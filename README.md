@@ -297,8 +297,14 @@ FormalRV/
     └── Qualtran/             Qualtran PhysicalParameters bridge
 ```
 
-90 source files; separating definitions from theorems within each folder is
-ongoing.
+Large proof files are split into a `<Name>/` sub-folder of shorter modules:
+`Defs.lean` (definitions) + `Proofs1..N.lean` (theorems) where they separate
+cleanly, or `Part1..N.lean` (order-preserving sequential chunks) where a `def`
+depends on a later lemma. So, for example, `Shor/PostQFT/` and
+`Arithmetic/RippleCarryAdder/` are folders of ~1,400-line modules, and the
+former 11.7k-line `Shor/VerifiedShor.lean` is now 29 parts. A few proof-dense
+files are kept whole because their proofs are sensitive to file boundaries
+(`System/CompressedRepeatSoundness`, `Core/UnitarySem`). 169 files in total.
 
 ## Building
 
@@ -316,7 +322,7 @@ lake build              # build the whole library
 `lake build` builds the root module, which imports the ten per-concern
 umbrellas (`Core`, `Arithmetic`, `Shor`, `QEC`, `PPM`, `LatticeSurgery`,
 `System`, `Framework`, `Corpus`, `Qualtran`), so one build exercises the whole
-library (90 source files). A clean clone builds successfully end-to-end
+library (169 files). A clean clone builds successfully end-to-end
 (warnings only — unused-variable lints).
 Continuous integration runs the same build via
 [`leanprover/lean-action`](https://github.com/leanprover/lean-action) on every push.
