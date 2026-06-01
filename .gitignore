@@ -1,0 +1,11 @@
+# Lake build artifacts and downloaded dependencies
+/.lake
+/build
+/lake-packages
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
