@@ -1,0 +1,69 @@
+name: Documentation
+
+# Build the doc-gen4 API documentation and deploy it to GitHub Pages.
+
+on:
+  push:
+    branches:
+      - main
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+# Allow the GITHUB_TOKEN to deploy to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment; do not cancel in-progress runs so a
+# long doc build can finish.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan (Lean toolchain manager)
+        run: |
+          set -o pipefail
+          curl -sSfL https://github.com/leanprover/elan/releases/latest/download/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          ./elan-init -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Get mathlib build cache
+        run: |
+          # -Kenv=docs is needed so Lake reconfigures with the doc-gen4 dep
+          # present; -R forces reconfiguration after the -K change. Fetching
+          # the cache here avoids recompiling all of mathlib from scratch.
+          lake -R -Kenv=docs exe cache get || true
+
+      - name: Build FormalRV (library)
+        run: lake -R -Kenv=docs build FormalRV
+
+      - name: Build documentation (doc-gen4)
+        run: lake -R -Kenv=docs build FormalRV:docs
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # doc-gen4 writes the generated HTML site here.
+          path: .lake/build/doc
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
