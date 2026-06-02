@@ -113,4 +113,36 @@ theorem apply_PPM_neg_mem (s : StabilizerState) (P : PauliString) (i : Nat)
       ⟨i, by simpa using hlt, by simp [List.getElem_zipIdx]⟩
   · simp
 
+/-! ## §5. The deferred-Pauli-frame law: the outcome affects only signs.
+
+    The `+1` and `−1` measurement branches (`apply_PPM_pos` /
+    `apply_PPM_neg`) have IDENTICAL structure — they differ ONLY in the
+    sign of the inserted generator (`P` vs `−P`).  Hence the Pauli
+    *operators* of the post-measurement stabilizer are completely
+    outcome-independent; only the *signs* differ.
+
+    This is the deferred-Pauli-frame principle as a single general
+    theorem: in practice one does not apply byproduct corrections
+    eagerly — the random outcome contributes only a sign, tracked
+    classically in the Pauli frame and commuted to readout at negligible
+    cost.  It instantly gives the all-measurement-branch correctness of
+    EVERY gadget (the gate's Heisenberg action on the Pauli structure is
+    the same on all branches; the per-branch sign is the frame). -/
+
+theorem apply_PPM_outcome_independent_ops (s : StabilizerState) (P : PauliString) :
+    (apply_PPM_pos s P).map (·.ops) = (apply_PPM_neg s P).map (·.ops) := by
+  unfold apply_PPM_pos apply_PPM_neg
+  cases hf : find_anticommuting s P with
+  | none => simp only [hf]
+  | some i =>
+      cases hg : s[i]? with
+      | none => simp only [hf, hg]
+      | some g_anti =>
+          simp only [hf, hg]
+          rw [List.map_map, List.map_map]
+          apply List.map_congr_left
+          rintro ⟨g, j⟩ _
+          simp only [Function.comp_apply]
+          by_cases h : j = i <;> simp [h, PauliString.neg]
+
 end FormalRV.Framework.PPMOp

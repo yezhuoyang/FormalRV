@@ -205,4 +205,32 @@ theorem hProgram_deferred_frame_correct (b₁ b₂ : Bool) :
   ⟨hProgram_input0_all_branches b₁ b₂, hProgram_input1_all_branches b₁ b₂,
    hProgram_inputPlus_all_branches b₁ b₂, hProgram_inputMinus_all_branches b₁ b₂⟩
 
+/-! ## §7. CNOT, all-branch (deferred frame).
+
+    The CNOT gadget has three measurements (`2³ = 8` outcome branches).
+    By the general `apply_PPM_outcome_independent_ops` law, the Pauli
+    *structure* of the output is the same on EVERY branch — the
+    `CNOT`-conjugated generators `Z_c`, `Z_anc`, `Z_c Z_anc Z_t` — while
+    the per-branch *signs* are the deferred Pauli-frame byproduct.
+    Strikingly, the structure is also the same for every basis INPUT:
+    all the information (input bits ⊕ measurement byproducts) lives in
+    the signs, i.e. in the frame — which is exactly why frame tracking
+    is cheap. -/
+
+/-- For all 8 outcome branches, `CNOT` on `|00⟩` produces the same
+    output Pauli structure (`Z_c, Z_anc, Z_cZ_ancZ_t`); the signs are
+    the frame. -/
+theorem cnotProgram_input00_ops_all_branches (b₁ b₂ b₃ : Bool) :
+    (runProgram cnotProgram [b₁, b₂, b₃] cnot_in00).map (fun g => g.ops)
+      = [[.Z, .I, .I], [.I, .Z, .I], [.Z, .Z, .Z]] := by
+  cases b₁ <;> cases b₂ <;> cases b₃ <;> decide
+
+/-- Same output Pauli structure for input `|10⟩` — the control bit and
+    all outcome byproducts are carried in the signs (the frame), not the
+    structure. -/
+theorem cnotProgram_input10_ops_all_branches (b₁ b₂ b₃ : Bool) :
+    (runProgram cnotProgram [b₁, b₂, b₃] cnot_in10).map (fun g => g.ops)
+      = [[.Z, .I, .I], [.I, .Z, .I], [.Z, .Z, .Z]] := by
+  cases b₁ <;> cases b₂ <;> cases b₃ <;> decide
+
 end FormalRV.Framework.StabProgram
