@@ -355,4 +355,203 @@ theorem measGadget_characterization
 -- on Lean's core axioms (`propext`; no `sorry`, no project `axiom`).
 #print axioms measGadget_measures_Z0Z1
 
+/-! ## (5) The DUAL X-stabilizer-measurement GADGET
+
+    The X-syndrome gadget is the mirror image of the Z gadget:
+
+        prepare ancilla `a` in |+⟩  (stabilized by X_a)
+        apply CNOT(a → data_i) for each i in the stabilizer support
+                                 (control = ancilla, target = data)
+        measure X_a
+
+    In the Heisenberg picture, conjugating the ancilla observable
+    `X_a` back through `CNOT(a → data_i)` for each `i∈supp` yields
+    `(∏_{i∈supp} X_i) · X_a`.  This uses the *other half* of the
+    CNOT symplectic table: `X_c ↦ X_c X_t` (control X spreads to
+    the target), where the control is now the ancilla.  Everything
+    is X-type, so no `Y` arises and the global phase stays `+1`.
+
+    This is the exact dual of the Z gadget (§4): swap Z↔X, swap the
+    CNOT direction (control = ancilla instead of data), and the same
+    structural proof goes through. -/
+
+/-- Conjugate the ancilla observable `X_a` back through the X-syndrome
+    gadget's CNOTs `CNOT(a → data_i)` for `i` in `supp` (control =
+    ancilla).  In the Heisenberg picture the result is the observable
+    that `measure X_a` actually measures on the input register, namely
+    `(∏_{i∈supp} X_i) · X_a`. -/
+def xMeasGadgetConj (supp : List Nat) (a : Nat) (p : PauliString) : PauliString :=
+  supp.foldl (fun q i => cnotConj a i q) p
+
+/-- GATE-LEVEL X gadget: the ancilla(|+⟩)+CNOT(2→0)+CNOT(2→1)
+    +measure-X₂ circuit measures the X-stabilizer `X₀X₁`.  In the
+    Heisenberg picture the measured `X₂` becomes `X₀X₁X₂` — the
+    `X₀X₁` part is the stabilizer measured on the 2-qubit data
+    register; the trailing `X₂` is the ancilla's own observable. -/
+theorem xMeasGadget_measures_X0X1 :
+    xMeasGadgetConj [0, 1] 2 ⟨Phase.plus, [Pauli.I, Pauli.I, Pauli.X]⟩
+      = ⟨Phase.plus, [Pauli.X, Pauli.X, Pauli.X]⟩ := by decide
+
+/-- GATE-LEVEL X gadget (3-body): the ancilla(|+⟩)+CNOT(3→0)
+    +CNOT(3→1)+CNOT(3→2)+measure-X₃ circuit measures the X-stabilizer
+    `X₀X₁X₂`.  The measured `X₃` becomes `X₀X₁X₂X₃`. -/
+theorem xMeasGadget_measures_X0X1X2 :
+    xMeasGadgetConj [0, 1, 2] 3
+        ⟨Phase.plus, [Pauli.I, Pauli.I, Pauli.I, Pauli.X]⟩
+      = ⟨Phase.plus, [Pauli.X, Pauli.X, Pauli.X, Pauli.X]⟩ := by decide
+
+/-! ### Per-qubit CNOT-conjugation lemmas for the X gadget
+
+    The dual of `cnot_ctrl` / `cnot_anc`.  Here the control is the
+    ancilla `a` (reading `X`) and the target is the data qubit `i`
+    (reading `I`); `cnot_other`, `cnot_len`, `cnot_phase` from §4 are
+    direction-agnostic and reused verbatim. -/
+
+/-- `CNOT(a → i)` turns a target `i` reading `I` into `X` when the
+    ancilla control `a` reads `X` (control X spreads to the target,
+    `x_t ⊕= x_c`). -/
+theorem cnot_x_tgt (p : PauliString) (i a : Nat) (hi : i < p.ops.length)
+    (hti : p.ops.getD i .I = Pauli.I) (hca : p.ops.getD a .I = Pauli.X) :
+    (cnotConj a i p).ops.getD i .I = Pauli.X := by
+  by_cases hia : i = a
+  · subst hia; simp only [hti] at hca; cases hca
+  · simp only [cnotConj, hti, hca, toSym, ofSym, Bool.xor_false, Bool.false_xor]
+    rw [List.getD_eq_getElem?_getD, List.getElem?_set_self (by simpa using hi)]
+    rfl
+
+/-- `CNOT(a → i)` leaves the ancilla control `a` reading `X` (the
+    control's own `x_c` bit is unchanged by the conjugation). -/
+theorem cnot_x_anc (p : PauliString) (i a : Nat) (ha : a < p.ops.length)
+    (hti : p.ops.getD i .I = Pauli.I) (hca : p.ops.getD a .I = Pauli.X) :
+    (cnotConj a i p).ops.getD a .I = Pauli.X := by
+  by_cases hia : i = a
+  · subst hia; simp only [hti] at hca; cases hca
+  · simp only [cnotConj, hti, hca, toSym, ofSym, Bool.xor_false, Bool.false_xor]
+    rw [List.getD_eq_getElem?_getD, List.getElem?_set_ne (by omega),
+        List.getElem?_set_self (by simpa using ha)]
+    rfl
+
+/-- The X gadget preserves the register length. -/
+theorem xgadget_len (supp : List Nat) (a : Nat) (p : PauliString) :
+    (xMeasGadgetConj supp a p).ops.length = p.ops.length := by
+  unfold xMeasGadgetConj
+  induction supp generalizing p with
+  | nil => rfl
+  | cons i rest ih => simp only [List.foldl_cons]; rw [ih]; exact cnot_len p a i
+
+/-- The X gadget preserves the global phase (everything is X-type). -/
+theorem xgadget_phase (supp : List Nat) (a : Nat) (p : PauliString) :
+    (xMeasGadgetConj supp a p).phase = p.phase := by
+  unfold xMeasGadgetConj
+  induction supp generalizing p with
+  | nil => rfl
+  | cons i rest ih => simp only [List.foldl_cons]; rw [ih]; exact cnot_phase p a i
+
+/-- Positions outside the support and `≠ a` are untouched by the X gadget. -/
+theorem xgadget_untouched (supp : List Nat) (a : Nat) (j : Nat) (hja : j ≠ a) :
+    ∀ (p : PauliString), j ∉ supp →
+      (xMeasGadgetConj supp a p).ops.getD j .I = p.ops.getD j .I := by
+  unfold xMeasGadgetConj
+  induction supp with
+  | nil => intro p _; rfl
+  | cons i rest ih =>
+    intro p hjs
+    simp only [List.foldl_cons]
+    have hji : j ≠ i := fun h => hjs (h ▸ List.mem_cons_self ..)
+    rw [ih (cnotConj a i p) (fun h => hjs (List.mem_cons_of_mem _ h))]
+    exact cnot_other p a i j hja hji
+
+/-- The ancilla observable stays `X` through the whole X gadget. -/
+theorem xgadget_anc (supp : List Nat) (a : Nat) :
+    ∀ (p : PauliString), a < p.ops.length → a ∉ supp → supp.Nodup →
+      p.ops.getD a .I = Pauli.X → (∀ i ∈ supp, p.ops.getD i .I = Pauli.I) →
+      (xMeasGadgetConj supp a p).ops.getD a .I = Pauli.X := by
+  unfold xMeasGadgetConj
+  induction supp with
+  | nil => intro p _ _ _ hca _; simpa using hca
+  | cons i rest ih =>
+    intro p ha hanc hnd hca hctrl
+    simp only [List.foldl_cons]
+    rw [List.nodup_cons] at hnd
+    have hia : i ≠ a := fun h => hanc (h ▸ List.mem_cons_self ..)
+    have hti : p.ops.getD i .I = Pauli.I := hctrl i (List.mem_cons_self ..)
+    apply ih (cnotConj a i p)
+    · rw [cnot_len]; exact ha
+    · exact fun h => hanc (List.mem_cons_of_mem _ h)
+    · exact hnd.2
+    · exact cnot_x_anc p i a ha hti hca
+    · intro j hj
+      have hji : j ≠ i := fun h => hnd.1 (h ▸ hj)
+      have hja : j ≠ a := fun h => hanc (h ▸ List.mem_cons_of_mem _ hj)
+      rw [cnot_other p a i j hja hji]
+      exact hctrl j (List.mem_cons_of_mem _ hj)
+
+/-- Every support qubit `k ∈ supp` ends up reading `X`. -/
+theorem xgadget_ctrl (supp : List Nat) (a : Nat) :
+    ∀ (p : PauliString), a < p.ops.length → a ∉ supp → supp.Nodup →
+      p.ops.getD a .I = Pauli.X → (∀ i ∈ supp, i < p.ops.length) →
+      (∀ i ∈ supp, p.ops.getD i .I = Pauli.I) →
+      ∀ k ∈ supp, (xMeasGadgetConj supp a p).ops.getD k .I = Pauli.X := by
+  unfold xMeasGadgetConj
+  induction supp with
+  | nil => intro p _ _ _ _ _ _ k hk; cases hk
+  | cons i rest ih =>
+    intro p ha hanc hnd hca hrange hctrl
+    simp only [List.foldl_cons]
+    rw [List.nodup_cons] at hnd
+    have hia : i ≠ a := fun h => hanc (h ▸ List.mem_cons_self ..)
+    have hti : p.ops.getD i .I = Pauli.I := hctrl i (List.mem_cons_self ..)
+    have hir : i < p.ops.length := hrange i (List.mem_cons_self ..)
+    have hti' : (cnotConj a i p).ops.getD i .I = Pauli.X := cnot_x_tgt p i a hir hti hca
+    have hca' : (cnotConj a i p).ops.getD a .I = Pauli.X := cnot_x_anc p i a ha hti hca
+    intro k hk
+    rcases List.mem_cons.mp hk with hk | hk
+    · subst hk
+      rw [show rest.foldl (fun q j => cnotConj a j q) (cnotConj a k p)
+            = xMeasGadgetConj rest a (cnotConj a k p) from rfl]
+      rw [xgadget_untouched rest a k hia (cnotConj a k p) hnd.1]
+      exact hti'
+    · apply ih (cnotConj a i p)
+      · rw [cnot_len]; exact ha
+      · exact fun h => hanc (List.mem_cons_of_mem _ h)
+      · exact hnd.2
+      · exact hca'
+      · intro j hj; rw [cnot_len]; exact hrange j (List.mem_cons_of_mem _ hj)
+      · intro j hj
+        have hji : j ≠ i := fun h => hnd.1 (h ▸ hj)
+        have hja : j ≠ a := fun h => hanc (h ▸ List.mem_cons_of_mem _ hj)
+        rw [cnot_other p a i j hja hji]
+        exact hctrl j (List.mem_cons_of_mem _ hj)
+      · exact hk
+
+/-- **Parametric gate-level X gadget theorem.**  Running the
+    ancilla(|+⟩)+CNOT(a→data_i for i∈supp)+measure-Xₐ circuit and
+    conjugating the measured `X_a` back through it yields, on the
+    canonical X-type input, an observable that reads `X` on every
+    support qubit and on the ancilla, and is untouched elsewhere.
+
+    This is the exact dual of `measGadget_characterization` (§4): the
+    gate circuit measures exactly the X-type stabilizer
+    `∏_{i∈supp} X_i` on the data register.  Instantiated by the
+    concrete `xMeasGadget_measures_X0X1` / `..._X0X1X2` `decide`
+    theorems above. -/
+theorem xMeasGadget_characterization
+    (supp : List Nat) (a : Nat) (p : PauliString)
+    (ha : a < p.ops.length) (hanc : a ∉ supp) (hnd : supp.Nodup)
+    (hca : p.ops.getD a .I = Pauli.X)
+    (hrange : ∀ i ∈ supp, i < p.ops.length)
+    (hctrl : ∀ i ∈ supp, p.ops.getD i .I = Pauli.I) :
+    (∀ k ∈ supp, (xMeasGadgetConj supp a p).ops.getD k .I = Pauli.X)
+    ∧ (xMeasGadgetConj supp a p).ops.getD a .I = Pauli.X
+    ∧ (∀ j, j ≠ a → j ∉ supp →
+        (xMeasGadgetConj supp a p).ops.getD j .I = p.ops.getD j .I) := by
+  refine ⟨xgadget_ctrl supp a p ha hanc hnd hca hrange hctrl,
+          xgadget_anc supp a p ha hanc hnd hca hctrl, ?_⟩
+  intro j hja hjs
+  exact xgadget_untouched supp a j hja p hjs
+
+-- Axiom audit: the parametric dual X gadget theorem depends only on
+-- Lean's core axioms (`propext`, `Quot.sound`; no `sorry`, no `axiom`).
+#print axioms xMeasGadget_characterization
+
 end FormalRV.Framework.CliffordConj
