@@ -550,4 +550,79 @@ theorem surgery_preserves_commuting_logical (g : SurgeryGadget) (L : PauliString
     L ∈ measureChecks (merged_stabilizers_X g) s :=
   mem_measureChecks_of_commutesAll (merged_stabilizers_X g) L s hmem hcomm
 
+/-! ## Fault-tolerance residue (delimited) -/
+
+/-- The structural fault-tolerance conditions of qianxu App. C
+    (`main.tex:435`).  Of the triple, (ii) the merged code is qLDPC and
+    (iii) `τ_s = Θ(d)` are DECIDABLE and discharged by
+    `verify_surgery_gadget`; (i) the merged-code distance `d̃ = Θ(d)` is the
+    DELIMITED residue, recorded here as the explicit input `merged_dist` with
+    the bound `merged_dist ≥ g.data_code.d`.  Its value comes from the boundary
+    Cheeger-constant lower bound for graph ancillas (Swaroop et al.) or a
+    QDistRnd numerical search (per the paper) — it is the single external,
+    non-derived quantity, made structurally visible here rather than baked into
+    a blanket axiom.
+
+    Crucially, the LOGICAL-correctness theorem
+    `surgery_implements_logical_measurement` below does NOT depend on this:
+    distance governs error SUPPRESSION (fault tolerance under a noise model),
+    not the noiseless logical action.  Error suppression and decoder runtime are
+    out of scope per the project taxonomy. -/
+def SurgeryFaultTolerant (g : SurgeryGadget) (merged_dist : Nat) : Prop :=
+  g.verify_surgery_gadget = true ∧ merged_dist ≥ g.data_code.d
+
+/-! ## Top-level logical correctness (R ∧ N), axiom-free -/
+
+/-- **A structurally-verified qLDPC code-surgery gadget implements the logical
+    Pauli measurement of its target operator.**  Given the decidable structural
+    verifier (`verify_surgery_gadget` = dimensions + qLDPC + τ_s + the kernel
+    condition `⟨ℒ⟩ = f_X'ᵀ ker(H_X'ᵀ)`) and well-shaped merged checks of
+    positive width, the gadget satisfies BOTH halves of surgery correctness:
+
+    * **(R) readout / eigenvalue** — the product of the `span_witness`-selected
+      signed merged X-checks equals the target logical operator signed by the
+      XOR-parity of those checks' ±1 outcomes (qianxu `main.tex:544`: the
+      outcome of `P̄` is the parity of the merged X-checks in the first cycle);
+    * **(N) non-disturbance** — every logical commuting with the measured set
+      survives the merge measurement; and
+    * the measured set is a valid simultaneously-measurable commuting family.
+
+    Proved CODE-GENERALLY (any data code) and AXIOM-FREE (only Lean's
+    `propext`/`Classical.choice`/`Quot.sound`; no project axioms, no `sorry`).
+    This is exactly the obligation the sibling QMeas language axiomatizes per
+    code tag (`transversal_X_is_logical_X`); here it is discharged for the
+    qLDPC merged-code construction.  Fault tolerance (the merged-distance
+    residue) is delimited separately in `SurgeryFaultTolerant`. -/
+theorem surgery_implements_logical_measurement
+    (g : SurgeryGadget) (n : Nat) (signs : List Bool)
+    (hn : 0 < n) (hshape : ∀ r ∈ g.merged_hx, r.length = n)
+    (hsig : signs.length = g.merged_hx.length)
+    (hverify : g.verify_surgery_gadget = true) :
+    -- (R) the measured eigenvalue of the target logical = parity of the
+    -- selected merged-X-check outcomes
+    (selectedSignedProduct g.span_witness g.merged_hx signs
+        = signedXRow (selectedParity g.span_witness signs) g.target_pauli)
+    -- (N) any logical commuting with the measured set is preserved
+    ∧ (∀ (L : PauliString) (s : StabilizerState), L ∈ s →
+        (∀ P ∈ merged_stabilizers_X g, L.commutes P = true) →
+        L ∈ measureChecks (merged_stabilizers_X g) s)
+    -- the measured set is a valid commuting family
+    ∧ (∀ p ∈ merged_stabilizers_X g, ∀ q ∈ merged_stabilizers_X g,
+        p.commutes q = true) := by
+  have hker : g.targets_logical_correctly = true := by
+    simp only [SurgeryGadget.verify_surgery_gadget, Bool.and_eq_true] at hverify
+    exact hverify.2
+  refine ⟨surgery_eigenvalue g n hn signs hshape hsig hker, ?_, merged_X_checks_commute g⟩
+  exact fun L s hmem hcomm => surgery_preserves_commuting_logical g L s hmem hcomm
+
+/-! ## Concrete smoke test of the eigenvalue computation -/
+
+/-- Selecting both rows of a 2×3 merged-X-check matrix with outcomes
+    `(+1, −1)` yields their support-XOR `[X,X,I]` signed by the outcome parity
+    `−1`: `selectedSignedProduct` computes the measured signed operator. -/
+example :
+    selectedSignedProduct [true, true] [[true, false, true], [false, true, true]]
+        [false, true]
+      = signedXRow true [true, true, false] := by decide
+
 end FormalRV.Framework.SurgeryCorrect
