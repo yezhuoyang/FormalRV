@@ -38,6 +38,10 @@
 [PASS] T7 kept (m<2) half-angles are π/4-multiples ⇒ Clifford+T
         kept depth m=1: half-angle ±π/4 (= T/T†). dropped non-Clifford+T depths sampled: [2, 3, 4, 5, 6, 7]
 
+=== (T8) consistency: actual ≤ min(2π/2^cutoff, 2)  (proved bound never contradicts ‖U−V‖≤2) ===
+[PASS] T8 actual ≤ min(2π/2^cutoff, 2) and ≤ 2  (n=2..8)
+        worst (actual − min(budget,2)) = 0.000e+00 ≤ 0  ⇒ proved bound is consistent
+
 ======================================================================
-SUMMARY: 8/8 checks passed.
+SUMMARY: 9/9 checks passed.
 ALL LEAN ERROR BOUNDS CONFIRMED BY QISKIT NUMERICAL SIMULATION.

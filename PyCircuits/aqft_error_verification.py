@@ -243,6 +243,25 @@ check("T7 kept (m<2) half-angles are π/4-multiples ⇒ Clifford+T", kept_ok,
 
 
 # ----------------------------------------------------------------------------
+# (T8) consistency: the actual error never exceeds min(proved budget, trivial 2).
+#      For any two unitaries ‖U−V‖_op ≤ ‖U‖+‖V‖ = 2, so the HONEST guarantee is
+#      min(2π/2^cutoff, 2).  At tiny cutoffs the budget exceeds 2 (loose but never
+#      violated); the proved bound is always consistent with the ≤2 floor.
+# ----------------------------------------------------------------------------
+print("\n=== (T8) consistency: actual ≤ min(2π/2^cutoff, 2)  (proved bound never contradicts ‖U−V‖≤2) ===")
+ok, worst = True, 0.0
+for n in range(2, 9):
+    U_exact = Operator(phase_ladder(n, 0, cutoff=None)).data
+    for cutoff in range(1, n):
+        actual = opnorm(U_exact - Operator(phase_ladder(n, 0, cutoff)).data)
+        guarantee = min(2 * PI / 2 ** cutoff, 2.0)
+        ok = ok and (actual <= guarantee + TOL) and (actual <= 2.0 + TOL)
+        worst = max(worst, actual - guarantee)
+check("T8 actual ≤ min(2π/2^cutoff, 2) and ≤ 2  (n=2..8)", ok,
+      f"worst (actual − min(budget,2)) = {worst:.3e} ≤ 0  ⇒ proved bound is consistent")
+
+
+# ----------------------------------------------------------------------------
 print("\n" + "=" * 70)
 n_pass = sum(1 for _, p, _ in results if p)
 print(f"SUMMARY: {n_pass}/{len(results)} checks passed.")
