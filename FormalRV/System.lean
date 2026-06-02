@@ -6,6 +6,7 @@ import FormalRV.System.FaultTolerantSchedule
 import FormalRV.System.HardwareErrorParams
 import FormalRV.System.InvariantFramework
 import FormalRV.System.LayeredArtifactInterface
+import FormalRV.System.NaiveUpperBound
 import FormalRV.System.ScheduleInvariantsExplicit
 import FormalRV.System.SystemChecker
 import FormalRV.System.SystemInvariantStrengthening
