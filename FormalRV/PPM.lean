@@ -4,6 +4,7 @@ import FormalRV.PPM.CircuitToPPMMagicFactory
 import FormalRV.PPM.CircuitToPPMObservationBridge
 import FormalRV.PPM.CircuitToPPMSemanticBridge
 import FormalRV.PPM.CircuitToPPMToffoliMagic
+import FormalRV.PPM.CliffordConj
 import FormalRV.PPM.CliffordPPMRules
 import FormalRV.PPM.EightTToCCZScheme
 import FormalRV.PPM.FactoryHierarchy
