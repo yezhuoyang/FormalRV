@@ -14,8 +14,11 @@ makes the residue that *cannot* be proven explicit and quantifiable.
 [![CI](https://github.com/yezhuoyang/FormalRV/actions/workflows/lean_action_ci.yml/badge.svg)](https://github.com/yezhuoyang/FormalRV/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-📖 **API documentation:** **<https://yezhuoyang.github.io/FormalRV/>** — generated
-by [`doc-gen4`](https://github.com/leanprover/doc-gen4) and deployed to GitHub
+📖 **API documentation:** **<https://yezhuoyang.github.io/FormalRV/>** — a
+FormalRV-only static site (definitions, theorems, and their docstrings, grouped
+by concern) produced by [`scripts/gen_docs.py`](scripts/gen_docs.py), which parses
+this project's `.lean` sources directly. It builds in **seconds** and documents
+**only FormalRV** (mathlib is intentionally excluded), and is deployed to GitHub
 Pages by the [`docs.yml`](.github/workflows/docs.yml) Actions workflow on every
 push to `main`.
 
@@ -129,9 +132,9 @@ lake build              # build the whole library (one build covers all 10 conce
 Inspect a theorem's axioms with `#print axioms FormalRV.Shor_correct_var`
 (expected: `propext, Classical.choice, Quot.sound`).
 
-**Docs:** `lake -R -Kenv=docs build FormalRV:docs` regenerates the API site into
-`.lake/build/doc/` (doc-gen4 is an optional dependency, gated so plain `lake
-build` never pulls it in). CI does this and publishes to GitHub Pages.
+**Docs:** `python scripts/gen_docs.py` regenerates the API site into `site/`
+(open `site/index.html`). It needs only Python — no Lean or mathlib build — and
+documents only FormalRV. CI runs the same command and publishes to GitHub Pages.
 
 ## License
 
