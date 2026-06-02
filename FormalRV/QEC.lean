@@ -5,6 +5,7 @@ import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Logical
 import FormalRV.QEC.QECCodeInstances
 import FormalRV.QEC.Instances
+import FormalRV.QEC.Addressing
 
 /-!
 # FormalRV.QEC
