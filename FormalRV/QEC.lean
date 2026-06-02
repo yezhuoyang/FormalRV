@@ -1,6 +1,7 @@
 import FormalRV.QEC.LDPCMatrix
 import FormalRV.QEC.GF2Linear
 import FormalRV.QEC.CSSCode
+import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.QECCodeInstances
 
 /-!
