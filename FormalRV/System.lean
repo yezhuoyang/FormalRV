@@ -2,6 +2,7 @@ import FormalRV.System.AdderSystem
 import FormalRV.System.Architecture
 import FormalRV.System.CodedLayout
 import FormalRV.System.CompressedRepeatSoundness
+import FormalRV.System.FaultTolerantSchedule
 import FormalRV.System.HardwareErrorParams
 import FormalRV.System.LayeredArtifactInterface
 import FormalRV.System.ScheduleInvariantsExplicit
