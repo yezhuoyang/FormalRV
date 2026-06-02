@@ -1,5 +1,6 @@
 import FormalRV.Core.Basic
 import FormalRV.Core.Boolean
+import FormalRV.Core.CliffordTRotations
 import FormalRV.Core.DensitySem
 import FormalRV.Core.Gate
 import FormalRV.Core.GateDecompositions
