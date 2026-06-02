@@ -1,5 +1,6 @@
 import FormalRV.LatticeSurgery.LDPCSurgery
 import FormalRV.LatticeSurgery.LatticeSurgeryPPMContract
+import FormalRV.LatticeSurgery.SurgeryCorrect
 import FormalRV.LatticeSurgery.SurgeryGadgetToSysCalls
 import FormalRV.LatticeSurgery.SurgeryReadout
 
