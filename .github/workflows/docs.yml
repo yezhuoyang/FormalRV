@@ -3,11 +3,13 @@ name: Documentation
 # Build the doc-gen4 API documentation and deploy it to GitHub Pages.
 
 on:
-  push:
-    branches:
-      - main
-  # Allow manual runs from the Actions tab.
+  # The doc build documents the ENTIRE mathlib import-closure (~17k jobs), so it
+  # is slow and large. It is therefore NOT rebuilt on every push to `main`.
+  # Trigger it on demand from the Actions tab, or by pushing a release tag.
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 # Allow the GITHUB_TOKEN to deploy to Pages.
 permissions:
