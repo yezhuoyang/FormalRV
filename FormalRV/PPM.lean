@@ -11,6 +11,7 @@ import FormalRV.PPM.LayeredPPMQECInterface
 import FormalRV.PPM.LogicalState
 import FormalRV.PPM.PPM
 import FormalRV.PPM.PPMOperational
+import FormalRV.PPM.PPMUpdateInvariants
 import FormalRV.PPM.PauliOps
 import FormalRV.PPM.PauliSemantics
 
