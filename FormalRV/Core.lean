@@ -1,3 +1,4 @@
+import FormalRV.Core.ApproxQFT
 import FormalRV.Core.Basic
 import FormalRV.Core.Boolean
 import FormalRV.Core.CliffordTRotations

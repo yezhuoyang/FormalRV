@@ -18,13 +18,14 @@
   ## The approximate cases (the honest boundary)
 
   The QFT rotations `R_k` for `k ≥ 4` are irrational-angle and provably
-  NOT exactly Clifford+T; they must be APPROXIMATED.  We expose the
-  standard result — Solovay–Kitaev / Ross–Selinger — as a single named
-  contract `SolovayKitaev`: for every angle and precision `ε` there is a
-  Clifford+T circuit `ε`-close in operator norm, with `T`-count
-  `O(log^c(1/ε))`.  Formalising that algorithm's number-theoretic core
-  is a separate (multi-month) effort; here it is a cited assumption, and
-  the `ε`-budget is what propagates into Shor's success probability.
+  NOT exactly Clifford+T.  Rather than ASSUME a decomposition exists
+  (Solovay–Kitaev as an axiom), we compile them constructively by the
+  standard approximate-QFT (Coppersmith) algorithm: DROP every rotation
+  below the cutoff.  With cutoff `≤ 3` the kept rotations are exactly
+  `Z, S, T`, so the whole QFT becomes exactly Clifford+T, and the error
+  of each dropped rotation is DERIVED (`‖R_z(θ) − I‖ ≤ |θ|`), not
+  assumed.  That construction and its error budget live in
+  `FormalRV.Core.ApproxQFT`.
 -/
 import FormalRV.Core.UnitarySem
 
@@ -32,6 +33,7 @@ namespace FormalRV.Framework.CliffordTRotations
 
 open Complex
 open FormalRV.Framework
+open FormalRV.Framework.BaseUCom
 
 /-! ## §1. `R_z(λ) = diag(1, e^{iλ})`. -/
 
@@ -109,33 +111,23 @@ inductive IsCliffordT : {dim : Nat} → BaseUCom dim → Prop
   | seq {dim : Nat} {c₁ c₂ : BaseUCom dim} :
       IsCliffordT c₁ → IsCliffordT c₂ → IsCliffordT (UCom.seq c₁ c₂)
   | gate1 {dim : Nat} {u : BaseUnitary 1} {n : Nat}
-      (h : u = U_H ∨ u = U_S ∨ u = U_T ∨ u = U_SDAG ∨ u = U_TDAG) :
+      (h : u = U_H ∨ u = U_S ∨ u = U_T ∨ u = U_SDAG ∨ u = U_TDAG ∨ u = U_I) :
       IsCliffordT (UCom.app1 u n : BaseUCom dim)
   | cnot {dim : Nat} {m n : Nat} :
       IsCliffordT (UCom.app2 BaseUnitary.CNOT m n : BaseUCom dim)
 
-/-- **Solovay–Kitaev / Ross–Selinger — cited contract.**
+-- NOTE.  We deliberately do NOT axiomatise the existence of a Clifford+T
+-- approximation for the off-lattice rotations (the Solovay–Kitaev
+-- "∃ circuit ε-close to R_z(θ)" contract).  Per the project's no-implicit-
+-- existence rule, the approximation is built CONSTRUCTIVELY instead: the
+-- approximate-QFT in `FormalRV.Core.ApproxQFT` drops the off-lattice
+-- rotations and DERIVES the resulting error (`dropRotationError_le`).  The
+-- only rotations actually emitted are `Z, S, T` — exactly Clifford+T.
 
-    For every angle `θ` and precision `ε > 0` there is a Clifford+T
-    circuit whose unitary is entrywise within `ε` of `R_z(θ)`, with a
-    finite `T`-count (the cited results give `O(log^c(1/ε))`).
-
-    This is the ONE named assumption of the QPE→Clifford+T compilation:
-    the exact `(π/4)·ℤ` rotations are proved (`tPow_eq_rotation`,
-    `qftRot_*`), and SK supplies an error-bounded Clifford+T circuit for
-    every other rotation.  Its proof — the algorithm's number-theoretic
-    exact-synthesis core over `ℤ[1/√2, i]` — is a separate (multi-month)
-    formalisation and is deliberately taken on trust here.  The `ε`
-    budget is what propagates into Shor's success-probability bound. -/
-axiom solovay_kitaev (θ ε : ℝ) (hε : 0 < ε) :
-    ∃ (c : BaseUCom 1) (tCount : ℕ),
-      IsCliffordT c ∧
-      (∀ i j : Fin 2, ‖uc_eval c i j - rotation 0 0 θ i j‖ ≤ ε)
-
-/-- The exact rotations are an `ε = 0` instance realised WITHOUT the
-    Solovay–Kitaev contract: `R_z(k·π/4)` is `T^k` exactly.  (Stated as a
-    sanity check that the contract is only needed off the `(π/4)·ℤ`
-    lattice.) -/
+/-- The exact rotations need no approximation at all: `R_z(k·π/4)` is
+    `T^k` exactly (`ε = 0`).  Off the `(π/4)·ℤ` lattice the approximate-QFT
+    drop (`ApproxQFT`) supplies a constructive, error-bounded
+    Clifford+T circuit. -/
 theorem exact_rotation_no_approx (k : ℕ) :
     (rotation 0 0 (Real.pi / 4)) ^ k = rotation 0 0 (k * (Real.pi / 4)) :=
   tPow_eq_rotation k
