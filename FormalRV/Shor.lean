@@ -8,6 +8,7 @@ import FormalRV.Shor.QPEAmplitude
 import FormalRV.Shor.Shor
 import FormalRV.Shor.TotientLowerBound
 import FormalRV.Shor.VerifiedShor
+import FormalRV.Shor.WindowedShorConnection
 
 /-!
 # FormalRV.Shor
