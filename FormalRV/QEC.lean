@@ -4,6 +4,7 @@ import FormalRV.QEC.CSSCode
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Logical
 import FormalRV.QEC.QECCodeInstances
+import FormalRV.QEC.Instances
 
 /-!
 # FormalRV.QEC

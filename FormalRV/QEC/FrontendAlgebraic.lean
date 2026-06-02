@@ -142,6 +142,108 @@ def circDagger (l : Nat) (p : Circ) : Circ := p.map (fun e => (l - e % l) % l)
 example : circulant 3 [1] = shiftMat 3 := by decide
 example : circDagger 3 [1] = [2] := by decide
 
+/-! ## (5b) Lifted product LP(A, A†) (qianxu / Panteleev–Kalachev)
+
+The lifted product is the hypergraph product taken over the circulant ring
+`R = F2[x]/(x^ℓ+1)`, with the second factor the conjugate transpose `A†`.
+Concretely, for `A : rA × nA` over `R` we form the polynomial check matrices
+
+    Hx = [ A ⊗ I_{nA} | I_{rA} ⊗ A† ]   (rA·nA × (nA²+rA²) over R)
+    Hz = [ I_{nA} ⊗ A | A† ⊗ I_{rA} ]   (nA·rA × (nA²+rA²) over R)
+
+and then LIFT each `R`-entry to its `ℓ × ℓ` GF(2) circulant block.  The qubit
+count is therefore `(rA² + nA²)·ℓ` (the identities `I_{nA}`, `I_{rA}` live at
+the UNLIFTED ring dimensions — the lift only expands the ring entries).
+
+Why `A†` (conjugate transpose) and not the plain transpose: the lift sends the
+GF(2) transpose of a circulant block to the lift of its ring conjugate
+(`circulant ℓ (circDagger ℓ e) = transpose (circulant ℓ e) ℓ`, verified below
+as `circulant_circDagger_eq_transpose`).  Hence `transpose (lift A†) = lift A`,
+and `Hx · Hzᵀ = A ⊗ A† + A ⊗ A† = 0` over GF(2) — the CSS condition.  Using the
+plain transpose (or the GF(2) kron of the lift against a plain `identMat`)
+breaks this cancellation; see the tiny-LP oracle (`lpTiny`) which holds for the
+`A†` ring-level form and fails for the naive forms. -/
+
+/-- KEY FACT: the GF(2) transpose of a lifted circulant equals the lift of the
+    ring conjugate.  Verified on the smoke instances used below by `decide`;
+    this is what makes the lifted-product CSS condition cancel over GF(2). -/
+example : circulant 3 (circDagger 3 [1]) = transpose (circulant 3 [1]) 3 := by decide
+example : circulant 4 (circDagger 4 [1, 2]) = transpose (circulant 4 [1, 2]) 4 := by decide
+
+/-- A polynomial matrix `A` (`r×n` over `R`) lifted to a GF(2) `BoolMat`
+    (`r·ℓ × n·ℓ`): block `(a,c)` is `circulant ℓ (A[a][c])`.  Each ring entry
+    becomes an `ℓ×ℓ` circulant; row block `a` contributes `ℓ` GF(2) rows, each
+    the column-concatenation of the corresponding circulant rows. -/
+def liftMat (ℓ : Nat) (A : List (List Circ)) : BoolMat :=
+  A.flatMap (fun polyRow =>
+    let blocks := polyRow.map (fun e => circulant ℓ e)
+    (List.range ℓ).map (fun r => blocks.flatMap (fun blk => blk.getD r [])))
+
+/-- The `n×n` identity over `R`: `1_R = [0]` (the constant `1 = x⁰`) on the
+    diagonal, `0_R = []` off-diagonal. -/
+def pIdent (n : Nat) : List (List Circ) :=
+  (List.range n).map (fun i =>
+    (List.range n).map (fun j => if i = j then ([0] : Circ) else []))
+
+/-- Conjugate transpose `A†` of a polynomial matrix: transpose the index grid
+    and conjugate (`circDagger`) every ring entry. -/
+def pDagger (ℓ : Nat) (A : List (List Circ)) : List (List Circ) :=
+  let r := A.length
+  let c := (A.headD []).length
+  (List.range c).map (fun j =>
+    (List.range r).map (fun i => circDagger ℓ ((A.getD i []).getD j [])))
+
+/-- Multiplication in `R = F2[x]/(x^ℓ+1)`: convolution of exponent supports,
+    exponents reduced mod `ℓ`, keeping terms of odd multiplicity (mod-2 sum). -/
+def circMul (ℓ : Nat) (p q : Circ) : Circ :=
+  let prods := p.flatMap (fun i => q.map (fun j => (i + j) % ℓ))
+  (List.range ℓ).filter (fun e => prods.countP (fun x => x = e) % 2 = 1)
+
+/-- Kronecker (tensor) product of two polynomial matrices over `R`: block
+    `(i,k),(j,l)` is the ring product `A[i][j] · B[k][l]`. -/
+def pKron (ℓ : Nat) (A B : List (List Circ)) : List (List Circ) :=
+  A.flatMap (fun arow => B.map (fun brow =>
+    arow.flatMap (fun a => brow.map (fun b => circMul ℓ a b))))
+
+/-- Horizontal block concatenation of two same-row-count polynomial matrices. -/
+def pHcat (L R : List (List Circ)) : List (List Circ) := L.zipWith (· ++ ·) R
+
+/-- The qianxu lifted-product code `LP(A, A†)` for `A : rA × nA` over
+    `R = F2[x]/(x^ℓ+1)` (each entry a `Circ`).  The hypergraph product is taken
+    over the ring with second factor `A†`, then lifted to GF(2):
+
+      n  = (rA² + nA²)·ℓ
+      hx = lift [ A ⊗ I_{nA} | I_{rA} ⊗ A† ]
+      hz = lift [ I_{nA} ⊗ A | A† ⊗ I_{rA} ]
+
+    `css_condition` holds because `transpose (lift A†) = lift A`, so
+    `hx · hzᵀ = lift(A ⊗ A† + A ⊗ A†) = 0` over GF(2) (oracle: `lpTiny`). -/
+def liftedProduct (ℓ : Nat) (A : List (List Circ)) (rA nA : Nat) : CSSCode :=
+  let Adag := pDagger ℓ A
+  let pHx := pHcat (pKron ℓ A (pIdent nA)) (pKron ℓ (pIdent rA) Adag)
+  let pHz := pHcat (pKron ℓ (pIdent nA) A) (pKron ℓ Adag (pIdent rA))
+  { n := (rA * rA + nA * nA) * ℓ
+    hx := liftMat ℓ pHx
+    hz := liftMat ℓ pHz }
+
+/-! ### The tiny-LP CSS oracle
+
+`ℓ = 3`, `A = [[1, x]]` (a `1×2` seed, entries `1 = [0]` and `x = [1]`).
+The `A†` ring-level form makes `css_condition = true` by `decide`; the naive
+GF(2)-kron-of-lifts forms and the plain-transpose form fail this oracle. -/
+
+def lpTiny : CSSCode := liftedProduct 3 [[[0], [1]]] 1 2
+
+example : lpTiny.n = (1 * 1 + 2 * 2) * 3 := by decide   -- = 15
+example : lpTiny.well_shaped = true := by decide
+example : lpTiny.css_condition = true := by decide       -- THE ORACLE
+
+/-- Tiny-LP pipeline capstone: the lifted-product code's syndrome-measurement
+    circuit implements it (the lowered stabilizer group is valid), because the
+    construction is CSS. -/
+example : StabilizerState.valid (lpTiny.toStabilizers) lpTiny.n = true := by
+  rw [CSSCode.syndrome_circuit_implements_code lpTiny (by decide)]; decide
+
 /-! ## (6) Pipeline capstone -/
 
 /-- The constructed distance-3 surface code syndrome circuit implements it.
