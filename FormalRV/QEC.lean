@@ -1,8 +1,10 @@
 import FormalRV.QEC.LDPCMatrix
 import FormalRV.QEC.GF2Linear
+import FormalRV.QEC.GF2Rank
 import FormalRV.QEC.CSSCode
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Logical
+import FormalRV.QEC.LogicalValidity
 import FormalRV.QEC.QECCodeInstances
 import FormalRV.QEC.Instances
 import FormalRV.QEC.Addressing
