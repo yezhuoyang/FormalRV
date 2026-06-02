@@ -1,15 +1,17 @@
 name: Documentation
 
-# Build the doc-gen4 API documentation and deploy it to GitHub Pages.
+# Build the FormalRV-only API docs and deploy them to GitHub Pages.
+#
+# The docs are produced by a small Python generator (scripts/gen_docs.py) that
+# parses this project's own .lean sources and emits a static HTML site. It does
+# NOT build Lean or mathlib, so the whole job runs in seconds and documents only
+# FormalRV's declarations (not the entire mathlib closure).
 
 on:
-  # The doc build documents the ENTIRE mathlib import-closure (~17k jobs), so it
-  # is slow and large. It is therefore NOT rebuilt on every push to `main`.
-  # Trigger it on demand from the Actions tab, or by pushing a release tag.
-  workflow_dispatch:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
 
 # Allow the GITHUB_TOKEN to deploy to Pages.
 permissions:
@@ -17,8 +19,7 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment; do not cancel in-progress runs so a
-# long doc build can finish.
+# One concurrent Pages deployment; don't cancel an in-progress deploy.
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -30,25 +31,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install elan (Lean toolchain manager)
-        run: |
-          set -o pipefail
-          curl -sSfL https://github.com/leanprover/elan/releases/latest/download/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          ./elan-init -y --default-toolchain none
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Get mathlib build cache
-        run: |
-          # -Kenv=docs is needed so Lake reconfigures with the doc-gen4 dep
-          # present; -R forces reconfiguration after the -K change. Fetching
-          # the cache here avoids recompiling all of mathlib from scratch.
-          lake -R -Kenv=docs exe cache get || true
-
-      - name: Build FormalRV (library)
-        run: lake -R -Kenv=docs build FormalRV
-
-      - name: Build documentation (doc-gen4)
-        run: lake -R -Kenv=docs build FormalRV:docs
+      - name: Generate FormalRV API docs
+        run: python scripts/gen_docs.py --out site
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -56,8 +45,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # doc-gen4 writes the generated HTML site here.
-          path: .lake/build/doc
+          path: site
 
   deploy:
     needs: build

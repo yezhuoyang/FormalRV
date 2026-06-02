@@ -9,3 +9,6 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
+
+# Generated API-doc site (scripts/gen_docs.py output)
+/site
