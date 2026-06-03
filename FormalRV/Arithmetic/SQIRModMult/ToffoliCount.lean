@@ -127,4 +127,65 @@ theorem tcount_sqir_modmult_const_gate_le (bits N a : Nat) :
         ≤ bits * (56 * bits) := tcount_sqir_modmult_prefix_gate_le _ _ _ _
     _ = 56 * bits ^ 2 := by ring
 
+/-! ## §6. EXACT counts (`=`, not `≤`) when every multiplier step is non-trivial.
+
+    The only source of the `≤` is the `if c = 0 then I` guard on each step gate.  When the
+    step constant `(a·2^j) % N` is non-zero, that step is EXACTLY `56·bits` T, so the whole
+    modular multiplier is EXACTLY `56·bits²`. -/
+
+theorem tcount_sqir_style_controlledModAddConst_gate_eq
+    (bits q N c ci f : Nat) (hc : c ≠ 0) :
+    tcount (sqir_style_controlledModAddConst_gate bits q N c ci f) = 56 * bits := by
+  unfold sqir_style_controlledModAddConst_gate
+  rw [if_neg hc, tcount_sqir_style_controlledModAddConst_candidate]
+
+theorem tcount_sqir_modmult_step_gate_eq
+    (bits N a j : Nat) (h : (a * 2 ^ j) % N ≠ 0) :
+    tcount (sqir_modmult_step_gate bits N a j) = 56 * bits := by
+  unfold sqir_modmult_step_gate
+  exact tcount_sqir_style_controlledModAddConst_gate_eq _ _ _ _ _ _ h
+
+theorem tcount_sqir_modmult_prefix_gate_eq
+    (bits N a k : Nat) (h : ∀ j, j < k → (a * 2 ^ j) % N ≠ 0) :
+    tcount (sqir_modmult_prefix_gate bits N a k) = k * (56 * bits) := by
+  induction k with
+  | zero => simp [sqir_modmult_prefix_gate, tcount]
+  | succ m ih =>
+      have hm : ∀ j, j < m → (a * 2 ^ j) % N ≠ 0 := fun j hj => h j (Nat.lt_succ_of_lt hj)
+      simp only [sqir_modmult_prefix_gate, tcount]
+      rw [ih hm, tcount_sqir_modmult_step_gate_eq bits N a m (h m (Nat.lt_succ_self m))]
+      ring
+
+/-- **EXACT T-count of the verified modular multiplier.**  `sqir_modmult_const_gate bits N a`
+    (PROVED to compute `(a·m) % N`) costs EXACTLY `56·bits²` T-gates whenever every step
+    constant is non-zero — so the compiled circuit will count exactly this number. -/
+theorem tcount_sqir_modmult_const_gate_eq
+    (bits N a : Nat) (h : ∀ j, j < bits → (a * 2 ^ j) % N ≠ 0) :
+    tcount (sqir_modmult_const_gate bits N a) = 56 * bits ^ 2 := by
+  unfold sqir_modmult_const_gate
+  rw [tcount_sqir_modmult_prefix_gate_eq bits N a bits h]; ring
+
+/-! ## §7. The non-triviality hypothesis holds for EVERY valid Shor base.
+
+    If `gcd(a,N)=1`, `N` is odd and `N>1`, then `(a·2^j) % N ≠ 0` for all `j` — so the
+    EXACT `56·bits²` applies to every legitimate RSA / order-finding instance. -/
+
+theorem modmult_step_const_ne_zero
+    (a N : Nat) (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) (j : Nat) :
+    (a * 2 ^ j) % N ≠ 0 := by
+  intro hzero
+  have hdvd : N ∣ a * 2 ^ j := Nat.dvd_of_mod_eq_zero hzero
+  have hdvd2 : N ∣ 2 ^ j := (Nat.Coprime.symm hcop).dvd_of_dvd_mul_left hdvd
+  have hcop2 : Nat.Coprime N (2 ^ j) :=
+    (Nat.coprime_two_right.mpr hodd).pow_right j
+  have hN1 : N = 1 := hcop2.eq_one_of_dvd hdvd2
+  omega
+
+/-- **EXACT T-count of the verified modular multiplier, for any valid Shor base.** -/
+theorem tcount_sqir_modmult_const_gate_shor
+    (bits N a : Nat) (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
+    tcount (sqir_modmult_const_gate bits N a) = 56 * bits ^ 2 :=
+  tcount_sqir_modmult_const_gate_eq bits N a
+    (fun j _ => modmult_step_const_ne_zero a N hcop hodd h1 j)
+
 end FormalRV.BQAlgo

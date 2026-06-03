@@ -20,6 +20,7 @@
 -/
 import FormalRV.PPM.GateToPPMResource
 import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
+import FormalRV.Arithmetic.SQIRModMult.ModExpCount
 import FormalRV.Arithmetic.SQIRModMult.Proofs2
 
 namespace FormalRV.PPM.ModMultPPMResource
@@ -76,5 +77,52 @@ theorem shor2048_per_modmult_CCZMagic_le (na N a : Nat) :
 
 -- 2n · (per-modmult bound) = the un-windowed whole-algorithm figure, exactly.
 example : 4096 * 33554432 = 137438953472 := by norm_num
+
+/-! ## §6. THE FULL CONCRETE MOD-EXP: EXACT (not bounded) PPM magic-state count.
+
+    `shorModExp bits N a` is the concrete `Gate` IR chain of `2·bits` verified modular
+    multipliers.  Its PPM CCZ-magic and measurement counts are EXACT closed forms in `bits`
+    for every valid Shor base — i.e. provably equal to the count of the actual compiled
+    circuit. -/
+
+/-- EXACT Toffoli count of the concrete Shor mod-exp: `16·bits³` (from `tcount = 112·bits³`
+    and `tcount = 7·toffCount`). -/
+theorem toffCount_shorModExp (bits N a : Nat)
+    (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
+    toffCount (shorModExp bits N a) = 16 * bits ^ 3 := by
+  have h := tcount_shorModExp bits N a hcop hodd h1
+  rw [tcount_eq_seven_mul_toffCount] at h
+  omega
+
+/-- EXACT CCZ-magic count of the PPM-compiled concrete Shor mod-exp: `16·bits³`. -/
+theorem numCCZMagic_shorModExp (na bits N a : Nat)
+    (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
+    numCCZMagic (circuitToPPM na (gateToHL (shorModExp bits N a))) = 16 * bits ^ 3 := by
+  rw [numCCZMagic_circuitToPPM_gateToHL, toffCount_shorModExp bits N a hcop hodd h1]
+
+/-- EXACT Z-basis Pauli-measurement count of the PPM-compiled concrete Shor mod-exp:
+    `48·bits³`. -/
+theorem numMeas_shorModExp (na bits N a : Nat)
+    (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
+    numMeas (circuitToPPM na (gateToHL (shorModExp bits N a))) = 48 * bits ^ 3 := by
+  rw [numMeas_circuitToPPM_gateToHL, toffCount_shorModExp bits N a hcop hodd h1]; ring
+
+/-- **THE SINGLE LITERAL RSA-2048 NUMBER — EXACT.**
+
+    For ANY valid RSA-2048 base (`N` a 2048-bit odd modulus, `a` coprime to `N`), the
+    concrete Shor modular-exponentiation circuit `shorModExp 2048 N a` compiles to EXACTLY
+    `137 438 953 472` CCZ magic states (= its Toffoli count) and `412 316 860 416` Z-basis
+    Pauli measurements.  This is `numCCZMagic` of the actual compiled PPM program — if you
+    built and counted the circuit you would get exactly these numbers; the proof derives
+    them by induction without ever building the 2048-bit term. -/
+theorem shor2048_CCZMagic_exact (na N a : Nat)
+    (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
+    numCCZMagic (circuitToPPM na (gateToHL (shorModExp 2048 N a))) = 137438953472 := by
+  rw [numCCZMagic_shorModExp na 2048 N a hcop hodd h1]; norm_num
+
+theorem shor2048_Meas_exact (na N a : Nat)
+    (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
+    numMeas (circuitToPPM na (gateToHL (shorModExp 2048 N a))) = 412316860416 := by
+  rw [numMeas_shorModExp na 2048 N a hcop hodd h1]; norm_num
 
 end FormalRV.PPM.ModMultPPMResource
