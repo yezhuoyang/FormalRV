@@ -200,23 +200,21 @@ def surfaceModel (factory : Nat) : CostModel :=
     area-INDEPENDENT; SYNDROME = explicit parity-check count.
 
     The data block packs `k` logicals into `n` DATA qubits, so
-    `physPer = ⌈n/k⌉`.  SYNDROME ancilla = `|hx| + |hz|` (one per parity check —
-    read straight from the code's check matrices).  SURGERY ancilla =
+    `physPer = ⌈n/k⌉`.  SYNDROME ancilla = `(n-k)/2` — ONE basis of stabilizer
+    ancilla, consistent with qianxu's per-zone footprint `N = n + (n-k)/2`
+    (data + one basis; qianxu Ext. Data Table I, p.13).  SURGERY ancilla =
     `parallel · op_weight` (Θ(w) per measured operator, coefficient 1 matching
     `cross_2025_ancilla_per_weight`, summed over parallel PPMs), and it does NOT
     see the code's area `n`.  Qubit ROUTING is atom transport — a TIME cost in
     the schedule layer, NOT an ancilla-qubit tag here.
 
     HONEST RESIDUES (documented, not hidden):
-    • SYNDROME extraction schedule.  We charge `|hx| + |hz|` (BOTH bases at
-      once).  qianxu measures X- and Z-stabilizers SEQUENTIALLY, so its per-zone
-      footprint is `N = n + (n-k)/2` — data + ONE basis of stabilizer ancilla
-      (qianxu Ext. Data Table I, p.13; App. E.1, p.21), i.e. the syndrome ancilla
-      is `(n-k)/2 = max(|hx|,|hz|)` (the X/Z ancilla time-multiplexed — a
-      scheduling reuse, same "reuse-over-time is a TIME cost" idea as routing).
-      Our `|hx| + |hz|` is thus a conservative SIMULTANEOUS-extraction UPPER BOUND
-      (≈ 2× qianxu's sequential peak); qianxu's halving sits in the gap, like the
-      other optimizations the framework leaves to the schedule.
+    • SYNDROME extraction schedule.  We charge qianxu's `(n-k)/2` — ONE basis of
+      stabilizer ancilla — because X- and Z-stabilizers are measured SEQUENTIALLY
+      (the X/Z ancilla time-multiplexed; "reuse-over-time is a TIME cost", same
+      idea as routing).  A scheme extracting BOTH bases at once would need
+      `|hx| + |hz| = n-k` (≈ 2×) — a conservative upper bound, not charged here.
+      (qianxu Ext. Data Table I, p.13; App. E.1, p.21.)
     • Θ(w) coefficient assumes good Tanner-graph boundary expansion (β = Θ(1);
       otherwise O(w·log³w), qianxu App. B / Cross §); a cross-block bridge adds a
       subleading `d` qubits. -/
@@ -225,7 +223,7 @@ def qldpcModel (factory : Nat) : CostModel :=
     tauToff := fun c => c.d
     physPer := fun c => physPerLogical c
     ancilla := fun c _w op_weight parallel =>
-      { syndrome := c.hx.length + c.hz.length     -- both bases (simultaneous upper bound)
+      { syndrome := (c.n - c.k) / 2               -- one basis (qianxu N = n + (n-k)/2)
         surgery  := parallel * op_weight }        -- Θ(w)·parallel  (coeff 1 = cross_2025)
     factory := fun _ => factory }
 
@@ -243,11 +241,12 @@ theorem qldpc_surgery_eq (factory : Nat) (c : QECCode) (w : Workload)
     (op_weight parallel : Nat) :
     ((qldpcModel factory).ancilla c w op_weight parallel).surgery = parallel * op_weight := rfl
 
-/-- qLDPC SYNDROME ancilla = the explicit parity-check count of the code. -/
-theorem qldpc_syndrome_eq_checks (factory : Nat) (c : QECCode) (w : Workload)
+/-- qLDPC SYNDROME ancilla = qianxu's one-basis count `(n-k)/2`, consistent with
+    the per-zone footprint `N = n + (n-k)/2`. -/
+theorem qldpc_syndrome_eq (factory : Nat) (c : QECCode) (w : Workload)
     (op_weight parallel : Nat) :
     ((qldpcModel factory).ancilla c w op_weight parallel).syndrome
-      = c.hx.length + c.hz.length := rfl
+      = (c.n - c.k) / 2 := rfl
 
 /-- Surface footprint scales with DATA AREA: per-logical cost is
     `2 · physPerLogical c`, proportional to the patch size — and INDEPENDENT of
@@ -289,10 +288,10 @@ example : ((qldpcModel 0).ancilla { n := 248, k := 10, d := 18, hx := [], hz := 
 /-! ### End-to-end smokes: the instances are corollaries of the general theorem. -/
 
 /-- qLDPC end-to-end qubit composition, tagged by purpose (instance of
-    `estimateWith_qubits_tagged`): data + syndrome(=|hx|+|hz|) + Θ(w)·p + factory. -/
+    `estimateWith_qubits_tagged`): data + syndrome(=(n-k)/2) + Θ(w)·p + factory. -/
 example (hw : Hardware) (w : Workload) (c : QECCode) (ow p : Nat) :
     (estimateWith (qldpcModel 2565) hw w c ow p).qubits
-      = w.n_logical * physPerLogical c + (c.hx.length + c.hz.length) + p * ow + 2565 := by
+      = w.n_logical * physPerLogical c + (c.n - c.k) / 2 + p * ow + 2565 := by
   simp only [estimateWith_qubits_tagged, qldpcModel]
 
 /-- Surface end-to-end qubit composition: data area `2 · physPerLogical c` per

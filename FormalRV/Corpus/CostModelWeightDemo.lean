@@ -52,22 +52,22 @@ example :
     surgery ancilla 2.  A heavier product scales the surgery tag up linearly. -/
 example : rowWeight (code422Logical.selectZ [0, 1]) = 2 := by decide
 
-/-! ### The SYNDROME tag is the real parity-check count. -/
+/-! ### The SYNDROME tag is qianxu's one-basis count `(n-k)/2`. -/
 
-/-- Wiring: the qLDPC SYNDROME ancilla = the code's real parity-check count
-    `|hx| + |hz| = 1 + 1 = 2` (the `op_weight` argument is irrelevant here). -/
-example : ((qldpcModel 0).ancilla code422Q w0 7 1).syndrome = 2 := by decide
+/-- Wiring: the qLDPC SYNDROME ancilla = qianxu's one-basis stabilizer count
+    `(n-k)/2 = (4-2)/2 = 1` (the `op_weight` argument is irrelevant here). -/
+example : ((qldpcModel 0).ancilla code422Q w0 7 1).syndrome = 1 := by decide
 
 /-! ### The full purpose-tagged budget, every term from real code data. -/
 
 /-- For measuring Z̄₀ on [[4,2,2]] under the qLDPC model:
-    syndrome 2 (real checks) + surgery 2 (real weight) ⇒ total 4 (the flat count
-    the purpose-agnostic `RequestFreshAncilla` syscall provisions). -/
-example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).syndrome = 2 := by
+    syndrome 1 ((n-k)/2, qianxu) + surgery 2 (real weight) ⇒ total 3 (the flat
+    count the purpose-agnostic `RequestFreshAncilla` syscall provisions). -/
+example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).syndrome = 1 := by
   decide
 example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).surgery = 2 := by
   decide
-example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).total = 4 := by
+example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).total = 3 := by
   decide
 
 end FormalRV.Corpus.CostModelWeightDemo
