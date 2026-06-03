@@ -4,6 +4,7 @@ import FormalRV.LatticeSurgery.SurgeryCorrect
 import FormalRV.LatticeSurgery.SurgeryGadgetToSysCalls
 import FormalRV.LatticeSurgery.SurgeryReadout
 import FormalRV.LatticeSurgery.SurgeryReduction
+import FormalRV.LatticeSurgery.SurgerySchedule
 import FormalRV.LatticeSurgery.StimEmit
 
 /-!
