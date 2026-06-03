@@ -181,4 +181,37 @@ theorem surfaceShor_anyHardware (T L factory : Nat) (hw : Hardware) :
       = T * 27 * hw.cycle_time_us_tenths :=
   surfaceShor_time_anyD 27 T L factory hw 0 0
 
+/-! ## The SAME derivation, three hardware platforms (NOT atom-specific)
+
+    Only the `Hardware` cycle time changes; the verified [[1405,1,27]] surface-code
+    Shor resource derivation is identical.  (Cycle times illustrative — a code
+    cycle is `d` physical rounds × the platform's measurement time.) -/
+
+def hwSuperconducting : Hardware := { cycle_time_us_tenths := 10 }    -- ~1 µs code cycle
+def hwTrappedIon      : Hardware := { cycle_time_us_tenths := 1000 }  -- ~100 µs (slow gates)
+def hwNeutralAtom     : Hardware := { cycle_time_us_tenths := 10 }    -- ~1 µs
+
+/-- Superconducting: runtime `T·27·10` tenths-µs. -/
+example (T L f : Nat) :
+    (estimateWith (surfaceModel f) hwSuperconducting (shorWorkload T L)
+        (surfaceCodeD 27) 0 0).time_us_tenths = T * 27 * 10 :=
+  surfaceShor_anyHardware T L f hwSuperconducting
+
+/-- Trapped-ion: the SAME derivation, slower clock → runtime `T·27·1000`. -/
+example (T L f : Nat) :
+    (estimateWith (surfaceModel f) hwTrappedIon (shorWorkload T L)
+        (surfaceCodeD 27) 0 0).time_us_tenths = T * 27 * 1000 :=
+  surfaceShor_anyHardware T L f hwTrappedIon
+
+/-- Neutral-atom: same framework again. -/
+example (T L f : Nat) :
+    (estimateWith (surfaceModel f) hwNeutralAtom (shorWorkload T L)
+        (surfaceCodeD 27) 0 0).time_us_tenths = T * 27 * 10 :=
+  surfaceShor_anyHardware T L f hwNeutralAtom
+
+/-- And the SAME concurrent schedule is system-valid regardless of platform —
+    `surfaceShorCtx_valid` does not mention hardware; transport/connectivity is a
+    separate pluggable invariant (neutral-atom rigid move, SC fixed coupling, …). -/
+example : checkAll baseInvariants surfaceShorCtx = true := surfaceShorCtx_valid
+
 end FormalRV.Corpus.SurfaceSystemCompile
