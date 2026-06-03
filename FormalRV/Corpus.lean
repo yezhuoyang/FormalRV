@@ -12,6 +12,7 @@ import FormalRV.Corpus.MagicInjectionSurgery
 import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.ShorCriticalPathFloor
+import FormalRV.Corpus.ShorFullMachineRequirement
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
 import FormalRV.Corpus.ShorPPMEndToEnd
 import FormalRV.Corpus.SurfaceShorFullSchedule
