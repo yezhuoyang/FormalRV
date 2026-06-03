@@ -15,6 +15,7 @@ import FormalRV.Corpus.MagicInjectionSurgery
 import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.QianxuBounds
+import FormalRV.Corpus.QianxuLPComputation
 import FormalRV.Corpus.QianxuNaiveConstructions
 import FormalRV.Corpus.QianxuPPMonLP
 import FormalRV.Corpus.ReactionLimitedRuntime
