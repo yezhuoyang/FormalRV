@@ -163,4 +163,94 @@ theorem demo_Feedforward : numFeedforward (circuitToPPM 3 demoCircuit) = 8 := by
        numFeedforward (circuitToPPM 3 demoCircuit),
        numQubits (circuitToPPM 3 demoCircuit))
 
+/-! ## §6. A GENUINE Shor-15 instance ⇒ PROVED resource totals.
+
+    The modular multiplier of the order-finding circuit that actually factors
+    15 = 3·5 (a = 7, verified end-to-end in `PyCircuits/shor15_ppm_factoring.py`:
+    the measured-phase order finding recovers the order r = 4 and hence the
+    factors).  Transpiled to a Toffoli + Clifford basis that circuit's modmult is
+    **27 Toffolis + 12 CNOTs**.  Each Toffoli is `H·CCZ·H`; the resource counts
+    are index-independent (the cost functions ignore qubit indices), so we encode
+    the multiplicities with representative indices and feed the gate list straight
+    into `circuitToPPM`.  Every total below is PROVED through the whole-circuit
+    formula of §4 — this is the literal instantiation the formula was built for.
+
+    Caveat (honest): `numQubits` depends on the ancilla schedule.  `circuitToPPM`
+    recycles the 3 syndrome ancillas across gadgets (the realistic sequential PPM
+    picture, `na + 3` qubits), whereas the Qiskit check used fresh ancillas per
+    gadget (89 qubits) so the gadgets simulate independently.  The magic-state,
+    measurement, Clifford and feed-forward totals are schedule-independent. -/
+
+/-- A Toffoli as `H·CCZ·H` in the high-level gate set. -/
+def toffoli (a b c : Nat) : List HLGate := [.H c, .CCZ a b c, .H c]
+
+/-- The Shor-15 (a = 7) modular multiplier: 27 Toffolis + 12 CNOTs. -/
+def shor15Modmult : List HLGate :=
+  ((List.range 27).flatMap fun _ => toffoli 0 1 2) ++ List.replicate 12 (.CNOT 0 1)
+
+theorem shor15_TMagic      : numTMagic      (circuitToPPM 8 shor15Modmult) = 0 := by
+  rw [numTMagic_circuitToPPM]; decide
+theorem shor15_CCZMagic    : numCCZMagic    (circuitToPPM 8 shor15Modmult) = 27 := by
+  rw [numCCZMagic_circuitToPPM]; decide
+/-- 27 CCZ gadgets × 3 Z-basis syndrome measurements = 81 Pauli measurements,
+    matching the Qiskit count exactly. -/
+theorem shor15_Meas        : numMeas        (circuitToPPM 8 shor15Modmult) = 81 := by
+  rw [numMeas_circuitToPPM]; decide
+theorem shor15_Clifford    : numClifford    (circuitToPPM 8 shor15Modmult) = 228 := by
+  rw [numClifford_circuitToPPM]; decide
+theorem shor15_Feedforward : numFeedforward (circuitToPPM 8 shor15Modmult) = 162 := by
+  rw [numFeedforward_circuitToPPM]; decide
+
+#eval (numTMagic (circuitToPPM 8 shor15Modmult),
+       numCCZMagic (circuitToPPM 8 shor15Modmult),
+       numMeas (circuitToPPM 8 shor15Modmult),
+       numClifford (circuitToPPM 8 shor15Modmult),
+       numFeedforward (circuitToPPM 8 shor15Modmult))
+
+/-! ## §7. PARAMETRIC over circuit size ⇒ scales to ANY Shor instance (incl. 2048-bit).
+
+    A modular-multiplier block of `nToff` Toffolis + `nCnot` CNOTs.  The magic-state
+    and Pauli-measurement totals are proved as CLOSED FORMS in `nToff` — so the
+    framework returns proved totals for any Shor implementation just by supplying its
+    Toffoli count: Shor-15 instantiates at `nToff = 27`, a 2048-bit run at its own
+    (much larger) Toffoli count, with no new proof. -/
+
+/-- Helper: sum of `f` over `n` concatenated copies of a block `L` is `n · (sum over L)`. -/
+theorem sum_map_flatten_replicate (n : Nat) (L : List HLGate) (f : HLGate → Nat) :
+    (((List.replicate n L).flatten).map f).sum = n * (L.map f).sum := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+      rw [List.replicate_succ, List.flatten_cons, List.map_append, List.sum_append, ih,
+          Nat.succ_mul]
+      exact Nat.add_comm _ _
+
+/-- A generic modular-multiplier block: `nToff` Toffolis (each `H·CCZ·H`) + `nCnot` CNOTs. -/
+def modmultBlock (nToff nCnot : Nat) : List HLGate :=
+  (List.replicate nToff (toffoli 0 1 2)).flatten ++ List.replicate nCnot (.CNOT 0 1)
+
+/-- Magic states scale exactly with the Toffoli count — for ANY size. -/
+theorem modmult_CCZMagic (nToff nCnot : Nat) :
+    numCCZMagic (circuitToPPM 8 (modmultBlock nToff nCnot)) = nToff := by
+  rw [numCCZMagic_circuitToPPM, modmultBlock, List.map_append, List.sum_append,
+      sum_map_flatten_replicate, List.map_replicate, List.sum_replicate_nat]
+  have h1 : ((toffoli 0 1 2).map gateCCZMagic).sum = 1 := rfl
+  have h2 : gateCCZMagic (HLGate.CNOT 0 1) = 0 := rfl
+  rw [h1, h2]; omega
+
+/-- Pauli measurements scale as `3·(Toffoli count)` — for ANY size. -/
+theorem modmult_Meas (nToff nCnot : Nat) :
+    numMeas (circuitToPPM 8 (modmultBlock nToff nCnot)) = 3 * nToff := by
+  rw [numMeas_circuitToPPM, modmultBlock, List.map_append, List.sum_append,
+      sum_map_flatten_replicate, List.map_replicate, List.sum_replicate_nat]
+  have h1 : ((toffoli 0 1 2).map gateMeas).sum = 3 := rfl
+  have h2 : gateMeas (HLGate.CNOT 0 1) = 0 := rfl
+  rw [h1, h2]; omega
+
+/-- Sanity: the parametric formula reproduces the proved Shor-15 totals at `nToff = 27`. -/
+example : numCCZMagic (circuitToPPM 8 (modmultBlock 27 12)) = 27 := by
+  rw [modmult_CCZMagic]
+example : numMeas (circuitToPPM 8 (modmultBlock 27 12)) = 81 := by
+  rw [modmult_Meas]
+
 end FormalRV.PPM.CircuitToPPMResource
