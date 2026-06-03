@@ -7,6 +7,7 @@ import FormalRV.Corpus.GateSyndromeWorkedExample
 import FormalRV.Corpus.Gidney2025
 import FormalRV.Corpus.GidneyEkera2021
 import FormalRV.Corpus.GidneyEkera2021Architecture
+import FormalRV.Corpus.GE2021DecoderWired
 import FormalRV.Corpus.GidneyEkera2021Reproduction
 import FormalRV.Corpus.LaSsynthImport
 import FormalRV.Corpus.MagicInjectionSurgery
