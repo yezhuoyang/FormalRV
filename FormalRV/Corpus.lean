@@ -11,6 +11,7 @@ import FormalRV.Corpus.ShorCriticalPathFloor
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
 import FormalRV.Corpus.ShorPPMEndToEnd
 import FormalRV.Corpus.SurfaceShorPPMEndToEnd
+import FormalRV.Corpus.SurfaceShorResourceCount
 import FormalRV.Corpus.SurgeryDemoSteane
 import FormalRV.Corpus.SurgeryDemoSurface
 import FormalRV.Corpus.Webster2026
