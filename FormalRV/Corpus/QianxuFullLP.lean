@@ -45,7 +45,15 @@ theorem lp16_k_derived : lp16.n - rank lp16.hx - rank lp16.hz = 744 := by native
     evaluation of the verified rank algorithm (matches the paper); recorded as data
     here because a build-time certificate at 4350 qubits is impractical. -/
 def lp20_n : Nat := 4350
-def lp20_k : Nat := 1224   -- = lp20.n - rank lp20.hx - rank lp20.hz (native-derived, matches paper)
+
+/-- **lp_20^{3,7}: k = 1224, DERIVED from the parity matrices** (n=4350), matching the
+    paper's [[4350,1224,20]].  Certified by `native_decide` (kernel `decide` times out at
+    4350 columns; native adds a native-eval axiom, flagged).  This upgrades the former
+    asserted `def lp20_k := 1224` to a proven rank identity — the logical-qubit count is no
+    longer hand-written data. -/
+theorem lp20_k_derived : lp20.n - rank lp20.hx - rank lp20.hz = 1224 := by native_decide
+
+def lp20_k : Nat := 1224   -- now backed by `lp20_k_derived` (native_decide), matches paper
 def lp20_d : Nat := 20
 
 /-! ## §2. Resource bounds + GAPS for the FULL lp_20 memory instance
