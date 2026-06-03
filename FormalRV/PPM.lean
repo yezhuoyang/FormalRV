@@ -22,6 +22,7 @@ import FormalRV.PPM.PPMCompilerCorrectness
 import FormalRV.PPM.PPMDenote
 import FormalRV.PPM.PPMGadgetInstance
 import FormalRV.PPM.PPMOperational
+import FormalRV.PPM.PPMResourceCount
 import FormalRV.PPM.PPMSemanticsGeneral
 import FormalRV.PPM.PPMShorPipeline
 import FormalRV.PPM.PPMToQASM
