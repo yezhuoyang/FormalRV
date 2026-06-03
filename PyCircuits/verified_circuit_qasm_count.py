@@ -55,6 +55,20 @@ check("MCP oracle Toffoli count == 16·bits²  (= 2× const, in-place)",
       f"16·2²={16*4} vs {ccx_of('modmult_MCP_2_15_7_13')}; "
       f"and MCP({ccx_of('modmult_MCP_2_15_7_13')}) = 2·const({ccx_of('modmult_const_2_15_7')})")
 
+# --- FULLY Clifford+T controlled multipliers: must be ONLY {x,cx,ccx} (no rotations) ---
+CTRL = [
+    ("ctrl_const_2_15_7",  172, "ctrl const bits=2: numCX+3·numCCX = 76+3·32 = 172 magic"),
+    ("ctrl_MCP_2_15_7_13", 360, "ctrl MCP   bits=2: numCX+3·numCCX = 168+3·64 = 360 magic"),
+]
+for name, magic, desc in CTRL:
+    qc = QuantumCircuit.from_qasm_file(os.path.join(QDIR, f"{name}.qasm"))
+    ops = qc.count_ops()
+    only_cliffordT = set(ops).issubset({"x", "cx", "ccx"})
+    q_ccx = ops.get("ccx", 0)
+    check(f"{name}: purely Clifford+T (only x/cx/ccx) AND magic == numCX+3·numCCX",
+          only_cliffordT and q_ccx == magic,
+          f"op set = {sorted(ops)} (Clifford+T={only_cliffordT}); ccx(magic) = {q_ccx} vs {magic}  [{desc}]")
+
 print("\n" + "=" * 70)
 n_pass = sum(1 for _, p in results if p)
 print(f"SUMMARY: {n_pass}/{len(results)} checks passed.")

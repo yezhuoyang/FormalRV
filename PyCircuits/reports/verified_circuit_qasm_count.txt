@@ -10,7 +10,11 @@
         8·2²=32 vs 32; 8·3²=72 vs 72
 [PASS] MCP oracle Toffoli count == 16·bits²  (= 2× const, in-place)
         16·2²=64 vs 64; and MCP(64) = 2·const(32)
+[PASS] ctrl_const_2_15_7: purely Clifford+T (only x/cx/ccx) AND magic == numCX+3·numCCX
+        op set = ['ccx'] (Clifford+T=True); ccx(magic) = 172 vs 172  [ctrl const bits=2: numCX+3·numCCX = 76+3·32 = 172 magic]
+[PASS] ctrl_MCP_2_15_7_13: purely Clifford+T (only x/cx/ccx) AND magic == numCX+3·numCCX
+        op set = ['ccx'] (Clifford+T=True); ccx(magic) = 360 vs 360  [ctrl MCP   bits=2: numCX+3·numCCX = 168+3·64 = 360 magic]
 
 ======================================================================
-SUMMARY: 6/6 checks passed.
+SUMMARY: 8/8 checks passed.
 THE EMITTED VERIFIED CIRCUITS' GATE COUNTS MATCH THE LEAN-PROVED NUMBERS.

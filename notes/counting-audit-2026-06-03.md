@@ -81,6 +81,21 @@ the GATE COUNT is angle-independent and proved:
   CNOT count of the emitted oracle = `numCX + 6·numCCX` (MCP: 552 = 168 + 6·64), confirming the
   formula's input against the real circuit.
 
+## Controlled mod-exp — FULLY Clifford+T, EXACT magic number (no rotation synthesis)
+
+`FormalRV/Shor/CliffordTControlledModExp.lean` (axiom-clean) resolves the rotation residual:
+instead of SQIR's generic decompose-then-control (which emits non-Clifford+T π/8 rotations),
+control each gate the Clifford+T-native way —
+  `control(X)=CX`, `control(CX)=Toffoli`, `control(CCX)=C³X = 3 Toffolis (1 ancilla)`.
+`ctrlGate cq anc g` does this; it is a `Gate` (X/CX/CCX only), hence fully Clifford+T, and its
+magic-state (Toffoli) count is an EXACT integer:
+  `numCCX_ctrlGate : numCCX (ctrlGate cq anc g) = numCX g + 3·numCCX g`,
+  `numCCX_ctrlModExpChain_shor : numCCX (ctrl mod-exp) = m·numCX(MCP) + m·48·bits²`,
+  `shor2048_ctrl_magic_core : (2·2048)·(48·2048²) = 824 633 720 832` (the data-independent core).
+QASM-confirmed (verified_circuit_qasm_count.py, controlled cases): the emitted controlled
+circuit has op set `{ccx}` ONLY (purely Clifford+T, zero rotations); magic counts 172 / 360 at
+bits=2 match `numCX + 3·numCCX`; `tcount = 7·magic`.  An exact magic number, not a bound.
+
 ## Honest residue (flagged, not faked)
 
 - No full mod-exp **semantic** correctness for the Gate counting chains (count-only). The
