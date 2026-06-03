@@ -14,6 +14,7 @@ import FormalRV.PPM.LayeredPPMQECInterface
 import FormalRV.PPM.LogicalState
 import FormalRV.PPM.MagicStateTeleport
 import FormalRV.PPM.PPM
+import FormalRV.PPM.PPMDenote
 import FormalRV.PPM.PPMOperational
 import FormalRV.PPM.PPMSemanticsGeneral
 import FormalRV.PPM.PPMUpdateInvariants
