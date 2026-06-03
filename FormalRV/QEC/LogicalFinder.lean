@@ -106,4 +106,58 @@ theorem steane_1_logical : numLogicals FormalRV.QEC.steaneCSS = 1 ∧ logicalZ_g
 /-- [[4,2,2]]: the finder returns exactly 2 logical qubits, genuine. -/
 theorem code422_2_logical : numLogicals code422 = 2 ∧ logicalZ_genuine code422 = true := by decide
 
+/-! ## §5. Symplectic pairing → a fully-defined, VALID `LogicalBasis`
+
+    The computed `logicalX` / `logicalZ` bases need not pair up
+    (`gf2dot(X̄_i, Z̄_j) ≠ δ_ij`).  We pair them by relabelling the X basis with the
+    GF(2) INVERSE of the pairing matrix `M_ij = gf2dot(X̄_i, Z̄_j)`: then
+    `gf2dot(X̄'_i, Z̄_j) = (M⁻¹ M)_ij = δ_ij`, the symplectic identity.  This yields a
+    valid `LogicalBasis` — the logical qubits fully defined (Z̄ name + conjugate X̄). -/
+
+/-- GF(2) `k×k` matrix inverse via Gaussian elimination on `[M | I]` (`none` if
+    singular). -/
+def gf2Inverse (M : BoolMat) (k : Nat) : Option BoolMat :=
+  let aug := (M.zip (List.range k)).map (fun (row, i) =>
+    row ++ (List.range k).map (fun j => decide (j = i)))
+  let red := (List.range k).foldl (fun (rows : BoolMat) (col : Nat) =>
+    match (rows.zip (List.range rows.length)).find?
+        (fun (r, idx) => decide (idx ≥ col) && r.getD col false) with
+    | none => rows
+    | some (piv, pidx) =>
+      let rows := (rows.set col piv).set pidx (rows.getD col [])
+      (rows.zip (List.range rows.length)).map (fun (r, idx) =>
+        if decide (idx ≠ col) && r.getD col false then vec_xor r piv else r)) aug
+  if red.all (fun r => (r.take k).any id) then some (red.map (fun r => r.drop k)) else none
+
+/-- The `k×k` symplectic pairing matrix `M_ij = gf2dot(X̄_i, Z̄_j)`. -/
+def pairingMatrix (lx lz : List BoolVec) : BoolMat :=
+  lx.map (fun xi => lz.map (fun zj => gf2dot xi zj))
+
+/-- Relabel a basis `lx` by a `k×k` matrix `Minv` over `n` columns:
+    `lx'_i = ⊕_l Minv_il · lx_l`. -/
+def relabel (Minv : BoolMat) (lx : List BoolVec) (n : Nat) : List BoolVec :=
+  Minv.map (fun row =>
+    (row.zip lx).foldl (fun acc (b, v) => if b then vec_xor acc v else acc)
+      ((List.range n).map (fun _ => false)))
+
+/-- The logical X basis RELABELLED to pair symplectically with `logicalZ c`. -/
+def pairedLogicalX (c : FormalRV.QEC.CSSCode) : List BoolVec :=
+  match gf2Inverse (pairingMatrix (logicalX c) (logicalZ c)) (numLogicals c) with
+  | some Mi => relabel Mi (logicalX c) c.n
+  | none    => logicalX c
+
+/-! ## §6. The BB code's logical qubits, FULLY DEFINED and VALID -/
+
+/-- A computed `LogicalBasis` for the BB code `[[18,2,d]]`: Z̄_i from `logicalZ`,
+    X̄_i from the symplectically-paired `pairedLogicalX` — both DERIVED from the
+    check matrices, defining the 2 logical qubits. -/
+def bbSmallLogicalBasis : FormalRV.QEC.LogicalBasis bbSmall 2 :=
+  { lx := fun i => (pairedLogicalX bbSmall).getD i.val []
+    lz := fun i => (logicalZ bbSmall).getD i.val [] }
+
+/-- **The BB code's computed logical basis is VALID**: each X̄/Z̄ commutes with the
+    stabilizers and the symplectic form is `δ_ij` — the 2 logical qubits are
+    well-defined, computed from the matrices (not asserted).  Kernel-clean by decide. -/
+theorem bbSmallLogicalBasis_valid : bbSmallLogicalBasis.valid = true := by decide
+
 end FormalRV.QEC.LogicalFinder
