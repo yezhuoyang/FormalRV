@@ -4,6 +4,7 @@ import FormalRV.Shor.ApproxTransfer
 import FormalRV.Shor.ControlledGates
 import FormalRV.Shor.Eigenstate
 import FormalRV.Shor.Main
+import FormalRV.Shor.ModExpToffoliCount
 import FormalRV.Shor.PPMShorMaster
 import FormalRV.Shor.PhaseKickback
 import FormalRV.Shor.PostQFT
