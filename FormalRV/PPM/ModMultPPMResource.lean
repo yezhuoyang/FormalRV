@@ -10,11 +10,22 @@
       its PPM compilation uses `≤ 8·bits²` CCZ magic states.
 
   So the per-modmult factor of the un-windowed schoolbook count is no longer an abstract
-  `def`: it is a proved upper bound on a circuit PROVED to multiply.  The relation to the
-  whole-algorithm figure is exact: `16·n³ = 2n · (8·n²)`, i.e. (exponent register `2n`) ·
-  (this per-modmult bound at `bits = n`).  Only the `×2n` mod-exp multiplicity — iterating
-  the verified modmult into a verified modular exponentiation — remains structural; it is
-  the one link of the 137-billion figure not yet welded to a verified circuit term.
+  `def`: it is a proved upper bound on a circuit PROVED to multiply.  Later sections make
+  these EXACT (`= 56·bits²`/`112·bits²`) for valid Shor bases, bind the count to the actual
+  verified oracle `sqir_modmult_MCP_gate` (§7), and count the whole arithmetic mod-exp on
+  that oracle (§8 → `32·bits³` Toffolis, `274 877 906 944` at 2048).
+
+  ## Honest note on the control overhead (why the arithmetic count is the clean one)
+
+  The verified Shor algorithm's modular exponentiation is `controlled_powers m u`, which
+  applies the GENERIC `control i` (UnitaryOps) to each oracle.  `control` of a CNOT is a
+  Toffoli, but `control` of a rotation is `controlled_R`, which emits `R(±θ/2)`.  Since the
+  oracle's Toffolis are decomposed to `7·T` (BaseUCom.CCX) before control, controlling a `T`
+  (θ=π/4) yields `R(π/8)` — NOT a Clifford+T angle.  So the FULL controlled mod-exp is not a
+  Clifford+T circuit, and a magic-state count of it is ill-posed for this implementation
+  without an extra rotation-synthesis layer.  The clean, exact, Clifford+T resource is the
+  ARITHMETIC (uncontrolled-oracle) count here; claiming a single magic-state number for the
+  generic-control overhead would be unsound, so it is deliberately excluded and flagged.
 
   No `sorry`, no new `axiom`.
 -/
@@ -159,5 +170,34 @@ theorem verified_MCP_oracle_end_to_end
       (le_of_lt hlt) h_inv,
    by rw [numCCZMagic_circuitToPPM_gateToHL,
           toffCount_sqir_modmult_MCP_gate bits N a ainv hcop hcopinv hpos hlt hodd h1]⟩
+
+/-! ## §8. Whole mod-exp ARITHMETIC magic-state count on the verified in-place oracle.
+
+    `shorModExpVerified` chains `2·bits` of the verified MCP oracle.  Its PPM CCZ-magic count
+    is EXACTLY `32·bits³` — the arithmetic (data) magic states of the verified Shor circuit.
+    (This is the Clifford+T arithmetic cost; see the file header note: the generic `control`
+    of `controlled_powers` is non-Clifford+T, so the control overhead is a separate regime
+    not included here.) -/
+
+theorem toffCount_shorModExpVerified (bits N a ainv : Nat)
+    (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    toffCount (shorModExpVerified bits N a ainv) = 32 * bits ^ 3 := by
+  have h := tcount_shorModExpVerified bits N a ainv hcop hcopinv hpos hlt hodd h1
+  rw [tcount_eq_seven_mul_toffCount] at h
+  omega
+
+theorem numCCZMagic_shorModExpVerified (na bits N a ainv : Nat)
+    (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    numCCZMagic (circuitToPPM na (gateToHL (shorModExpVerified bits N a ainv))) = 32 * bits ^ 3 := by
+  rw [numCCZMagic_circuitToPPM_gateToHL, toffCount_shorModExpVerified bits N a ainv hcop hcopinv hpos hlt hodd h1]
+
+/-- **RSA-2048 arithmetic magic states on the verified oracle**: `32·2048³ = 274 877 906 944`. -/
+theorem shor2048_CCZMagic_verified (na N a ainv : Nat)
+    (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    numCCZMagic (circuitToPPM na (gateToHL (shorModExpVerified 2048 N a ainv))) = 274877906944 := by
+  rw [numCCZMagic_shorModExpVerified na 2048 N a ainv hcop hcopinv hpos hlt hodd h1]; norm_num
 
 end FormalRV.PPM.ModMultPPMResource

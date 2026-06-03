@@ -62,4 +62,46 @@ example : tcount (shorModExp 4 15 7) = 112 * 4 ^ 3 :=
 #eval tcount (shorModExp 4 15 7)     -- 7168  (actual circuit traversal)
 #eval (112 * 4 ^ 3 : Nat)            -- 7168  (the formula)
 
+/-! ## The mod-exp on the ACTUAL VERIFIED ORACLE term (in-place MCP multiplier).
+
+    `shorModExp` above chains the out-of-place `const_gate`.  The verified Shor algorithm
+    instead uses the in-place `sqir_modmult_MCP_gate` (forward + uncompute = 2 const_gates).
+    This chain counts EXACTLY that verified building block, so the arithmetic Toffoli total
+    is on the term the verified Shor theorem actually uses.  (Each oracle has identical count
+    `112·bits²` regardless of the specific valid constant `a^(2^k)`, so we may chain a fixed
+    `(a,ainv)`; the count is the same as the constant-varying real circuit.) -/
+def shorModExpMCPChain (m bits N a ainv : Nat) : Gate :=
+  match m with
+  | 0 => Gate.I
+  | k + 1 => seq (shorModExpMCPChain k bits N a ainv) (sqir_modmult_MCP_gate bits N a ainv)
+
+theorem tcount_shorModExpMCPChain (m bits N a ainv : Nat)
+    (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    tcount (shorModExpMCPChain m bits N a ainv) = m * (112 * bits ^ 2) := by
+  induction m with
+  | zero => simp [shorModExpMCPChain, tcount]
+  | succ k ih =>
+      simp only [shorModExpMCPChain, tcount]
+      rw [ih, tcount_sqir_modmult_MCP_gate_shor bits N a ainv hcop hcopinv hpos hlt hodd h1]
+      ring
+
+/-- Full Shor mod-exp on the verified in-place oracle: `2·bits` MCP multipliers. -/
+def shorModExpVerified (bits N a ainv : Nat) : Gate := shorModExpMCPChain (2 * bits) bits N a ainv
+
+/-- **EXACT** T-count of the verified-oracle mod-exp: `224·bits³` (= `32·bits³` Toffolis;
+    twice `shorModExp` because the in-place oracle does forward + uncompute). -/
+theorem tcount_shorModExpVerified (bits N a ainv : Nat)
+    (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    tcount (shorModExpVerified bits N a ainv) = 224 * bits ^ 3 := by
+  unfold shorModExpVerified
+  rw [tcount_shorModExpMCPChain (2 * bits) bits N a ainv hcop hcopinv hpos hlt hodd h1]; ring
+
+-- Smoke: actual circuit traversal at (N=15, a=7, ainv=13) matches the formula 224·2³=1792.
+example : tcount (shorModExpVerified 2 15 7 13) = 224 * 2 ^ 3 :=
+  tcount_shorModExpVerified 2 15 7 13 (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide)
+#eval tcount (shorModExpVerified 2 15 7 13)   -- 1792  (actual MCP-chain traversal)
+
 end FormalRV.BQAlgo
