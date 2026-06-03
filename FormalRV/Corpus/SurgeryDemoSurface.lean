@@ -39,6 +39,8 @@ open FormalRV.Framework.SurgeryCorrect
 open FormalRV.Framework.SurgeryReadout
 open FormalRV.Framework.PauliSem
 open FormalRV.Framework.PPMUpdate
+open FormalRV.Framework.PPMOp
+open FormalRV.QEC
 open FormalRV.QEC.Instances
 
 /-! ## surface3 as a flat `QECCode` -/
@@ -128,5 +130,38 @@ theorem surface3_x_surgery_checks_commute :
     ∀ p ∈ merged_stabilizers_X surface3_x_surgery,
     ∀ q ∈ merged_stabilizers_X surface3_x_surgery, p.commutes q = true :=
   merged_X_checks_commute surface3_x_surgery
+
+/-! ## (L5) Detailed physical realization: the MERGED code is CSS, and its
+    syndrome-extraction circuit implements the merged stabilizer group.
+
+    The "lattice surgery" of this gadget IS the syndrome-measurement of its merged
+    data+ancilla code.  That merged code is CSS — and it is CSS *because* the
+    target {6,7,8} is a genuine logical (it commutes with every data Z-check, so
+    the coupled ancilla X-checks commute with the data Z-checks).  Hence the
+    standard CSS syndrome-extraction circuit (`CSSCode.syndrome_circuit_implements_code`,
+    each stabiliser an ancilla+CNOT+measure circuit per `CliffordConj`) realises
+    the merge.  This is the detailed physical circuit underneath the surgery. -/
+
+/-- The merged surface3+ancilla code as a `CSSCode` (14 qubits). -/
+def surface3_merged_css : CSSCode :=
+  { n  := surface3_x_surgery.merged_n
+    hx := surface3_x_surgery.merged_hx
+    hz := surface3_x_surgery.merged_hz }
+
+/-- The merged code is well-shaped and CSS (`H̃_X · H̃_Z^T = 0`).  CSS holds
+    precisely because the surgery target is a logical (commutes with all Z-checks). -/
+theorem surface3_merged_well_shaped : surface3_merged_css.well_shaped = true := by decide
+theorem surface3_merged_is_CSS : surface3_merged_css.css_condition = true := by decide
+
+/-- **The detailed syndrome-extraction circuit implements the merge.**  The
+    lowered merged stabiliser group is a valid (well-sized, pairwise-commuting)
+    stabilizer code — i.e. the physical CSS syndrome circuit of the merged code
+    (one ancilla + CNOTs + measurement per merged check, `CliffordConj`-realised)
+    implements the lattice-surgery merge, via
+    `CSSCode.syndrome_circuit_implements_code`. -/
+theorem surface3_merged_syndrome_circuit_implements :
+    StabilizerState.valid surface3_merged_css.toStabilizers surface3_merged_css.n = true := by
+  rw [CSSCode.syndrome_circuit_implements_code surface3_merged_css surface3_merged_well_shaped]
+  exact surface3_merged_is_CSS
 
 end FormalRV.Corpus.SurgeryDemoSurface
