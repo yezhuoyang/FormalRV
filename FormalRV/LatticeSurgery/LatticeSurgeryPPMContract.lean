@@ -36,7 +36,7 @@
     4. Three PPM-pair schedules + invariant proofs:
        sequential / parallel-distinct / parallel-alias.
     5. **I1 capacity counterexample** — an isolated capacity
-       failure (atom outside `total_atoms`).  Not previously
+       failure (atom outside `total_sites`).  Not previously
        present.
     6. **I3 feedback-latency counterexample** — an isolated
        PauliFrameUpdate-duration failure.  Not previously present.
@@ -183,9 +183,9 @@ theorem ge2021_ppm_schedule_cert_wallclock :
 
 def ppm_pair_arch : ZonedArch :=
   { zones :=
-      [ { name := "Data",    atom_lo := 0,   atom_hi := 100 }
-      , { name := "Ancilla", atom_lo := 100, atom_hi := 200 } ]
-    total_atoms := 200
+      [ { name := "Data",    site_lo := 0,   site_hi := 100 }
+      , { name := "Ancilla", site_lo := 100, site_hi := 200 } ]
+    total_sites := 200
     t_cycle_us  := 1
     v_max_um_per_us := 0
   }
@@ -279,7 +279,7 @@ theorem ppm_pair_parallel_alias_fails_only_exclusivity :
 /-! ## §4. I1 capacity counterexample (previously missing)
 
     A schedule with a Gate2q referencing atom 250 — outside the
-    `ppm_pair_arch`'s total_atoms = 200 budget.  I1 REJECTS
+    `ppm_pair_arch`'s total_sites = 200 budget.  I1 REJECTS
     because the claimed atom is not inside ANY zone.
 
     Failure isolation: I2 (only one syscall, no overlap), I3
@@ -287,7 +287,7 @@ theorem ppm_pair_parallel_alias_fails_only_exclusivity :
     RequestMagicState) all pass. -/
 
 def capacity_bad_schedule : List SysCall :=
-  [ { kind := SysCallKind.Gate2q 0 250 0    -- atom 250 ≥ total_atoms = 200
+  [ { kind := SysCallKind.Gate2q 0 250 0    -- atom 250 ≥ total_sites = 200
       begin_us := 0, end_us := 1 } ]
 
 theorem capacity_bad_oversubscription_fails :
@@ -715,10 +715,10 @@ theorem ppm_pair_parallel_distinct_all_invariants_with_factory_ports_ok :
     schedule. -/
 def magic_factory_arch : ZonedArch :=
   { zones :=
-      [ { name := "Data",    atom_lo := 0,   atom_hi := 100 }
-      , { name := "Ancilla", atom_lo := 100, atom_hi := 200 }
-      , { name := "Factory", atom_lo := 200, atom_hi := 300 } ]
-    total_atoms := 300
+      [ { name := "Data",    site_lo := 0,   site_hi := 100 }
+      , { name := "Ancilla", site_lo := 100, site_hi := 200 }
+      , { name := "Factory", site_lo := 200, site_hi := 300 } ]
+    total_sites := 300
     t_cycle_us  := 1
     v_max_um_per_us := 0
   }
@@ -775,7 +775,7 @@ theorem magic_factory_same_port_standard_vs_strengthened :
 
     **Terminology note**: this section discusses the foundational
     `ScheduleInv.ArchZone` structure, whose field names
-    (`atom_lo`, `atom_hi`, `contains_atom`, `total_atoms`) predate
+    (`site_lo`, `site_hi`, `contains_atom`, `total_sites`) predate
     the platform-neutral framing.  Read `atom` here as a generic
     physical resource / site id; the structural argument applies
     to any FTQC platform (superconducting transmons, trapped
@@ -792,9 +792,9 @@ theorem magic_factory_same_port_standard_vs_strengthened :
     `ScheduleInvariantsExplicit.lean`:
 
         @[inline] def capacity (z : ArchZone) : Nat :=
-          z.atom_hi - z.atom_lo
+          z.site_hi - z.site_lo
         @[inline] def contains_atom (z : ArchZone) (a : Nat) : Bool :=
-          decide (z.atom_lo ≤ a) && decide (a < z.atom_hi)
+          decide (z.site_lo ≤ a) && decide (a < z.site_hi)
 
     Zone capacity is DERIVED from the atom range, not stored
     separately.  Thus the maximum DISTINCT atoms in any zone at
@@ -806,7 +806,7 @@ theorem magic_factory_same_port_standard_vs_strengthened :
     An isolated `capacity_per_cycle` failure (with exclusivity
     holding) would require decoupling zone capacity from its
     atom-range size — e.g., adding a separate `slot_capacity`
-    field smaller than `atom_hi - atom_lo`.  We do NOT modify
+    field smaller than `site_hi - site_lo`.  We do NOT modify
     `ArchZone` here (per the tick's "minimal safe changes"
     guidance).  Documenting the limitation precisely. -/
 

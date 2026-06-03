@@ -35,7 +35,7 @@
       separate purpose.
   ROUTING is deliberately NOT a tag: on qianxu's reconfigurable neutral-atom
   array, qubit "routing" is ATOM TRANSPORT — a TIME cost in the schedule (the
-  `AtomMove` / latency-invariant layer), not dedicated ancilla qubits.  Surface
+  `Transport` / latency-invariant layer), not dedicated ancilla qubits.  Surface
   code's standing routing area IS a real cost, but it is a PER-LOGICAL LAYOUT
   cost and lives in `physPer` (the ~2× patch), not in the operation-ancilla
   budget.

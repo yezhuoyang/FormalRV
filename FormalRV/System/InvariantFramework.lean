@@ -11,7 +11,7 @@
   extends coverage by appending one instance — never editing existing
   invariants.  The standard scheduling rules (capacity = ancilla, exclusivity,
   latency/speed = routing, throughput = T-factory, decoder) are instances
-  (`baseInvariants`); `latticeParallelMoveInv` shows the framework captures
+  (`baseInvariants`); `neutralAtomRigidMoveInv` shows the framework captures
   INSTRUCTION-LEVEL hardware limits too (neutral-atom rigid parallel movement —
   time-overlapping atom moves must share a displacement).
   FTSchedule.ft_ok is recoverable as `checkAll baseInvariants c &&
@@ -28,9 +28,12 @@ open FormalRV.Framework.Architecture FormalRV.Framework.ScheduleInv
 
 /-! ## (1) The fixed resources + the schedule context -/
 
-/-- An atom-position resource usage: atom `id` moves from `fromPos` to `toPos`
-    over [begin_us, end_us).  Positions are lattice coords (row, col). -/
-structure AtomMove where
+/-- A qubit-TRANSPORT resource usage (hardware-neutral): qubit `id` moves from
+    `fromPos` to `toPos` over [begin_us, end_us).  Positions are layout coords
+    (row, col).  How transport is physically realised — neutral-atom AOD shuttle,
+    superconducting SWAP routing, ion-shuttle — is a HARDWARE-SPECIFIC invariant,
+    not part of this generic event. -/
+structure Transport where
   id       : Nat
   fromPos  : Nat × Nat
   toPos    : Nat × Nat
@@ -45,7 +48,7 @@ deriving Repr, DecidableEq
 structure SystemCtx where
   arch           : ZonedArch
   sched          : List SysCall
-  moves          : List AtomMove
+  moves          : List Transport
   window_us      : Nat
   max_per_window : Nat
   t_react_us     : Nat
@@ -110,30 +113,50 @@ def decoderInv : SpaceTimeInvariant :=
 def baseInvariants : List SpaceTimeInvariant :=
   [capacityInv, exclusivityInv, latencyInv, throughputInv, decoderInv]
 
-/-! ## (5) THE NEW INSTANCE — neutral-atom instruction-level constraint
+/-! ## (5) HARDWARE-SPECIFIC INVARIANT INSTANCES
 
-    Neutral-atom AOD/lattice movement: atoms are in a lattice and a parallel
-    move shifts a whole row/column rigidly, so atoms moved in time-overlapping
-    steps must share the SAME displacement ("same pace").  Modelled as a
-    space-time proposition over the atom-move resource. -/
+    The core above (`baseInvariants`, `SysCall`, the resource model) is
+    HARDWARE-NEUTRAL — it holds for superconducting, trapped-ion, or neutral-atom
+    surface-code machines alike (surface-code lattice surgery is implemented on
+    BOTH neutral-atom and superconducting hardware).  A platform's PHYSICAL limits
+    enter ONLY as a pluggable `SpaceTimeInvariant` named for that platform
+    (`neutralAtom…`, `superconducting…`), composed in via `checkAll_snoc` without
+    touching the core.  The first such instance:
+
+    Neutral-atom AOD movement: qubits sit in a lattice and a parallel AOD move
+    shifts a whole row/column rigidly, so qubits transported in time-overlapping
+    steps must share the SAME displacement ("same pace").  A neutral-atom-only
+    instruction-level limit.  (A superconducting analogue would instead forbid
+    `Transport` events altogether — fixed coupling, route by SWAP — and live in a
+    `superconductingFixedCouplingInv`.) -/
 
 /-- Two moves overlap in time. -/
-def movesOverlap (a b : AtomMove) : Bool :=
+def movesOverlap (a b : Transport) : Bool :=
   decide (a.begin_us < b.end_us) && decide (b.begin_us < a.end_us)
 
 /-- Equal displacement (Nat-safe via cross-addition, avoiding subtraction):
     (to-from) of a equals (to-from) of b in both coordinates. -/
-def sameDisplacement (a b : AtomMove) : Bool :=
+def sameDisplacement (a b : Transport) : Bool :=
   decide (a.toPos.1 + b.fromPos.1 = b.toPos.1 + a.fromPos.1) &&
   decide (a.toPos.2 + b.fromPos.2 = b.toPos.2 + a.fromPos.2)
 
 /-- Neutral-atom parallel-move constraint: any two time-overlapping atom moves
     must have the same displacement (rigid lattice translation — "same pace").
     An INSTRUCTION-LEVEL hardware limit, expressed as a space-time invariant. -/
-def latticeParallelMoveInv : SpaceTimeInvariant :=
+def neutralAtomRigidMoveInv : SpaceTimeInvariant :=
   { name := "neutral-atom rigid parallel move (same pace)",
     check := fun c => c.moves.all (fun a => c.moves.all (fun b =>
       ! movesOverlap a b || sameDisplacement a b)) }
+
+/-- Superconducting fixed-coupling constraint: superconducting qubits have FIXED
+    nearest-neighbour coupling and do NOT physically move — routing is done by
+    SWAP gates, not by transporting qubits.  So a superconducting schedule carries
+    NO `Transport` events.  A superconducting-only instruction-level limit, the
+    sibling of `neutralAtomRigidMoveInv`; both compose onto the SAME hardware-
+    neutral `baseInvariants`.  (Surface-code lattice surgery runs on both platforms.) -/
+def superconductingFixedCouplingInv : SpaceTimeInvariant :=
+  { name := "superconducting fixed coupling (no physical transport)",
+    check := fun c => c.moves.isEmpty }
 
 /-! ## (6) WORKED INSTANCE + tests
 
@@ -142,16 +165,16 @@ def latticeParallelMoveInv : SpaceTimeInvariant :=
     that `System/FaultTolerantSchedule.lean` already proves passes
     `all_invariants_ok` + `decoder_react_ok`, so all five base invariants hold.
     The atom-move list is two coherent parallel moves (both displacement (0,+1),
-    overlapping in [0,10)), so `latticeParallelMoveInv` also holds. -/
+    overlapping in [0,10)), so `neutralAtomRigidMoveInv` also holds. -/
 
 /-- Worked-instance architecture (mirror of `FTSchedule.demoArch`). -/
 def demoArch : ZonedArch :=
   { zones :=
-      [ { name := "Data",      atom_lo := 0,  atom_hi := 10 }
-      , { name := "Workspace", atom_lo := 10, atom_hi := 20 }
-      , { name := "Factory",   atom_lo := 20, atom_hi := 30 }
-      , { name := "Routing",   atom_lo := 30, atom_hi := 40 } ]
-    total_atoms := 40
+      [ { name := "Data",      site_lo := 0,  site_hi := 10 }
+      , { name := "Workspace", site_lo := 10, site_hi := 20 }
+      , { name := "Factory",   site_lo := 20, site_hi := 30 }
+      , { name := "Routing",   site_lo := 30, site_hi := 40 } ]
+    total_sites := 40
     t_cycle_us  := 100
     v_max_um_per_us := 5 }
 
@@ -170,7 +193,7 @@ def demoSched : List SysCall :=
 
 /-- Two COHERENT parallel atom moves: both displace by (0,+1) (one lattice site
     rightward), both running over [0,10) — a legal rigid translation. -/
-def demoMoves : List AtomMove :=
+def demoMoves : List Transport :=
   [ { id := 0, fromPos := (0,0), toPos := (0,1), begin_us := 0, end_us := 10 }
   , { id := 1, fromPos := (1,0), toPos := (1,1), begin_us := 0, end_us := 10 } ]
 
@@ -184,15 +207,15 @@ example : checkAll baseInvariants demoCtx = true := by decide
 
 -- Extending with the neutral-atom constraint: adding it ANDs in, base
 -- unaffected (this is `checkAll_snoc` instantiated at the worked context):
-example : checkAll (baseInvariants ++ [latticeParallelMoveInv]) demoCtx
-        = (checkAll baseInvariants demoCtx && latticeParallelMoveInv.check demoCtx) :=
-  checkAll_snoc baseInvariants latticeParallelMoveInv demoCtx
+example : checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) demoCtx
+        = (checkAll baseInvariants demoCtx && neutralAtomRigidMoveInv.check demoCtx) :=
+  checkAll_snoc baseInvariants neutralAtomRigidMoveInv demoCtx
 
 -- POSITIVE: two coherent parallel moves (same displacement, overlapping) pass:
-example : latticeParallelMoveInv.check demoCtx = true := by decide
+example : neutralAtomRigidMoveInv.check demoCtx = true := by decide
 
 -- The full extended set still passes on the coherent context:
-example : checkAll (baseInvariants ++ [latticeParallelMoveInv]) demoCtx = true := by decide
+example : checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) demoCtx = true := by decide
 
 /-- NEGATIVE: two overlapping moves with DIFFERENT displacement.  Move 0
     displaces (0,+1); move 1 displaces (+1,0); both run over [0,10), so they
@@ -202,10 +225,10 @@ def badMoveCtx : SystemCtx := { demoCtx with moves :=
   , { id := 1, fromPos := (1,0), toPos := (2,0), begin_us := 0, end_us := 10 } ] }
 
 -- The new invariant alone rejects the bad move set:
-example : latticeParallelMoveInv.check badMoveCtx = false := by decide
+example : neutralAtomRigidMoveInv.check badMoveCtx = false := by decide
 
 -- Hence the extended set fails on the bad context:
-example : checkAll (baseInvariants ++ [latticeParallelMoveInv]) badMoveCtx = false := by decide
+example : checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) badMoveCtx = false := by decide
 
 -- ... and the base invariants STILL pass on badMoveCtx (only the new
 -- constraint fails — invariants do not interfere with each other):

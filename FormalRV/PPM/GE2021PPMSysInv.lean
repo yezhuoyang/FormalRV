@@ -86,9 +86,9 @@ open FormalRV.Framework.ScheduleInv
 
 def ge2021_ppm_arch : ZonedArch :=
   { zones :=
-      [ { name := "Data",    atom_lo := 0,   atom_hi := 100 }
-      , { name := "Ancilla", atom_lo := 100, atom_hi := 200 } ]
-    total_atoms := 200
+      [ { name := "Data",    site_lo := 0,   site_hi := 100 }
+      , { name := "Ancilla", site_lo := 100, site_hi := 200 } ]
+    total_sites := 200
     t_cycle_us  := 1
     v_max_um_per_us := 0
   }
@@ -97,7 +97,7 @@ theorem ge2021_ppm_arch_zone_count :
     ge2021_ppm_arch.zones.length = 2 := by native_decide
 
 theorem ge2021_ppm_arch_total :
-    ge2021_ppm_arch.total_atoms = 200 := by native_decide
+    ge2021_ppm_arch.total_sites = 200 := by native_decide
 
 /-! ## §2. One PPM round (5 SysCalls, 5 µs long) -/
 

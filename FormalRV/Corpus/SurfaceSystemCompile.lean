@@ -214,4 +214,18 @@ example (T L f : Nat) :
     separate pluggable invariant (neutral-atom rigid move, SC fixed coupling, …). -/
 example : checkAll baseInvariants surfaceShorCtx = true := surfaceShorCtx_valid
 
+/-- **Valid on SUPERCONDUCTING hardware**: the schedule carries no `Transport`
+    (`moves := []`), so it satisfies the superconducting fixed-coupling invariant
+    on top of the shared `baseInvariants`. -/
+theorem surfaceShorCtx_valid_superconducting :
+    checkAll (baseInvariants ++ [superconductingFixedCouplingInv]) surfaceShorCtx = true := by
+  decide
+
+/-- **Valid on NEUTRAL-ATOM hardware**: it also satisfies the neutral-atom
+    rigid-move invariant (vacuously — no transport this window).  So one verified
+    surface-code lattice-surgery schedule runs on BOTH platforms. -/
+theorem surfaceShorCtx_valid_neutralAtom :
+    checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) surfaceShorCtx = true := by
+  decide
+
 end FormalRV.Corpus.SurfaceSystemCompile

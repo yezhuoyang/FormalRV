@@ -165,11 +165,11 @@ def FTSchedule.budget (f : FTSchedule) : SystemBudget :=
     speed limit 5 µm/µs. -/
 def demoArch : ZonedArch :=
   { zones :=
-      [ { name := "Data",      atom_lo := 0,  atom_hi := 10 }
-      , { name := "Workspace", atom_lo := 10, atom_hi := 20 }
-      , { name := "Factory",   atom_lo := 20, atom_hi := 30 }
-      , { name := "Routing",   atom_lo := 30, atom_hi := 40 } ]
-    total_atoms := 40
+      [ { name := "Data",      site_lo := 0,  site_hi := 10 }
+      , { name := "Workspace", site_lo := 10, site_hi := 20 }
+      , { name := "Factory",   site_lo := 20, site_hi := 30 }
+      , { name := "Routing",   site_lo := 30, site_hi := 40 } ]
+    total_sites := 40
     t_cycle_us  := 100
     v_max_um_per_us := 5 }
 
