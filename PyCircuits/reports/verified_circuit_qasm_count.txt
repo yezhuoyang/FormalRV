@@ -1,0 +1,16 @@
+[PASS] toffoli: emitted QASM gate counts == Lean
+        Qiskit ccx=1 cx=0 x=0 total=1 | Lean ccx=1 cx=0 x=0 gcount=1 | 7·ccx=7 vs tcount=7  [bare Toffoli: 1 ccx, tcount 7]
+[PASS] modmult_const_2_15_7: emitted QASM gate counts == Lean
+        Qiskit ccx=32 cx=76 x=0 total=108 | Lean ccx=32 cx=76 x=0 gcount=108 | 7·ccx=224 vs tcount=224  [const bits=2: 8·2²=32 ccx, 56·2²=224 T]
+[PASS] modmult_const_3_21_5: emitted QASM gate counts == Lean
+        Qiskit ccx=72 cx=165 x=0 total=237 | Lean ccx=72 cx=165 x=0 gcount=237 | 7·ccx=504 vs tcount=504  [const bits=3: 8·3²=72 ccx, 56·3²=504 T]
+[PASS] modmult_MCP_2_15_7_13: emitted QASM gate counts == Lean
+        Qiskit ccx=64 cx=168 x=0 total=232 | Lean ccx=64 cx=168 x=0 gcount=232 | 7·ccx=448 vs tcount=448  [MCP  bits=2: 16·2²=64 ccx, 112·2²=448 T]
+[PASS] const_gate Toffoli count == 8·bits²  (bits=2 and bits=3)
+        8·2²=32 vs 32; 8·3²=72 vs 72
+[PASS] MCP oracle Toffoli count == 16·bits²  (= 2× const, in-place)
+        16·2²=64 vs 64; and MCP(64) = 2·const(32)
+
+======================================================================
+SUMMARY: 6/6 checks passed.
+THE EMITTED VERIFIED CIRCUITS' GATE COUNTS MATCH THE LEAN-PROVED NUMBERS.
