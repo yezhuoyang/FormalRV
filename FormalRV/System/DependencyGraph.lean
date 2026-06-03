@@ -274,4 +274,41 @@ example (τ : Nat) (b : Nat → Nat) (h : ∀ i, b i + τ ≤ b (i + 1)) :
     b 0 + 2048 * τ ≤ b 2048 :=
   serial_chain_depth τ b h 2048
 
+/-! ## (9) Composing the floor through a circuit's STRUCTURE.
+
+    A structured circuit's critical path is a chain threaded through its
+    sub-structures, so its depth is a PRODUCT of structural coefficients — which
+    is what makes the floor parametric (Q2-scalable) and circuit-derived (Q1:
+    no scheduling).  For Shor's modular exponentiation:
+      • the ripple-carry ADDER's carry chain has length = the adder width
+        (carry `c_{i+1}` depends on `c_i`) ⇒ Toffoli-depth ≥ width;
+        (the carry-lookahead variant cuts this to ≈ log width — a different,
+        shallower DAG, hence a different floor: Q1's decomposition residue);
+      • a MULTIPLICATION threads `adds_per_mult` additions on its critical path;
+      • MODEXP threads `mults` modular multiplications (the accumulator chain).
+    So the modexp critical-path Toffoli-DEPTH ≥ `mults · adds_per_mult ·
+    adder_depth`, and the runtime floor ≥ that depth · `τ_Toff` cycles — for ANY
+    schedule and ANY resource count.  The coefficients come from the SPECIFIC
+    circuit (qianxu App. E/F); the corpus instantiation plugs them in. -/
+
+/-- Modexp critical-path Toffoli-depth from its structural coefficients. -/
+def modexpToffoliDepth (mults adds_per_mult adder_depth : Nat) : Nat :=
+  mults * adds_per_mult * adder_depth
+
+/-- Runtime floor in code-cycles = (critical-path Toffoli-depth) · (min cycles
+    per Toffoli). -/
+def runtimeFloorCycles (depth tau_toff_cycles : Nat) : Nat :=
+  depth * tau_toff_cycles
+
+/-- THE FLOOR IS A GENUINE `∀`-SCHEDULES LOWER BOUND.  A critical path of `depth`
+    serially-dependent Toffolis, each taking at least `τ` cycles, takes at least
+    `runtimeFloorCycles depth τ` cycles — no matter the schedule and no matter
+    the resource provisioning (a specialisation of `serial_chain_depth`, with
+    `begin_ i` the start cycle of the i-th critical-path Toffoli). -/
+theorem runtimeFloor_is_lower_bound (τ : Nat) (begin_ : Nat → Nat)
+    (hdep : ∀ i, begin_ i + τ ≤ begin_ (i + 1)) (depth : Nat) :
+    begin_ 0 + runtimeFloorCycles depth τ ≤ begin_ depth := by
+  unfold runtimeFloorCycles
+  exact serial_chain_depth τ begin_ hdep depth
+
 end FormalRV.System.DependencyGraph
