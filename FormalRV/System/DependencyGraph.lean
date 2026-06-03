@@ -235,4 +235,43 @@ theorem critical_path_two (op0 op1 : SysCall) (d0 d1 : Nat)
     op0.begin_us + (d0 + d1) ≤ op1.end_us := by
   omega
 
+/-! ## (8) SCALABILITY — the bound is PARAMETRIC, not a graph computation.
+
+    Proving a critical-path lower bound for a billion-gate circuit by
+    MATERIALIZING the dependency DAG and running a longest-path algorithm is
+    infeasible in-kernel.  The scalable route is a PARAMETRIC closed-form bound
+    proven by INDUCTION on the circuit's recursive structure — one proof `∀ n`,
+    instantiated at any size INSTANTLY (no graph traversal).  This works whenever
+    the circuit is structured enough that its critical path is identifiable from
+    its recursion (e.g. the carry chain of a ripple-carry adder); the structured
+    arithmetic circuits qianxu uses qualify.
+
+    The model below abstracts a schedule as a START-TIME function `begin_ : Nat →
+    Nat` (gate `i` starts at `begin_ i`), so the theorem quantifies over ALL
+    schedules at once — no scheduling is fixed, only the chain dependency and the
+    per-gate minimum duration `τ` (Q1: circuit + hardware, not system schedule). -/
+
+/-- PARAMETRIC CRITICAL-PATH LOWER BOUND.  For a chain of gates where each gate
+    runs at least `τ` and gate `i+1` cannot start before gate `i`'s minimum
+    completion (`begin_ i + τ ≤ begin_ (i+1)`), gate `n` starts no earlier than
+    `begin_ 0 + n·τ` — for ANY start-time schedule `begin_`.  Proven by induction
+    on `n`: NO graph algorithm, scalable to any depth. -/
+theorem serial_chain_depth (τ : Nat) (begin_ : Nat → Nat)
+    (hdep : ∀ i, begin_ i + τ ≤ begin_ (i + 1)) (n : Nat) :
+    begin_ 0 + n * τ ≤ begin_ n := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+      have hk := hdep k
+      rw [Nat.succ_mul]
+      omega
+
+/-- Instantiation at RSA-2048 scale is INSTANT — it is the `∀ n` theorem applied
+    to a literal, NOT a graph traversal.  (n = 10⁹ would be equally immediate.)
+    So a depth-`n` dependency chain forces makespan ≥ `n·τ` at any scale, with no
+    per-instance graph computation. -/
+example (τ : Nat) (b : Nat → Nat) (h : ∀ i, b i + τ ≤ b (i + 1)) :
+    b 0 + 2048 * τ ≤ b 2048 :=
+  serial_chain_depth τ b h 2048
+
 end FormalRV.System.DependencyGraph
