@@ -94,10 +94,10 @@ def ge2021_ppm_arch : ZonedArch :=
   }
 
 theorem ge2021_ppm_arch_zone_count :
-    ge2021_ppm_arch.zones.length = 2 := by native_decide
+    ge2021_ppm_arch.zones.length = 2 := by decide
 
 theorem ge2021_ppm_arch_total :
-    ge2021_ppm_arch.total_sites = 200 := by native_decide
+    ge2021_ppm_arch.total_sites = 200 := by decide
 
 /-! ## §2. One PPM round (5 SysCalls, 5 µs long) -/
 
@@ -177,19 +177,19 @@ theorem ppm_block_wallclock_is_derived :
       ppm_block_syscalls.foldl (fun acc sc => Nat.max acc sc.end_us) 0 :=
   rfl
 
-/-! ## §6. Concrete derived values (proven by native_decide) -/
+/-! ## §6. Concrete derived values (proven by decide) -/
 
 theorem ppm_block_wallclock_value :
-    ppm_block_wallclock_us = 16 := by native_decide
+    ppm_block_wallclock_us = 16 := by decide
 
 theorem ppm_block_peak_physical_qubits_value :
-    ppm_block_peak_physical_qubits = 2 := by native_decide
+    ppm_block_peak_physical_qubits = 2 := by decide
   -- Each Gate2q claims {data, ancilla} = 2 atoms simultaneously.
   -- All other SysCalls (RequestFreshAncilla, Measure, DecodeSyndrome,
   -- PauliFrameUpdate) claim 1 atom or 0.
 
 theorem ppm_block_total_distinct_qubits_value :
-    ppm_block_total_distinct_qubits = 3 := by native_decide
+    ppm_block_total_distinct_qubits = 3 := by decide
   -- Distinct atoms touched: {0, 50, 100} = 3.
 
 /-! ## §7. System-level invariants (each closed by `decide`) -/
@@ -266,23 +266,23 @@ def count_pauli_frame_update (sched : List SysCall) : Nat :=
 
 /-- Three rounds × 1 RequestFreshAncilla each = 3. -/
 theorem ppm_block_count_request_fresh_ancilla :
-    count_request_fresh_ancilla ppm_block_syscalls = 3 := by native_decide
+    count_request_fresh_ancilla ppm_block_syscalls = 3 := by decide
 
 /-- Three rounds × 2 Gate2q each = 6. -/
 theorem ppm_block_count_gate2q :
-    count_gate2q ppm_block_syscalls = 6 := by native_decide
+    count_gate2q ppm_block_syscalls = 6 := by decide
 
 /-- Three rounds × 1 Measure each = 3. -/
 theorem ppm_block_count_measure :
-    count_measure ppm_block_syscalls = 3 := by native_decide
+    count_measure ppm_block_syscalls = 3 := by decide
 
 /-- Three rounds × 1 DecodeSyndrome each = 3. -/
 theorem ppm_block_count_decode_syndrome :
-    count_decode_syndrome ppm_block_syscalls = 3 := by native_decide
+    count_decode_syndrome ppm_block_syscalls = 3 := by decide
 
 /-- One PauliFrameUpdate at the end of the block. -/
 theorem ppm_block_count_pauli_frame_update :
-    count_pauli_frame_update ppm_block_syscalls = 1 := by native_decide
+    count_pauli_frame_update ppm_block_syscalls = 1 := by decide
 
 /-! ## §10. What this delivers
 

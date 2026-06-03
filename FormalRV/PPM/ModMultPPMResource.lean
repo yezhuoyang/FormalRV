@@ -119,20 +119,21 @@ theorem numMeas_shorModExp (na bits N a : Nat)
     numMeas (circuitToPPM na (gateToHL (shorModExp bits N a))) = 48 * bits ^ 3 := by
   rw [numMeas_circuitToPPM_gateToHL, toffCount_shorModExp bits N a hcop hodd h1]; ring
 
-/-- **THE SINGLE LITERAL RSA-2048 NUMBER — EXACT.**
+/-- EXACT CCZ-magic count of the OUT-OF-PLACE COUNTING MODEL `shorModExp 2048 N a`:
+    `137 438 953 472` (and `412 316 860 416` measurements).
 
-    For ANY valid RSA-2048 base (`N` a 2048-bit odd modulus, `a` coprime to `N`), the
-    concrete Shor modular-exponentiation circuit `shorModExp 2048 N a` compiles to EXACTLY
-    `137 438 953 472` CCZ magic states (= its Toffoli count) and `412 316 860 416` Z-basis
-    Pauli measurements.  This is `numCCZMagic` of the actual compiled PPM program — if you
-    built and counted the circuit you would get exactly these numbers; the proof derives
-    them by induction without ever building the 2048-bit term. -/
-theorem shor2048_CCZMagic_exact (na N a : Nat)
+    ⚠ HONEST LABEL (counting audit 2026-06-03): the count is exact for this concrete term,
+    but the term is a chain of OUT-OF-PLACE `const_gate`s — NOT the verified Shor oracle and
+    NOT a valid modular-exponentiation circuit (no feedback).  The verified-oracle arithmetic
+    figure is `shor2048_CCZMagic_verified = 274 877 906 944 = 2×` this (§8) — that is the
+    honest headline; this `137 438 953 472` UNDERSTATES the verified-oracle cost by exactly
+    the in-place forward+uncompute factor of 2.  Do not cite this as "the verified circuit". -/
+theorem shor2048_CCZMagic_outOfPlaceModel (na N a : Nat)
     (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
     numCCZMagic (circuitToPPM na (gateToHL (shorModExp 2048 N a))) = 137438953472 := by
   rw [numCCZMagic_shorModExp na 2048 N a hcop hodd h1]; norm_num
 
-theorem shor2048_Meas_exact (na N a : Nat)
+theorem shor2048_Meas_outOfPlaceModel (na N a : Nat)
     (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
     numMeas (circuitToPPM na (gateToHL (shorModExp 2048 N a))) = 412316860416 := by
   rw [numMeas_shorModExp na 2048 N a hcop hodd h1]; norm_num
@@ -171,13 +172,23 @@ theorem verified_MCP_oracle_end_to_end
    by rw [numCCZMagic_circuitToPPM_gateToHL,
           toffCount_sqir_modmult_MCP_gate bits N a ainv hcop hcopinv hpos hlt hodd h1]⟩
 
-/-! ## §8. Whole mod-exp ARITHMETIC magic-state count on the verified in-place oracle.
+/-! ## §8. HEADLINE: whole mod-exp ARITHMETIC magic-state count on the VERIFIED in-place oracle.
 
-    `shorModExpVerified` chains `2·bits` of the verified MCP oracle.  Its PPM CCZ-magic count
-    is EXACTLY `32·bits³` — the arithmetic (data) magic states of the verified Shor circuit.
-    (This is the Clifford+T arithmetic cost; see the file header note: the generic `control`
-    of `controlled_powers` is non-Clifford+T, so the control overhead is a separate regime
-    not included here.) -/
+    `shorModExpVerified` chains `2·bits` of the verified MCP oracle (`sqir_modmult_MCP_gate`),
+    the term the verified Shor theorem actually uses.  Its PPM CCZ-magic count is EXACTLY
+    `32·bits³` — `274 877 906 944` at 2048.  This is the honest verified-oracle arithmetic
+    figure and supersedes the out-of-place `shorModExp` count (`16·bits³`, §6), which is 2×
+    smaller and not the verified term.
+
+    HONEST CAVEATS (do not over-read the word "exact"):
+    * COUNT-ONLY / SCAFFOLDED: the chain is built from semantically-verified multipliers, but
+      there is NO theorem that the chain computes `a^x mod N` (the verified mod-exp semantics
+      lives in `Shor_correct_verified_no_modmult_axioms` via `controlled_powers`, a BaseUCom
+      term with no bridge to this Gate chain).  Per CLAUDE.md this is Scaffolded, not Verified.
+    * STRUCTURAL `2·bits`: the exponent-register multiplicity is read off the def, not derived
+      from a verified order-finding register sizing.
+    * ARITHMETIC ONLY: the generic `control` of `controlled_powers` is non-Clifford+T (header),
+      so the controlled-mod-exp control overhead is excluded — this counts the data arithmetic. -/
 
 theorem toffCount_shorModExpVerified (bits N a ainv : Nat)
     (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
@@ -193,7 +204,9 @@ theorem numCCZMagic_shorModExpVerified (na bits N a ainv : Nat)
     numCCZMagic (circuitToPPM na (gateToHL (shorModExpVerified bits N a ainv))) = 32 * bits ^ 3 := by
   rw [numCCZMagic_circuitToPPM_gateToHL, toffCount_shorModExpVerified bits N a ainv hcop hcopinv hpos hlt hodd h1]
 
-/-- **RSA-2048 arithmetic magic states on the verified oracle**: `32·2048³ = 274 877 906 944`. -/
+/-- **THE HONEST RSA-2048 ARITHMETIC HEADLINE — verified-oracle chain**: `32·2048³ =
+    274 877 906 944` CCZ magic states (count-only/scaffolded + arithmetic-only; see §8 note).
+    This, not the 2× smaller out-of-place `137 438 953 472`, is the verified-oracle figure. -/
 theorem shor2048_CCZMagic_verified (na N a ainv : Nat)
     (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
     (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
