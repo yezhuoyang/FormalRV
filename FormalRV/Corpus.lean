@@ -17,6 +17,7 @@ import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.QianxuBounds
 import FormalRV.Corpus.QianxuGadgetDerivedResource
 import FormalRV.Corpus.QianxuLPComputation
+import FormalRV.Corpus.QianxuLPFullSchedule
 import FormalRV.Corpus.QianxuLPSurgery
 import FormalRV.Corpus.QianxuLPSystemSchedule
 import FormalRV.Corpus.QianxuModExpLP
