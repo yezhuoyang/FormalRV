@@ -5,6 +5,7 @@ import FormalRV.Shor.Eigenstate
 import FormalRV.Shor.Main
 import FormalRV.Shor.PhaseKickback
 import FormalRV.Shor.PostQFT
+import FormalRV.Shor.ProbabilityTransfer
 import FormalRV.Shor.QPE
 import FormalRV.Shor.QPEAmplitude
 import FormalRV.Shor.Shor
