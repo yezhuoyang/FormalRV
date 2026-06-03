@@ -30,6 +30,7 @@
 -/
 
 import FormalRV.PPM.CircuitToPPMMagicFactory
+import FormalRV.Arithmetic.Correctness
 
 namespace FormalRV.Corpus.ShorPPMUnitaryReduction
 
@@ -54,6 +55,24 @@ theorem ppm_clifford_run_eq_applyNat
     σ'.bits = Gate.applyNat g f :=
   magicBasisPPMGateRel_imp_applyNat g (magicBasisEncodeBits F f) σ'
     (magicBasisPPMReflects_ICX F g hICX (magicBasisEncodeBits F f) σ' hrun)
+
+/-! ## §1b. The reduction to the ACTUAL UNITARY (not just `Gate.applyNat`), scale-free -/
+
+/-- **REDUCTION TO THE UNITARY (Clifford fragment).**  Composing the Boolean-PPM reduction
+    with the general `Gate → BaseUCom` basis adapter (`uc_eval_toUCom_acts_on_basis`, proved
+    by structural induction — no `decide`), the Boolean PPM run's output bits, lifted to a
+    computational-basis vector, EQUAL the genuine unitary `uc_eval (Gate.toUCom dim g)` applied
+    to the input basis vector.  So the Boolean PPM simulation equals the actual UNITARY action
+    on basis states, at any `dim` — dissolving the "applyNat ↔ uc_eval faithfulness" residue
+    for the Clifford fragment. -/
+theorem ppm_clifford_run_eq_unitary
+    (F : TFactoryContract) (dim : Nat) (g : Gate) (hICX : isICXGate g = true)
+    (h_wt : Gate.WellTyped dim g) (f : Nat → Bool)
+    (σ' : MagicBasisPPMState)
+    (hrun : PPMProgramRel (magicBasisPPMSemanticsModel F) (compileArithmeticGateToPPM g)
+              (magicBasisEncodeBits F f) σ') :
+    f_to_vec dim σ'.bits = uc_eval (Gate.toUCom dim g) * f_to_vec dim f := by
+  rw [ppm_clifford_run_eq_applyNat F g hICX f σ' hrun, uc_eval_toUCom_acts_on_basis dim g h_wt f]
 
 /-- The reduction at the OBSERVATION level: the Boolean PPM run observes exactly the
     `Gate.applyNat g f` bit-state (and never fails) — the full refinement, for the
