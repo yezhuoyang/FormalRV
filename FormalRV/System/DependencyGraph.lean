@@ -164,4 +164,75 @@ theorem causal_chain_floor (sched : List SysCall) (g : DepGraph)
   have hle2 : v.end_us ≤ w.begin_us := by simpa using hc2
   omega
 
+/-! ## (7) A CONDITIONAL critical-path runtime LOWER BOUND.
+
+    CAREFUL ABOUT WHAT THIS IS (John, 2026-06-02).  An *unconditional* lower
+    bound — "no algorithm/circuit/schedule whatsoever beats XX" — is a
+    complexity-theoretic statement and is NOT verifiable here (it quantifies over
+    all possible computations).  What IS verifiable is the *conditional*
+    critical-path bound: fix the dependency DAG (the circuit's causal structure)
+    and a per-operation MINIMUM duration `dmin` (a hardware fact, an axiom/input);
+    then NO SCHEDULE — no assignment of begin/end times respecting the DAG with
+    durations ≥ `dmin` — beats the weighted critical path.  This IS a genuine
+    `∀`-schedules statement, because a dependency chain is intrinsically serial:
+    you cannot parallelize it away.
+
+    The two ASSUMPTIONS are the honest residue: a shallower DAG (a cleverer
+    circuit) or a faster `dmin` (better hardware) lowers the floor.  So this
+    floors THIS circuit's runtime on THIS hardware, not the problem's optimum.
+
+    Total minimum duration along a chain of (op, dmin) pairs. -/
+def chainMinTotal : List (SysCall × Nat) → Nat
+  | []            => 0
+  | (_, d) :: rest => d + chainMinTotal rest
+
+/-- `end_us` of the last operation in a chain (0 on the empty chain). -/
+def lastEnd : List (SysCall × Nat) → Nat
+  | []            => 0
+  | [(op, _)]     => op.end_us
+  | _ :: rest     => lastEnd rest
+
+/-- A chain is a valid execution iff each op runs at least its minimum duration
+    (`begin + dmin ≤ end`) and consecutive ops are dependency-linked
+    (`prev.end ≤ next.begin`).  This holds of ANY schedule of the chain — it is
+    the `∀`-schedules hypothesis. -/
+def MinChain : List (SysCall × Nat) → Prop
+  | []                          => True
+  | [(op, d)]                   => op.begin_us + d ≤ op.end_us
+  | (op1, d1) :: (op2, d2) :: r =>
+      op1.begin_us + d1 ≤ op1.end_us ∧ op1.end_us ≤ op2.begin_us
+      ∧ MinChain ((op2, d2) :: r)
+
+/-- THE CRITICAL-PATH LOWER BOUND.  For ANY schedule (any begin/end times) of a
+    dependency chain `(op0, d0) :: rest` that respects the dependencies and runs
+    each op for at least its minimum duration, the last operation cannot finish
+    before `op0.begin + Σ dmin`.  Equivalently: the makespan from `op0`'s start
+    to the chain's end is ≥ the sum of minimum durations — NO scheduling beats
+    the critical path.  Proven by induction on the chain. -/
+theorem critical_path_lower_bound :
+    ∀ (op0 : SysCall) (d0 : Nat) (rest : List (SysCall × Nat)),
+      MinChain ((op0, d0) :: rest) →
+      op0.begin_us + chainMinTotal ((op0, d0) :: rest)
+        ≤ lastEnd ((op0, d0) :: rest)
+  | op0, d0, [], h => by
+      simp only [MinChain] at h
+      simp only [chainMinTotal, lastEnd]
+      omega
+  | op0, d0, (op1, d1) :: tl, h => by
+      simp only [MinChain] at h
+      obtain ⟨hm0, hdep, hrest⟩ := h
+      have ih := critical_path_lower_bound op1 d1 tl hrest
+      simp only [chainMinTotal, lastEnd] at ih ⊢
+      omega
+
+/-- The two-operation seed, for clarity: along a single dependency edge
+    `op0 → op1`, every schedule has makespan ≥ `d0 + d1`.  (One `omega`; this is
+    the base mechanism the induction iterates.) -/
+theorem critical_path_two (op0 op1 : SysCall) (d0 d1 : Nat)
+    (hmin0 : op0.begin_us + d0 ≤ op0.end_us)
+    (hdep  : op0.end_us ≤ op1.begin_us)
+    (hmin1 : op1.begin_us + d1 ≤ op1.end_us) :
+    op0.begin_us + (d0 + d1) ≤ op1.end_us := by
+  omega
+
 end FormalRV.System.DependencyGraph
