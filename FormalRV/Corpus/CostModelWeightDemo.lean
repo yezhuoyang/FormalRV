@@ -61,10 +61,9 @@ example : ((qldpcModel 0).ancilla code422Q w0 7 1).syndrome = 2 := by decide
 /-! ### The full purpose-tagged budget, every term from real code data. -/
 
 /-- For measuring Z̄₀ on [[4,2,2]] under the qLDPC model:
-    syndrome 2 (real checks) + routing 0 + surgery 2 (real weight) ⇒ total 4. -/
+    syndrome 2 (real checks) + surgery 2 (real weight) ⇒ total 4 (the flat count
+    the purpose-agnostic `RequestFreshAncilla` syscall provisions). -/
 example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).syndrome = 2 := by
-  decide
-example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).routing = 0 := by
   decide
 example : ((qldpcModel 0).ancilla code422Q w0 (rowWeight (code422Logical.selectZ [0])) 1).surgery = 2 := by
   decide

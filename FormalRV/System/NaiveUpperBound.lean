@@ -58,16 +58,15 @@ theorem naive_time (hw : Hardware) (w : Workload) (c : QECCode) (factory : Nat) 
     (naiveEstimate hw w c factory).time_us_tenths
       = w.n_toff * c.d * hw.cycle_time_us_tenths := rfl
 
-/-- Naive qubit footprint = 2 · (n_logical · phys) + factory: the per-logical
-    DATA patch plus an equal-area ROUTING region (the surface "~2×"), plus the
-    factory.  Under the purpose-tagged surface model this is data
-    (`n_logical · physPer`) + routing (`n_logical · physPer`) + factory; the
-    syndrome and surgery tags are 0 for the surface model. -/
+/-- Naive qubit footprint = n_logical · (2·phys) + factory: the standing ~2×
+    surface patch (data + in-patch syndrome + equal-area routing region, all a
+    per-logical LAYOUT cost) plus the factory.  Under the surface cost model both
+    operation-ancilla tags (syndrome, surgery) are 0 — the audit-relevant ancilla
+    is the standing footprint, captured in `physPer`. -/
 theorem naive_qubits (hw : Hardware) (w : Workload) (c : QECCode) (factory : Nat) :
     (naiveEstimate hw w c factory).qubits
-      = 2 * (w.n_logical * physPerLogical c) + factory := by
-  simp only [naiveEstimate, estimateWith_qubits_tagged, surfaceModel]
-  omega
+      = w.n_logical * (2 * physPerLogical c) + factory := by
+  simp only [naiveEstimate, estimateWith_qubits_tagged, surfaceModel, Nat.add_zero]
 
 /-! ## (2) The verifiable upper bound: peak qubit demand never exceeds the
     static footprint, FOR ANY number of sequential Toffoli steps.  Proven by
