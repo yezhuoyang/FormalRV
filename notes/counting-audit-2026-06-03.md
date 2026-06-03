@@ -58,13 +58,36 @@ disclosing comment.
 circuits' gate counts equal the Lean numbers (const 8·bits²/56·bits², MCP 16·bits²/112·bits²,
 MCP = 2× const), with `tcount = 7·numCCX` proved in `Core/GateQASM.lean`.
 
+## Controlled-overhead count — NOW CLOSED (was previously flagged "ill-posed")
+
+`FormalRV/Shor/ControlledModExpCount.lean` (axiom-clean) actually counts
+`controlled_powers (verified oracle)` — the exact verified Shor mod-exp INCLUDING control.
+The earlier "ill-posed" was only about collapsing the result to a single *magic-state* number
+(the generic `control` emits `π/8` rotations, so that collapse needs per-rotation synthesis);
+the GATE COUNT is angle-independent and proved:
+
+- **Generic control overhead** (any circuit `c`):
+  `ucApp2 (control q c) = 2·ucApp1 c + 6·ucApp2 c` (CNOTs),
+  `ucApp1 (control q c) = 4·ucApp1 c + 9·ucApp2 c + ucApp3 c` (rotations).
+- **`Gate → BaseUCom` counts**: `ucApp2 (toUCom g) = numCX g + 6·numCCX g`,
+  `ucApp1 (toUCom g) = numI g + numX g + 9·numCCX g`.
+- **Per controlled oracle** (`ucApp2/1_control_toUCom`): fully determined by
+  `(gNumI, numX, numCX, numCCX)`.  At bits=2 (N=15,a=7,ainv=13): EXACTLY **4710 CNOTs +
+  7764 rotations** per controlled oracle (`#eval`).
+- **Whole algorithm**: `controlled_powers = npar (control i (f i))`, so the total is the sum
+  over the `m` exponent steps (`ucApp2_npar` / `ucApp1_npar`; the `+1` in `ucApp1_npar` is the
+  base `SKIP` identity rotation).
+- **QASM justification** (`controlled_overhead_qasm_check.py`, 3/3): the decomposed-Toffoli
+  CNOT count of the emitted oracle = `numCX + 6·numCCX` (MCP: 552 = 168 + 6·64), confirming the
+  formula's input against the real circuit.
+
 ## Honest residue (flagged, not faked)
 
-- No full mod-exp **semantic** correctness for either Gate chain (count-only). The verified
-  *algorithm* semantics IS proved (`Shor_correct_verified_no_modmult_axioms`, axiom-clean) but
-  on the BaseUCom `controlled_powers` term, with no bridge to these counting chains.
-- The full **controlled** mod-exp magic-state count is ill-posed for this implementation: the
-  generic `control` of `controlled_powers` turns each `T` into `controlled_R` with a `π/8`
-  rotation → not Clifford+T. So only the **arithmetic** (uncontrolled-oracle) magic states are
-  cleanly countable; the control overhead is excluded and flagged (claiming a number would be
-  unsound).
+- No full mod-exp **semantic** correctness for the Gate counting chains (count-only). The
+  verified *algorithm* semantics IS proved (`Shor_correct_verified_no_modmult_axioms`,
+  axiom-clean) on the BaseUCom `controlled_powers` term; the bridge to the Gate counting chains
+  is not built.
+- The controlled mod-exp's count is given as (CNOTs, rotations) — both exact.  Collapsing the
+  rotations to a single *magic-state* number still needs per-rotation Clifford+T synthesis
+  (the rotations are mixed `π/4`, `π/8`, … angles); that synthesis layer is the one remaining
+  honest residual, and its size is now exactly bounded by the proved rotation count.
