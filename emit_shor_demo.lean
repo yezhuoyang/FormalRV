@@ -1,13 +1,12 @@
-import FormalRV.LatticeSurgery.ScheduleEmit
-import FormalRV.Corpus.SurgeryDemoSurface
+import FormalRV.Corpus.ShorEmit
 
-open FormalRV.LatticeSurgery.ScheduleEmit
-open FormalRV.Corpus.SurgeryDemoSurface
-open FormalRV.Framework.SurgerySchedule
+open FormalRV.Corpus.ShorEmit
 
--- A demo Shor surgery schedule: 3 logical-X̄ merges on the verified [[13,1,3]] code.
-def shorDemoSchedule : Schedule := List.replicate 3 surface3_x_surgery
+-- End-to-end: hand the framework a LITERAL (N, a) and emit the scheduled circuit.
+def N : Nat := 15
+def a : Nat := 2
+def demoSurgeries : Nat := 5   -- emit the first 5 surgeries (full Shor(15) = 3072)
 
 def main : IO Unit := do
-  IO.FS.writeFile "PyCircuits/shor_demo_schedule.stim" (emitScheduleStim shorDemoSchedule)
-  IO.println s!"emitted {(shorDemoSchedule).length} surgeries, {scheduleFootprint shorDemoSchedule} physical qubits"
+  IO.FS.writeFile "PyCircuits/shor_demo_schedule.stim" (emitShorPrefix N a demoSurgeries)
+  IO.println s!"Shor(N={N}, a={a}): full schedule = {shorMergeCount N} surgery merges; emitted first {demoSurgeries}."

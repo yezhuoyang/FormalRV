@@ -13,7 +13,7 @@ A third party who does not trust our proof can run THIS on the emitted code.
 import stim, sys
 
 CIRC = "PyCircuits/shor_demo_schedule.stim"
-N_SURG, MEAS_PER, QUBITS_PER = 3, 14, 28
+N_SURG, MEAS_PER, QUBITS_PER = 5, 14, 28
 TOTAL_MEAS = N_SURG * MEAS_PER
 
 c = stim.Circuit.from_file(CIRC)
