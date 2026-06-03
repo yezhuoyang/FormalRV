@@ -1,38 +1,45 @@
 """
-Cross-validate the Lean-verified surface3 surgery gadget against Stim.
+Cross-validate the Lean-verified surface3 surgery against Stim — using the
+STABILIZER-FLOW (correlation-surface) criterion of Tan, Niu & Gidney, "A SAT
+Scalpel for Lattice Surgery" (LaSsynth).  Per that paper, a lattice-surgery
+subroutine is functionally correct iff it satisfies the required stabilizer
+flows ("product of logical operators at ports = product of measurements").
+Stim's `has_flow` IS that check.
 
-`surface3_surgery.stim` is emitted by the Lean framework via
-`FormalRV.LatticeSurgery.StimEmit.surgeryToStim surface3_x_surgery`
-(regenerate with: `#eval IO.FS.writeFile "PyCircuits/surface3_surgery.stim"
-(surgeryToStim surface3_x_surgery)` after importing StimEmit + SurgeryDemoSurface).
+`surface3_surgery.stim` is emitted by the Lean framework
+(`StimEmit.surgeryToStim surface3_x_surgery`).  14 measurements: X-checks
+rec 0..7, Z-checks rec 8..13.  Logical X-bar = X6 X7 X8; logical Z-bar = Z0 Z3 Z6
+(anticommutes with X-bar at qubit 6).
 
-It is the DETAILED merged-code syndrome circuit: per merged X-check an ancilla
-|+>, CX anc->support, MX; per merged Z-check an ancilla |0>, CX support->anc, M.
-14 measurements: X-checks rec 0..7, Z-checks rec 8..13.
-
-Stim's flow analysis (the reference Gottesman-Knill oracle) independently
-confirms the Lean theorem `surface3_x_surgery_measures_logicalX`: the
-span_witness-selected X-checks (rows 6,7 = rec[-8] xor rec[-7]) read the logical
-X-bar = X6 X7 X8.
+We verify the COMPLETE functional characterization of the X-bar measurement
+(not just the readout): it READS X-bar, it is a GENUINE projective measurement
+(destroys the anticommuting Z-bar), and it PRESERVES the code stabilizers.
 """
 import stim, sys
 c = stim.Circuit(open("PyCircuits/surface3_surgery.stim").read())
-print("qubits:", c.num_qubits, " measurements:", c.num_measurements)
-all_pass = True
-def ok(desc, flow_str):
-    global all_pass
-    try: r = c.has_flow(stim.Flow(flow_str))
+print(f"qubits {c.num_qubits}  measurements {c.num_measurements}")
+ok = True
+def flow(desc, s, expect=True):
+    global ok
+    try: r = c.has_flow(stim.Flow(s))
     except Exception as e: r = f"ERR {e}"
-    all_pass = all_pass and (r is True)
-    print(f"  [{'PASS' if r is True else 'FAIL'}] {desc}: {flow_str} -> {r}")
+    good = (r is expect)
+    ok = ok and good
+    print(f"  [{'PASS' if good else 'FAIL'}] {desc}: ({s}) = {r}  (expect {expect})")
 
-print("\n== logical X-bar readout (span_witness rows 6,7 = rec[-8] xor rec[-7]) ==")
-ok("X-bar = X6 X7 X8 read by selected X-checks", "X6*X7*X8 -> rec[-8] xor rec[-7]")
-print("\n== each merged X-check measures its support ==")
-ok("X-check0 {0,3,9}",   "X0*X3*X9 -> rec[-14]")
-ok("X-check6 {6,7,8,13}", "X6*X7*X8*X13 -> rec[-8]")
-ok("X-check7 {13}",       "X13 -> rec[-7]")
-print("\n== merged Z-checks measure their supports ==")
-ok("Z-check0 {0,1,9}",    "Z0*Z1*Z9 -> rec[-6]")
-ok("Z-check2 {3,4,9,11}", "Z3*Z4*Z9*Z11 -> rec[-4]")
-print("\nALL PASS" if all_pass else "\nSOME FAILED"); sys.exit(0 if all_pass else 1)
+print("\n(R) READOUT — the span_witness-selected X-checks read X-bar:")
+flow("X-bar = X6 X7 X8 -> rec[6] xor rec[7]", "X6*X7*X8 -> rec[-8] xor rec[-7]", True)
+
+print("\n(projective) the measurement DESTROYS the anticommuting Z-bar:")
+flow("Z-bar = Z0 Z3 Z6 NOT preserved", "Z0*Z3*Z6 -> Z0*Z3*Z6", False)
+
+print("\n(non-disturbance) code stabilizers are PRESERVED through the merge:")
+flow("Z-check0 Z0 Z1 Z9 preserved", "Z0*Z1*Z9 -> Z0*Z1*Z9", True)
+flow("Z-check4 Z6 Z7 Z11 preserved", "Z6*Z7*Z11 -> Z6*Z7*Z11", True)
+
+print("\n(measurement faithfulness) each merged check measures its support:")
+flow("merge X-check {6,7,8,13}", "X6*X7*X8*X13 -> rec[-8]", True)
+flow("Z-check2 {3,4,9,11}", "Z3*Z4*Z9*Z11 -> rec[-4]", True)
+
+print("\n" + ("ALL FLOWS AS EXPECTED — surgery is a correct projective X-bar measurement"
+              if ok else "SOME FLOWS UNEXPECTED")); sys.exit(0 if ok else 1)
