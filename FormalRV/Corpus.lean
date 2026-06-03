@@ -6,6 +6,7 @@ import FormalRV.Corpus.Gidney2025
 import FormalRV.Corpus.GidneyEkera2021
 import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
+import FormalRV.Corpus.ShorCriticalPathFloor
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
 import FormalRV.Corpus.ShorPPMEndToEnd
 import FormalRV.Corpus.SurgeryDemoSteane
