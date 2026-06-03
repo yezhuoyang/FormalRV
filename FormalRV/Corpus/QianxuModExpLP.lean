@@ -84,6 +84,34 @@ theorem modexp_preserves_code
   · rw [h0]; exact (codeStabs_commute_logZ g hg).1
   · rw [h1]; exact (codeStabs_commute_logZ g hg).2
 
+/-- **THE FULLY GENERAL FORM.**  The real modexp does not use only Z̄₀/Z̄₁ — it is a long
+    sequence of DIFFERENT logical PPMs (controlled-adder Paulis, unary-lookup Paulis,
+    CCZ magic-injection Paulis).  What ALL of them share — what *makes* them logical
+    operations — is that they commute with every code stabilizer.  Under exactly that
+    (any-length) hypothesis, every code stabilizer survives the whole computation.  So
+    ANY logical computation on the LP code — the full modexp with its true gate set
+    included — preserves the code, by induction. -/
+theorem logical_computation_preserves_code
+    (ps : List PauliString)
+    (hlog : ∀ P ∈ ps, ∀ g ∈ codeStabs, g.commutes P = true)
+    (g : PauliString) (hg : g ∈ codeStabs) :
+    g ∈ runPPMs ps bbCodeState := by
+  show g ∈ measureChecks ps bbCodeState
+  exact mem_measureChecks_of_commutesAll ps g bbCodeState (codeStabs_sub_state g hg)
+    (fun P hP => hlog P hP g hg)
+
+/-- The naive logical-Z modexp is the special case (`halpha` ⇒ `hlog` via
+    `codeStabs_commute_logZ`). -/
+theorem modexp_preserves_code'
+    (ps : List PauliString) (halpha : ∀ P ∈ ps, P = zbar 0 ∨ P = zbar 1)
+    (g : PauliString) (hg : g ∈ codeStabs) :
+    g ∈ runPPMs ps bbCodeState :=
+  logical_computation_preserves_code ps
+    (fun P hP g hg => by
+      rcases halpha P hP with h0 | h1
+      · rw [h0]; exact (codeStabs_commute_logZ g hg).1
+      · rw [h1]; exact (codeStabs_commute_logZ g hg).2) g hg
+
 /-- Specialised to the X-checks: every X-stabilizer survives the full modexp. -/
 theorem modexp_preserves_Xchecks
     (ps : List PauliString) (halpha : ∀ P ∈ ps, P = zbar 0 ∨ P = zbar 1)
