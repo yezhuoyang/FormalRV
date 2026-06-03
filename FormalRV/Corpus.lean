@@ -27,6 +27,7 @@ import FormalRV.Corpus.ShorEmit
 import FormalRV.Corpus.ShorFullMachineRequirement
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
 import FormalRV.Corpus.ShorPPMEndToEnd
+import FormalRV.Corpus.ShorPPMUnitaryReduction
 import FormalRV.Corpus.StabilizerScheduleVerify
 import FormalRV.Corpus.SurfaceShorFullSchedule
 import FormalRV.Corpus.SurfaceShorFullStack
