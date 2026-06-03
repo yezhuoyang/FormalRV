@@ -16,6 +16,7 @@ import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.QianxuBounds
 import FormalRV.Corpus.QianxuLPComputation
+import FormalRV.Corpus.QianxuLPSurgery
 import FormalRV.Corpus.QianxuModExpLP
 import FormalRV.Corpus.QianxuNaiveConstructions
 import FormalRV.Corpus.QianxuPPMonLP
