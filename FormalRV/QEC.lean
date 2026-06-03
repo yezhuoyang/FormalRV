@@ -4,6 +4,7 @@ import FormalRV.QEC.GF2Rank
 import FormalRV.QEC.CSSCode
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Logical
+import FormalRV.QEC.LogicalFinder
 import FormalRV.QEC.LogicalValidity
 import FormalRV.QEC.QECCodeInstances
 import FormalRV.QEC.Instances
