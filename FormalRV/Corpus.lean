@@ -11,6 +11,7 @@ import FormalRV.Corpus.LaSsynthImport
 import FormalRV.Corpus.MagicInjectionSurgery
 import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
+import FormalRV.Corpus.ReactionLimitedRuntime
 import FormalRV.Corpus.ShorCriticalPathFloor
 import FormalRV.Corpus.ShorFullMachineRequirement
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
