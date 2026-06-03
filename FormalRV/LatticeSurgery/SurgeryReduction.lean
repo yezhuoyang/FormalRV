@@ -124,7 +124,43 @@ theorem logical_PPM_reduces_to_surgery_schedule
     rw [surgery_schedule_runs_as_merge]
     exact surgery_preserves_commuting_logical g L s hmem hcomm
 
-/-! ## (3) Smoke: the schedule-as-program identity fires on a concrete check list. -/
+/-! ## (3) The Z-TYPE DUAL (closing (2): both measurement bases).
+
+    `runProgram_map_meas_nil` is Pauli-generic, so the Z-type surgery (measuring
+    the merged Z-checks `merged_stabilizers_Z`, for a logical Z̄) reduces the same
+    way, reusing the Z-type correctness theorems verbatim. -/
+
+theorem surgery_schedule_runs_as_merge_Z (g : SurgeryGadget) (s : StabilizerState) :
+    runProgram ((merged_stabilizers_Z g).map StabOp.meas) [] s
+      = measureChecks (merged_stabilizers_Z g) s := by
+  rw [measureChecks]
+  exact runProgram_map_meas_nil _ s
+
+/-- The Z-type logical PPM command (measuring the logical Z̄ = `ztarget`) reduces
+    to the merged-Z-check surgery schedule-program, with readout (R) + non-
+    disturbance (N) of the execution.  `zwitness/ztarget` carry the Z-kernel
+    identity (the gadget stores only the X-kernel), as in
+    `surgery_implements_logical_measurement_Z`. -/
+theorem logical_PPM_Z_reduces_to_surgery_schedule
+    (g : SurgeryGadget) (n : Nat) (zwitness ztarget : BoolVec) (signs : List Bool)
+    (hn : 0 < n) (hshape : ∀ r ∈ g.merged_hz, r.length = n)
+    (hsig : signs.length = g.merged_hz.length)
+    (hzker : row_combination zwitness g.merged_hz = ztarget) :
+    (∀ s, runProgram ((merged_stabilizers_Z g).map StabOp.meas) [] s
+            = measureChecks (merged_stabilizers_Z g) s)
+    ∧ (selectedSignedZProduct zwitness g.merged_hz signs
+            = signedZRow (selectedZParity zwitness signs) ztarget)
+    ∧ (∀ (L : PauliString) (s : StabilizerState), L ∈ s →
+         (∀ P ∈ merged_stabilizers_Z g, L.commutes P = true) →
+         L ∈ runProgram ((merged_stabilizers_Z g).map StabOp.meas) [] s) := by
+  refine ⟨fun s => surgery_schedule_runs_as_merge_Z g s, ?_, ?_⟩
+  · exact (surgery_implements_logical_measurement_Z g n zwitness ztarget signs
+            hn hshape hsig hzker).1
+  · intro L s hmem hcomm
+    rw [surgery_schedule_runs_as_merge_Z]
+    exact surgery_preserves_commuting_logical_Z g L s hmem hcomm
+
+/-! ## (4) Smoke: the schedule-as-program identity fires on a concrete check list. -/
 
 example (s : StabilizerState) :
     runProgram ([xRow [true, false], xRow [false, true]].map StabOp.meas) [] s

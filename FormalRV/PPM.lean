@@ -27,6 +27,7 @@ import FormalRV.PPM.PPMUpdateInvariants
 import FormalRV.PPM.PauliOps
 import FormalRV.PPM.PauliSemantics
 import FormalRV.PPM.StabProgram
+import FormalRV.PPM.StabilizerBasisBridge
 import FormalRV.PPM.TGadgetTeleport
 import FormalRV.PPM.ToffoliFromCCZ
 import FormalRV.PPM.ToffoliScheme
