@@ -1,29 +1,43 @@
 /-
-  FormalRV.Corpus.ShorCriticalPathFloor — a verified CONDITIONAL critical-path
-  runtime LOWER BOUND for qianxu's RSA-2048 modular exponentiation, and the GAP
-  to qianxu's reported runtimes.
+  FormalRV.Corpus.ShorCriticalPathFloor — the critical-path lower-bound MECHANISM
+  applied ILLUSTRATIVELY to qianxu's RSA-2048 numbers.  NOT a verified lower
+  bound on qianxu's implementation.
 
-  This executes the plan from the lower-bound discussion: take the circuit's
-  intrinsic dependency depth (Q1: circuit + per-gate min duration, NO scheduling,
-  NO resource counts — the floor holds for ANY schedule and ANY P), as a
-  PARAMETRIC product of structural coefficients (Q2: scalable by induction, not a
-  graph traversal — see `System/DependencyGraph.lean`), multiply by the minimum
-  cycles per critical-path Toffoli, and compare to the reported runtimes.
+  ## STATUS / HONEST SCOPE (corrected 2026-06-02 after John's objection)
 
-  HONESTY (CLAUDE.md "arithmetic-only / inferred" taxonomy).  qianxu gives a
-  Toffoli COUNT, never a modexp DEPTH (agent extraction 2026-06-02).  So:
-    • PAPER-BACKED (a real `paper_claim`): the ADDER Toffoli-depth — ~q_A for the
-      ripple carry chain, ~4·log q_A for carry-lookahead (qianxu body p.7; App. F
-      p.25).  This is the ONE depth qianxu commits to, and it is RIGOROUS: the
-      carry chain is a serial dependency chain (`ripple_adder_carry_chain_floor`).
-    • INFERRED (NOT a qianxu claim — structural inference from the Gidney–Ekerå
-      windowed arithmetic, Ref. [18]): the number of sequential additions per
-      modular multiplication (≈ ⌈n/q_A⌉) and of sequential modular multiplications
-      per modexp (≈ 2n).  These compose the adder depth into a modexp depth.
-  So the modexp FLOOR below is a VALID lower bound (it underestimates the true
-  depth — it omits the unary-lookup depth and uses the minimum per-Toffoli time —
-  hence it is conservative) but its magnitude rests on the inferred sequential
-  counts.  The CONCLUSION is a BRACKET on the optimal, not a single number.
+  This file does NOT prove a runtime lower bound on qianxu's actual circuit, and
+  must not be read as one.  TWO PREREQUISITES are missing — and per CLAUDE.md
+  ("semantic correctness BEFORE resource counts") they must come FIRST:
+
+    1. We have NOT compiled qianxu's circuit: the modexp through his three codes
+       (memory lp_20, processor bb18, factory) via PPM + lattice surgery does not
+       exist in our formalization.  So the dependency structure (the carry chain,
+       the depth L, the per-op duration τ) below is ASSUMED, not derived from a
+       verified circuit.
+    2. We have NOT proven the compiled circuit's SEMANTIC correctness (that it
+       implements modexp).  A resource bound on an unverified circuit is, by the
+       project's own rule, an ARITHMETIC-ONLY observation.
+
+  What is real here is split sharply:
+    • VERIFIED TOOL (hypothesis-conditional, kernel-clean): the critical-path
+      principle — `serial_chain_depth` / `runtimeFloor_is_lower_bound`
+      (`System/DependencyGraph.lean`): IF a computation has a serial dependency
+      chain of length L with per-step min duration τ, THEN any schedule takes
+      ≥ L·τ.  Genuinely proven and reusable.
+    • ARITHMETIC-ONLY (NOT a verified result about qianxu): everything below.  The
+      "floor" is built from an ASSUMED dependency structure + INFERRED sequential
+      add/mult counts; the "gap" theorems are TRUE Nat inequalities between that
+      assumed-structure number and the reported runtimes — NOT a proof that
+      qianxu's circuit cannot run faster.
+
+  To make this a REAL lower bound on qianxu, in order: (i) compile his three-code
+  PPM circuit; (ii) prove it implements modexp; (iii) DERIVE its dependency DAG +
+  per-op durations from that verified compilation; (iv) only THEN does the tool
+  apply.  None of (i)–(iii) is done.
+
+  The closest-to-real fact is `ripple_adder_carry_chain_floor` (qianxu states the
+  ~n adder depth, p.7) — but even it ASSUMES the carry-chain dependency rather
+  than deriving it from a compiled, verified adder.
 
   No Mathlib.  Pure Nat + `decide`.  No `sorry`, no `axiom`.
 -/
@@ -111,8 +125,10 @@ def reported_balanced_cycles : Nat := 10000 * 86400 * 1000
     gates and PPMs are executed sequentially"). -/
 def reported_spaceeff_cycles : Nat := 43000 * 86400 * 1000
 
-/-! ## (6) THE GAP — every reported runtime sits ABOVE the verified causal floor,
-    by a quantified factor.  `decide`-checked. -/
+/-! ## (6) THE GAP — ARITHMETIC-ONLY (assumed structure + inferred coefficients).
+    These are true Nat inequalities between the assumed-structure "floor" and the
+    reported runtimes.  They are NOT a verified lower bound on qianxu's circuit
+    (see STATUS): the dependency structure is assumed and unverified. -/
 
 /-- Sanity: the floor is a valid lower bound on qianxu's BEST reported runtime. -/
 theorem floor_below_best : modexp_floor_cycles ≤ reported_timeeff_P1160_cycles := by decide
@@ -148,20 +164,22 @@ theorem spaceeff_at_least_14000x_above_floor :
 theorem spaceeff_440x_balanced_or_better :
     440 * reported_timeeff_P1160_cycles ≤ reported_spaceeff_cycles := by decide
 
-/-! ## Headline finding.
-    VERIFIED (paper-backed + proven): the ripple adder's Toffoli-depth ≥ q_A
-      (`ripple_adder_carry_chain_floor`) — the carry chain is intrinsically serial.
-    VERIFIED arithmetic on INFERRED depth: the RSA-2048 modexp causal floor is
-      ≈ 2.9 days (carry-lookahead, conservative); qianxu's reported runtimes sit
-      ≈ 34× (time-efficient P=1160, 97 d), ≈ 3500× (balanced, 10⁴ d), and
-      ≈ 14000× (space-efficient, 4.3×10⁴ d) ABOVE it.  So the optimal time-efficient
-      runtime is bracketed in [≈2.9 d, 97 d]; the rest of the reported range is
-      the parallelism the architecture leaves on the table.
-    ROBUST (no inference): qianxu's own 440× space-vs-time spread confirms the
-      available parallelism independently.
+/-! ## Headline (read with the STATUS block — most of this is NOT verified about
+       qianxu; it is arithmetic on an ASSUMED, uncompiled, unverified circuit).
+    ONLY genuinely-proven thing about a circuit: `ripple_adder_carry_chain_floor`
+      — a serial carry chain of width q_A forces adder Toffoli-depth ≥ q_A — and
+      even this ASSUMES the carry-chain dependency (qianxu's ~n depth, p.7) rather
+      than deriving it from a compiled, semantically-verified adder.
+    ARITHMETIC-ONLY (assumed structure + inferred counts, NOT a qianxu lower
+      bound): the "≈2.9-day floor" and the 34× / 3500× / 14000× ratios.  The
+      dependency structure they rest on is not formalized; semantic correctness of
+      the three-code PPM compilation is the unmet prerequisite.
+    ROBUST paper-internal (no inference, no circuit model): qianxu's own ≥440×
+      space-vs-time spread is a true relation between two REPORTED numbers — it
+      witnesses available parallelism without claiming anything we proved.
 
-    The honest residue is the INFERRED sequential add/mult counts (the adder
-    depth is paper-backed; a sharper bound needs the explicit Gidney–Ekerå modexp
-    loop structure from Refs. [18]/[34]). -/
+    Bottom line: this is the verified MECHANISM plus an illustration; turning it
+    into a real lower bound on qianxu requires first compiling and verifying his
+    three-code PPM modexp circuit. -/
 
 end FormalRV.Corpus.ShorCriticalPathFloor
