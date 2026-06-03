@@ -1,5 +1,6 @@
 import FormalRV.Shor.AQFTCompile
 import FormalRV.Shor.AQFTCompileSemantics
+import FormalRV.Shor.ApproxTransfer
 import FormalRV.Shor.ControlledGates
 import FormalRV.Shor.Eigenstate
 import FormalRV.Shor.Main
