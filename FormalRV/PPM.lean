@@ -3,6 +3,7 @@ import FormalRV.PPM.CircuitToPPMFactoryProvision
 import FormalRV.PPM.CircuitToPPMInterface
 import FormalRV.PPM.CircuitToPPMMagicFactory
 import FormalRV.PPM.CircuitToPPMObservationBridge
+import FormalRV.PPM.CircuitToPPMResource
 import FormalRV.PPM.CircuitToPPMSemanticBridge
 import FormalRV.PPM.CircuitToPPMToffoliMagic
 import FormalRV.PPM.CliffordConj
