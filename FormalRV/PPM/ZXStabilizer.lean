@@ -67,6 +67,11 @@ def ZXSpider.toPauli (sp : ZXSpider) : PauliString :=
 /-- The PPM op a spider compiles to: measure its Pauli. -/
 def ZXSpider.toStabOp (sp : ZXSpider) : StabOp := StabOp.meas sp.toPauli
 
+/-- Build a spider from its colour and the list of qubit indices in its support
+    (over `n` qubits).  Used by the LaSre→PPM importer to emit compact diagrams. -/
+def mkSpider (color : ZXColor) (idxs : List Nat) (n : Nat) : ZXSpider :=
+  { color := color, support := (List.range n).map (fun i => idxs.contains i) }
+
 /-- A ZX diagram (measurement fragment) — a sequence of spiders. -/
 abbrev ZXDiagram := List ZXSpider
 
