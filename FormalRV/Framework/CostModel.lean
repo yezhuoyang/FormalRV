@@ -207,15 +207,25 @@ def surfaceModel (factory : Nat) : CostModel :=
     see the code's area `n`.  Qubit ROUTING is atom transport — a TIME cost in
     the schedule layer, NOT an ancilla-qubit tag here.
 
-    HONEST RESIDUES (documented, not hidden): the Θ(w) coefficient assumes good
-    Tanner-graph boundary expansion (β = Θ(1); otherwise O(w·log³w), qianxu
-    App. B / Cross §); a cross-block bridge adds a subleading `d` qubits. -/
+    HONEST RESIDUES (documented, not hidden):
+    • SYNDROME extraction schedule.  We charge `|hx| + |hz|` (BOTH bases at
+      once).  qianxu measures X- and Z-stabilizers SEQUENTIALLY, so its per-zone
+      footprint is `N = n + (n-k)/2` — data + ONE basis of stabilizer ancilla
+      (qianxu Ext. Data Table I, p.13; App. E.1, p.21), i.e. the syndrome ancilla
+      is `(n-k)/2 = max(|hx|,|hz|)` (the X/Z ancilla time-multiplexed — a
+      scheduling reuse, same "reuse-over-time is a TIME cost" idea as routing).
+      Our `|hx| + |hz|` is thus a conservative SIMULTANEOUS-extraction UPPER BOUND
+      (≈ 2× qianxu's sequential peak); qianxu's halving sits in the gap, like the
+      other optimizations the framework leaves to the schedule.
+    • Θ(w) coefficient assumes good Tanner-graph boundary expansion (β = Θ(1);
+      otherwise O(w·log³w), qianxu App. B / Cross §); a cross-block bridge adds a
+      subleading `d` qubits. -/
 def qldpcModel (factory : Nat) : CostModel :=
   { name    := "qLDPC code surgery (surgery weight-scaling, area-independent)"
     tauToff := fun c => c.d
     physPer := fun c => physPerLogical c
     ancilla := fun c _w op_weight parallel =>
-      { syndrome := c.hx.length + c.hz.length     -- one ancilla per parity check
+      { syndrome := c.hx.length + c.hz.length     -- both bases (simultaneous upper bound)
         surgery  := parallel * op_weight }        -- Θ(w)·parallel  (coeff 1 = cross_2025)
     factory := fun _ => factory }
 
