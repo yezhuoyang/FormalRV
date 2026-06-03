@@ -21,6 +21,7 @@ import FormalRV.PPM.PPMDenote
 import FormalRV.PPM.PPMGadgetInstance
 import FormalRV.PPM.PPMOperational
 import FormalRV.PPM.PPMSemanticsGeneral
+import FormalRV.PPM.PPMToQASM
 import FormalRV.PPM.PPMUpdateInvariants
 import FormalRV.PPM.PauliOps
 import FormalRV.PPM.PauliSemantics
