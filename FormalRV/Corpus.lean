@@ -5,6 +5,7 @@ import FormalRV.Corpus.GateSyndromeWorkedExample
 import FormalRV.Corpus.Gidney2025
 import FormalRV.Corpus.GidneyEkera2021
 import FormalRV.Corpus.LaSsynthImport
+import FormalRV.Corpus.MagicInjectionSurgery
 import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.ShorCriticalPathFloor
