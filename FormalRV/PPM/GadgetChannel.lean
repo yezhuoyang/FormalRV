@@ -247,4 +247,30 @@ theorem cczKraus000_eq_smul_U :
     · intro hmem; exact absurd (Finset.mem_univ _) hmem
   rw [← e1, hcol, e2]
 
+/-! ## §3. Channel composition — GAP 4 at the PROGRAM level.
+
+    `tChannel_eq_unitaryChannel` says one gadget's data channel is its gate's unitary
+    channel.  Composing them: a SEQUENCE of gadgets, each realizing its gate's unitary
+    channel, realizes the unitary channel of the PRODUCT gate — so the whole PPM
+    program's data channel is the unitary channel of the circuit it compiles. -/
+
+/-- The unitary channel of `U`: `ρ ↦ U·ρ·U†`. -/
+noncomputable def unitaryChannel {n : Nat} (U ρ : Matrix (Fin n) (Fin n) ℂ) :
+    Matrix (Fin n) (Fin n) ℂ := U * ρ * Uᴴ
+
+/-- **Channel composition.** Running the unitary channel of `U₁` then of `U₂` is the
+    unitary channel of the product `U₂·U₁`.  Iterating, a sequence of gadget channels
+    (each `= unitaryChannel Uᵢ` by `tChannel_eq_unitaryChannel`) composes to
+    `unitaryChannel (Uₙ·…·U₁)` — the program-level data channel of the compiled circuit. -/
+theorem unitaryChannel_comp {n : Nat} (U₁ U₂ ρ : Matrix (Fin n) (Fin n) ℂ) :
+    unitaryChannel U₂ (unitaryChannel U₁ ρ) = unitaryChannel (U₂ * U₁) ρ := by
+  unfold unitaryChannel
+  rw [Matrix.conjTranspose_mul]
+  simp only [Matrix.mul_assoc]
+
+/-- The T gadget's data channel, against the general `unitaryChannel`. -/
+theorem tChannel_eq_unitaryChannel' (ρ : Matrix (Fin 2) (Fin 2) ℂ) :
+    tChannel ρ = unitaryChannel tMat ρ :=
+  tChannel_eq_unitaryChannel ρ
+
 end FormalRV.PPM.GadgetChannel
