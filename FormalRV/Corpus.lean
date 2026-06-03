@@ -1,5 +1,6 @@
 import FormalRV.Corpus.Babbush2026
 import FormalRV.Corpus.CainXu
+import FormalRV.Corpus.CostModelWeightDemo
 import FormalRV.Corpus.GateSyndromeWorkedExample
 import FormalRV.Corpus.Gidney2025
 import FormalRV.Corpus.GidneyEkera2021

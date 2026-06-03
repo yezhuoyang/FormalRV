@@ -5,6 +5,7 @@ import FormalRV.Framework.L2_Gadgets
 import FormalRV.Framework.L3_PPM
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Framework.ResourceEstimate
+import FormalRV.Framework.CostModel
 
 /-!
 # FormalRV.Framework
