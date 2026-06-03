@@ -188,4 +188,90 @@ theorem tcount_sqir_modmult_const_gate_shor
   tcount_sqir_modmult_const_gate_eq bits N a
     (fun j _ => modmult_step_const_ne_zero a N hcop hodd h1 j)
 
+/-! ## §8. EXACT count of the ACTUAL VERIFIED ORACLE TERM `sqir_modmult_MCP_gate`.
+
+    This is the in-place modular multiplier that the verified Shor theorem
+    `Shor_correct_verified_no_modmult_axioms` ACTUALLY uses as its oracle
+    (`f_modmult_circuit_verified_bits → sqir_modmult_MCP_gate`).  In-place = forward
+    `const_gate a` + register swap + uncompute `const_gate ((N-ainv)%N)`, wrapped in
+    layout adapters; the swaps/adapters are SWAP networks (Toffoli-free).  So the verified
+    oracle is EXACTLY `2·56·bits² = 112·bits²` T = `16·bits²` Toffolis. -/
+
+theorem tcount_qubit_swap (a b : Nat) : tcount (qubit_swap a b) = 0 := by
+  simp [qubit_swap, tcount]
+
+theorem tcount_Gate_shift (off : Nat) (g : Gate) : tcount (Gate.shift off g) = tcount g := by
+  induction g with
+  | I => rfl
+  | X q => rfl
+  | CX a b => rfl
+  | CCX a b c => rfl
+  | seq g h ih1 ih2 => simp [Gate.shift, tcount, ih1, ih2]
+
+theorem tcount_sqir_swap_acc_mult_aux (bits k : Nat) :
+    tcount (sqir_swap_acc_mult_aux bits k) = 0 := by
+  induction k with
+  | zero => rfl
+  | succ m ih => simp [sqir_swap_acc_mult_aux, tcount, ih, tcount_qubit_swap]
+
+theorem tcount_sqir_swap_acc_mult (bits : Nat) : tcount (sqir_swap_acc_mult bits) = 0 :=
+  tcount_sqir_swap_acc_mult_aux bits bits
+
+theorem tcount_reverse_register_swap_aux (n oa ob k : Nat) :
+    tcount (reverse_register_swap_aux n oa ob k) = 0 := by
+  induction k with
+  | zero => rfl
+  | succ m ih => simp [reverse_register_swap_aux, tcount, ih, tcount_qubit_swap]
+
+theorem tcount_reverse_register_swap (n oa ob : Nat) :
+    tcount (reverse_register_swap n oa ob) = 0 :=
+  tcount_reverse_register_swap_aux n oa ob n
+
+theorem tcount_sqir_encode_to_mult_adapter (bits : Nat) :
+    tcount (sqir_encode_to_mult_adapter bits) = 0 := by
+  simp [sqir_encode_to_mult_adapter, tcount_reverse_register_swap]
+
+/-- EXACT T-count of the in-place modular multiplier = `112·bits²` when both constant
+    multipliers (`a` and `(N-ainv)%N`) have all non-zero steps. -/
+theorem tcount_sqir_modmult_inplace_candidate_eq
+    (bits N a ainv : Nat)
+    (ha : ∀ j, j < bits → (a * 2 ^ j) % N ≠ 0)
+    (hb : ∀ j, j < bits → ((N - ainv) % N * 2 ^ j) % N ≠ 0) :
+    tcount (sqir_modmult_inplace_candidate bits N a ainv) = 112 * bits ^ 2 := by
+  simp only [sqir_modmult_inplace_candidate, tcount, tcount_sqir_swap_acc_mult]
+  rw [tcount_sqir_modmult_const_gate_eq bits N a ha,
+      tcount_sqir_modmult_const_gate_eq bits N ((N - ainv) % N) hb]
+  ring
+
+/-- **EXACT T-count of the VERIFIED MCP oracle term** = `112·bits²` (same conditions). -/
+theorem tcount_sqir_modmult_MCP_gate_eq
+    (bits N a ainv : Nat)
+    (ha : ∀ j, j < bits → (a * 2 ^ j) % N ≠ 0)
+    (hb : ∀ j, j < bits → ((N - ainv) % N * 2 ^ j) % N ≠ 0) :
+    tcount (sqir_modmult_MCP_gate bits N a ainv) = 112 * bits ^ 2 := by
+  simp only [sqir_modmult_MCP_gate, sqir_modmult_inplace_shifted, tcount,
+             tcount_sqir_encode_to_mult_adapter, tcount_Gate_shift,
+             tcount_sqir_modmult_inplace_candidate_eq bits N a ainv ha hb]
+  omega
+
+/-- The uncompute constant `(N-ainv)%N` is coprime to `N` when `ainv` is (and `0<ainv<N`). -/
+theorem coprime_modsub (ainv N : Nat)
+    (hcopinv : Nat.Coprime ainv N) (hpos : 0 < ainv) (hlt : ainv < N) :
+    Nat.Coprime ((N - ainv) % N) N := by
+  have hsub : (N - ainv) % N = N - ainv := Nat.mod_eq_of_lt (by omega)
+  rw [hsub]
+  unfold Nat.Coprime
+  rw [Nat.gcd_comm, Nat.gcd_self_sub_right (le_of_lt hlt), Nat.gcd_comm]
+  exact hcopinv
+
+/-- **EXACT T-count of the verified MCP oracle, for any valid Shor base + inverse.** -/
+theorem tcount_sqir_modmult_MCP_gate_shor
+    (bits N a ainv : Nat) (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    tcount (sqir_modmult_MCP_gate bits N a ainv) = 112 * bits ^ 2 := by
+  apply tcount_sqir_modmult_MCP_gate_eq
+  · exact fun j _ => modmult_step_const_ne_zero a N hcop hodd h1 j
+  · have hc : Nat.Coprime ((N - ainv) % N) N := coprime_modsub ainv N hcopinv hpos hlt
+    exact fun j _ => modmult_step_const_ne_zero ((N - ainv) % N) N hc hodd h1 j
+
 end FormalRV.BQAlgo

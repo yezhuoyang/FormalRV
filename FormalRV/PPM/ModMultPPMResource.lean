@@ -22,6 +22,7 @@ import FormalRV.PPM.GateToPPMResource
 import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
 import FormalRV.Arithmetic.SQIRModMult.ModExpCount
 import FormalRV.Arithmetic.SQIRModMult.Proofs2
+import FormalRV.Arithmetic.SQIRModMult.Proofs3
 
 namespace FormalRV.PPM.ModMultPPMResource
 
@@ -124,5 +125,39 @@ theorem shor2048_Meas_exact (na N a : Nat)
     (hcop : Nat.Coprime a N) (hodd : Odd N) (h1 : 1 < N) :
     numMeas (circuitToPPM na (gateToHL (shorModExp 2048 N a))) = 412316860416 := by
   rw [numMeas_shorModExp na 2048 N a hcop hodd h1]; norm_num
+
+/-! ## §7. Count welded onto the ACTUAL verified Shor oracle term `sqir_modmult_MCP_gate`.
+
+    The verified Shor theorem `Shor_correct_verified_no_modmult_axioms` uses
+    `f_modmult_circuit_verified_bits → sqir_modmult_MCP_gate` (the in-place modular
+    multiplier) as its oracle, and that whole theorem is axiom-clean / sorry-free.  Here the
+    EXACT Toffoli count is bound to THAT same term, paired with its semantic proof
+    `sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty`. -/
+
+theorem toffCount_sqir_modmult_MCP_gate (bits N a ainv : Nat)
+    (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
+    toffCount (sqir_modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
+  have h := tcount_sqir_modmult_MCP_gate_shor bits N a ainv hcop hcopinv hpos hlt hodd h1
+  rw [tcount_eq_seven_mul_toffCount] at h
+  omega
+
+/-- **END-TO-END on the ACTUAL verified Shor oracle.**  ONE term `sqir_modmult_MCP_gate
+    bits N a ainv` simultaneously (a) computes `|x⟩ ↦ |a·x mod N⟩` (its `Gate.toUCom`
+    satisfies `MultiplyCircuitProperty` — the property the verified Shor algorithm relies
+    on) and (b) costs EXACTLY `16·bits²` CCZ magic states in PPM. -/
+theorem verified_MCP_oracle_end_to_end
+    (bits N a ainv : Nat)
+    (hbits : 1 ≤ bits) (hN_pos : 0 < N) (hN : N ≤ 2 ^ bits) (hN2 : 2 * N ≤ 2 ^ bits)
+    (hodd : Odd N) (h1 : 1 < N) (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
+    (hpos : 0 < ainv) (hlt : ainv < N) (h_inv : a * ainv % N = 1) :
+    FormalRV.SQIRPort.MultiplyCircuitProperty a N bits (sqir_modmult_rev_anc bits)
+        (Gate.toUCom (sqir_total_dim bits) (sqir_modmult_MCP_gate bits N a ainv))
+    ∧ numCCZMagic (circuitToPPM 0 (gateToHL (sqir_modmult_MCP_gate bits N a ainv)))
+        = 16 * bits ^ 2 :=
+  ⟨sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty bits N a ainv hbits hN_pos hN hN2
+      (le_of_lt hlt) h_inv,
+   by rw [numCCZMagic_circuitToPPM_gateToHL,
+          toffCount_sqir_modmult_MCP_gate bits N a ainv hcop hcopinv hpos hlt hodd h1]⟩
 
 end FormalRV.PPM.ModMultPPMResource
