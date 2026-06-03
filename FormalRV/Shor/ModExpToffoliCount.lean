@@ -39,6 +39,15 @@
     construction deliberately omits — see §4 for the same formula evaluated at the
     published windowed count, and the ratio.
 
+  UPDATE — the lower layers are now WELDED to verified circuit terms:
+  `PPM/GateToPPMResource.verified_adder_end_to_end` (the adder computes a+b AND costs
+  2(n+2) magic states, ONE term) and `PPM/ModMultPPMResource.verified_modmult_end_to_end`
+  (the modular multiplier `sqir_modmult_const_gate` computes (a·m) % N AND costs ≤ 8·bits²
+  magic states, ONE term).  Since `16n³ = 2n · (8n²)`, the per-modmult factor of the
+  figure below is now a PROVED bound on a circuit PROVED to multiply; only the `×2n`
+  exponent-register multiplicity (iterating the verified modmult into a verified mod-exp)
+  remains structural.
+
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.PPM.CircuitToPPMResource

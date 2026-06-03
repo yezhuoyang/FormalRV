@@ -19,6 +19,7 @@ import FormalRV.PPM.LayeredPPMQECInterface
 import FormalRV.PPM.LogicalState
 import FormalRV.PPM.MagicGadgetInterface
 import FormalRV.PPM.MagicStateTeleport
+import FormalRV.PPM.ModMultPPMResource
 import FormalRV.PPM.PPM
 import FormalRV.PPM.PPMCompilerCorrectness
 import FormalRV.PPM.PPMDenote
