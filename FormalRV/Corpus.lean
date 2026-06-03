@@ -27,6 +27,7 @@ import FormalRV.Corpus.ShorCriticalPathFloor
 import FormalRV.Corpus.ShorEmit
 import FormalRV.Corpus.ShorFullMachineRequirement
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
+import FormalRV.Corpus.ShorOnLPBridge
 import FormalRV.Corpus.ShorPPMEndToEnd
 import FormalRV.Corpus.ShorPPMUnitaryReduction
 import FormalRV.Corpus.StabilizerScheduleVerify
