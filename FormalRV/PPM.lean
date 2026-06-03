@@ -34,6 +34,7 @@ import FormalRV.PPM.TGadgetTeleport
 import FormalRV.PPM.ToffoliFromCCZ
 import FormalRV.PPM.ToffoliScheme
 import FormalRV.PPM.ToffoliSchemeDischarge
+import FormalRV.PPM.ZXSpiderFusion
 import FormalRV.PPM.ZXStabilizer
 
 /-!
