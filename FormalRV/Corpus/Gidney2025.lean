@@ -169,17 +169,24 @@ theorem g2025_modadd_beats_berry (n : Nat) (hn : 0 < n) :
 
     SEMANTIC CORE (separate files, "semantic proof before resource proof"): the algorithm's
     novel content — Chevignard–Fouque–Schrottenloher approximate RESIDUE arithmetic — has its
-    arithmetic engine proved bottom-up in `FormalRV.Shor.CFS` (three axiom-clean,
-    `#verify_clean`-accepted layers):
+    arithmetic engine proved bottom-up in `FormalRV.Shor.CFS` (six axiom-clean,
+    `#verify_clean`-accepted modules; formulas cited from this paper's §"Approximate Residue
+    Arithmetic"):
       (1) `CFS.ResidueArith.residue_modexp_exact_of_lt` — residue modexp is EXACT,
-          `(∏ M_k^{e_k}) % L % N = g^e mod N` when `L ≥ N^m` (no wraparound);
+          `(∏ M_k^{e_k}) % L % N = g^e mod N` when `L ≥ N^m` (eq:bound-L, no wraparound);
       (2) `CFS.ResidueNumberSystem.rns_faithful` — the residue-number-system over the prime set
           `P` (`∏P = L`) is FAITHFUL (CRT injectivity), so the modexp can run componentwise;
-      (3) `CFS.TruncationBound.sum_truncBits_error` — the APPROXIMATE reconstruction (each term
-          truncated to `f` bits) deviates by `< |P|·2^{-f}` (the `2^{-f}` part of eq:modevbound).
-    The resource tallies below are for THAT algorithm; the still-open semantic links (exact
-    fractional-CRT identity, the `ℓ` factor, quantum-circuit semantics, Ekerå–Håstad, Assumption-1
-    prime set) are itemised in `FormalRV/Shor/CFS.lean`.  Honest caveats on the RESOURCE numbers:
+      (3) `CFS.Reconstruction.reconstruction` — the EXACT CRT reconstruction `(∑_j r_j u_j) % L =
+          V % L` (eq:comp_v) and the full chain `residue_modexp_via_crt : … % L % N = g^e mod N`;
+      (4) `CFS.TruncationBound.sum_truncBits_error_double` — the APPROXIMATE reconstruction (each
+          of the `|P|·ℓ` terms truncated to `f` bits) deviates by `< |P|·ℓ·2^{-f}` (eq:modevbound);
+      (5) `CFS.ModularDeviation.modDev_triangle/modDev_chain` — the paper's `Δ_N` metric (line 299)
+          is a pseudometric that accumulates linearly over an op chain (line 311);
+      (6) `CFS.Assumptions.Assumption1` — the one genuine conjecture (line 346), stated as a `Prop`,
+          never asserted.
+    The resource tallies below are for THAT algorithm; the still-open semantic links (real↔integer
+    `Δ_N` bridge, the explicit `u_j` basis, quantum-circuit semantics, Ekerå–Håstad) are itemised in
+    `FormalRV/Shor/CFS.lean`.  Honest caveats on the RESOURCE numbers:
 
     * The active-hot logical count `131` and the loop4 peak `1409` are paper-stated LITERALS;
       they do NOT decompose as `3f+2ℓ+⌈log m⌉` (= 152) or `m+3f+2ℓ+len m` (= 1432) — so no

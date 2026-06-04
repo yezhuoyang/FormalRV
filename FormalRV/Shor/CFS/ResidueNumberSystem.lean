@@ -52,6 +52,21 @@ theorem modEq_list_prod_of_forall (a b : ℕ) :
       rw [List.prod_cons]
       exact (Nat.modEq_and_modEq_iff_modEq_mul hcop).mp ⟨hm, hl⟩
 
+/-- **CRT, `Fin`-indexed product form.**  If `a ≡ b` modulo every modulus `p i` (pairwise coprime),
+    then `a ≡ b` modulo `∏ i, p i`.  This is the `Fin`-indexed bridge used by the reconstruction
+    identity (`CFS.Reconstruction`); proved from the `List` form via `List.ofFn`. -/
+theorem modEq_prod_of_forall {t : ℕ} (p : Fin t → ℕ)
+    (hco : ∀ i j, i ≠ j → Nat.Coprime (p i) (p j))
+    (a b : ℕ) (h : ∀ i, a ≡ b [MOD p i]) : a ≡ b [MOD ∏ i, p i] := by
+  rw [← List.prod_ofFn]
+  refine modEq_list_prod_of_forall a b _ ?_ ?_
+  · rw [List.pairwise_ofFn]
+    exact fun i j hij => hco i j (ne_of_lt hij)
+  · intro mm hm
+    rw [List.mem_ofFn] at hm
+    obtain ⟨i, rfl⟩ := hm
+    exact h i
+
 /-- **RNS faithfulness (CRT injectivity).**  Over a set of pairwise-coprime moduli `P` (the CFS
     prime set, with `∏P = L`), two naturals with IDENTICAL residue vectors agree modulo `L`.
     Hence the residue representation loses no information about `V mod L`: the entire modexp may be
@@ -72,5 +87,6 @@ theorem rns_recover (l : List ℕ) (hpw : l.Pairwise Nat.Coprime) (V W : ℕ)
 #verify_clean rns_faithful
 #verify_clean rns_recover
 #verify_clean modEq_list_prod_of_forall
+#verify_clean modEq_prod_of_forall
 
 end FormalRV.CFS
