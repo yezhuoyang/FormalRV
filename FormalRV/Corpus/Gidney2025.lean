@@ -167,15 +167,19 @@ theorem g2025_modadd_beats_berry (n : Nat) (hn : 0 < n) :
     This is arithmetic-tally verification (like the GE2021 corpus tuple), NOT a semantic proof
     that the circuit factors RSA-2048.
 
-    SEMANTIC CORE (separate file, "semantic proof before resource proof"): the algorithm's
+    SEMANTIC CORE (separate files, "semantic proof before resource proof"): the algorithm's
     novel content — Chevignard–Fouque–Schrottenloher approximate RESIDUE arithmetic — has its
-    exact-arithmetic heart proved in `FormalRV.Shor.CFS.ResidueArith`:
-    `residue_modexp_exact_of_lt` shows the residue-arithmetic modular exponentiation
-    (`(∏ M_k^{e_k}) % L % N`) equals `g^e mod N` exactly when `L ≥ N^m` (no wraparound), by
-    induction — axiom-clean, `#verify_clean`-accepted.  The resource tallies below are for THAT
-    algorithm; the still-open semantic links (CRT reconstruction, truncation deviation bound,
-    quantum-circuit semantics, Assumption-1 prime set) are itemised at the top of that file.
-    Honest caveats on the RESOURCE numbers:
+    arithmetic engine proved bottom-up in `FormalRV.Shor.CFS` (three axiom-clean,
+    `#verify_clean`-accepted layers):
+      (1) `CFS.ResidueArith.residue_modexp_exact_of_lt` — residue modexp is EXACT,
+          `(∏ M_k^{e_k}) % L % N = g^e mod N` when `L ≥ N^m` (no wraparound);
+      (2) `CFS.ResidueNumberSystem.rns_faithful` — the residue-number-system over the prime set
+          `P` (`∏P = L`) is FAITHFUL (CRT injectivity), so the modexp can run componentwise;
+      (3) `CFS.TruncationBound.sum_truncBits_error` — the APPROXIMATE reconstruction (each term
+          truncated to `f` bits) deviates by `< |P|·2^{-f}` (the `2^{-f}` part of eq:modevbound).
+    The resource tallies below are for THAT algorithm; the still-open semantic links (exact
+    fractional-CRT identity, the `ℓ` factor, quantum-circuit semantics, Ekerå–Håstad, Assumption-1
+    prime set) are itemised in `FormalRV/Shor/CFS.lean`.  Honest caveats on the RESOURCE numbers:
 
     * The active-hot logical count `131` and the loop4 peak `1409` are paper-stated LITERALS;
       they do NOT decompose as `3f+2ℓ+⌈log m⌉` (= 152) or `m+3f+2ℓ+len m` (= 1432) — so no
