@@ -212,23 +212,44 @@ Large proof files are split into a `<Name>/` sub-folder of shorter modules —
 `Defs.lean` + `Proofs1..N.lean` where definitions and theorems separate cleanly,
 or `Part1..N.lean` (order-preserving) otherwise.
 
-## The seven corpus papers
+## The seven corpus papers — what they claim vs. what we verify
 
 `Corpus/` binds each estimate to one `(ShorAlgorithm × QECCode ×
-QualtranPhysicalParameters)` tuple and records the headline numbers the paper
-reports. These are **recorded paper claims**, not derivations (parity matrices
-are stubbed); the genuine semantic content lives in `Core/`, `Arithmetic/`,
-`Shor/`, and `PPM/`.
+QualtranPhysicalParameters)` tuple, records every page-cited resource number as a
+`paper_claim_*` constant, and — where the framework allows — **machine-checks a
+bound against that claim**. Two honesty rules hold throughout: the headline
+**qubit/time numbers are *recorded* paper claims** (the tuples type-check them;
+per-paper parity matrices are stubbed `[]`), and the **machine-checked content is
+narrower** and tagged below — ✅ *Verified* semantic theorem · ➗ *Arithmetic-only*
+(`decide`) · ⬜ *Recorded/Assumed*. The one cross-cutting **verified lower bound**
+— order-finding success `≥ κ/(log₂N)⁴`, `κ = 4·e⁻²/π²`, axiom-free — holds for
+*every* instance below (it is `N`-parametric).
 
-| Bibkey | Code family / hardware | Headline figure(s) |
-|---|---|---|
-| `cain-xu-2026` (qianxu, focus) | LP / bivariate-bicycle qLDPC, neutral atoms | RSA-2048 in **~10⁴ qubits**, ~1 week |
-| `gidney-ekera-2021` | rotated surface code (d=27), superconducting | **20M qubits**, ~8 h, ~2.7×10⁹ Toffolis |
-| `gidney-2025` | yoked surface code + cultivation | **< 1M qubits**, < 1 week |
-| `webster-2026` (Pinnacle) | generalised-bicycle qLDPC, neutral atoms | code `[[1620, 16, 24]]` |
-| `babbush-2026` | surface code (d≈14), superconducting | **ECC-256** in **< 500k qubits**, 18–23 min |
-| `xu-2024` | HGP / LP qLDPC, neutral atoms | `[[544, 80, 12]]`, **24 ms** cycle |
-| `peng-2022` (SQIR/Coq) | *no QEC stack* | machine-checked gate-count bound |
+| Paper — arXiv | Code / hardware | Paper's headline claim | What FormalRV machine-checks |
+|---|---|---|---|
+| **cain-xu-2026** (qianxu, *focus*) — [2603.28627](https://arxiv.org/abs/2603.28627) | LP / bivariate-bicycle qLDPC `[[144,12,12]]`, neutral atoms | RSA-2048 in **~10⁴ physical qubits**, **~1 week** | ➗ recovers paper Eqs. **E3** (adder `=25n`), **E4** (ctl-adder `=30n`), **E9** (lookup); ➗ `decide`-proved **95× qubit·hour** win vs GE2021 (`qianxu_qubit_hours_95x_lower_than_gidney_ekera`); ✅ verified adder/lookup **T-counts** (RSA-2048 adder `=14·q_A=462` T) |
+| **gidney-ekera-2021** — [1905.09749](https://arxiv.org/abs/1905.09749) | rotated surface code (d=27), superconducting | **20M physical qubits**, **~8 h**, ~2.7×10⁹ Toffolis | ✅ verified **qubit upper bound**: the naive sequential footprint is a feasible ceiling for *any* size (`naivePeak_le_footprint`); ➗ reproduction (`gidney_ekera_2021_reproduced`): derived **19.44M ≤ reported 20M** (~3%), and the reported 8 h is **2–3× under** the verified naive-time ceiling — the gap (pipelining) made *explicit*, not hidden |
+| **gidney-2025** — [2505.15917](https://arxiv.org/abs/2505.15917) | yoked surface code + magic-state cultivation | **< 1M physical qubits** (~898k), **< 1 week** (~5 d), ~6.5×10⁹ Toffolis | ✅ the paper's **CFS residue-arithmetic engine**, axiom-clean: CRT faithfulness (`rns_faithful`), exact reconstruction (`reconstruction_explicit`), modexp correctness (`residue_modexp_exact_of_lt`), truncation bound + `Δ_N` pseudometric, and **Ekerå–Håstad post-processing** (new). One *stated* conjecture: **Assumption 1** (a `Prop`, never asserted) |
+| **webster-2026** (Pinnacle) — [2602.11457](https://arxiv.org/abs/2602.11457) | generalised-bicycle qLDPC `[[1620,16,24]]`, atom array | RSA-2048 in **< 100k physical qubits** (10⁻³ error) | ⬜ parameter-binding tuple only — params type-check & read back through the shared interface (parity matrices stubbed) |
+| **babbush-2026** — [2603.28846](https://arxiv.org/abs/2603.28846) | surface code (d≈14), superconducting | **ECC-256** (elliptic-curve dlog) in **< 500k physical qubits**, **18–23 min**, ≤90M Toffolis / ≤1200 logical | ⬜ parameter-binding tuple — the **modulus-agnostic** stress test of the L1 interface (the first non-RSA instance) |
+| **xu-2024** — [2308.08648](https://arxiv.org/abs/2308.08648) | HGP / LP qLDPC `[[544,80,12]]`, neutral atoms (*Nat. Phys.* **20**, 1084) | constant-overhead FTQC; **24 ms** syndrome cycle (the slow-cycle outlier) | ⬜ parameter-binding tuple; ➗ cross-checks the **24,000×** cycle-time outlier against the surface-code baselines |
+| **peng-2022** (SQIR/Coq) — [2204.07112](https://arxiv.org/abs/2204.07112) | *no QEC stack* — algorithm level | machine-checked gate-count bound `(212n²+975n+1031)·m + 4m + m²` | ✅ **the headline verified result lives here**: `Shor_correct_var` / `Shor_correct_verified_no_modmult_axioms` — the axiom-free success-probability lower bound the whole project rests on (ported from SQIR's Coq proof) |
+
+### Emit the verified code for a corpus instance
+
+Every instance drives the same two verified emitters (see [Generate the verified
+code](#from-proof-to-runnable-code--verified-qasm--stim-emission)):
+
+```bash
+# verified arithmetic (modular multiplier) → OpenQASM 2.0; Qiskit re-counts the gates (8/8 pass)
+lake env lean --run scripts/EmitQASM.lean
+# (N, a) → lattice-surgery schedule → Stim; Stim has_flow re-checks each merge
+lake env lean --run emit_shor_demo.lean
+```
+
+- **Small `N`** (e.g. Shor(15)) is *fully materialised* and independently validated (Qiskit gate counts / Stim stabilizer flows).
+- **RSA-2048 / ECC-256** are *parametric*: the counts are **proved** (e.g. `shorMergeCount_rsa2048 = 412,316,860,416` surgery merges) and `emitShorPrefix N a k` emits the first `k` surgeries as a Stim-validatable sample — the full circuit is astronomically large and never materialised.
+- **Honest limit:** each paper's bespoke QEC *code structure* (parity matrices) is stubbed in the corpus tuples, so what we emit-and-verify is the algorithm + arithmetic + the surgery schedule — not each paper's qLDPC/surface code itself.
 
 ## What is proven vs. assumed
 
