@@ -165,7 +165,17 @@ theorem g2025_modadd_beats_berry (n : Nat) (hn : 0 < n) :
     WHAT THIS FILE VERIFIES (per the project taxonomy): the paper's INTERNAL ARITHMETIC
     consistency — its component tallies add up to its stated totals (the `decide` theorems).
     This is arithmetic-tally verification (like the GE2021 corpus tuple), NOT a semantic proof
-    that the circuit factors RSA-2048.  Honest caveats:
+    that the circuit factors RSA-2048.
+
+    SEMANTIC CORE (separate file, "semantic proof before resource proof"): the algorithm's
+    novel content — Chevignard–Fouque–Schrottenloher approximate RESIDUE arithmetic — has its
+    exact-arithmetic heart proved in `FormalRV.Shor.CFS.ResidueArith`:
+    `residue_modexp_exact_of_lt` shows the residue-arithmetic modular exponentiation
+    (`(∏ M_k^{e_k}) % L % N`) equals `g^e mod N` exactly when `L ≥ N^m` (no wraparound), by
+    induction — axiom-clean, `#verify_clean`-accepted.  The resource tallies below are for THAT
+    algorithm; the still-open semantic links (CRT reconstruction, truncation deviation bound,
+    quantum-circuit semantics, Assumption-1 prime set) are itemised at the top of that file.
+    Honest caveats on the RESOURCE numbers:
 
     * The active-hot logical count `131` and the loop4 peak `1409` are paper-stated LITERALS;
       they do NOT decompose as `3f+2ℓ+⌈log m⌉` (= 152) or `m+3f+2ℓ+len m` (= 1432) — so no
