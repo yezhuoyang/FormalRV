@@ -258,4 +258,77 @@ theorem liftMat_entry (ℓ : Nat) (A : List (List Circ)) (C : Nat)
   rw [List.getD_eq_getElem?_getD, hinner]
   simp [List.getD_eq_getElem?_getD]
 
+/-! ## §8. `well_shaped` for the lifted product (the other half of `code.valid`) -/
+
+/-- A `pKron` row has length `(#cols A)·(#cols B)` for rectangular `A`, `B`. -/
+theorem pKron_row_length (ℓ : Nat) (A B : List (List Circ)) (cA cB : Nat)
+    (hA : ∀ arow ∈ A, arow.length = cA) (hB : ∀ brow ∈ B, brow.length = cB) :
+    ∀ row ∈ pKron ℓ A B, row.length = cA * cB := by
+  intro row hrow; unfold pKron at hrow; rw [List.mem_flatMap] at hrow
+  obtain ⟨arow, harow, hrow2⟩ := hrow; rw [List.mem_map] at hrow2
+  obtain ⟨brow, hbrow, rfl⟩ := hrow2
+  rw [List.length_flatMap,
+      show (fun a => (List.map (fun b => circMul ℓ a b) brow).length) = (fun _ => cB) from by
+        funext a; rw [List.length_map]; exact hB brow hbrow,
+      List.map_const',
+      show (List.replicate arow.length cB).sum = arow.length * cB from by
+        induction arow.length with
+        | zero => simp
+        | succ k ih => rw [List.replicate_succ, List.sum_cons, ih, Nat.succ_mul]; omega,
+      hA arow harow]
+
+/-- A `pHcat` row has length `cL + cR` for rectangular sides. -/
+theorem pHcat_row_length (L R : List (List Circ)) (cL cR : Nat)
+    (hL : ∀ row ∈ L, row.length = cL) (hR : ∀ row ∈ R, row.length = cR) :
+    ∀ row ∈ pHcat L R, row.length = cL + cR := by
+  intro row hrow; unfold pHcat at hrow; rw [List.mem_iff_getElem] at hrow
+  obtain ⟨i, hi, rfl⟩ := hrow
+  rw [List.getElem_zipWith, List.length_append, hL _ (List.getElem_mem _), hR _ (List.getElem_mem _)]
+
+/-- Each `pIdent n` row has length `n`. -/
+theorem pIdent_row_length (n : Nat) : ∀ row ∈ pIdent n, row.length = n := by
+  intro row hrow; unfold pIdent at hrow; rw [List.mem_map] at hrow; obtain ⟨i, _, rfl⟩ := hrow; simp
+
+/-- Each `pDagger ℓ A` row has length `A.length` (the conjugate transpose flips dimensions). -/
+theorem pDagger_row_length (ℓ : Nat) (A : List (List Circ)) :
+    ∀ row ∈ pDagger ℓ A, row.length = A.length := by
+  intro row hrow; unfold pDagger at hrow; rw [List.mem_map] at hrow; obtain ⟨j, _, rfl⟩ := hrow; simp
+
+/-- A matrix whose every row has length `n` passes `matrix_has_n_cols`. -/
+theorem matrix_has_n_cols_of (M : BoolMat) (n : Nat) (h : ∀ row ∈ M, row.length = n) :
+    matrix_has_n_cols M n = true := by
+  unfold matrix_has_n_cols; rw [List.all_eq_true]
+  intro row hrow; rw [decide_eq_true_eq]; exact h row hrow
+
+/-- **`well_shaped` for the lifted product `LP(A, A†)`, PARAMETRICALLY** (native-free).  Every
+    `H_X`/`H_Z` row has length `n = (rA² + nA²)·ℓ`: both check matrices are `liftMat` of a
+    `pHcat` of two `pKron`s with column counts `nA·nA` and `rA·rA`, and `liftMat_row_length`
+    multiplies by `ℓ`.  This is the first half of `code.valid` for lp16/lp20, with NO
+    `decide`/`native_decide` at the 2610/4350-column scale. -/
+theorem liftedProduct_well_shaped (ℓ : Nat) (A : List (List Circ)) (rA nA : Nat)
+    (hA_rows : A.length = rA) (hA_cols : ∀ row ∈ A, row.length = nA) :
+    (liftedProduct ℓ A rA nA).well_shaped = true := by
+  have hdag : ∀ brow ∈ pDagger ℓ A, brow.length = rA := fun brow hbrow => by
+    rw [pDagger_row_length ℓ A brow hbrow, hA_rows]
+  have key : ∀ (P : List (List Circ)), (∀ row ∈ P, row.length = rA * rA + nA * nA) →
+      ∀ row ∈ liftMat ℓ P, row.length = (rA * rA + nA * nA) * ℓ :=
+    fun P hP => liftMat_row_length ℓ P (rA * rA + nA * nA) hP
+  have hHx : ∀ row ∈ pHcat (pKron ℓ A (pIdent nA)) (pKron ℓ (pIdent rA) (pDagger ℓ A)),
+      row.length = rA * rA + nA * nA := by
+    have := pHcat_row_length (pKron ℓ A (pIdent nA)) (pKron ℓ (pIdent rA) (pDagger ℓ A))
+      (nA * nA) (rA * rA)
+      (pKron_row_length ℓ A (pIdent nA) nA nA hA_cols (pIdent_row_length nA))
+      (pKron_row_length ℓ (pIdent rA) (pDagger ℓ A) rA rA (pIdent_row_length rA) hdag)
+    intro row hrow; rw [this row hrow]; omega
+  have hHz : ∀ row ∈ pHcat (pKron ℓ (pIdent nA) A) (pKron ℓ (pDagger ℓ A) (pIdent rA)),
+      row.length = rA * rA + nA * nA := by
+    have := pHcat_row_length (pKron ℓ (pIdent nA) A) (pKron ℓ (pDagger ℓ A) (pIdent rA))
+      (nA * nA) (rA * rA)
+      (pKron_row_length ℓ (pIdent nA) A nA nA (pIdent_row_length nA) hA_cols)
+      (pKron_row_length ℓ (pDagger ℓ A) (pIdent rA) rA rA hdag (pIdent_row_length rA))
+    intro row hrow; rw [this row hrow]; omega
+  unfold liftedProduct CSSCode.well_shaped
+  rw [matrix_has_n_cols_of _ _ (key _ hHx), matrix_has_n_cols_of _ _ (key _ hHz)]
+  rfl
+
 end FormalRV.QEC.Algebraic
