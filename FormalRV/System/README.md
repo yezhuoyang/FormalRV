@@ -35,3 +35,39 @@ single-body check to an `n`-fold compressed repeat without expanding it.
 
 ## Status
 The decidable checkers and their cross-platform architecture model are complete; the strict bundle is proven strictly stronger than the older one, and several invariants (feedback-after-decode, capacity) have **Verified** parametric shift/sequence/repeat-invariance lemmas, while others (exclusivity, slot capacity) are confirmed only on concrete instances pending a long index-induction proof. `SystemChecker.lean` honestly records five abstraction gaps the SysCall-level checker does not yet enforce. These are well-formedness/resource checks, not semantic circuit-correctness proofs — the adder skeleton is a system-layer scaffold, not a verified adder.
+
+## Worked example — the verified resource ceiling, and the GE2021 gap
+
+![scheduling invariants](../../docs/diagrams/scheduling_invariants.png)
+
+*Left:* `scheduleFootprint_replicate` (`LatticeSurgery/ScheduleEmit.lean:66`,
+**Verified**) — a schedule of `n` surgery merges occupies exactly `28·n` physical
+qubits (`28 = merged_n + |hx| + |hz|`). *Right:* instantiating the verified
+`surfaceModel` resource formula with Gidney–Ekerå 2021's own inputs (`2.7×10⁹`
+Toffolis, 6200 logicals, `[[1568,1,27]]`, 1 µs) gives a derived ceiling of
+**19.44M ≤ the reported 20M** qubits (~3%, the residual being the magic factory) and
+a naive-sequential time ceiling of **20.25 h**, machine-checking that the reported
+8 h sits **2–3×** below it — the gap is reaction-limited pipelining, pinned
+explicitly by `gidney_ekera_2021_reproduced`.
+
+## Essential proof techniques
+
+- **A ∀-size feasibility ceiling by induction.** `naivePeak_le_footprint`
+  (`NaiveUpperBound.lean:86`) proves the one-Toffoli-at-a-time schedule's peak qubit
+  demand never exceeds the static footprint, by a one-line induction on the step
+  count (`max footprint (≤footprint) = footprint`) — so the bound holds for *every*
+  problem size, not just the concrete instance.
+- **Closed-form footprint via `foldl` over `replicate`.** `scheduleFootprint_replicate`
+  reduces the symbolic sum of `n` identical gadget footprints to `n · gadgetFootprint g`
+  (helper `foldl_add_replicate`), so parametric schedules cost out without
+  materialising the list.
+- **One formula, pluggable cost model.** `estimateWith` is polymorphic over the
+  `CostModel`; swapping `surfaceModel ↔ qldpcModel` is a parameter substitution proven
+  once by `rfl`, and the concrete GE2021 numbers are then `decide`-level arithmetic
+  over that verified formula.
+
+Honest scope: the GE2021 reproduction is a verified-*formula* result over recorded
+inputs (**Arithmetic-only** at the literal level), not a whole-circuit semantic
+closure; the cost-model rules and the `demoCtx` feasibility witness are illustrative,
+and several invariants are confirmed only on concrete instances pending full
+index-induction.

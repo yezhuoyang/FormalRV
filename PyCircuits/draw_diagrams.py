@@ -104,6 +104,52 @@ for d in zd:
 qec.measure(qr[idx[za]], cr[1])
 save(qec, "surface3_syndrome", scale=1.1)
 
+# --- QEC: surface-code parity-check matrices (heatmap, from emitted Stim) -------
+print("QEC parity-check matrices Hx / Hz (from emitted Stim):")
+MERGED_N = 14  # surface3 merged code: 13 data + 1 surgery ancilla; syndrome ancillas are >= 14
+
+
+def parity_rows(start_op, meas_op):
+    rows, cur, anc = [], None, None
+    for ln in lines:
+        p = ln.split()
+        if p[0] == start_op:
+            cur, anc = set(), int(p[1])
+        elif cur is not None and p[0] == "CX":
+            a, b = int(p[1]), int(p[2])
+            d = b if a == anc else a       # the data qubit this check touches
+            if d < MERGED_N:
+                cur.add(d)
+        elif cur is not None and p[0] == meas_op and int(p[1]) == anc:
+            rows.append(sorted(cur)); cur = None
+    return rows
+
+
+import numpy as np
+hx = parity_rows("RX", "MX")
+hz = parity_rows("R", "M")
+Hx = np.zeros((len(hx), MERGED_N)); Hz = np.zeros((len(hz), MERGED_N))
+for i, s in enumerate(hx):
+    for c in s:
+        Hx[i, c] = 1
+for i, s in enumerate(hz):
+    for c in s:
+        Hz[i, c] = 1
+figq, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.0))
+for ax, H, name, color in [(a1, Hx, f"Hx  ({len(hx)} X-checks)", "#c53030"),
+                           (a2, Hz, f"Hz  ({len(hz)} Z-checks)", "#2b6cb0")]:
+    ax.imshow(H, cmap=matplotlib.colors.ListedColormap(["#f0f0f0", color]), aspect="auto")
+    ax.set_title(f"surface3 [[13,1,3]] merged code: {name}", fontsize=11)
+    ax.set_xlabel("data / surgery-ancilla qubit (0..13)")
+    ax.set_ylabel("stabilizer (row)")
+    ax.set_xticks(range(MERGED_N)); ax.set_yticks(range(H.shape[0]))
+    ax.set_xticks([x - 0.5 for x in range(MERGED_N + 1)], minor=True)
+    ax.set_yticks([y - 0.5 for y in range(H.shape[0] + 1)], minor=True)
+    ax.grid(which="minor", color="white", linewidth=1.2)
+figq.tight_layout()
+figq.savefig(os.path.join(OUT, "surface3_parity.png"), dpi=130)
+print(f"  drew surface3_parity.png  (Hx {Hx.shape}, Hz {Hz.shape})")
+
 # --- 7-SCHED: verified scheduling invariants (matplotlib) -----------------------
 print("System scheduling invariants (matplotlib):")
 fig, (axL, axR) = plt.subplots(1, 2, figsize=(11, 4.2))
