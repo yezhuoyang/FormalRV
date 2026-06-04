@@ -5,6 +5,7 @@
 -/
 import FormalRV.Core.GateQASM
 import FormalRV.Arithmetic.SQIRModMult.Defs
+import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 import FormalRV.Shor.CliffordTControlledModExp
 
 open FormalRV.Framework
@@ -19,6 +20,9 @@ def emit (name : String) (g : FormalRV.Framework.Gate) : IO Unit := do
 def main : IO Unit := do
   -- sanity: a bare Toffoli
   emit "toffoli" (Gate.CCX 0 1 2)
+  -- the verified 3-bit Cuccaro ripple-carry adder (cuccaro_n_bit_adder_full_correct):
+  --   layout 2·3+1 = 7 qubits; T-count 14·3 = 42; pure X/CX/CCX.
+  emit "cuccaro_adder_3bit" (cuccaro_n_bit_adder_full 3 0)
   -- the verified out-of-place modular multiplier (const_gate): tcount should be 56·bits²
   emit "modmult_const_2_15_7"  (sqir_modmult_const_gate 2 15 7)
   emit "modmult_const_3_21_5"  (sqir_modmult_const_gate 3 21 5)
