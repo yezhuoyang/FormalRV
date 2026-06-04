@@ -2,6 +2,7 @@ import FormalRV.Shor.AQFTCompile
 import FormalRV.Shor.AQFTCompileSemantics
 import FormalRV.Shor.ApproxTransfer
 import FormalRV.Shor.CFS.ResidueArith
+import FormalRV.Shor.CFS.ResidueNumberSystem
 import FormalRV.Shor.CliffordTControlledModExp
 import FormalRV.Shor.ControlledGates
 import FormalRV.Shor.ControlledModExpCount
