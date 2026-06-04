@@ -9,6 +9,18 @@ puts the algorithm, the arithmetic circuits, the logical operations, and the
 error-correction stack into Lean, proves the parts that *can* be proven, and
 makes the residue that *cannot* be proven explicit and quantifiable.
 
+Two things make FormalRV more than a resource calculator:
+
+1. **A semantically-verified, end-to-end proof — with no project-specific
+   axioms** (only Lean's three standard logical axioms) — that Shor's
+   order-finding subroutine succeeds with an explicitly-bounded probability,
+   instantiated with a *constructively-defined* modular multiplier, so there is
+   no oracle placeholder (see [The headline result](#the-headline-result)).
+2. **It generates the verified code.** The same circuits FormalRV *proves*
+   correct are *emitted* as standard **OpenQASM** and **Stim**, and an
+   independent third-party tool (Qiskit, Stim) re-verifies the emitted artifact
+   — without trusting Lean (see [Generate the verified code](#from-proof-to-runnable-code--verified-qasm--stim-emission)).
+
 [![Lean 4](https://img.shields.io/badge/Lean-4.29.1-blue.svg)](https://github.com/leanprover/lean4/releases/tag/v4.29.1)
 [![Mathlib](https://img.shields.io/badge/Mathlib-v4.29.1-orange.svg)](https://github.com/leanprover-community/mathlib4)
 [![CI](https://github.com/yezhuoyang/FormalRV/actions/workflows/lean_action_ci.yml/badge.svg)](https://github.com/yezhuoyang/FormalRV/actions)
@@ -41,6 +53,129 @@ project-specific axioms and no `sorry`:
 Both are re-exported from **[`FormalRV/Shor/Main.lean`](FormalRV/Shor/Main.lean)**
 — start there. This is a from-scratch Lean port of the order-finding argument
 from [SQIR](https://github.com/inQWIRE/SQIR) (Peng et al. 2022, Coq).
+
+## From proof to runnable code — verified QASM & STIM emission
+
+A second flagship value: FormalRV does not stop at *proving* the circuits
+correct — it **emits the exact verified circuits as standard OpenQASM and Stim**,
+and an *independent* third-party tool then confirms the emitted code matches what
+Lean proved. The proof and the runnable artifact are the same object. **Generate
+the verified code.**
+
+Three emitters, each backed by a semantic-correctness proof — not just a
+pretty-printer:
+
+### 1. Gate IR → OpenQASM 2.0 (the verified arithmetic circuits)
+
+[`FormalRV/Core/GateQASM.lean`](FormalRV/Core/GateQASM.lean) serialises the `Gate`
+IR — the very circuits whose semantics are proven in [`Arithmetic/`](FormalRV/Arithmetic)
+— to Qiskit-loadable OpenQASM 2.0, with the gate-count consistency *itself* proved:
+`tcount g = 7 · numCCX g` (`tcount_eq_seven_numCCX`) and
+`gcount g = numX g + numCX g + numCCX g` (`gcount_eq_sum`).
+
+```bash
+lake env lean --run scripts/EmitQASM.lean   # writes PyCircuits/qasm/*.qasm and prints Lean counts
+```
+
+For example, the verified out-of-place modular multiplier `sqir_modmult_const_gate 2 15 7`
+(`x ↦ 7·x mod 15`):
+
+```qasm
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[9];
+cx q[7], q[4];
+cx q[7], q[6];
+cx q[4], q[3];
+...
+ccx q[2], q[3], q[4];     // 32 Toffolis total = 8·bits², so tcount = 56·bits² = 224 T
+```
+
+Then Qiskit **loads the emitted file, counts the gates, and confirms they equal
+the Lean-proved numbers** — closing the loop that the count is not a Lean-only
+bookkeeping trick:
+
+```bash
+python PyCircuits/verified_circuit_qasm_count.py
+# [PASS] modmult_const_2_15_7: emitted QASM gate counts == Lean
+#         Qiskit ccx=32 cx=76 x=0 total=108 | 7·ccx=224 vs tcount=224
+# ...
+# SUMMARY: 8/8 checks passed.
+# THE EMITTED VERIFIED CIRCUITS' GATE COUNTS MATCH THE LEAN-PROVED NUMBERS.
+```
+
+The fully Clifford+T controlled multipliers (`ctrl_const_*`, `ctrl_MCP_*`) emit
+**only** `x`/`cx`/`ccx` — Qiskit confirms the op-set carries no rotations, with
+magic-count `numCX + 3·numCCX`.
+
+### 2. PPM gadget IR → OpenQASM 3 (verified magic-state teleportation)
+
+[`FormalRV/PPM/PPMToQASM.lean`](FormalRV/PPM/PPMToQASM.lean) emits the
+*measurement-based* gadgets proven correct in `TGadgetTeleport` /
+`CCZGadgetTeleport` — magic-state prep, the entangling CNOTs, the Z-measurement,
+and the **classically-controlled feed-forward** corrections — as runnable
+OpenQASM 3. The verified T-teleportation gadget (`tGadgetQASM`):
+
+```qasm
+OPENQASM 3.0;
+include "stdgates.inc";
+qubit[2] q;
+bit[1] c;
+h q[1];
+t q[1];                   // prepare |T⟩ on the magic ancilla
+cx q[0], q[1];            // entangle: data → ancilla
+c[0] = measure q[1];      // Z-measure the ancilla
+if (c[0] == true) s q[0]; // feed-forward S correction == t_gadget_with_feedback
+```
+
+[`PyCircuits/ppm_qasm_verification.py`](PyCircuits/ppm_qasm_verification.py) runs
+an independent Qiskit simulation and cross-checks it against the Lean denotation
+`⟦·⟧`.
+
+### 3. Lattice-surgery schedule → Stim (the physical surface-code circuit)
+
+[`StimEmit.lean`](FormalRV/LatticeSurgery/StimEmit.lean) +
+[`ScheduleEmit.lean`](FormalRV/LatticeSurgery/ScheduleEmit.lean) emit the
+**detailed physical syndrome-extraction circuit** of a verified surgery gadget —
+per merged X-check an ancilla in `|+⟩`, `CX anc→s`, `MX`; per Z-check `R` /
+`CX s→anc` / `M` — and [`Corpus/ShorEmit.lean`](FormalRV/Corpus/ShorEmit.lean)
+glues `(N, a) → schedule → Stim` end-to-end:
+
+```bash
+lake env lean --run emit_shor_demo.lean   # writes PyCircuits/shor_demo_schedule.stim
+```
+
+```stim
+RX 14
+CX 14 0
+CX 14 3
+CX 14 9
+MX 14
+...
+R 22
+CX 0 22
+CX 1 22
+CX 9 22
+M 22
+```
+
+A third party who *does not trust the Lean proof* can run Stim's stabilizer-flow
+check (`has_flow`) on the emitted code and re-derive correctness independently —
+the LaSsynth gold standard:
+
+```bash
+python PyCircuits/validate_surface3_stim.py   # has_flow: X-bar = X6 X7 X8 -> rec[-8] xor rec[-7]
+python PyCircuits/validate_shor_demo.py       # every emitted surgery IS a correct projective X-bar measurement
+```
+
+The emitter is *parametric*, not materialised: `emitShor N a` is for small `N`,
+while `emitShorPrefix N a k` emits the first `k` of any instance's surgeries
+(RSA-2048 = 412,316,860,416 merges, proved in `shorMergeCount_rsa2048`) as a
+Stim-validatable sample.
+
+> **The point:** every number in the resource estimate, and every gate in the
+> emitted QASM/Stim, traces back to a machine-checked theorem — and an
+> independent tool can re-verify the emitted artifact without trusting Lean at all.
 
 ## The four-layer stack
 
