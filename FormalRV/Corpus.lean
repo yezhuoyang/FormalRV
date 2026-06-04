@@ -7,6 +7,10 @@ import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E
 import FormalRV.Corpus.SurgeryDemoSteane
 import FormalRV.Corpus.Webster2026
+import FormalRV.Corpus.NaiveBaselineCost
+import FormalRV.Corpus.WindowedShorDeviceSchedule
+import FormalRV.Corpus.WindowedShorPhysicalEstimate
+import FormalRV.Corpus.WindowedShorPPMFactoryE2E
 import FormalRV.Corpus.Xu2024
 
 /-!
