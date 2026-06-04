@@ -76,9 +76,19 @@ def gidney2025_cold_physical_per_logical : Nat := 430
 
     The verification value-add: the paper's own component arithmetic, confirmed by `decide`. -/
 
-/-- **Logical-qubit tally**: `1280` (cold input) `+ 131` (active hot `3f+2ℓ+⌈log m⌉`)
-    `+ 7·18` (idle hot patches) `= 1537 < 1600` (main.tex:1173). -/
+/-- **Logical-qubit tally**: `1280` (cold input `m`) `+ 131` (active-hot logical, a paper-stated
+    LITERAL — see caveat: it does NOT equal `3f+2ℓ+⌈log m⌉ = 152`) `+ 7·18 = 126` (idle hot
+    patches) `= 1537 < 1600` (main.tex:1173). -/
 theorem gidney2025_logical_tally : 1280 + 131 + 7 * 18 = 1537 := by decide
+
+/-- Input/exponent qubits: `m = ⌊n/2⌋ + ⌊n/s⌋ = 1024 + 256 = 1280` at `n=2048, s=8`
+    (Ekerå–Håstad; main.tex:1030,1166). -/
+theorem gidney2025_input_qubits : 2048 / 2 + 2048 / 8 = 1280 := by decide
+
+/-- Window counts (ceil division): `W₁ = ⌈m/w₁⌉ = 214`, `W₃ = ⌈ℓ/w₃⌉ = 7`, `W₄ = ⌈ℓ/w₄⌉ = 5`
+    at `m=1280, ℓ=21, w₁=6, w₃=3, w₄=5` (main.tex:1035–1037). -/
+theorem gidney2025_window_counts :
+    (1280 + 6 - 1) / 6 = 214 ∧ (21 + 3 - 1) / 3 = 7 ∧ (21 + 5 - 1) / 5 = 5 := by decide
 
 /-- **Physical-qubit tally**: cold `1280·430` + active-hot `131·1352` + idle-hot `7·18·1352`
     `= 897 864`, reported as `< 1 000 000` for slack (main.tex:1168–1176). -/
@@ -100,6 +110,10 @@ theorem gidney2025_lookup_ccz : 2 ^ 6 - 6 - 1 = 57 := by decide
     (6 factories, 150 rounds/CCZ; main.tex:1192). -/
 theorem gidney2025_ccz_period : 150 / 6 = 25 := by decide
 
+/-- The `< 1 000 000` headline holds with ≈100k slack: `897 864 < 1 000 000` and
+    `1 000 000 − 897 864 = 102 136` (main.tex:1176). -/
+theorem gidney2025_slack : 897864 < 1000000 ∧ 1000000 - 897864 = 102136 := by decide
+
 /-! ## §4. Gap-vs-reported: Gidney 2025 against GE2021 in the framework.
 
     The trade made explicit: ≈22× fewer physical qubits, paid for by ≈2.4× more Toffolis. -/
@@ -111,6 +125,10 @@ theorem gidney2025_vs_ge2021_qubit_cut : 897864 * 22 < 20000000 := by decide
 /-- Toffoli INCREASE GE2021 → Gidney2025: `2.7×10⁹ → 6.5×10⁹` (> 2× more — the space saving is
     paid for in gates/time; main.tex:94,157). -/
 theorem gidney2025_vs_ge2021_toffoli : 2_700_000_000 * 2 < 6_500_000_000 := by decide
+
+/-- Toffoli REDUCTION vs CFS24: `2×10¹² / 6.5×10⁹ ≈ 308×`, far beyond the paper's loose ">100×"
+    claim (`300·6.5×10⁹ < 2×10¹²`; main.tex:95,158). -/
+theorem gidney2025_vs_cfs24_toffoli : 300 * 6_500_000_000 < 2_000_000_000_000 := by decide
 
 -- Headline resource vector: (Toffolis, logical qubits, physical qubits).
 #eval (gidney2025_work.n_toff, gidney2025_work.n_logical,
@@ -137,15 +155,28 @@ theorem g2025_modadd_beats_berry (n : Nat) (hn : 0 < n) :
     g2025_modadd_toffoli_halves n < 7 * n := by
   unfold g2025_modadd_toffoli_halves; omega
 
-/-! ## §6. Chosen parameters + an honest note on the paper's numbers.
+/-! ## §6. Chosen parameters + HONEST scope of this verification.
 
     Grid-scan-selected parameters minimizing `q³·t` (main.tex:1006–1017):
-      `s = 8` (Ekerå–Håstad), `ℓ ∈ [18,25]` (prime bit length), `w₁ = 6` (loop1 window),
-      `w₃ ∈ [2,6]`, `w₄ ∈ [2,8]`, `f = 33` (truncated accumulator).
+      `s = 8`, `ℓ = 21`, `w₁ = 6`, `w₃ = 3`, `w₄ = 5`, `f = 33`, `|P| ≈ 640` primes,
+      `m = 1280`, peak active logical ≈ 1409, `E(shots) = (s+1)/(1−P_dev)/0.99 ≈ 9.2`,
+      `P_dev = 1.25%` (main.tex:1006–1037, table logical-costs).
 
-    All numbers above are the paper's CLAIMED values, verified for internal arithmetic
-    consistency — NOT derived from a Lean circuit.  One minor textual slip noted for honesty:
-    the runtime states "expected number of shots is 9.2" then computes with `9.1`
-    (`12.07·9.1/24 = 4.63` days; main.tex:1216).  Negligible (rounding), reported not hidden. -/
+    WHAT THIS FILE VERIFIES (per the project taxonomy): the paper's INTERNAL ARITHMETIC
+    consistency — its component tallies add up to its stated totals (the `decide` theorems).
+    This is arithmetic-tally verification (like the GE2021 corpus tuple), NOT a semantic proof
+    that the circuit factors RSA-2048.  Honest caveats:
+
+    * The active-hot logical count `131` and the loop4 peak `1409` are paper-stated LITERALS;
+      they do NOT decompose as `3f+2ℓ+⌈log m⌉` (= 152) or `m+3f+2ℓ+len m` (= 1432) — so no
+      theorem asserts those identities.  The SYSTEM total `1537 = 1280+131+126` does reconcile.
+    * The Toffoli count `6.5×10⁹` is a grid-scan OPTIMIZATION output, not closed-form derivable;
+      it is a paper-claim `def`, never a theorem conclusion.
+    * The runtime (≈4.96 days) is the least-grounded headline — it rests on per-op latencies and
+      the `(1−10⁻¹⁵)^(6.9×10¹³) ≈ 93.3%` survival, none circuit-verified (cf. GE2021's pipelining).
+    * Yoked surface codes (cold 430), magic-state cultivation (30000 qubit·rounds/T) and the
+      8T→CCZ factories have NO Lean construction — they are coarse Nat placeholders.
+    * Minor textual slip (reported, not hidden): runtime states "9.2 shots" then computes with
+      "9.1" (`12.07·9.1/24 = 4.63` days; main.tex:1216).  Negligible. -/
 
 end FormalRV.Corpus.Gidney2025
