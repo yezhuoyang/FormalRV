@@ -28,6 +28,7 @@ import FormalRV.Corpus.ReactionLimitedRuntime
 import FormalRV.Corpus.ResourceAuditGaps
 import FormalRV.Corpus.ShorCriticalPathFloor
 import FormalRV.Corpus.ShorEmit
+import FormalRV.Corpus.ShorEmitDistance
 import FormalRV.Corpus.ShorFullMachineRequirement
 import FormalRV.Corpus.ShorLPContract
 import FormalRV.Corpus.ShorModMulPPMFactoryE2E

@@ -94,6 +94,23 @@ ancilla coupled to *both* logical supports. It passes the **same** `verify_surge
 
 <p align="center"><img src="../../docs/diagrams/tqec_xxmerge.png" width="560" alt="verified two-patch XX-merge, TQEC spacetime"></p>
 
+**Any code distance.** The per-merge gadget is generic in the distance:
+`surface_d_x_surgery d` (`Corpus/ShorEmitDistance.lean`) builds the surgery gadget on
+`surfaceHGP d` (the `[[d²+(d−1)², 1, d]]` surface code), with its logical X̄ computed by the
+code-general `pairedLogicalX` and `τ_s = ⌈2d/3⌉`. It passes the **same**
+`verify_surgery_gadget` at each chosen distance — `surface_d_x_surgery_verifies_d3`
+(axiom-clean `decide`, just `propext`), `…_d5`, `…_d7` (`native_decide`). The whole
+computation is then distance-parameterized:
+
+```lean
+def emitShorAtDistance (N a d : Nat) : String :=     -- full Shor(N,a) lattice surgery at distance d
+  emitScheduleStim (List.replicate (shorMergeCount N) (surface_d_x_surgery d))
+```
+
+`lake env lean --run emit_shor_distance_demo.lean` emits the first 3 of Shor(15)'s 3072
+merges at **distance 5** — a 708-line Stim circuit, three `[[41,1,5]]` merged-code syndrome
+blocks (`RX` ancilla → `CX` to data → `MX`) → `PyCircuits/shor_distance5_demo.stim`.
+
 **Schedules.** Gadgets compose into a `Schedule` (`SurgerySchedule.lean`), and
 `schedule_runs_as_surgeries` (`SurgerySchedule.lean:76`) proves a schedule runs as the
 sequence of its gadget measurements. Concrete schedules: `cczInjectionSchedule =
@@ -119,7 +136,11 @@ is the Z-dual, still illustrative here:
 > used elsewhere in the repo). What remains: the verifier's row-span is over `merged_hx` and the
 > merged-`H_Z` ancilla block carries no data coupling, so the framework is **X-type** — a **Z̄
 > measurement / `ZZ`-merge** needs the Z-dual construction, the one missing piece for a
-> fully-verified CNOT. Merged-code distance `d̃ = Θ(d)` is a paper-cited input, not proved here.
+> fully-verified CNOT. **On distance:** the distance-`d` gadget is verified at each *chosen*
+> `d` (`decide` / `native_decide`), not yet by a single ∀d theorem; and the verified object is
+> the **logical / algebraic** merge — one ancilla with one high-weight coupling check realising
+> the row-span — not the physical distance-`d` local boundary stitching, syndrome decoder, or
+> fault tolerance (incl. merged distance `d̃ = Θ(d)`), which remain cited / scaffolded.
 
 ## Essential proof techniques
 
