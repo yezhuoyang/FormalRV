@@ -437,7 +437,7 @@ theorem magic_no_startup_prefix_accepted :
     claimed.  Under `capacity_in_arch_ok`, every claimed atom
     lies in some zone of the architecture, so distinct atoms
     landing in zone `z` are bounded by `|atoms(z)| =
-    z.atom_hi - z.atom_lo = z.capacity`.
+    z.site_hi - z.site_lo = z.capacity`.
 
     Conclusion: `capacity_per_cycle_ok` adds no constraints
     beyond `capacity_in_arch_ok ∧ exclusivity_ok` SO LONG AS

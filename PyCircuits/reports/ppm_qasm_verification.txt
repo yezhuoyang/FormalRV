@@ -1,0 +1,17 @@
+=== (1) parse the emitted OpenQASM 3 ===
+[PASS] QASM parses (qiskit.qasm3.loads)
+        T-gadget: 2q/1c; CCZ-gadget: 6q/3c
+
+=== (2) T-gadget QASM implements T on the data qubit ===
+[PASS] emitted T-gadget == T  (data reduced DM, all outcomes)
+        max |rho_data - T|psi><psi|T^dag| over random+basis inputs = 9.99e-16
+
+=== (3) CCZ-gadget QASM implements CCZ on the 3 data qubits ===
+    (exercises ALL 8 outcomes incl. the CZ feed-forward corrections —
+     numerically confirms the 7 corrected branches Lean left to future work)
+[PASS] emitted CCZ-gadget == CCZ  (data reduced DM, all outcomes)
+        max |rho_data - CCZ|psi><psi|CCZ^dag| over random+basis inputs = 8.88e-16
+
+======================================================================
+SUMMARY: 3/3 checks passed.
+EMITTED PPM QASM SIMULATES TO THE CORRECT LOGICAL GATES.

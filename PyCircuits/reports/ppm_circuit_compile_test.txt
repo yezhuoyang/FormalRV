@@ -1,0 +1,27 @@
+=== (1) Shor building-block gates: PPM compilation == the gate ===
+[PASS] T: emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 8.88e-16  (n_data=1)
+[PASS] H·T·S: emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 1.33e-15  (n_data=1)
+[PASS] CNOT: emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 4.45e-16  (n_data=2)
+[PASS] CCZ: emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 8.88e-16  (n_data=3)
+[PASS] Toffoli (H·CCZ·H): emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 7.77e-16  (n_data=3)
+
+=== (2) composed circuit (the demoCircuit: T·CNOT·T·CCZ·H) ===
+[PASS] demoCircuit: emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 6.66e-16  (n_data=3)
+
+=== (3) Toffoli-cascade modular-arithmetic fragment (Shor-15/21 style) ===
+[PASS] Toffoli-cascade adder fragment: emitted PPM == input unitary
+        max |rho_data - U|psi><psi|U^dag| = 1.11e-15  (n_data=4)
+
+=== (4) Stim: the Clifford backbone is a genuine stabilizer circuit ===
+[PASS] Stim: T-gadget Clifford skeleton simulates as a stabilizer circuit
+        H + CX + Z-measure run in Stim (the gadget's Clifford frame is stabilizer)
+
+======================================================================
+SUMMARY: 8/8 checks passed.
+THE EMITTED PPM COMPILATION IMPLEMENTS THE INPUT CIRCUITS — verified.

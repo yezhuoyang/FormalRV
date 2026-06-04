@@ -22,8 +22,8 @@
 
   ## Legacy-name compatibility
 
-  Foundational code (e.g., `ScheduleInv.ArchZone.atom_lo`,
-  `atom_hi`, `total_atoms`, `contains_atom`,
+  Foundational code (e.g., `ScheduleInv.ArchZone.site_lo`,
+  `site_hi`, `total_sites`, `contains_atom`,
   `Architecture.syscall_acts_on`) predates this terminology fix.
   Those names are RETAINED to avoid a dangerous global rename; in
   platform-neutral terminology they should be READ AS site/
@@ -100,7 +100,7 @@ open FormalRV.Framework.LatticeSurgeryPPMContract
     intended meaning of an id at its use site.
 
     Legacy `atom`-named identifiers in foundational code
-    (`ArchZone.atom_lo`, `contains_atom`, `syscall_acts_on`, etc.)
+    (`ArchZone.site_lo`, `contains_atom`, `syscall_acts_on`, etc.)
     are READ AS site / physical-resource ids under this
     platform-neutral framing.  See the file header for the full
     legacy-compatibility note. -/
@@ -400,16 +400,16 @@ theorem surgery_good_cert_exists :
 /-- A larger architecture accommodating multiple parallel
     surgery gadgets.  4 zones × 100 sites each, 400 sites total.
     Ancilla zone big enough for the 3 ancilla sites used in the
-    triple example.  (`total_atoms` is the legacy field name on
+    triple example.  (`total_sites` is the legacy field name on
     `ScheduleInv.ZonedArch`; read it as "total sites" in
     platform-neutral terms.) -/
 def surgery_arch : ZonedArch :=
   { zones :=
-      [ { name := "Data",    atom_lo := 0,   atom_hi := 100 }
-      , { name := "Ancilla", atom_lo := 100, atom_hi := 200 }
-      , { name := "Factory", atom_lo := 200, atom_hi := 300 }
-      , { name := "Routing", atom_lo := 300, atom_hi := 400 } ]
-    total_atoms := 400
+      [ { name := "Data",    site_lo := 0,   site_hi := 100 }
+      , { name := "Ancilla", site_lo := 100, site_hi := 200 }
+      , { name := "Factory", site_lo := 200, site_hi := 300 }
+      , { name := "Routing", site_lo := 300, site_hi := 400 } ]
+    total_sites := 400
     t_cycle_us  := 1
     v_max_um_per_us := 0
   }

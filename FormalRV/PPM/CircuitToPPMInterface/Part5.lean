@@ -1156,7 +1156,7 @@ def toySurgeryComposedSchedule : CompressedSchedule :=
 theorem toySurgeryBackendCert :
     compressed_schedule_strict_certificate_ok
       toySurgerySystemModels
-      toySurgeryComposedSchedule = true := by native_decide
+      toySurgeryComposedSchedule = true := by decide
 
 /-! ### §26.c `VerifiedBackendBlock` for the toy. -/
 
@@ -1411,7 +1411,7 @@ theorem toySurgeryTraceMatchesGadget :
 theorem toySurgeryComposedSchedule_trace_matches :
     SurgeryTraceMatchesGadget toySchedulableSurgeryGadget
       (surgeryTraceOfCompressedSchedule
-        toySurgeryVerifiedBackendBlock.schedule) := by native_decide
+        toySurgeryVerifiedBackendBlock.schedule) := by native_decide  -- toy trace-match; too heavy for kernel `decide`
 
 /-! ### §27.d Trace-level QEC lowering evidence.
 
