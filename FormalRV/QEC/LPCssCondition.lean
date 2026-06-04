@@ -188,4 +188,38 @@ theorem liftMat_row_length (ℓ : Nat) (A : List (List Circ)) (C : Nat)
   rw [List.mem_range] at hr
   rw [liftRow_length ℓ pr r hr, hrect pr hpr]
 
+/-! ## §6. Uniform-block indexing (the crux of the transpose homomorphism)
+
+    `liftMat` and its rows are `flatMap`s of UNIFORM-length-`ℓ` blocks.  Indexing such a
+    `flatMap` at position `b·ℓ+s` lands in block `b`, offset `s`.  Used at BOTH nesting
+    levels (the outer poly-row `flatMap`, and the inner circulant-block-row `flatMap`). -/
+
+/-- **Uniform-block `getElem?`**: for `f` producing length-`ℓ` lists and `s < ℓ`, the
+    `(b·ℓ+s)`-th element of `l.flatMap f` is the `s`-th element of `f`(the `b`-th block).
+    By induction over `l`, using the append `getElem?` lemmas. -/
+theorem getElem?_flatMap_uniform {α β : Type} (f : α → List β) (ℓ : Nat) :
+    ∀ (l : List α), (∀ a ∈ l, (f a).length = ℓ) →
+      ∀ (b s : Nat) (a : α), s < ℓ → l[b]? = some a →
+        (l.flatMap f)[b * ℓ + s]? = (f a)[s]? := by
+  intro l
+  induction l with
+  | nil => intro _ b s a _ hget; simp at hget
+  | cons blk rest ih =>
+    intro huni b s a hs hget
+    have hblk : (f blk).length = ℓ := huni blk (List.mem_cons_self ..)
+    rw [List.flatMap_cons]
+    cases b with
+    | zero =>
+        simp only [Nat.zero_mul, Nat.zero_add]
+        rw [List.getElem?_append_left (by rw [hblk]; exact hs)]
+        simp only [List.getElem?_cons_zero, Option.some.injEq] at hget
+        rw [hget]
+    | succ b' =>
+        have hidx : (b' + 1) * ℓ + s = (f blk).length + (b' * ℓ + s) := by
+          rw [hblk, Nat.succ_mul]; omega
+        rw [hidx, List.getElem?_append_right (by omega), Nat.add_sub_cancel_left]
+        have hrest : ∀ x ∈ rest, (f x).length = ℓ := fun x hx => huni x (List.mem_cons_of_mem _ hx)
+        rw [List.getElem?_cons_succ] at hget
+        exact ih hrest b' s a hs hget
+
 end FormalRV.QEC.Algebraic
