@@ -22,11 +22,12 @@
 
 import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
+import FormalRV.Framework.ResourceEstimate
 import FormalRV.Qualtran.Bridge
 
 namespace FormalRV.Corpus.Gidney2025
 
-open FormalRV.Framework FormalRV.Qualtran
+open FormalRV.Framework FormalRV.Framework.Resource FormalRV.Qualtran
 
 /-- Gidney 2025 Shor instance: RSA-2048 with Ekerå–Håstad `s = 8`
 parameter (input qubits m = n/2 + ⌈n/(2s)⌉ = 1024 + 128 = 1152;
@@ -56,5 +57,63 @@ example : gidney2025_instance.2.1.n = 1352 ∧
           gidney2025_instance.2.1.k = 1 ∧
           gidney2025_instance.2.1.d = 25 := ⟨rfl, rfl, rfl⟩
 example : gidney2025_instance.2.2 = gidney_fowler_realistic := rfl
+
+/-! ## §2. Headline resource workload + cold storage.
+
+    Beyond the (algorithm, code, hardware) tuple, the paper's headline RSA-2048 cost. -/
+
+/-- Gidney-2025 workload: `6.5×10⁹` Toffolis (main.tex:1191), `1537` logical qubits
+    (main.tex:1173). -/
+def gidney2025_work : Workload :=
+  { n_toff := 6_500_000_000, n_logical := 1537 }
+
+/-- Cold (idle) storage uses a YOKED 2D-parity-check surface code: `430` physical qubits per
+    idle logical qubit (main.tex:1163), vs `1352` for a hot distance-25 patch.  No `QECCode`
+    slot — it is a concatenated/yoked construction the framework does not yet model. -/
+def gidney2025_cold_physical_per_logical : Nat := 430
+
+/-! ## §3. Cross-checks of the paper's stated TALLIES (machine-checked arithmetic).
+
+    The verification value-add: the paper's own component arithmetic, confirmed by `decide`. -/
+
+/-- **Logical-qubit tally**: `1280` (cold input) `+ 131` (active hot `3f+2ℓ+⌈log m⌉`)
+    `+ 7·18` (idle hot patches) `= 1537 < 1600` (main.tex:1173). -/
+theorem gidney2025_logical_tally : 1280 + 131 + 7 * 18 = 1537 := by decide
+
+/-- **Physical-qubit tally**: cold `1280·430` + active-hot `131·1352` + idle-hot `7·18·1352`
+    `= 897 864`, reported as `< 1 000 000` for slack (main.tex:1168–1176). -/
+theorem gidney2025_physical_tally :
+    1280 * 430 + 131 * 1352 + 7 * 18 * 1352 = 897864 := by decide
+
+/-- Hot patch size: `2·(d+1)² = 2·26² = 1352` at `d = 25` (main.tex:1162). -/
+theorem gidney2025_hot_patch_size : 2 * (25 + 1) ^ 2 = 1352 := by decide
+
+/-- The encoded workload's logical count matches the reconciled tally. -/
+theorem gidney2025_work_consistent :
+    gidney2025_work.n_logical = 1280 + 131 + 7 * 18 := by decide
+
+/-- Largest lookup (`w₁ = 6` address qubits) needs `2⁶ − 6 − 1 = 57` CCZ states
+    (Babbush QROM cost `2ⁿ − n − 1`; main.tex:1204). -/
+theorem gidney2025_lookup_ccz : 2 ^ 6 - 6 - 1 = 57 := by decide
+
+/-- CCZ-state period `= 150 / 6 = 25 µs` equals the `d = 25` lattice-surgery period
+    (6 factories, 150 rounds/CCZ; main.tex:1192). -/
+theorem gidney2025_ccz_period : 150 / 6 = 25 := by decide
+
+/-! ## §4. Gap-vs-reported: Gidney 2025 against GE2021 in the framework.
+
+    The trade made explicit: ≈22× fewer physical qubits, paid for by ≈2.4× more Toffolis. -/
+
+/-- Physical-qubit reduction GE2021 → Gidney2025 is ≈ 22×: `897864·22 = 19 753 008 < 20 000 000`
+    (GE2021's 20M; main.tex:88,1245). -/
+theorem gidney2025_vs_ge2021_qubit_cut : 897864 * 22 < 20000000 := by decide
+
+/-- Toffoli INCREASE GE2021 → Gidney2025: `2.7×10⁹ → 6.5×10⁹` (> 2× more — the space saving is
+    paid for in gates/time; main.tex:94,157). -/
+theorem gidney2025_vs_ge2021_toffoli : 2_700_000_000 * 2 < 6_500_000_000 := by decide
+
+-- Headline resource vector: (Toffolis, logical qubits, physical qubits).
+#eval (gidney2025_work.n_toff, gidney2025_work.n_logical,
+       1280 * 430 + 131 * 1352 + 7 * 18 * 1352)   -- (6500000000, 1537, 897864)
 
 end FormalRV.Corpus.Gidney2025
