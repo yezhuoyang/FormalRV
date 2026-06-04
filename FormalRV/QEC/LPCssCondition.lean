@@ -222,4 +222,40 @@ theorem getElem?_flatMap_uniform {α β : Type} (f : α → List β) (ℓ : Nat)
         rw [List.getElem?_cons_succ] at hget
         exact ih hrest b' s a hs hget
 
+/-! ## §7. Entry access into `liftMat` (the bridge for the transpose homomorphism) -/
+
+/-- **The `(a·ℓ+r, b·ℓ+s)` entry of `liftMat ℓ A` is `circulant(A[a][b])[r][s]`** — the
+    block `(a,b)` is the `ℓ×ℓ` circulant of the ring entry `A[a][b]`, read at `(r,s)`.
+    Proved by decomposing both flatMap levels with `getElem?_flatMap_uniform`.  This is the
+    bridge that turns the transpose homomorphism into a per-entry application of
+    `circulant_circDagger_eq_transpose`. -/
+theorem liftMat_entry (ℓ : Nat) (A : List (List Circ)) (C : Nat)
+    (hrect : ∀ pr ∈ A, pr.length = C)
+    (a r b s : Nat) (ha : a < A.length) (hr : r < ℓ) (hb : b < C) (hs : s < ℓ) :
+    ((liftMat ℓ A)[a * ℓ + r]?.getD []).getD (b * ℓ + s) false
+      = ((circulant ℓ ((A[a]?.getD []).getD b [])).getD r []).getD s false := by
+  have hpra : A[a]? = some (A[a]?.getD []) := by rw [List.getElem?_eq_getElem ha]; rfl
+  have houter : (liftMat ℓ A)[a * ℓ + r]?
+      = ((List.range ℓ).map (fun r' =>
+          ((A[a]?.getD []).map (fun e => circulant ℓ e)).flatMap (fun blk => blk.getD r' [])))[r]? := by
+    unfold liftMat
+    exact getElem?_flatMap_uniform _ ℓ A (by intro pr _; simp) a r (A[a]?.getD []) hr hpra
+  rw [houter, List.getElem?_map, List.getElem?_range hr]
+  simp only [Option.map_some, Option.getD_some]
+  have hcirc : ∀ blk ∈ (A[a]?.getD []).map (fun e => circulant ℓ e), (blk.getD r []).length = ℓ := by
+    intro blk hblk; rw [List.mem_map] at hblk; obtain ⟨e, _, rfl⟩ := hblk
+    exact circulant_row_length ℓ e r hr
+  have hmem : A[a]?.getD [] ∈ A := by
+    have he : A[a]?.getD [] = A[a] := by rw [List.getElem?_eq_getElem ha]; rfl
+    rw [he]; exact List.getElem_mem ha
+  have hbC : b < (A[a]?.getD []).length := by rw [hrect _ hmem]; exact hb
+  have hblkget : ((A[a]?.getD []).map (fun e => circulant ℓ e))[b]?
+      = some (circulant ℓ ((A[a]?.getD []).getD b [])) := by
+    rw [List.getElem?_map, List.getElem?_eq_getElem hbC]
+    simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hbC]
+  have hinner := getElem?_flatMap_uniform (fun blk => blk.getD r []) ℓ
+    ((A[a]?.getD []).map (fun e => circulant ℓ e)) hcirc b s _ hs hblkget
+  rw [List.getD_eq_getElem?_getD, hinner]
+  simp [List.getD_eq_getElem?_getD]
+
 end FormalRV.QEC.Algebraic
