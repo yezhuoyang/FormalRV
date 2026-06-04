@@ -36,11 +36,12 @@
   truncation deviation in `Δ_N` (4,5) → approximate periodicity (6).  What remains is QUANTUM /
   number-theoretic and is each its own effort:
 
-  - The **quantum success half** of "deviation → success".  Closed so far (classical/combinatorial):
-    `approx_periodic` (the periodicity premise) and the masked-state infidelity's COUNTING core
-    (`window_overlap_card`, `infidelity_ratio_bound`: overlap `= W−d`, ratio `d/W ≤ ε/S`).  Remaining
-    (genuinely quantum): the amplitude identity `|⟨ψ₁|ψ̃₁⟩| = |A∩B|/W` for uniform superpositions, QPE
-    on the resulting ideal state, and Ekerå–Håstad post-processing — connecting to
+  - The **quantum success half** of "deviation → success".  Closed: `approx_periodic` (the
+    periodicity premise) AND the full masked-state infidelity argument eq:max-infidelity —
+    `unifSuper_inner` (the amplitude identity `⟨u_A|u_B⟩ = |A∩B|/W`), `window_overlap_card`
+    (`|A∩B| = W−d`), `masked_fidelity` (fidelity `= (W−d)/W`), and `infidelity_ratio_bound`
+    (`d/W ≤ ε/S`).  Remaining: lifting the per-`e` conditioned fidelity to the global state, QPE on
+    the resulting ideal state, and Ekerå–Håstad post-processing — connecting to
     `FormalRV.SQIRPort.probability_of_success` (the ported exact analysis).
   - The full multi-register **`Gate`-IR assembly** and its UNITARY (superposition) faithfulness;
     layer 7 proves one register's classical action and identifies each step with the verified modmult.

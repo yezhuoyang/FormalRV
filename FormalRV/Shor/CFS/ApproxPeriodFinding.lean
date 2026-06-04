@@ -118,11 +118,48 @@ theorem infidelity_ratio_bound (N S eps d W : ℕ) (hN : 0 < N) (hS : 0 < S)
     _ = (eps : ℚ) * ((S * N : ℕ) : ℚ) := by push_cast; ring
     _ ≤ (eps : ℚ) * W := by nlinarith [hWc, Nat.cast_nonneg (α := ℚ) eps]
 
-/-! ## The approximate-periodicity theorems pass the VERIFIER gate (sorry-free, axiom-clean). -/
+open scoped ComplexConjugate in
+/-- Uniform superposition over a finite index set `A` of size `W`: amplitude `1/√W` on `A`, else 0
+    (the conditioned masked output state of the period-finding register). -/
+noncomputable def unifSuper {d : ℕ} (W : ℕ) (A : Finset (Fin d)) : Fin d → ℂ :=
+  fun x => if x ∈ A then ((Real.sqrt W : ℂ))⁻¹ else 0
+
+open scoped BigOperators ComplexConjugate in
+/-- **The amplitude identity** — the only genuinely-quantum step of the masked-state infidelity
+    bound.  The inner product of two uniform superpositions equals the normalised overlap of their
+    supports: `⟨u_A | u_B⟩ = |A ∩ B| / W`.  So the conditioned fidelity IS the window overlap. -/
+theorem unifSuper_inner {d : ℕ} (W : ℕ) (hW : 0 < W) (A B : Finset (Fin d)) :
+    (∑ x, conj (unifSuper W A x) * unifSuper W B x) = ((A ∩ B).card : ℂ) / W := by
+  have hWc : (Real.sqrt W : ℂ) ^ 2 = (W : ℂ) := by
+    rw [← Complex.ofReal_pow, Real.sq_sqrt (by positivity)]; norm_cast
+  have key : ∀ x : Fin d, conj (unifSuper W A x) * unifSuper W B x
+      = if x ∈ A ∩ B then ((Real.sqrt W : ℂ))⁻¹ ^ 2 else 0 := by
+    intro x
+    unfold unifSuper
+    by_cases hA : x ∈ A <;> by_cases hB : x ∈ B <;>
+      simp [hA, hB, Finset.mem_inter, map_inv₀, Complex.conj_ofReal, sq]
+  simp_rw [key]
+  rw [Finset.sum_ite_mem, Finset.univ_inter, Finset.sum_const, nsmul_eq_mul, inv_pow, hWc]
+  field_simp
+
+open scoped BigOperators ComplexConjugate in
+/-- **The masked-state fidelity equals `(W − d)/W`** (eq:max-infidelity, combining the amplitude
+    identity with `window_overlap_card`): two width-`W` masked windows whose supports overlap in
+    `W − d` values have conditioned fidelity `⟨u_A|u_B⟩ = (W − d)/W`, hence infidelity `d/W` (which
+    `infidelity_ratio_bound` caps at `ε/S`).  This closes the masked-state overlap argument; the
+    remaining quantum links are global-fidelity-from-conditioned, QPE, and Ekerå–Håstad. -/
+theorem masked_fidelity {D : ℕ} (W d : ℕ) (hW : 0 < W) (A B : Finset (Fin D))
+    (hov : (A ∩ B).card = W - d) :
+    (∑ x, conj (unifSuper W A x) * unifSuper W B x) = ((W - d : ℕ) : ℂ) / W := by
+  rw [unifSuper_inner W hW A B, hov]
+
+/-! ## The approximate-periodicity + infidelity theorems pass the VERIFIER gate (axiom-clean). -/
 
 #verify_clean modexp_periodic
 #verify_clean approx_periodic
 #verify_clean window_overlap_card
 #verify_clean infidelity_ratio_bound
+#verify_clean unifSuper_inner
+#verify_clean masked_fidelity
 
 end FormalRV.CFS
