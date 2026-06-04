@@ -59,6 +59,18 @@ textbook 7-T chain (`H·CNOT·T†…`), and `f_to_vec_CCX` (`GateDecompositions
 chain flips the target iff both controls are set, with `CCX_eq_toffoliMatrix` giving
 the full 8×8 permutation identity.
 
+### More small examples
+
+3. **Composite gate-count.** For `seq (X 0) (CCX 0 1 2)` the IR computes
+   `tcount = 0 + 7 = 7`, `gcount = 1 + 1 = 2`, `depth = 2` (the `example`s in
+   `Gate.lean`), and `toQASM` emits `x q[0]; ccx q[0],q[1],q[2];`. The 3-bit Cuccaro
+   adder (`Arithmetic/`) is the same machinery at scale — 18 gates, `tcount = 14·3 = 42`
+   from its `6` Toffolis — and Qiskit re-counts it.
+4. **The Clifford leaves.** `toQASM (CX 1 0)` and `toQASM (X 0)` emit the obvious
+   one-line OpenQASM 2; both have `tcount = 0` (Cliffords are T-free), while `numCX` /
+   `numX` track them for the `gcount_eq_sum` identity — these are the leaves the
+   `seq`-induction composes.
+
 ## Essential proof techniques
 
 - **Structural induction on the `Gate` IR.** The resource theorems induct over the

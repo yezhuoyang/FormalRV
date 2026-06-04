@@ -40,6 +40,19 @@ span-witness-selected ancilla X-checks multiply to exactly `signedXRow X̄`, and
 `surface3_x_surgery_verifies` passes the structural verifier. Stim's `has_flow` then
 re-derives the same fact externally — the LaSsynth gold standard.
 
+### More small examples
+
+2. **The row-span check, concretely.** For `surface3_x_surgery` the span witness
+   `[F,F,F,F,F,F,T,T]` selects the two ancilla X-checks; `row_combination witness
+   merged_hx = target_pauli` evaluates to the `X̄ = X₆X₇X₈` row
+   (`targets_logical_correctly`, by `decide`) — the GF(2) fact that
+   `selectedSignedProduct_eq` lifts to the signed Pauli product.
+3. **Rejecting a bad gadget.** `topology_pair_alias_rejected`
+   (`SurgeryGadgetToSysCalls.lean:834`, `native_decide`) proves the combined checker
+   returns `false` for two parallel gadgets that *share* ancilla sites — a structural
+   aliasing bug caught before any physics (the contract file's §22 shows two
+   individually-valid certs that must NOT auto-compose).
+
 ## Essential proof techniques
 
 - **Logical measurement as a row-span identity.** Correctness is the statement that

@@ -178,4 +178,41 @@ fig.tight_layout()
 fig.savefig(os.path.join(OUT, "scheduling_invariants.png"), dpi=130)
 print("  drew scheduling_invariants.png")
 
+# --- SYSTEM: the zoned Architecture design (neutral_atom_mini, from Architecture.lean) ---
+print("System zone design (neutral_atom_mini):")
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+figz, axz = plt.subplots(figsize=(9.5, 6.2))
+axz.set_xlim(0, 10); axz.set_ylim(0, 8); axz.axis("off")
+# zone id, role, capacity, (x,y), color  — verbatim from neutral_atom_mini
+zones = {
+    1: ("Processor", 21, (4.0, 3.4), "#2b6cb0"),
+    0: ("Memory",   100, (0.4, 3.4), "#2f855a"),
+    2: ("Ancilla",   10, (4.0, 0.4), "#b7791f"),
+    3: ("Factory",    5, (4.0, 6.2), "#c53030"),
+}
+boxw, boxh = 3.0, 1.4
+centers = {}
+for zid, (role, cap, (x, y), col) in zones.items():
+    axz.add_patch(FancyBboxPatch((x, y), boxw, boxh, boxstyle="round,pad=0.05",
+                  linewidth=2, edgecolor=col, facecolor=col + "22"))
+    axz.text(x + boxw / 2, y + boxh - 0.32, f"Zone {zid}: {role}", ha="center",
+             fontsize=12, fontweight="bold", color=col)
+    axz.text(x + boxw / 2, y + 0.42, f"capacity {cap}  ·  routing 15 µs", ha="center", fontsize=9.5, color="#333")
+    centers[zid] = (x + boxw / 2, y + boxh / 2)
+# channels: (src, dst, kind label) — all 15 µs latency, 99.9% fidelity, 67 transits/ms
+chans = [(2, 1, "AncillaSupply"), (3, 1, "MagicSupply"), (0, 1, "MemoryLoad")]
+for src, dst, kind in chans:
+    (xs, ys), (xd, yd) = centers[src], centers[dst]
+    axz.add_patch(FancyArrowPatch((xs, ys), (xd, yd), arrowstyle="-|>", mutation_scale=18,
+                  linewidth=2, color="#555", connectionstyle="arc3,rad=0.0",
+                  shrinkA=42, shrinkB=42))
+    mx, my = (xs + xd) / 2, (ys + yd) / 2
+    axz.text(mx, my + 0.18, kind, ha="center", fontsize=9, color="#222",
+             bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#999"))
+axz.text(5.0, 7.7, "FormalRV zoned Architecture — neutral_atom_mini "
+         "(t_stab 1000 µs · t_react 100 µs · channels 15 µs / 99.9%)",
+         ha="center", fontsize=10.5, fontweight="bold")
+figz.savefig(os.path.join(OUT, "zone_design.png"), dpi=130, bbox_inches="tight")
+print("  drew zone_design.png")
+
 print("\nAll diagrams written to docs/diagrams/")
