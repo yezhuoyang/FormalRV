@@ -41,3 +41,50 @@ pipeline) is expressed in terms of these defs. Faithfully mirrors SQIR's
 
 ## Status
 The unitary core (gate IR, matrix semantics, pad embedding, CCX=7-T correctness, Pauli/phase-gate algebra) is sorry-free in its proof bodies; the only `axiom`s in this folder are the two Shor-specific deferrals in `QuantumLib.lean`. The measurement-based layers (`NDSem`, `DensitySem`) and parts of `UnitaryOps` are deliberately Scaffolded — types and statements are present, but partial-trace / matrix-norm proofs are deferred.
+
+## Worked example — Toffoli = 7 T, emitted and round-tripped
+
+![Toffoli = CCX](../../docs/diagrams/toffoli.png)
+
+The whole T-count ledger rests on one primitive. `toQASM (CCX 0 1 2)` emits
+`toffoli.qasm` (drawn above); `tcount_eq_seven_numCCX` (`GateQASM.lean:33`,
+**Verified**, axiom-clean) proves `tcount g = 7 · numCCX g` for *every* circuit `g`,
+and `gcount_eq_sum` that `gcount = numX + numCX + numCCX`. So a Qiskit script can
+load any emitted `.qasm`, count its `ccx`, and confirm it equals `tcount/7` —
+turning the resource theorem into an externally checkable fact, not Lean bookkeeping.
+
+At the *unitary* level the decomposition is also proved: `BaseUCom.CCX` is the
+textbook 7-T chain (`H·CNOT·T†…`), and `f_to_vec_CCX` (`GateDecompositions.lean:81`,
+**Verified** — `#print axioms` = `propext, Classical.choice, Quot.sound`) proves that
+chain flips the target iff both controls are set, with `CCX_eq_toffoliMatrix` giving
+the full 8×8 permutation identity.
+
+### More small examples
+
+3. **Composite gate-count.** For `seq (X 0) (CCX 0 1 2)` the IR computes
+   `tcount = 0 + 7 = 7`, `gcount = 1 + 1 = 2`, `depth = 2` (the `example`s in
+   `Gate.lean`), and `toQASM` emits `x q[0]; ccx q[0],q[1],q[2];`. The 3-bit Cuccaro
+   adder (`Arithmetic/`) is the same machinery at scale — 18 gates, `tcount = 14·3 = 42`
+   from its `6` Toffolis — and Qiskit re-counts it.
+4. **The Clifford leaves.** `toQASM (CX 1 0)` and `toQASM (X 0)` emit the obvious
+   one-line OpenQASM 2; both have `tcount = 0` (Cliffords are T-free), while `numCX` /
+   `numX` track them for the `gcount_eq_sum` identity — these are the leaves the
+   `seq`-induction composes.
+
+## Essential proof techniques
+
+- **Structural induction on the `Gate` IR.** The resource theorems induct over the
+  five constructors `I / X / CX / CCX / seq`; the leaf cases are reflexive and the
+  `seq` case rewrites with the two induction hypotheses and closes by `omega` — the
+  Lean-native analogue of SQIR's `bccom` induction.
+- **Two semantics, one IR.** Cost lives in the lightweight *reversible* IR (`Gate`,
+  where `CCX` is a primitive costed at 7 by definition); *correctness* lives in the
+  *unitary* IR (`BaseUCom`/`uc_eval`, `2^dim×2^dim` matrices) where the 7-T `CCX` is
+  proven equal to the Toffoli. The pad/Kronecker embedding (`pad_u`, with
+  `pad_u_mul_pad_u`) and the gate-power identities (`T⁴=Z`, `S²=Z`, `H²=I`) are the
+  matrix-algebra workhorses; `f_to_vec_CCX` is proven on `f_to_vec` basis states.
+
+Honest scope: the two `axiom`s here are the deprecated Shor placeholders in
+`QuantumLib.lean` (`f_modmult_circuit`, `probability_of_success`), off the verified
+chain (the live proof uses the SQIR-faithful multiplier in `Arithmetic/`);
+measurement/density semantics (`NDSem`, `DensitySem`) are Scaffolded.

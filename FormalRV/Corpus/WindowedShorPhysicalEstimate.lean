@@ -126,8 +126,8 @@ theorem windowedRuntime_rsa2048_brackets_paper :
 /-- A surface-code architecture at the GE2021 hardware parameters: `t_cycle_us = 1` (from
     `ge2021_hw`), a single physical-site zone, no transit (`v_max = 0`). -/
 def ge2021_arch : ZonedArch :=
-  { zones := [ { name := "Surface", atom_lo := 0, atom_hi := 20000000 } ]
-    total_atoms := 20000000
+  { zones := [ { name := "Surface", site_lo := 0, site_hi := 20000000 } ]
+    total_sites := 20000000
     t_cycle_us := 1
     v_max_um_per_us := 0
     t_react_us := 10 }

@@ -1,0 +1,248 @@
+M Z 7,4
+F 4
+M Z 7,6
+F 6
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 4,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 2,3
+F 3
+M Z 7,4
+F 4
+M Z 7,6
+F 6
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+M Z 6,1
+F 1
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 6,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 4,3
+F 3
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 4,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 2,3
+F 3
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+M Z 6,1
+F 1
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 6,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 4,3
+F 3
+M Z 7,1
+F 1
+M Z 8,6
+F 6
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 4,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 2,3
+F 3
+M Z 8,6
+F 6
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+M Z 6,1
+F 1
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 6,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 4,3
+F 3
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 4,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 2,3
+F 3
+M Z 4,3
+F 3
+M Z 4,2
+F 2
+T 4
+M Z 2,3,4
+F 4
+M Z 6,5
+F 5
+M Z 6,4
+F 4
+T 6
+M Z 4,5,6
+F 6
+M Z 6,1
+F 1
+T 6
+M Z 4,5,6
+F 6
+M Z 6,4
+F 4
+M Z 6,5
+F 5
+T 4
+M Z 2,3,4
+F 4
+M Z 4,2
+F 2
+M Z 4,3
+F 3
+M Z 8,1
+F 1

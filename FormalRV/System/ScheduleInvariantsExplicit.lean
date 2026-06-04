@@ -65,28 +65,28 @@ open FormalRV.Framework.Architecture
 /-! ## Zone breakdown (for I1) -/
 
 /-- An architecture zone described as a contiguous atom range
-    with a role label.  `[atom_lo, atom_hi)` defines the zone's
-    atoms; `capacity = atom_hi − atom_lo`. -/
+    with a role label.  `[site_lo, site_hi)` defines the zone's
+    atoms; `capacity = site_hi − site_lo`. -/
 structure ArchZone where
   name     : String
-  atom_lo  : Nat
-  atom_hi  : Nat        -- exclusive
+  site_lo  : Nat
+  site_hi  : Nat        -- exclusive
   deriving Repr, Inhabited
 
 namespace ArchZone
 
-@[inline] def capacity (z : ArchZone) : Nat := z.atom_hi - z.atom_lo
+@[inline] def capacity (z : ArchZone) : Nat := z.site_hi - z.site_lo
 
 @[inline] def contains_atom (z : ArchZone) (a : Nat) : Bool :=
-  decide (z.atom_lo ≤ a) && decide (a < z.atom_hi)
+  decide (z.site_lo ≤ a) && decide (a < z.site_hi)
 
 end ArchZone
 
 /-- A zoned architecture: list of disjoint ArchZones covering
-    the atom-id range `[0, total_atoms)` (possibly with gaps). -/
+    the atom-id range `[0, total_sites)` (possibly with gaps). -/
 structure ZonedArch where
   zones        : List ArchZone
-  total_atoms  : Nat
+  total_sites  : Nat
   t_cycle_us   : Nat
   v_max_um_per_us : Nat
   /-- Decoder reaction-time budget (µs): every `DecodeSyndrome` must complete within this, else the

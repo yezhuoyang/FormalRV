@@ -40,3 +40,59 @@ modular multiplier are **Verified** (semantic correctness proven by induction);
 their T-counts are **Arithmetic-only** side products. Unary lookup is
 **Scaffolded** (indexing only). The `GateToUCom`/`MCPBridge` path is **Verified**
 as a reduction but is exercised end-to-end only via the multiplier above.
+
+## Worked example — the adder and the multiplier, drawn
+
+![3-bit Cuccaro adder](../../docs/diagrams/cuccaro_adder_3bit.png)
+
+`cuccaro_n_bit_adder_full 3 0` is a complete 3-bit ripple-carry adder on 7 qubits
+(a forward `MAJ` chain, then a *reverse* `UMA` chain), emitted to OpenQASM 2 by
+`scripts/EmitQASM.lean` and drawn above by Qiskit. On the encoded input
+(`cuccaro_input_F`: carry-in at `q0`, then interleaved `bᵢ,aᵢ` pairs),
+`cuccaro_n_bit_adder_full_correct` (`Cuccaro/CuccaroFull.lean:847`, **Verified**,
+axiom-clean) proves the three positional invariants — the sum bit at `q_{2i+1}`
+becomes `cᵢ ⊕ bᵢ ⊕ aᵢ`, the `a`-register is restored, and the carry-in is restored.
+
+![modular multiplier x->7x mod 15](../../docs/diagrams/modmult_const_2_15_7.png)
+
+Stacking controlled modular adds gives `sqir_modmult_const_gate 2 15 7` — the
+108-gate `x ↦ 7·x mod 15` multiplier above. The accumulator obeys the
+shift-and-accumulate recurrence `sqir_modmult_acc_spec` (`SQIRModMult/Defs.lean:64`);
+for `m=2` it steps `0 → 0 → (0 + 7·2 mod 15) = 14`. `sqir_modmult_const_gate_target_decode`
+(`SQIRModMult/Proofs2.lean:856`, **Verified**) proves the target decodes to
+`(a·m) mod N`, and `MCPBridge.lean` promotes this Boolean-correct circuit to the
+`MultiplyCircuitProperty` that `Shor` consumes as its oracle.
+
+### More small examples
+
+3. **Controlled modular adder** `controlledModAddConstGate` (`ModularAdder/Defs.lean`)
+   — an 8-step `(x+c) mod N` pipeline (compare, conditional subtract, restore).
+   `controlledModAddConstGate_correct` (`ModularAdder/Proofs3.lean`, **Verified**)
+   proves the target becomes `(x+c) mod N` exactly when the control bit is set, with
+   the workspace restored — the conditional building block the multiplier stacks
+   `bits` times.
+4. **A numeric trace** of `cuccaro_n_bit_adder_full 3 0` on `a=2, b=3`: the MAJ chain
+   computes the carries, the reverse UMA writes the sum register `2+3 = 5 = 101₂`
+   (no overflow, top carry 0) and restores `a=2` — exactly the three
+   `cuccaro_n_bit_adder_full_correct` invariants on concrete inputs.
+
+## Essential proof techniques
+
+- **Boolean basis-state action, not matrices.** Every gate is given a `Nat → Bool`
+  action `Gate.applyNat`, with per-gate lemmas (`gate_{x,cx,ccx}_acts_on_basis`)
+  glued by `gate_seq_acts_on_basis` (`Correctness.lean`);
+  `uc_eval_toUCom_acts_on_basis` proves this Boolean semantics agrees with the
+  matrix `uc_eval` on basis vectors. So arithmetic correctness reduces to symbolic
+  Boolean identities — and a gate/T-count alone is *rejected* (CLAUDE.md): two
+  circuits of equal T-count can compute different functions; only the action proves
+  *what* is computed.
+- **Induction on the carry chain.** The proof of the adder carries a three-band
+  invariant (carry positions hold `carryᵢ ⊕ aᵢ`, sum positions `bᵢ ⊕ aᵢ`, plus the
+  top carry) by induction on `n`, with *frame lemmas* isolating the support so
+  outside positions are provably untouched and a *shift lemma*
+  (`cuccaro_carry_after_MAJ0_shift`) advancing the carry as `q_start → q_start+2`;
+  the reverse `UMA` chain then algebraically inverts each `MAJ` to deposit the sum.
+- **A solvable recurrence for multiplication.** Because each step adds the
+  *constant* `(a·2^k) mod N` (no cross-bit dependency), the accumulator recurrence
+  closes by induction on the bit index (`sqir_modmult_acc_spec_eq_mul_mod`),
+  evaluating to `(a·m) mod N` after all `bits` steps.

@@ -23,10 +23,10 @@ open FormalRV.Framework.Architecture
     `[200,300)`; 1 µs stabilizer cycle, no transit (`v_max = 0`), 10 µs decoder reaction budget. -/
 def demoArch : ZonedArch :=
   { zones :=
-      [ { name := "Data",    atom_lo := 0,   atom_hi := 100 },
-        { name := "Ancilla", atom_lo := 100, atom_hi := 200 },
-        { name := "Factory", atom_lo := 200, atom_hi := 300 } ]
-    total_atoms := 300
+      [ { name := "Data",    site_lo := 0,   site_hi := 100 },
+        { name := "Ancilla", site_lo := 100, site_hi := 200 },
+        { name := "Factory", site_lo := 200, site_hi := 300 } ]
+    total_sites := 300
     t_cycle_us  := 1
     v_max_um_per_us := 0
     t_react_us  := 10 }

@@ -1,0 +1,10 @@
+[PASS] modmult_const_2_15_7: decomposed CNOT count == numCX + 6·numCCX
+        Qiskit cx after Toffoli-decompose = 268 | Lean numCX+6·numCCX = 76+6·32 = 268
+[PASS] modmult_const_3_21_5: decomposed CNOT count == numCX + 6·numCCX
+        Qiskit cx after Toffoli-decompose = 597 | Lean numCX+6·numCCX = 165+6·72 = 597
+[PASS] modmult_MCP_2_15_7_13: decomposed CNOT count == numCX + 6·numCCX
+        Qiskit cx after Toffoli-decompose = 552 | Lean numCX+6·numCCX = 168+6·64 = 552
+
+======================================================================
+SUMMARY: 3/3 checks passed.
+THE CONTROL-FORMULA INPUT (decomposed-Toffoli CNOT count) MATCHES THE ACTUAL CIRCUIT.

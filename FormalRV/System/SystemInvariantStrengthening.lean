@@ -15,7 +15,7 @@
 
     A. **Operation-capacity gap.**  The existing
        `capacity_per_cycle_ok` bounds per-cycle SITE counts using
-       `ArchZone.capacity = atom_hi - atom_lo`.  Under
+       `ArchZone.capacity = site_hi - site_lo`.  Under
        `exclusivity_ok`, this is redundant (review §9) — and it
        does NOT bound the number of simultaneous OPERATIONS the
        hardware can sustain (e.g., "the device supports at most
@@ -66,7 +66,7 @@
   All new identifiers use **site / physical resource /
   operation capacity / routing lane / factory port / decoder
   channel**.  No new generic identifier uses "atom".  Legacy
-  fields like `total_atoms`, `contains_atom`, `syscall_acts_on`
+  fields like `total_sites`, `contains_atom`, `syscall_acts_on`
   appear only as references to pre-existing names; read them as
   site / physical-resource ids.
 
@@ -509,12 +509,12 @@ theorem strict_still_accepts_magic_no_startup_prefix :
     We therefore declare a SLOT-capacity zone as a separate
     local spec — independent of `ArchZone`.  The schedule's
     site claims are matched against the SPEC's interval, not
-    against `ArchZone.atom_lo/atom_hi`.  This decouples
+    against `ArchZone.site_lo/site_hi`.  This decouples
     "where a site is" (`ArchZone`) from "how many active
     bookings a zone supports" (`ZoneCapacitySpec`).  Both
     models can coexist without aliasing.
 
-    Legacy `atom_lo/atom_hi` (on `ArchZone`) should be read as
+    Legacy `site_lo/site_hi` (on `ArchZone`) should be read as
     site-interval bounds; the new fields use `site_lo/site_hi`.
 
     ### Examples of finite slot capacity (platform-neutral)
@@ -589,13 +589,13 @@ def slot_capacity_ok
     zone is a 100-site ancilla zone with generous capacity. -/
 
 /-- Demo architecture for the slot-capacity examples.  Two
-    zones, 100 sites each.  Legacy `atom_lo/atom_hi` fields
+    zones, 100 sites each.  Legacy `site_lo/site_hi` fields
     carry the site-interval bounds. -/
 def slot_capacity_demo_arch : ZonedArch :=
   { zones :=
-      [ { name := "Data",    atom_lo := 0,   atom_hi := 100 }
-      , { name := "Ancilla", atom_lo := 100, atom_hi := 200 } ]
-    total_atoms := 200
+      [ { name := "Data",    site_lo := 0,   site_hi := 100 }
+      , { name := "Ancilla", site_lo := 100, site_hi := 200 } ]
+    total_sites := 200
     t_cycle_us  := 1
     v_max_um_per_us := 0
     t_react_us := 10 }

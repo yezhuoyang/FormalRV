@@ -26,3 +26,50 @@ L3 of the FormalRV stack: lattice-surgery (merge/split) modelling for fault-tole
 
 ## Status
 All proofs discharge by `decide`/`native_decide`/`rfl` with no `sorry` and no custom `axiom`; the system-invariant and structural-correctness claims (dimensions, qLDPC bound, `tau_s`, row-span identity, schedule resources) are genuinely **Verified** at that layer. However, these are structural/resource checks only: quantum-semantic correctness (that the surgery actually measures the claimed Pauli product), decoder correctness, per-SysCall duration physics, and RSA-2048-scale schedules are explicitly out of scope and remain unverified. Merged-code distance `d̃ = Θ(d_data)` is accepted as an implementer-supplied, paper-cited input (**Axiom**-equivalent, not proven here).
+
+## Worked example — measuring logical X̄ on the [[13,1,3]] surface code
+
+![surface-code surgery syndrome extraction](../../docs/diagrams/surface3_syndrome.png)
+
+`surface3_x_surgery` merges one ancilla into the distance-3 surface code to measure
+the logical `X̄ = X₆X₇X₈`. `StimEmit.surgeryToStim` emits the merged-code syndrome
+circuit (above: each X-check is an ancilla in `|+⟩`, `CX anc→support`, `MX`; each
+Z-check is `CX support→anc`, `M`). `surface3_x_surgery_measures_logicalX`
+(`Corpus/SurgeryDemoSurface.lean:118`, **Verified**, axiom-clean) proves the
+span-witness-selected ancilla X-checks multiply to exactly `signedXRow X̄`, and
+`surface3_x_surgery_verifies` passes the structural verifier. Stim's `has_flow` then
+re-derives the same fact externally — the LaSsynth gold standard.
+
+### More small examples
+
+2. **The row-span check, concretely.** For `surface3_x_surgery` the span witness
+   `[F,F,F,F,F,F,T,T]` selects the two ancilla X-checks; `row_combination witness
+   merged_hx = target_pauli` evaluates to the `X̄ = X₆X₇X₈` row
+   (`targets_logical_correctly`, by `decide`) — the GF(2) fact that
+   `selectedSignedProduct_eq` lifts to the signed Pauli product.
+3. **Rejecting a bad gadget.** `topology_pair_alias_rejected`
+   (`SurgeryGadgetToSysCalls.lean:834`, `native_decide`) proves the combined checker
+   returns `false` for two parallel gadgets that *share* ancilla sites — a structural
+   aliasing bug caught before any physics (the contract file's §22 shows two
+   individually-valid certs that must NOT auto-compose).
+
+## Essential proof techniques
+
+- **Logical measurement as a row-span identity.** Correctness is the statement that
+  the target logical operator lies in the GF(2) row span of the merged X-checks. The
+  proof links three layers in lockstep: a GF(2)→Pauli homomorphism
+  (`xRow_vec_xor_ops`: vector XOR = Pauli product on X-supports, always trivial
+  phase), `selectedSignedProduct_eq` (signed product of selected checks = the
+  lowering of `row_combination`), and the decidable kernel check
+  `row_combination span_witness merged_hx = target_pauli` (`targets_logical_correctly`).
+- **Non-disturbance by Gottesman bookkeeping.** `surgery_preserves_commuting_logical`
+  shows any logical commuting with all merged X-checks survives the merge, by
+  threading the single-measurement step (`apply_PPM_pos_preserves_mem_of_commutes`)
+  through the check list by induction.
+- **Everything decidable.** Dimension consistency, the qLDPC weight bound,
+  `3·τ_s ≥ 2d`, and the kernel condition are all `decide`/`native_decide` `Bool`
+  checks — no `sorry`, no custom axiom.
+
+Honest scope: these are structural / stabilizer-level guarantees; merged-code
+distance `d̃ = Θ(d)`, decoder correctness, and per-SysCall physics are explicitly
+out of scope (implementer-supplied, paper-cited).
