@@ -47,13 +47,21 @@ open FormalRV.Framework.SurgeryCorrect
 open FormalRV.BQAlgo
 open VerifiedShor
 
-/-! ## §1. Logical readout: the classical data the code's logical qubits carry -/
+/-! ## §1. Helpers
 
-/-- The logical Z̄_i is "read 1" on a stabilizer state iff it is a `+`-stabilizer of it
-    (the logical-Z measurement outcome).  This is how a code state encodes a logical bit. -/
-def readLogicalBit {c : CSSCode} {k : Nat} (L : LogicalBasis c k)
-    (s : StabilizerState) (i : Fin k) : Bool :=
-  decide (L.zbar i ∈ s)
+    ACCEPTANCE PROTOCOL (external, by design — cannot be a Lean term, since Lean cannot
+    introspect its own axiom use inside a proof).  A submission `cert : Certificate code` is
+    ACCEPTED iff it type-checks AND
+        `#print axioms cert`  =  `[propext, Classical.choice, Quot.sound]`.
+    This forbids BOTH `sorryAx` (no hand-waving any obligation) AND
+    `Lean.ofReduceBool` / `native_decide`'s native-eval axiom (no unverified brute force).
+    Consequently the decidable obligations (`code.valid`, `basis.valid`, the rank dimension)
+    must be discharged by KERNEL `decide` or a PARAMETRIC proof — never `native_decide`. -/
+
+/-- The GF(2) support of a Pauli string: the positions where it acts non-trivially.  Used to
+    tie each surgery gadget's `target_pauli` to the operation it measures. -/
+def pauliSupport (P : PauliString) : BoolVec :=
+  P.ops.map (fun p => decide (p ≠ Pauli.I))
 
 /-! ## §2. THE VERIFIER CONTRACT (proof-carrying; parametric in the user's LP code) -/
 
@@ -97,22 +105,25 @@ structure Certificate (code : CSSCode) where
       computation (the error-correcting structure survives). -/
   hPreservesCode : ∀ g ∈ code.hx.map CSSCode.xStab ++ code.hz.map CSSCode.zStab,
     g ∈ measureChecks program (codeStateWithLogicals code k basis)
-  /-- (3c) a lattice-surgery gadget realising the logical measurements, ON THIS code. -/
-  gadget : SurgeryGadget
-  hGadgetOnCode : gadget.data_code.hx = code.hx ∧ gadget.data_code.hz = code.hz
-  /-- (4d) the surgery gadget passes the full structural verifier (dimensions, qLDPC,
-      τ_s = Θ(d), kernel/row-span condition) — the physical realisation is verified, not
-      asserted. -/
-  hGadgetVerified : SurgeryGadget.verify_surgery_gadget gadget = true
-  /-- (4e) THE COMPILATION IS FAITHFUL: running the LP `program` on the logically-encoded
-      input `x` reproduces, at the logical readout, exactly the arithmetic circuit's output
-      `(a·x) mod N`.  This is the bridge from the abstract circuit to the LP-code computation
-      (the obligation that forbids "the program preserves the code but computes nothing").
-      `encodeState x` is the implementer-supplied logical encoding. -/
+  /-- (3c)+(4d) a VERIFIED lattice-surgery gadget for EVERY logical operation in the program,
+      on THIS code.  NO single representative: each PPM `program[i]` gets its OWN structurally-
+      verified gadget that measures exactly that operation's logical operator (its support). -/
+  gadgets : Fin program.length → SurgeryGadget
+  hGadgetsOnCode : ∀ i : Fin program.length,
+    (gadgets i).data_code.hx = code.hx ∧ (gadgets i).data_code.hz = code.hz
+  hGadgetsVerified : ∀ i : Fin program.length,
+    SurgeryGadget.verify_surgery_gadget (gadgets i) = true
+  hGadgetsMeasure : ∀ i : Fin program.length,
+    (gadgets i).target_pauli
+      = pauliSupport (program.get i) ++ List.replicate (gadgets i).ancilla_n false
+  /-- (4e) THE COMPILATION IS FAITHFUL — FULL STATE.  For EVERY computational-basis input
+      `x < N`, running the LP `program` from the encoded input `encodeState x` yields EXACTLY
+      the encoded output `encodeState ((a·x) mod N)` AS A WHOLE STABILIZER STATE — not merely
+      one logical-readout bit: the ENTIRE encoded state is correct.  Forbids "preserves the
+      code but computes nothing / the wrong thing". -/
   encodeState : Nat → StabilizerState
-  hSimulates : ∀ x : Nat, x < N → ∀ i : Fin k,
-    readLogicalBit basis (measureChecks program (encodeState x)) i
-      = readLogicalBit basis (encodeState ((a * x) % N)) i
+  hSimulates : ∀ x : Nat, x < N →
+    measureChecks program (encodeState x) = encodeState ((a * x) % N)
   /-- (3d)+(4f) the ALGORITHM: Shor order-finding succeeds with probability ≥ κ/(log₂N)⁴
       using this modular multiplier as the oracle (the SQIR-ported success bound). -/
   r : Nat
