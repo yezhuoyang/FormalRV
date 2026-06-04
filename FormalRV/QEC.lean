@@ -1,5 +1,6 @@
 import FormalRV.QEC.LDPCMatrix
 import FormalRV.QEC.GF2Linear
+import FormalRV.QEC.GF2Linearity
 import FormalRV.QEC.GF2Rank
 import FormalRV.QEC.CSSCode
 import FormalRV.QEC.FrontendAlgebraic
