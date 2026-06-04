@@ -12,6 +12,7 @@ import FormalRV.QEC.LPCssCondition
 import FormalRV.QEC.LogicalValidity
 import FormalRV.QEC.QECCodeInstances
 import FormalRV.QEC.Instances
+import FormalRV.QEC.LPInstancesValid
 import FormalRV.QEC.Addressing
 
 /-!
