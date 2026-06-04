@@ -8,6 +8,7 @@
 -/
 import FormalRV.PPM.CircuitToPPMInterface
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
+import FormalRV.Arithmetic.SQIRModMult.Defs
 
 open FormalRV.Framework
 open FormalRV.Framework.Architecture
@@ -22,9 +23,15 @@ def cmdStr : PPMCommand → String
   | .applyFrameUpdate qs    => "F " ++ String.intercalate "," (qs.map toString)
   | .useMagicT q            => "T " ++ toString q
 
+def emitProg (name : String) (g : Gate) : IO Unit := do
+  let prog := compileArithmeticGateToPPM g
+  IO.FS.writeFile s!"PyCircuits/ppm/{name}.txt"
+    (String.intercalate "\n" (prog.map cmdStr) ++ "\n")
+  IO.println s!"emitted {name} PPM program: {prog.length} commands"
+
 def main : IO Unit := do
   IO.FS.createDirAll "PyCircuits/ppm"
-  let prog := compileArithmeticGateToPPM (cuccaro_n_bit_adder_full 3 0)
-  IO.FS.writeFile "PyCircuits/ppm/adder3_ppm.txt"
-    (String.intercalate "\n" (prog.map cmdStr) ++ "\n")
-  IO.println s!"emitted adder3 PPM program: {prog.length} commands"
+  -- the verified 3-bit Cuccaro adder
+  emitProg "adder3_ppm" (cuccaro_n_bit_adder_full 3 0)
+  -- the verified modular multiplier x ↦ 7·x mod 15
+  emitProg "modmult_215_7_ppm" (sqir_modmult_const_gate 2 15 7)

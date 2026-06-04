@@ -76,8 +76,10 @@ boxes joined by a bar, `Z` green; magic-T injection purple; deferred X-frames da
 
 <p align="center"><img src="../../docs/diagrams/ppm_cx.png" width="430" alt="CNOT compiled to PPM">&nbsp;<img src="../../docs/diagrams/ppm_ccx.png" width="520" alt="Toffoli compiled to PPM"></p>
 
-A `seq` simply concatenates the programs
-([`ppm_seq.png`](../../docs/diagrams/ppm_seq.png)).
+The blue `mₖ` boxes on the classical lane `c` are the **measurement record**: each
+joint Pauli measurement lands one outcome bit, and the deferred `X`-frames are exactly
+the Pauli corrections those recorded bits control. A `seq` simply concatenates the
+programs ([`ppm_seq.png`](../../docs/diagrams/ppm_seq.png)).
 
 **Scaling to a full gadget.** Running the *same* compiler on the verified 3-bit
 Cuccaro adder (`cuccaro_n_bit_adder_full 3 0`, emitted from Lean by
@@ -86,6 +88,12 @@ magic-T injections** — and the forward-MAJ → reverse-UMA structure of the ad
 visible as the climb-then-descend of the joint measurements:
 
 <p align="center"><img src="../../docs/diagrams/ppm_adder3.png" width="980" alt="3-bit Cuccaro adder compiled to a full PPM program"></p>
+
+And the modular multiplier `x ↦ 7x mod 15` (`sqir_modmult_const_gate 2 15 7`) compiles
+to a **248-command PPM program with 32 magic-T injections** (its 32 Toffolis), folded
+into rows:
+
+<p align="center"><img src="../../docs/diagrams/ppm_modmult.png" width="960" alt="modular multiplier compiled to a full PPM program"></p>
 
 Regenerate everything with `lake env lean --run scripts/EmitAdderPPM.lean` then
 `python PyCircuits/draw_ppm.py`.
