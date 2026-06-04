@@ -77,7 +77,17 @@ boxes joined by a bar, `Z` green; magic-T injection purple; deferred X-frames da
 <p align="center"><img src="../../docs/diagrams/ppm_cx.png" width="430" alt="CNOT compiled to PPM">&nbsp;<img src="../../docs/diagrams/ppm_ccx.png" width="520" alt="Toffoli compiled to PPM"></p>
 
 A `seq` simply concatenates the programs
-([`ppm_seq.png`](../../docs/diagrams/ppm_seq.png)). Regenerate with
+([`ppm_seq.png`](../../docs/diagrams/ppm_seq.png)).
+
+**Scaling to a full gadget.** Running the *same* compiler on the verified 3-bit
+Cuccaro adder (`cuccaro_n_bit_adder_full 3 0`, emitted from Lean by
+`scripts/EmitAdderPPM.lean`) gives a **complete 42-command PPM program with 6
+magic-T injections** — and the forward-MAJ → reverse-UMA structure of the adder is
+visible as the climb-then-descend of the joint measurements:
+
+<p align="center"><img src="../../docs/diagrams/ppm_adder3.png" width="980" alt="3-bit Cuccaro adder compiled to a full PPM program"></p>
+
+Regenerate everything with `lake env lean --run scripts/EmitAdderPPM.lean` then
 `python PyCircuits/draw_ppm.py`.
 
 **How we prove it — a three-layer refinement** (each layer isolates one source of
