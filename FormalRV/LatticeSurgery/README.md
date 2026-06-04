@@ -53,6 +53,57 @@ re-derives the same fact externally — the LaSsynth gold standard.
    aliasing bug caught before any physics (the contract file's §22 shows two
    individually-valid certs that must NOT auto-compose).
 
+## 3D spacetime (TQEC) diagrams — the surgery we verify
+
+A lattice-surgery computation is naturally a **3D spacetime diagram** (the TQEC /
+"Game of Surface Codes" idiom): time runs upward, each logical surface-code patch is a
+box whose vertical faces carry the boundary type (X = red / rough, Z = blue / smooth),
+and a surgery **merge** is a tube coloured by the measured Pauli type (X-merge red,
+Z-merge blue). FormalRV verifies the abstract `SurgeryGadget` (merged parity rows +
+Pauli frame, all by `decide`); these diagrams are its spacetime view. Regenerate with
+`python PyCircuits/draw_tqec.py`.
+
+**What the verifier checks.** `verify_surgery_gadget` (`LDPCSurgery.lean`) is the
+conjunction of four decidable conditions — `dimensions_consistent`, `tau_s_sufficient`
+(`3·τ_s ≥ 2d`), `merged_is_qldpc`, and `targets_logical_correctly` (the row-span kernel
+condition) — and it applies to *any* surface-code surgery gadget. We instantiate and
+prove it (`= true` by `decide`) across three code families:
+
+| Gadget | Code | Measures | τ_s | merged Hx / Hz | Verified |
+|---|---|---|:--:|:--:|---|
+| `surface3_x_surgery` | surface `[[13,1,3]]` | X̄ = X₆X₇X₈ | 2 | 8 / 6 | `surface3_x_surgery_verifies` |
+| `steane_x_surgery` | Steane `[[7,1,3]]` | X̄ = X₃X₅X₆ | 2 | 5 / 3 | `steane_x_surgery_verifies` |
+| `bb_x_surgery` | biv.-bicycle `[[18,2,6]]` | logical X̄₀ | 4 | 20 / 18 | `bb_x_surgery_verifies` |
+
+<p align="center"><img src="../../docs/diagrams/tqec_xbar.png" width="430" alt="surface3 logical-X-bar measurement, TQEC spacetime"></p>
+
+It is the *same* construction — a data patch + an ancilla patch joined by an X-merge
+tube of height ≈ τ_s — across all three code families:
+
+<p align="center"><img src="../../docs/diagrams/tqec_codes.png" width="980" alt="X-bar surgery across surface / Steane / bivariate-bicycle codes"></p>
+
+**Schedules.** Gadgets compose into a `Schedule` (`SurgerySchedule.lean`), and
+`schedule_runs_as_surgeries` (`SurgerySchedule.lean:76`) proves a schedule runs as the
+sequence of its gadget measurements. Concrete schedules: `cczInjectionSchedule =
+[mA, mB, mC]` (`MagicInjectionSurgery.lean`, the 3 merges of one magic-CCZ injection),
+`demoSchedule = List.replicate 3 surface3_x_surgery` (`SurfaceShorFullStack.lean`), and
+the parametric `shorSchedule` (RSA-2048 = 412,316,860,416 merges, `ShorEmit.lean`). The
+CCZ-injection schedule as a spacetime diagram:
+
+<p align="center"><img src="../../docs/diagrams/tqec_ccz.png" width="430" alt="CCZ magic-injection schedule, TQEC spacetime"></p>
+
+**The lattice-surgery CNOT** — the canonical two-merge construction (a `ZZ`-merge, then
+an `XX`-merge, then measure the ancilla) — shows both merge colours at once:
+
+<p align="center"><img src="../../docs/diagrams/tqec_cnot.png" width="540" alt="lattice-surgery CNOT, TQEC spacetime (illustrative)"></p>
+
+> **Honest scope.** The three X̄-measurement gadgets are **Verified** — each merge's
+> row-span equals the target Pauli, with the qLDPC and τ_s conditions, all axiom-free by
+> `decide` — and `surgery_implements_logical_measurement` proves the logical measurement
+> code-generally. The CNOT panel is **illustrative**: today's verified gadgets are all
+> *X-type single-logical measurements*, so a verified CNOT / merge-split / Z̄ schedule is
+> future work. Merged-code distance `d̃ = Θ(d)` is a paper-cited input, not proved here.
+
 ## Essential proof techniques
 
 - **Logical measurement as a row-span identity.** Correctness is the statement that
