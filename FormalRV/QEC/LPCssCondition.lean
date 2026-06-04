@@ -149,4 +149,43 @@ theorem circMul_comm (ℓ : Nat) (p q : Circ) : circMul ℓ p q = circMul ℓ q 
     rw [Nat.add_comm]
   rw [key]
 
+/-! ## §5. Shape of `liftMat` (rows are `(#cols)·ℓ` wide) — toward `well_shaped` + transpose -/
+
+/-- Sum of a constant-`a` replicate. -/
+private theorem sum_replicate (n a : Nat) : (List.replicate n a).sum = n * a := by
+  induction n with
+  | zero => simp
+  | succ k ih => rw [List.replicate_succ, List.sum_cons, ih, Nat.succ_mul]; omega
+
+/-- A circulant's `r`-th row (for `r < ℓ`) has length `ℓ` (the matrix is `ℓ×ℓ`). -/
+theorem circulant_row_length (ℓ : Nat) (e : Circ) (r : Nat) (hr : r < ℓ) :
+    ((circulant ℓ e).getD r []).length = ℓ := by
+  unfold circulant
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hr]; simp
+
+/-- One lifted row of a polynomial row `pr` (the `r`-th rows of its circulant blocks,
+    concatenated) has length `(#blocks)·ℓ = pr.length·ℓ`. -/
+theorem liftRow_length (ℓ : Nat) (pr : List Circ) (r : Nat) (hr : r < ℓ) :
+    ((pr.map (fun e => circulant ℓ e)).flatMap (fun blk => blk.getD r [])).length
+      = pr.length * ℓ := by
+  rw [List.length_flatMap, List.map_map,
+      show (fun blk => (blk.getD r []).length) ∘ (fun e => circulant ℓ e) = (fun _ => ℓ) from
+        by funext e; exact circulant_row_length ℓ e r hr,
+      List.map_const', sum_replicate]
+
+/-- **Every row of `liftMat ℓ A` has length `C·ℓ`** when `A` is rectangular with `C`
+    columns — the shape invariant feeding `well_shaped` for the lifted product, and the
+    block decomposition needed for the transpose homomorphism. -/
+theorem liftMat_row_length (ℓ : Nat) (A : List (List Circ)) (C : Nat)
+    (hrect : ∀ pr ∈ A, pr.length = C) :
+    ∀ row ∈ liftMat ℓ A, row.length = C * ℓ := by
+  intro row hrow
+  unfold liftMat at hrow
+  rw [List.mem_flatMap] at hrow
+  obtain ⟨pr, hpr, hrow2⟩ := hrow
+  rw [List.mem_map] at hrow2
+  obtain ⟨r, hr, rfl⟩ := hrow2
+  rw [List.mem_range] at hr
+  rw [liftRow_length ℓ pr r hr, hrect pr hpr]
+
 end FormalRV.QEC.Algebraic
