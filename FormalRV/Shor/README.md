@@ -45,3 +45,44 @@ the folder (`QPE_semantics_full` in `QPE.lean`; the deprecated
 proof path of the re-exported results, which instead route through the LSB
 pipeline and (for the fully axiom-free oracle) the SQIR-faithful multiplier in
 `Arithmetic/`.
+
+## Worked example — phase estimation of `7ˣ mod 15` (order r = 4)
+
+![QPE schematic](../../docs/diagrams/qpe_frame.png)
+
+The diagram is QPE's frame (Hadamards, controlled powers, inverse QFT); each
+controlled-`U` block **is** the emitted verified modular multiplier (`Arithmetic/`).
+For `a=7, N=15` the order is `r=4`, and `|1⟩` decomposes over the modular orbit as
+`(1/√r)·∑ₖ ψₖ` (`orbit_decomposition_pointwise`, `Eigenstate.lean`) with the `ψₖ`
+orthonormal (`modmult_eigenstate_orthonormal`). QPE concentrates each `ψₖ`'s phase
+`k/r` onto the control register: `QPE_MMI_correct` (`PostQFT/Proofs3.lean:205`,
+**Verified**, axiom-free) proves the peak outcome `s_closest` carries probability
+`≥ 4/(π²·r)`. Summing over the `φ(r)` coprime residues and applying the totient
+bound `φ(r)/r ≥ e⁻²/(log₂N)⁴` yields the headline `Shor_correct_var`
+(`Proofs3.lean:220`): success `≥ κ/(log₂N)⁴`, `κ = 4e⁻²/π²`.
+
+## Essential proof techniques
+
+- **Amplitude analysis, not a Gate-IR circuit.** QPE correctness is a statement
+  about complex amplitudes: after the inverse QFT, the amplitude at `s_closest` is a
+  Dirichlet kernel bounded below by `4/(π²r)` via a geometric-series closed form
+  (`qpe_amp`, `QPEAmplitude.lean`). FormalRV proves this at the state-vector level;
+  it is *not* an emittable `{I,X,CX,CCX}` circuit (the reversible IR has no `H`/QFT).
+- **Phase kickback by block-disjoint commutation.** The controlled-powers cascade is
+  justified by showing the shift-lifted data circuit is fresh on the control wires
+  and commutes block-disjointly with the control gates
+  (`uc_eval_map_qubits_shift_commutes_pad_u`, `PhaseKickback.lean`), so each `ψₖ`
+  simply accrues its phase.
+- **An elementary totient bound.** `phi_n_over_n_lowerbound` (`Shor/Part3.lean`)
+  avoids Mertens: `φ(r)/r = ∏_{p|r}(1−1/p) ≥ (1/2)^{#primes}`, and
+  `#distinct primes ≤ log₂ r` because `2^{#primes} ≤ r` — an explicit, if
+  conservative, constant.
+- **CFS classical core.** The residue-arithmetic engine (Gidney 2025) is verified
+  separately and axiom-clean: CRT injectivity (`rns_faithful`), the masked-state
+  amplitude identity `⟨u_A|u_B⟩ = |A∩B|/W` (`unifSuper_inner`), and the `Δ_N`
+  truncation bound.
+
+Honest scope: the standalone control-gate implementation remains a `SKIP` stub; the
+re-exported headline theorems route around it via the LSB pipeline and the
+SQIR-faithful multiplier (so they are axiom-free), while `QPE_semantics_full`
+(`QPE.lean`) is a superseded axiom off the proof path.

@@ -21,3 +21,31 @@ The L4 (QEC-code) data layer of FormalRV. Provides binary-field (GF(2)) parity-c
 
 ## Status
 The GF(2) matrix toolkit is complete and exercised only by `decide`/`rfl` smoke checks (**Arithmetic-only**); there are no semantic-correctness theorems here. Code instances are **Scaffolded**: they record `[[n,k,d]]` parameters, but parity matrices are empty placeholders except `steane_713_with_parity`, and no code's distance or stabilizer-commutation property is proven. Per the L4→L3 contract, cycle-level logical error rates are framework *inputs*, not derived here.
+
+## Worked example — the surface [[13,1,3]] parity-check matrices
+
+![surface3 parity-check matrices Hx and Hz](../../docs/diagrams/surface3_parity.png)
+
+A CSS code is two GF(2) parity-check matrices. The heatmap above is the merged
+surface `[[13,1,3]]` surgery code from `Corpus/SurgeryDemoSurface.lean`, drawn
+directly from the Lean-emitted `surface3_surgery.stim`: `Hx` has 8 X-checks, `Hz`
+has 6 Z-checks, each a sparse weight-≤4 row over the 14 data/ancilla qubits —
+exactly the bounded-degree structure the `is_qldpc` predicate checks. This folder
+supplies the GF(2) toolkit those checks run on: `vec_xor`, `row_combination`
+(`selᵀ·mat`, the core of the surgery row-span membership test), `hcat`/`vcat`
+(assembling a merged `H̃_X` from data / ancilla / connection blocks), and
+`max_row_weight` / `is_qldpc`.
+
+## Essential proof techniques
+
+- **GF(2) linear algebra as `List Bool` with decidable checks.** Matrices are
+  `List (List Bool)`; `row_combination` is the selection-weighted row sum, and
+  membership of a logical operator in the stabilizer row span is a `decide`-checkable
+  equation (`row_combination sel H = target`) — the exact obligation the
+  `LatticeSurgery` verifier discharges.
+- **Instances carry `[[n,k,d]]`; parities are mostly inputs.** Honest scope: the
+  catalogue (`surface_d3..d25`, `lp_144_18_12`) records parameters with parity
+  matrices left empty *except* `steane_713_with_parity` (the `[7,4]` Hamming check).
+  The one fully populated, structurally verified parity matrix exercised end-to-end
+  is the surface `[[13,1,3]]` surgery code shown above; no code's distance or decoder
+  is proven here — per the L4→L3 contract, logical error rates are framework *inputs*.
