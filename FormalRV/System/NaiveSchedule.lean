@@ -2,6 +2,10 @@
   FormalRV.System.NaiveSchedule — the FULL device schedule for a computation of ANY size, defined
   RECURSIVELY (not enumerated concretely), and PROVEN valid for all sizes.
 
+  Part of the unified FT-scheduling framework — see `FormalRV.System.FTFramework` for the single
+  entry point.  This module proves schedule VALIDITY on `DSchedule`; its `ResourceEstimate` sibling
+  is `FormalRV.System.NaiveUpperBound` (resource-number upper bound), connected via `ScheduleBounds`.
+
   Realizes the plan: instead of building the ~10⁹-operation RSA-2048 schedule by hand, define the
   most NAIVE strategy — do everything ONE OPERATION AT A TIME (fully serial) — as a recursive
   function of the operation count `M`, and prove `scheduleValid dev (naiveSchedule M)` for ALL `M`

@@ -132,6 +132,13 @@ theorem both_papers :
     ∧ physQubitsN 6189 gidney2025.d = 8367528 := by
   refine ⟨by native_decide, by native_decide, by native_decide, by native_decide⟩
 
+/-- **Cross-reference (dedup):** the magic-state floor computed here for GE2021 is the SAME number
+    as `ScheduleLowerBound.rsa2048_floor_qubit_hours` — the two "22 425 149 qubit-hours" literals are
+    proven equal rather than independently asserted. -/
+theorem magicFloor_matches_rsa2048 :
+    magicFloorN ge2021_K ge2021.fq ge2021.prod 3600000000
+      = ScheduleLowerBound.rsa2048_floor_qubit_hours := by native_decide
+
 /-- **Completeness.**  Every listed hardware parameter has a proven sensitivity theorem above:
     decoding speed (`decoderFloor_mono_tReact`, `depthFloor_mono_tReact`), architecture size
     (`magicFloor_anti_Q`), routing latency + measurement time (`parFloor_mono_opTime`,
