@@ -74,6 +74,8 @@ prove it (`= true` by `decide`) across three code families:
 | `surface3_x_surgery` | surface `[[13,1,3]]` | X̄ = X₆X₇X₈ | 2 | 8 / 6 | `surface3_x_surgery_verifies` |
 | `steane_x_surgery` | Steane `[[7,1,3]]` | X̄ = X₃X₅X₆ | 2 | 5 / 3 | `steane_x_surgery_verifies` |
 | `bb_x_surgery` | biv.-bicycle `[[18,2,6]]` | logical X̄₀ | 4 | 20 / 18 | `bb_x_surgery_verifies` |
+| `surface3_xx_merge` | surface ⊕ surface `[[26,2,3]]` | joint **X̄₁X̄₂** | 2 | 14 / 12 | `surface3_xx_merge_verifies` |
+| `surface3_xxx_merge` | 3 × surface `[[39,3,3]]` | joint **X̄₁X̄₂X̄₃** | 2 | 20 / 18 | `surface3_xxx_merge_verifies` |
 
 <p align="center"><img src="../../docs/diagrams/tqec_xbar.png" width="430" alt="surface3 logical-X-bar measurement, TQEC spacetime"></p>
 
@@ -81,6 +83,16 @@ It is the *same* construction — a data patch + an ancilla patch joined by an X
 tube of height ≈ τ_s — across all three code families:
 
 <p align="center"><img src="../../docs/diagrams/tqec_codes.png" width="980" alt="X-bar surgery across surface / Steane / bivariate-bicycle codes"></p>
+
+**Multi-patch merges (same framework).** The verifier is not limited to one patch: a
+**joint X̄₁X̄₂ measurement** — the `XX`-merge of a lattice-surgery CNOT — is the gadget
+`surface3_xx_merge` on a block-diagonal `surface3 ⊕ surface3` `[[26,2,3]]` code, with one
+ancilla coupled to *both* logical supports. It passes the **same** `verify_surgery_gadget`
+(`= true` by `decide` at 27 merged qubits) and the **same** code-general
+`surgery_implements_logical_measurement` (`surface3_xx_merge_implements_logical`, axiom-free).
+`surface3_xxx_merge` does the joint **X̄₁X̄₂X̄₃** on three patches (`native_decide`, 40 qubits).
+
+<p align="center"><img src="../../docs/diagrams/tqec_xxmerge.png" width="560" alt="verified two-patch XX-merge, TQEC spacetime"></p>
 
 **Schedules.** Gadgets compose into a `Schedule` (`SurgerySchedule.lean`), and
 `schedule_runs_as_surgeries` (`SurgerySchedule.lean:76`) proves a schedule runs as the
@@ -93,16 +105,21 @@ CCZ-injection schedule as a spacetime diagram:
 <p align="center"><img src="../../docs/diagrams/tqec_ccz.png" width="430" alt="CCZ magic-injection schedule, TQEC spacetime"></p>
 
 **The lattice-surgery CNOT** — the canonical two-merge construction (a `ZZ`-merge, then
-an `XX`-merge, then measure the ancilla) — shows both merge colours at once:
+an `XX`-merge, then measure the ancilla) — shows both merge colours at once. Its
+**`XX`-merge step is now a verified gadget** (`surface3_xx_merge`, above); the `ZZ`-merge
+is the Z-dual, still illustrative here:
 
-<p align="center"><img src="../../docs/diagrams/tqec_cnot.png" width="540" alt="lattice-surgery CNOT, TQEC spacetime (illustrative)"></p>
+<p align="center"><img src="../../docs/diagrams/tqec_cnot.png" width="540" alt="lattice-surgery CNOT, TQEC spacetime"></p>
 
-> **Honest scope.** The three X̄-measurement gadgets are **Verified** — each merge's
-> row-span equals the target Pauli, with the qLDPC and τ_s conditions, all axiom-free by
-> `decide` — and `surgery_implements_logical_measurement` proves the logical measurement
-> code-generally. The CNOT panel is **illustrative**: today's verified gadgets are all
-> *X-type single-logical measurements*, so a verified CNOT / merge-split / Z̄ schedule is
-> future work. Merged-code distance `d̃ = Θ(d)` is a paper-cited input, not proved here.
+> **Honest scope.** All gadgets above pass the *same* `verify_surgery_gadget`. The
+> single-patch and the two-patch `surface3_xx_merge` (joint X̄₁X̄₂, the CNOT's X-merge) are
+> kernel-clean `decide` and also carry the code-general `surgery_implements_logical_measurement`
+> — axiom-free (`propext, Classical.choice, Quot.sound`). `surface3_xxx_merge` (X̄₁X̄₂X̄₃, 40
+> qubits) is checked by `native_decide` (the standard `Lean.ofReduceBool` evaluation axiom, as
+> used elsewhere in the repo). What remains: the verifier's row-span is over `merged_hx` and the
+> merged-`H_Z` ancilla block carries no data coupling, so the framework is **X-type** — a **Z̄
+> measurement / `ZZ`-merge** needs the Z-dual construction, the one missing piece for a
+> fully-verified CNOT. Merged-code distance `d̃ = Θ(d)` is a paper-cited input, not proved here.
 
 ## Essential proof techniques
 

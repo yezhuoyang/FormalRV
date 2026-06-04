@@ -126,4 +126,18 @@ ax.text(1.9, 1.7, 1.8, "ZZ\n(Z-merge)", fontsize=8, ha="center", color="#2a4365"
 ax.text(4.5, 1.7, 4.0, "XX\n(X-merge)", fontsize=8, ha="center", color="#9b2c2c")
 finish(ax, fig, "tqec_cnot.png", (7, 2, 7))
 
+# ---- 5. the VERIFIED two-patch XX-merge (surface3_xx_merge) ----
+fig, ax = newfig("VERIFIED multi-patch surgery: joint X̄₁X̄₂ measurement\n"
+                 "surface3_xx_merge on surface3 ⊕ surface3 — verify_surgery_gadget = true (decide)",
+                 sz=(8.2, 6.6))
+patch(ax, 0, 0, 0, 6)            # data patch 1
+patch(ax, 2.6, 0, 1.4, 4.6)     # ancilla patch (init→measure)
+patch(ax, 5.2, 0, 0, 6)         # data patch 2
+merge_x(ax, 1.2, 2.6, 0, 2.0, 3.3, "X")   # X-merge ancilla–patch1
+merge_x(ax, 3.8, 5.2, 0, 2.0, 3.3, "X")   # X-merge ancilla–patch2
+ax.text(0.6, 0.6, 6.3, "patch 1  (X̄₁ on {6,7,8})", fontsize=8.5, ha="center")
+ax.text(5.8, 0.6, 6.3, "patch 2  (X̄₂ on {19,20,21})", fontsize=8.5, ha="center")
+ax.text(3.2, 0.6, 4.9, "ancilla", fontsize=8.5, ha="center")
+finish(ax, fig, "tqec_xxmerge.png", (7, 2, 7))
+
 print("\nTQEC diagrams written to docs/diagrams/")

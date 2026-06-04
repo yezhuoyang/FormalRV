@@ -44,6 +44,7 @@ import FormalRV.Corpus.SyndromeMeasurementLatency
 import FormalRV.Corpus.TeleportCCXGrounded
 import FormalRV.Corpus.SurgeryDemoSteane
 import FormalRV.Corpus.SurgeryDemoSurface
+import FormalRV.Corpus.SurgeryDemoMerge
 import FormalRV.Corpus.Webster2026
 import FormalRV.Corpus.Xu2024
 import FormalRV.Corpus.ZoneBudget
