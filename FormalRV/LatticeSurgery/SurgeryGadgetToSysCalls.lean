@@ -412,6 +412,7 @@ def surgery_arch : ZonedArch :=
     total_atoms := 400
     t_cycle_us  := 1
     v_max_um_per_us := 0
+    t_react_us := 10
   }
 
 /-! ### §6.a Parallel-aliasing REJECTED -/

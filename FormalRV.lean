@@ -30,3 +30,5 @@ import FormalRV.Framework
 import FormalRV.Corpus
 -- Qualtran physical-parameter bridge.
 import FormalRV.Qualtran
+-- Code emission: device-program / QASM serializers (library modules; demos are standalone).
+import FormalRV.Codegen
