@@ -76,6 +76,8 @@ prove it (`= true` by `decide`) across three code families:
 | `bb_x_surgery` | biv.-bicycle `[[18,2,6]]` | logical X̄₀ | 4 | 20 / 18 | `bb_x_surgery_verifies` |
 | `surface3_xx_merge` | surface ⊕ surface `[[26,2,3]]` | joint **X̄₁X̄₂** | 2 | 14 / 12 | `surface3_xx_merge_verifies` |
 | `surface3_xxx_merge` | 3 × surface `[[39,3,3]]` | joint **X̄₁X̄₂X̄₃** | 2 | 20 / 18 | `surface3_xxx_merge_verifies` |
+| `surface3_zz_merge` | surface ⊕ surface (CSS-dual) | joint **Z̄₁Z̄₂** | 2 | 14 / 12 | `surface3_zz_merge_verifies` |
+| `surface3_zzz_merge` | 3 × surface (CSS-dual) | joint **Z̄₁Z̄₂Z̄₃** | 2 | 20 / 18 | `surface3_zzz_merge_verifies` |
 
 <p align="center"><img src="../../docs/diagrams/tqec_xbar.png" width="430" alt="surface3 logical-X-bar measurement, TQEC spacetime"></p>
 
@@ -121,26 +123,38 @@ CCZ-injection schedule as a spacetime diagram:
 
 <p align="center"><img src="../../docs/diagrams/tqec_ccz.png" width="430" alt="CCZ magic-injection schedule, TQEC spacetime"></p>
 
-**The lattice-surgery CNOT** — the canonical two-merge construction (a `ZZ`-merge, then
-an `XX`-merge, then measure the ancilla) — shows both merge colours at once. Its
-**`XX`-merge step is now a verified gadget** (`surface3_xx_merge`, above); the `ZZ`-merge
-is the Z-dual, still illustrative here:
+**The full lattice-surgery CNOT is VERIFIED.** It is the two-merge schedule
+`surface3_cnot = [surface3_zz_merge, surface3_xx_merge]` (a `ZZ`-merge, then an `XX`-merge,
+then measure the ancilla), and `surface3_cnot_verifies` proves **both** merges pass the
+framework verifier — `decide`, axiom-clean (`propext`). The Z-merge is handled by **CSS
+duality** (measuring X̄ of the dual code `{hx := hz, hz := hx}` *is* measuring Z̄), so it reuses
+the **same** `verify_surgery_gadget` with no new machinery.
 
-<p align="center"><img src="../../docs/diagrams/tqec_cnot.png" width="540" alt="lattice-surgery CNOT, TQEC spacetime"></p>
+<p align="center"><img src="../../docs/diagrams/tqec_cnot.png" width="540" alt="verified lattice-surgery CNOT, TQEC spacetime"></p>
 
-> **Honest scope.** All gadgets above pass the *same* `verify_surgery_gadget`. The
-> single-patch and the two-patch `surface3_xx_merge` (joint X̄₁X̄₂, the CNOT's X-merge) are
-> kernel-clean `decide` and also carry the code-general `surgery_implements_logical_measurement`
-> — axiom-free (`propext, Classical.choice, Quot.sound`). `surface3_xxx_merge` (X̄₁X̄₂X̄₃, 40
-> qubits) is checked by `native_decide` (the standard `Lean.ofReduceBool` evaluation axiom, as
-> used elsewhere in the repo). What remains: the verifier's row-span is over `merged_hx` and the
-> merged-`H_Z` ancilla block carries no data coupling, so the framework is **X-type** — a **Z̄
-> measurement / `ZZ`-merge** needs the Z-dual construction, the one missing piece for a
-> fully-verified CNOT. **On distance:** the distance-`d` gadget is verified at each *chosen*
-> `d` (`decide` / `native_decide`), not yet by a single ∀d theorem; and the verified object is
-> the **logical / algebraic** merge — one ancilla with one high-weight coupling check realising
-> the row-span — not the physical distance-`d` local boundary stitching, syndrome decoder, or
-> fault tolerance (incl. merged distance `d̃ = Θ(d)`), which remain cited / scaffolded.
+**CCX (Toffoli) magic injection — VERIFIED, assuming a logical magic state at a port.** The
+injection is the verified joint **Z̄Z̄Z̄ measurement** (`surface3_zzz_merge`) coupling the data
+to a port that holds a logical `|C̄CZ̄⟩` (the `measure ZZZ` step of the PPM-level CCX lowering
+`[useMagicT, measure ZZZ, X-frame]`), plus the outcome-controlled Pauli correction.
+`surface3_ccx_injection_verifies` (`native_decide`) checks the port-merge; the magic state at
+the port is an *assumed* input, and the teleportation identity it realises is
+`CCZGadgetTeleport.ccz_teleport_outcome_000`.
+
+<p align="center"><img src="../../docs/diagrams/tqec_ccx.png" width="640" alt="verified CCX magic injection, TQEC spacetime"></p>
+
+> **Honest scope.** Everything above passes the *same* `verify_surgery_gadget` /
+> `verify_surgery_schedule`: single- and multi-patch X̄ merges, the **CSS-dual Z̄ merges**
+> (`surface3_zz_merge`, `surface3_zzz_merge`), the **full CNOT** (`surface3_cnot_verifies`), and
+> the **CCX magic injection** (`surface3_ccx_injection_verifies`). The `decide` proofs are
+> kernel-clean (`propext`; the two-patch X-merge also carries the code-general
+> `surgery_implements_logical_measurement` — `propext, Classical.choice, Quot.sound`); larger
+> instances use `native_decide` (the standard `Lean.ofReduceBool` axiom). The verified object is
+> the **logical / algebraic** merge (one ancilla, one coupling check realising the row-span),
+> verified at each *chosen* distance — **not yet a single ∀d theorem**. Out of scope (cited /
+> assumed): the **physical** distance-`d` syndrome circuit with local boundary stitching +
+> decoder + fault tolerance (merged distance `d̃ = Θ(d)`); and **magic-state preparation** — the
+> CCX injection *assumes* the logical magic state at the port (realising `CCZGadgetTeleport`), it
+> does not distill it.
 
 ## Essential proof techniques
 

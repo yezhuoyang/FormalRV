@@ -110,9 +110,9 @@ for k, z0 in enumerate([1, 3.4, 5.8]):                         # three sequentia
 ax.text(0.6, 0.6, 8.3, "data block", fontsize=9, ha="center")
 finish(ax, fig, "tqec_ccz.png", (4, 2, 9))
 
-# ---- 4. lattice-surgery CNOT (ILLUSTRATIVE — standard construction) ----
-fig, ax = newfig("Lattice-surgery CNOT (standard construction — illustrative)\n"
-                 "ZZ-merge then XX-merge then measure ancilla; FormalRV verifies each merge as a gadget",
+# ---- 4. lattice-surgery CNOT (VERIFIED: surface3_cnot_verifies) ----
+fig, ax = newfig("VERIFIED lattice-surgery CNOT — surface3_cnot_verifies (decide, axiom-clean)\n"
+                 "ZZ-merge (surface3_zz_merge) then XX-merge (surface3_xx_merge), then measure ancilla",
                  sz=(8.2, 6.6))
 patch(ax, 0, 0, 0, 6)            # control
 patch(ax, 2.6, 0, 0, 6)         # ancilla (|+>), measured at top
@@ -122,9 +122,23 @@ merge_x(ax, 3.8, 5.2, 0, 3.4, 4.6, "X")     # XX merge ancilla-target (red)
 ax.text(0.6, 0.6, 6.3, "control", fontsize=9, ha="center")
 ax.text(3.2, 0.6, 6.3, "ancilla |+⟩", fontsize=9, ha="center")
 ax.text(5.8, 0.6, 6.3, "target", fontsize=9, ha="center")
-ax.text(1.9, 1.7, 1.8, "ZZ\n(Z-merge)", fontsize=8, ha="center", color="#2a4365")
-ax.text(4.5, 1.7, 4.0, "XX\n(X-merge)", fontsize=8, ha="center", color="#9b2c2c")
+ax.text(1.9, 1.7, 1.8, "ZZ-merge\n✓ verified", fontsize=8, ha="center", color="#2a4365")
+ax.text(4.5, 1.7, 4.0, "XX-merge\n✓ verified", fontsize=8, ha="center", color="#9b2c2c")
 finish(ax, fig, "tqec_cnot.png", (7, 2, 7))
+
+# ---- 6. CCX (Toffoli) magic injection (VERIFIED: surface3_ccx_injection_verifies) ----
+fig, ax = newfig("VERIFIED CCX magic injection — surface3_ccx_injection_verifies (native_decide)\n"
+                 "joint Z̄Z̄Z̄ measurement consuming a logical |C̄CZ̄⟩ at an assumed port",
+                 sz=(9.0, 6.6))
+for i, lab in enumerate(["data a", "data b", "data t"]):
+    patch(ax, 2.4 * i, 0, 0, 6)
+    ax.text(2.4 * i + 0.6, 0.6, 6.3, lab, fontsize=9, ha="center")
+patch(ax, 7.2, 0, 1.4, 4.6)      # magic port (assumed |CCZ>)
+ax.text(7.8, 0.6, 4.9, "|C̄CZ̄⟩ port\n(assumed)", fontsize=8.5, ha="center", color="#44337a")
+# one wide blue Z-merge bus spanning the 3 data + the port (the joint ZZZ measurement)
+box(ax, (0.6, 0.15, 2.2), (7.2, 0.9, 1.2), ZB, ZB, ZB, alpha=0.85)
+ax.text(3.8, 1.7, 2.0, "joint Z̄Z̄Z̄ merge  ✓ verified", fontsize=8.5, ha="center", color="#2a4365")
+finish(ax, fig, "tqec_ccx.png", (9, 2, 7))
 
 # ---- 5. the VERIFIED two-patch XX-merge (surface3_xx_merge) ----
 fig, ax = newfig("VERIFIED multi-patch surgery: joint X̄₁X̄₂ measurement\n"
