@@ -188,6 +188,7 @@ def ppm_pair_arch : ZonedArch :=
     total_sites := 200
     t_cycle_us  := 1
     v_max_um_per_us := 0
+    t_react_us := 10
   }
 
 /-- One PPM measurement: RequestFreshAncilla + Gate2q + Measure +
@@ -721,6 +722,7 @@ def magic_factory_arch : ZonedArch :=
     total_sites := 300
     t_cycle_us  := 1
     v_max_um_per_us := 0
+    t_react_us := 10
   }
 
 /-- **Strengthened-bundle headline**: the same-port bad schedule

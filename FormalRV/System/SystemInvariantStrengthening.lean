@@ -597,7 +597,8 @@ def slot_capacity_demo_arch : ZonedArch :=
       , { name := "Ancilla", site_lo := 100, site_hi := 200 } ]
     total_sites := 200
     t_cycle_us  := 1
-    v_max_um_per_us := 0 }
+    v_max_um_per_us := 0
+    t_react_us := 10 }
 
 /-- Demo slot-capacity model.  The data zone supports only 2
     simultaneous active site claims; the ancilla zone is

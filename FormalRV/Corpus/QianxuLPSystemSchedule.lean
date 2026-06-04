@@ -53,7 +53,7 @@ def lp_factory : ArchZone := { name := "Factory", site_lo := 5244, site_hi := 78
 /-- The finite LP architecture: three disjoint zones over `[0, 7809)`, 1 ms surgery cycle. -/
 def lpArch : ZonedArch :=
   { zones := [lp_memory, lp_operation, lp_factory],
-    total_sites := 7809, t_cycle_us := 1000, v_max_um_per_us := 1 }
+    total_sites := 7809, t_cycle_us := 1000, v_max_um_per_us := 1, t_react_us := 10 }
 
 /-- **The three zones EXACTLY partition the 7809-qubit budget** (Q4: the figure is a real
     capacity breakdown). -/

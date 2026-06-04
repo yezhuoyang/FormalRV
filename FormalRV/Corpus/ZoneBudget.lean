@@ -45,7 +45,8 @@ def ZoneBudget.toArch (b : ZoneBudget) : ZonedArch :=
   { zones := layoutZones b.zones 0
     total_sites := b.total
     t_cycle_us := b.tCycle
-    v_max_um_per_us := b.vMax }
+    v_max_um_per_us := b.vMax
+    t_react_us := 10 }
 
 /-- The built architecture's total qubit count is exactly the user's zone sum. -/
 theorem toArch_total (b : ZoneBudget) : b.toArch.total_sites = b.total := rfl

@@ -190,6 +190,40 @@ Each layer is a Lean structure with an explicit **inter-layer contract**; three
 error mechanisms (logical/random, approximation, algorithmic-uncertainty)
 propagate bounds upward toward the success-probability theorem.
 
+## Device programs: one syntax for physical operations **and** system calls
+
+The L4 `SysCall` IR unifies **physical operations** (`gate1q`, `gate2q`, `measure`, `transit`) and
+**system calls** (`request_ancilla`, `request_magic`, `decode_syndrome`, `pauli_frame_update`) in a
+single `Schedule`. `Codegen/SysCallEmit.lean` emits it as a timestamped `DEVICE-PROGRAM` stream, and
+the schedule is *checked* against four system invariants — **I1** capacity, **I2** exclusivity,
+**I3** latency / speed / decoder-reaction, **I4** factory throughput
+(`System/ScheduleInvariantsExplicit.lean`, `all_invariants_ok`; the decoder-reaction budget lives in
+`ZonedArch.t_react_us`). The whole flow is **build → check → emit**, and every verdict is a
+`native_decide` theorem (`System/SystemInvariantExamples.lean`, checked by `lake build`).
+
+```
+DEVICE-PROGRAM 1.0;                          // one magic-state Toffoli (π/8) — PHYS + SYS
+[0,12)us  SYS   request_magic      factory=3        // distill the magic state
+[12,13)us PHYS  transit            q[100] via channel=1
+[13,14)us PHYS  gate2q             q[0],q[100] gate=0   // lattice-surgery teleport
+[14,15)us PHYS  measure            q[100] basis=0
+[15,16)us SYS   decode_syndrome    round=7
+[16,17)us SYS   pauli_frame_update corr=7
+```
+
+Five worked examples (two that **pass** the invariants, three that **fail**, each with a proof of its
+verdict and the reason) are in [`System/README.md`](FormalRV/System#checking-system-invariants--four-worked-examples)
+— e.g. two parity measurements on **distinct** ancillas pass exclusivity, but the *same* schedule
+**aliasing one ancilla** is rejected by I2, two magic requests inside one distillation window are
+rejected by I4, and a decode slower than the reaction budget is rejected by I3. The verdicts are
+checked by `lake build`; emit the programs with `lake env lean FormalRV/Codegen/SysCallEmitDemo.lean`.
+
+The schedule layer also carries a verified **full-scale schedule** (`NaiveSchedule.lean`, valid for
+all ~10⁹ ops), a resource **lower bound** (`ScheduleLowerBound.lean`: `Q·T ≥ K·fq·prod`, ≈ 22.4M
+qubit-hours for RSA-2048), and a **hardware-sensitivity** analysis proving the bound responds to
+every hardware parameter (decoding speed, architecture size, routing latency, measurement time, max
+parallelism — `HardwareSensitivity.lean`), instantiated for both Gidney papers.
+
 ## Verified-gadget gallery — every diagram drawn from the emitted code
 
 Each circuit below is **rendered by Qiskit / Stim from a file the Lean emitters

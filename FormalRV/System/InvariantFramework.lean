@@ -176,7 +176,8 @@ def demoArch : ZonedArch :=
       , { name := "Routing",   site_lo := 30, site_hi := 40 } ]
     total_sites := 40
     t_cycle_us  := 100
-    v_max_um_per_us := 5 }
+    v_max_um_per_us := 5
+    t_react_us := 10 }
 
 /-- Route distance function: every channel covers 30 µm (mirror of
     `FTSchedule.demoDist`). -/

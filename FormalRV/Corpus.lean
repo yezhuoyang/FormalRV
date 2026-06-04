@@ -48,6 +48,10 @@ import FormalRV.Corpus.SurgeryDemoSurface
 import FormalRV.Corpus.SurgeryDemoMerge
 import FormalRV.Corpus.SurgeryDemoCNOT
 import FormalRV.Corpus.Webster2026
+import FormalRV.Corpus.NaiveBaselineCost
+import FormalRV.Corpus.WindowedShorDeviceSchedule
+import FormalRV.Corpus.WindowedShorPhysicalEstimate
+import FormalRV.Corpus.WindowedShorPPMFactoryE2E
 import FormalRV.Corpus.Xu2024
 import FormalRV.Corpus.ZoneBudget
 

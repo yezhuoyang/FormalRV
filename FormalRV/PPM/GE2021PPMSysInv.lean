@@ -91,6 +91,7 @@ def ge2021_ppm_arch : ZonedArch :=
     total_sites := 200
     t_cycle_us  := 1
     v_max_um_per_us := 0
+    t_react_us := 10
   }
 
 theorem ge2021_ppm_arch_zone_count :
