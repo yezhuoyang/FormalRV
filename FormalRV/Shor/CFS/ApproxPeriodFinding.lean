@@ -153,6 +153,22 @@ theorem masked_fidelity {D : ℕ} (W d : ℕ) (hW : 0 < W) (A B : Finset (Fin D)
     (∑ x, conj (unifSuper W A x) * unifSuper W B x) = ((W - d : ℕ) : ℂ) / W := by
   rw [unifSuper_inner W hW A B, hov]
 
+open scoped BigOperators ComplexConjugate in
+/-- **Global fidelity from conditioned fidelities** (paper line 501: "true for every condition, and
+    so also bounds the total infidelity").  For states block-structured by the input register `e`
+    (orthogonal `|e⟩` sectors), the global overlap is the SUM of the per-`e` conditioned overlaps, so
+    if every conditioned overlap has real part `≥ c` then the global overlap has real part `≥ M·c`.
+    Dividing by the `M` normalisation lifts the per-`e` fidelity `(W−d)/W ≥ 1−ε/S` to the whole
+    state — completing the structure of eq:max-infidelity. -/
+theorem global_fidelity_ge {M d : ℕ} (U V : Fin M → Fin d → ℂ) (c : ℝ)
+    (hcond : ∀ e, c ≤ (∑ x, conj (U e x) * V e x).re) :
+    (M : ℝ) * c ≤ (∑ p : Fin M × Fin d, conj (U p.1 p.2) * V p.1 p.2).re := by
+  rw [Fintype.sum_prod_type, Complex.re_sum]
+  calc (M : ℝ) * c
+      = ∑ _e : Fin M, c := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+    _ ≤ ∑ e, (∑ x, conj (U e x) * V e x).re := Finset.sum_le_sum (fun e _ => hcond e)
+
 /-! ## The approximate-periodicity + infidelity theorems pass the VERIFIER gate (axiom-clean). -/
 
 #verify_clean modexp_periodic
@@ -161,5 +177,6 @@ theorem masked_fidelity {D : ℕ} (W d : ℕ) (hW : 0 < W) (A B : Finset (Fin D)
 #verify_clean infidelity_ratio_bound
 #verify_clean unifSuper_inner
 #verify_clean masked_fidelity
+#verify_clean global_fidelity_ge
 
 end FormalRV.CFS
