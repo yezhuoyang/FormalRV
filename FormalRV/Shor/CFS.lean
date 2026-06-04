@@ -19,20 +19,31 @@
   | 4 | `CFS.TruncationBound`     | `sum_truncBits_error_double` | the APPROXIMATE reconstruction (each of the `|P|·ℓ` terms truncated to `f` bits) deviates by `< |P|·ℓ · 2^{-f}` (real-valued model). |
   | 5 | `CFS.ModularDeviation`    | `modDev_triangle`, `modDev_chain` | the paper's deviation metric `Δ_N` (line 299) is a pseudometric whose value is `0 ↔ ≡ mod N`, and it ACCUMULATES LINEARLY over a chain of operations (line 311). |
   | 4+5| `CFS.TruncatedAccumulation` | `modDev_truncAcc`, `modDev_truncAcc_normalized` | the FUSION: the paper's integer truncation `(x≫t)≪t` over `A=|P|·ℓ` ops deviates by `≤ A·2^t`, i.e. `Δ_N/N ≤ |P|·ℓ·2^{-f}` (eq:modevbound) when `2^{t+f}≤N`. Uses `modDev` translation invariance. |
+  | 6 | `CFS.ApproxPeriodFinding` | `modexp_periodic`, `approx_periodic` | the exact modexp `g^x mod N` is periodic; with a pointwise deviation `≤ ε`, the approximation is APPROXIMATELY PERIODIC: `Δ_N(f̃(x+yP)−f̃(x)) ≤ 2ε` (paper eq:438) — the classical entry point of period finding. |
+  | 7 | `CFS.ResidueCircuit`     | `residueAccumulate_step`, `residueAccumulate_eq` | CLASSICAL SEMANTICS of the controlled residue multiplications: each step IS the verified modmult `r↦M_k·r mod p_j` (or identity), and the `m`-step composition computes `modexpProd % p_j`. |
   | — | `CFS.Assumptions`        | `Assumption1` | the one genuine CONJECTURE (line 346), stated as a `Prop`, never asserted. |
 
-  Together: carry the modexp product componentwise in the residue domain over `P` (layer 2),
-  reconstruct `V mod L` exactly with the constructed CRT basis and reduce mod `N` to get `g^e mod N`
-  (layers 1+3+3′), at a cost made cheap by truncating the reconstruction with a deviation that is
-  proven `≤ |P|·ℓ·2^{-f}` in the paper's own integer `Δ_N` metric (layers 4+5 fused).
+  Together: carry the modexp product componentwise in the residue domain over `P` (layer 2) via the
+  verified per-step modmults (layer 7), reconstruct `V mod L` exactly with the constructed CRT basis
+  and reduce mod `N` to get `g^e mod N` (layers 1+3+3′), at a cost made cheap by truncating the
+  reconstruction with a deviation proven `≤ |P|·ℓ·2^{-f}` in the paper's integer `Δ_N` metric (layers
+  4+5 fused), which makes the approximation APPROXIMATELY PERIODIC (layer 6) so period finding applies.
 
   ## HONEST remaining semantic gaps (documented, NOT faked)
 
-  - The chain `Δ_N(V − Ṽ≪t) ≤ |P|·ℓ·2^{-f}` (now proved, `TruncatedAccumulation`) → "good shot"
-    probability → Ekerå–Håstad post-processing → success probability.  This links the deviation bound
-    to `FormalRV.SQIRPort`'s `probability_of_success`.
-  - The quantum-circuit semantics of the reversible residue multiplications (a `Gate`-IR construction
-    of the controlled modular multiplications, with a correctness proof à la the SQIR modmult port).
+  The arithmetic/classical chain is now CLOSED end to end: verified per-step modmult (7) → residue
+  product (1) → faithful RNS (2) → exact CRT reconstruction with constructed basis (3,3′) → bounded
+  truncation deviation in `Δ_N` (4,5) → approximate periodicity (6).  What remains is QUANTUM /
+  number-theoretic and is each its own effort:
+
+  - The **quantum success half** of "deviation → success".  Closed so far (classical/combinatorial):
+    `approx_periodic` (the periodicity premise) and the masked-state infidelity's COUNTING core
+    (`window_overlap_card`, `infidelity_ratio_bound`: overlap `= W−d`, ratio `d/W ≤ ε/S`).  Remaining
+    (genuinely quantum): the amplitude identity `|⟨ψ₁|ψ̃₁⟩| = |A∩B|/W` for uniform superpositions, QPE
+    on the resulting ideal state, and Ekerå–Håstad post-processing — connecting to
+    `FormalRV.SQIRPort.probability_of_success` (the ported exact analysis).
+  - The full multi-register **`Gate`-IR assembly** and its UNITARY (superposition) faithfulness;
+    layer 7 proves one register's classical action and identifies each step with the verified modmult.
   - **Assumption 1** (main.tex line 346): a prime set `P` with `∏P ≥ N^m` and `Δ_N(∏P) < 2^{-f}`
     exists / is findable in `O(2^f·poly)` time.  Encoded as `CFS.Assumptions.Assumption1` (a `Prop`),
     NEVER asserted — the paper's own conjecture stays a conjecture.
@@ -44,4 +55,6 @@ import FormalRV.Shor.CFS.CRTBasis
 import FormalRV.Shor.CFS.TruncationBound
 import FormalRV.Shor.CFS.ModularDeviation
 import FormalRV.Shor.CFS.TruncatedAccumulation
+import FormalRV.Shor.CFS.ApproxPeriodFinding
+import FormalRV.Shor.CFS.ResidueCircuit
 import FormalRV.Shor.CFS.Assumptions
