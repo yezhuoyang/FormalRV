@@ -21,6 +21,7 @@
   | 4+5| `CFS.TruncatedAccumulation` | `modDev_truncAcc`, `modDev_truncAcc_normalized` | the FUSION: the paper's integer truncation `(x≫t)≪t` over `A=|P|·ℓ` ops deviates by `≤ A·2^t`, i.e. `Δ_N/N ≤ |P|·ℓ·2^{-f}` (eq:modevbound) when `2^{t+f}≤N`. Uses `modDev` translation invariance. |
   | 6 | `CFS.ApproxPeriodFinding` | `modexp_periodic`, `approx_periodic` | the exact modexp `g^x mod N` is periodic; with a pointwise deviation `≤ ε`, the approximation is APPROXIMATELY PERIODIC: `Δ_N(f̃(x+yP)−f̃(x)) ≤ 2ε` (paper eq:438) — the classical entry point of period finding. |
   | 7 | `CFS.ResidueCircuit`     | `residueAccumulate_step`, `residueAccumulate_eq` | CLASSICAL SEMANTICS of the controlled residue multiplications: each step IS the verified modmult `r↦M_k·r mod p_j` (or identity), and the `m`-step composition computes `modexpProd % p_j`. |
+  | 8 | `CFS.EkeraHastad`        | `ekera_hastad_exponent`, `ekera_hastad_recovery` | CLASSICAL post-processing: `g^{N−1} ≡ g^{p+q−2}` (so `d = p+q−2`), and from `d`,`N` the factors solve `p·(d−p+2)=N` / the quadratic `X²−(d+2)X+N`. |
   | — | `CFS.Assumptions`        | `Assumption1` | the one genuine CONJECTURE (line 346), stated as a `Prop`, never asserted. |
 
   Together: carry the modexp product componentwise in the residue domain over `P` (layer 2) via the
@@ -36,13 +37,13 @@
   truncation deviation in `Δ_N` (4,5) → approximate periodicity (6).  What remains is QUANTUM /
   number-theoretic and is each its own effort:
 
-  - The **quantum success half** of "deviation → success".  Closed: `approx_periodic` (the
-    periodicity premise) AND the full masked-state infidelity argument eq:max-infidelity —
-    `unifSuper_inner` (the amplitude identity `⟨u_A|u_B⟩ = |A∩B|/W`), `window_overlap_card`
-    (`|A∩B| = W−d`), `masked_fidelity` (fidelity `= (W−d)/W`), and `infidelity_ratio_bound`
-    (`d/W ≤ ε/S`).  Remaining: lifting the per-`e` conditioned fidelity to the global state, QPE on
-    the resulting ideal state, and Ekerå–Håstad post-processing — connecting to
-    `FormalRV.SQIRPort.probability_of_success` (the ported exact analysis).
+  - The **quantum success half** of "deviation → success".  Closed (classical/combinatorial):
+    `approx_periodic`; the full masked-state infidelity argument eq:max-infidelity (`unifSuper_inner`
+    amplitude identity, `window_overlap_card`, `masked_fidelity`, `infidelity_ratio_bound`,
+    `global_fidelity_ge` lift); and the Ekerå–Håstad post-processing (`EkeraHastad`: `d = p+q−2` and
+    factor recovery from the quadratic).  Remaining (irreducibly QUANTUM): that the QPE shots recover
+    the discrete log `d` with high probability — the quantum period-finding success on the ideal
+    state, connecting to `FormalRV.SQIRPort.probability_of_success` (the ported exact analysis).
   - The full multi-register **`Gate`-IR assembly** and its UNITARY (superposition) faithfulness;
     layer 7 proves one register's classical action and identifies each step with the verified modmult.
   - **Assumption 1** (main.tex line 346): a prime set `P` with `∏P ≥ N^m` and `Δ_N(∏P) < 2^{-f}`
@@ -58,4 +59,5 @@ import FormalRV.Shor.CFS.ModularDeviation
 import FormalRV.Shor.CFS.TruncatedAccumulation
 import FormalRV.Shor.CFS.ApproxPeriodFinding
 import FormalRV.Shor.CFS.ResidueCircuit
+import FormalRV.Shor.CFS.EkeraHastad
 import FormalRV.Shor.CFS.Assumptions
