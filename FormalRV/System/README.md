@@ -97,6 +97,35 @@ a naive-sequential time ceiling of **20.25 h**, machine-checking that the report
 8 h sits **2–3×** below it — the gap is reaction-limited pipelining, pinned
 explicitly by `gidney_ekera_2021_reproduced`.
 
+### 6. T-state, ancilla, and qubit-routing scheduling — in detail
+
+<p align="center"><img src="../../docs/diagrams/syscall_timeline.png" width="900" alt="SysCall scheduling timeline"></p>
+
+The Gantt above is the verified 16-µs PPM block
+(`compileSurgeryGadgetToSysCalls surgery_ppm_A`): three syndrome rounds of
+`RequestFreshAncilla → Gate2q → Gate2q → Measure → DecodeSyndrome`, then a
+`PauliFrameUpdate`. Three resource types are scheduled *explicitly*:
+
+- **Ancilla (lifecycle).** `RequestFreshAncilla 1` allocates the smallest non-`Live`
+  site in zone 1's range `[100,200)` (the `AncillaModel` "next free site" rule,
+  `demo_ancilla_model`); after `Measure` the site goes `Dirty`, and the next round's
+  request re-allocates it `Live`. `ancilla_freshness_ok` rejects use-before-reset,
+  reuse-without-reset, and dangling-`Live` schedules.
+- **T-states.** `RequestMagicState factory_zone` draws a `|T⟩`/`|CCZ⟩` from a Factory
+  zone; `MagicStateSpec` (`Architecture.lean:548`) carries the factory's qubit cost,
+  production time, success rate, and output fidelity, and `capacity_ok` bounds the
+  per-zone request count. (This block makes no magic requests — the Factory zone of the
+  [zone design](#worked-examples) sits idle here.)
+- **Routing.** `TransitQubit q channel_id` moves a qubit through a `Channel`;
+  `latency_ok` forces each transit to last ≥ the channel latency (15 µs neutral-atom /
+  500 µs ion / 1 µs SC) and `channel_bandwidth_ok` caps transits per ms.
+
+Two invariants are visible above: **operation-capacity** (`max_gate2q_active = 1` → the
+`Gate2q`s never overlap) and **feedback-after-decode** (each `PauliFrameUpdate` begins
+only after its `DecodeSyndrome` ends). The whole block passes `adder_n1_strict_system_ok`
+by `native_decide`. *Honest scope:* per-SysCall durations are representative hand-coded
+values (cited from hardware papers), and factory distillation correctness is assumed.
+
 ## Essential proof techniques
 
 - **A ∀-size feasibility ceiling by induction.** `naivePeak_le_footprint`

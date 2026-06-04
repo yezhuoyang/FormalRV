@@ -103,6 +103,27 @@ proved. `magicCompile_executable_ICX` (`CircuitToPPMFactoryProvision.lean:214`) 
 only that a pool of ≥ `shorMagicDemand g` certified T-tokens lets the compiled program
 *run to completion*.
 
+### PPM rewrite rules (the calculus)
+
+PPM circuits are simplified by two rules, both backed by FormalRV's Pauli algebra
+and Gottesman update — drawn here in the same lattice-surgery style:
+
+<p align="center"><img src="../../docs/diagrams/ppm_rules.png" width="900" alt="PPM rewrite rules"></p>
+
+- **(a) Commuting measurements reorder.** `commutes p q` (`PPM.lean:109`) is `true`
+  iff the two Pauli products share an *even* number of anticommuting sites (e.g.
+  `Z⊗Z` and `X⊗X`); `commutes_self` / `commutes_I_*` are the base lemmas. Commuting
+  PPMs swap freely.
+- **(b) Measuring an anticommuting Pauli replaces the stabilizer.** `apply_PPM_pos` /
+  `apply_PPM_neg` (`PPMOperational.lean:104`) are the Gottesman update: a measured `P`
+  anticommuting with a generator replaces it (measuring `Z` on `|+⟩` turns stabilizer
+  `X` into `Z`, `PPM_Z_on_plus_pos`), and the generator set stays commuting
+  (`PPM_preserves_validity_plus_Z`).
+
+These are the FormalRV-verified core of the Litinski PPM calculus — the
+Pauli-commutation and measurement-update rules — checked by `decide` on concrete
+states (a full π/8-rotation-pushing calculus is not formalised).
+
 ### More small examples
 
 2. **CCZ teleportation gadget** (`ccz_gadget.qasm`, diagram

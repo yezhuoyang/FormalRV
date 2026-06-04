@@ -61,6 +61,40 @@ orthonormal (`modmult_eigenstate_orthonormal`). QPE concentrates each `ψₖ`'s 
 bound `φ(r)/r ≥ e⁻²/(log₂N)⁴` yields the headline `Shor_correct_var`
 (`Proofs3.lean:220`): success `≥ κ/(log₂N)⁴`, `κ = 4e⁻²/π²`.
 
+## Worked example — compiling Shor's circuit to Clifford+T
+
+Shor's circuit becomes pure Clifford+T in two moves.
+
+**(1) The controlled oracle stays `{X, CX, CCX}`.** The modular-exponentiation oracle
+is already over `{X, CX, CCX}`; adding the QPE control with `ctrlGate` controls each
+gate *natively* — `X→CX` (0 magic), `CX→CCX` (1 magic), `CCX→C³X` via one ancilla
+(3 magic) — so no rotation synthesis is needed. The exact relation is proved:
+
+```lean
+theorem numCCX_ctrlGate (cq anc : Nat) (g : Gate) :          -- CliffordTControlledModExp.lean:45
+    numCCX (ctrlGate cq anc g) = numCX g + 3 * numCCX g
+```
+
+For `x ↦ 7x mod 15` (`sqir_modmult_MCP_gate 2 15 7 13`: 168 CX, 64 CCX) the controlled
+oracle has `magic = 168 + 3·64 = 360`, all `{x,cx,ccx}` (no rotations); the full `m=4`
+mod-exp chain has `numCCX = 1440`, `tcount = 7·1440 = 10080` (the `#eval`s at
+`CliffordTControlledModExp.lean:129`).
+
+**(2) The inverse QFT goes through the approximate QFT.** `compileLadder`
+(`AQFTCompile.lean:54`) keeps only rotations of depth `m < c` and drops the rest; for
+cutoff `c ≤ 2` every kept rotation is Clifford+T (`m=0 → S/S†`, `m=1 → T/T†`,
+`compileLadder_isCliffordT`), and the truncation error is bounded in closed form:
+
+<p align="center"><img src="../../docs/diagrams/aqft_error_budget.png" width="560" alt="AQFT error budget"></p>
+
+`compileLadder_error_budget` (`AQFTCompile.lean:138`, **Verified**) proves
+`Σ_{m≥c} π/2^m ≤ 2π/2^c` (via `aqft_ladder_error_budget`, from `|e^{iθ}−1| ≤ |θ|`), and
+`compileLadder_acts_on_basis` proves the compiled ladder's computational-basis action.
+
+**Honest scope:** the magic counts and the AQFT error bound are Verified; the *full*
+exact-vs-approximate QFT matrix equivalence and the choice of cutoff `c` for a target
+failure probability are amplitude-level / design concerns (see `QPE_MMI_correct`).
+
 ### More small examples
 
 2. **Orbit decomposition for `r=4`.** For `a=7, N=15`, `|1⟩` over the modular orbit
