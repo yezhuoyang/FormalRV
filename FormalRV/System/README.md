@@ -36,7 +36,54 @@ single-body check to an `n`-fold compressed repeat without expanding it.
 ## Status
 The decidable checkers and their cross-platform architecture model are complete; the strict bundle is proven strictly stronger than the older one, and several invariants (feedback-after-decode, capacity) have **Verified** parametric shift/sequence/repeat-invariance lemmas, while others (exclusivity, slot capacity) are confirmed only on concrete instances pending a long index-induction proof. `SystemChecker.lean` honestly records five abstraction gaps the SysCall-level checker does not yet enforce. These are well-formedness/resource checks, not semantic circuit-correctness proofs — the adder skeleton is a system-layer scaffold, not a verified adder.
 
-## Worked example — the verified resource ceiling, and the GE2021 gap
+## Worked examples
+
+### 1. The zoned `Architecture` design (`neutral_atom_mini`)
+
+![zone design](../../docs/diagrams/zone_design.png)
+
+An `Architecture` is `zones + channels + {t_stab_cycle, t_react, t_coherence}`.
+Each `Zone` has a `role` (Memory / Processor / Ancilla / Factory / Routing), a
+`capacity`, and an average routing time; each `Channel` carries a `kind`
+(`AncillaSupply` / `MagicSupply` / `MemoryLoad` / `InterRouting`), a latency, a
+bandwidth, and a per-transit fidelity. The diagram is the literal `neutral_atom_mini`
+instance (`Architecture.lean:856`): a 21-qubit Processor fed by a 100-qubit Memory,
+a 10-qubit Ancilla zone, and a 5-qubit Factory, each over a 15 µs / 99.9% channel.
+Sibling instances `trapped_ion_mini` and `superconducting_mini` fill the *same shape*
+with Quantinuum-H1 and Sycamore-class numbers.
+
+### 2. Scheduling the system calls
+
+Everything schedulable is an explicit `SysCall` with begin/end timestamps —
+`Gate1q` / `Gate2q`, `Measure`, `TransitQubit`, `RequestFreshAncilla`,
+`RequestMagicState`, `DecodeSyndrome`, `PauliFrameUpdate`. `AdderSystem.adder_n1_syscalls`
+composes three PPM blocks into a concrete **48-SysCall, 48 µs** schedule, and every
+resource number is *computed by `foldl`/`filter` over the list*, not typed in:
+`adder_n1_*_value` (`native_decide`) prove **48 SysCalls, 18 `Gate2q`, 9 `Measure`,
+9 `DecodeSyndrome`, 3 `PauliFrameUpdate`, 9 `RequestFreshAncilla`, wallclock 48 µs**.
+
+### 3. Checking the invariants — accept
+
+The strict bundle conjoins capacity, exclusivity, latency, throughput,
+**operation-capacity** (per-kind concurrency caps), **feedback-after-decode**
+ordering, slot-capacity, and ancilla-freshness. `adder_n1_strict_system_ok`
+(`AdderSystem.lean:156`, **Verified** by `native_decide`) proves the schedule above
+passes `all_invariants_strict_with_slot_capacity_and_freshness_ok` under a realistic
+cap model (`max_gate2q_active = 1`, decoder bank 4).
+
+### 4. Checking the invariants — reject (and a capacity lower bound)
+
+Run the *same* checker on a schedule that fires two PPM blocks in parallel:
+`bad_parallel_adder_schedule_rejected` (`AdderSystem.lean:354`, `native_decide`)
+proves it returns **`false`** — two simultaneous `Gate2q`s exceed
+`max_gate2q_active = 1`. The framework also pins a schedule-independent floor: any
+schedule emitting 18 `Gate2q`s one-at-a-time needs `≥ ⌈18/1⌉·1 = 18 µs`, so an
+"optimistic 1 µs" claim is provably impossible
+(`optimistic_adder_claim_below_gate2q_capacity_lower_bound`). This is the
+**gap-reporting** pattern — a paper claim that ignores serial dependencies is
+formally contradicted by its own capacity assumptions.
+
+### 5. The verified resource ceiling, and the GE2021 gap
 
 ![scheduling invariants](../../docs/diagrams/scheduling_invariants.png)
 

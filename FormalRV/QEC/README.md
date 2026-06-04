@@ -36,6 +36,17 @@ supplies the GF(2) toolkit those checks run on: `vec_xor`, `row_combination`
 (assembling a merged `H̃_X` from data / ancilla / connection blocks), and
 `max_row_weight` / `is_qldpc`.
 
+### More small examples
+
+2. **Steane `[[7,1,3]]`.** `steane_713_with_parity` (`QECCodeInstances.lean`) is the one
+   fully populated catalogue code: `hx = hz` = the `[7,4]` Hamming parity check
+   (3 rows × 7 columns). It is the data code of the verified `steane_x_surgery` gadget
+   (`Corpus/SurgeryDemoSteane.lean`).
+3. **The GF(2) toolkit in action.** `vec_xor [t,f,t] [t,t,f] = [f,t,t]`,
+   `is_qldpc mat 14 4 = true` for the surface3 checks (all weights ≤ 4), and
+   `row_combination sel H` is the selection-weighted row sum the surgery verifier
+   decides against a target — all `rfl`/`decide` smoke checks in `LDPCMatrix.lean`.
+
 ## Essential proof techniques
 
 - **GF(2) linear algebra as `List Bool` with decidable checks.** Matrices are

@@ -55,6 +55,20 @@ outcomes — the byproduct differs only by the Born amplitude and the ancilla la
 The companion CCZ gadget (`ccz_gadget.png`) is emitted and numerically cross-checked
 against a Qiskit density-matrix simulation (`PyCircuits/ppm_qasm_verification.py`).
 
+### More small examples
+
+2. **CCZ teleportation gadget** (`ccz_gadget.qasm`, diagram
+   [`ccz_gadget.png`](../../docs/diagrams/ccz_gadget.png)) — prepare `|CCZ⟩` on three
+   ancillas, a transversal CNOT chain, three Z-measurements, then the `CZ`/`Z`
+   feed-forward corrections. `ccz_teleport_outcome_000` (`CCZGadgetTeleport.lean:127`,
+   **Verified**) proves the `|000⟩` branch lands `CCZ|ψ⟩` at amplitude `1/(2√2)`; the
+   full feed-forward gadget is emitted and cross-checked by Qiskit simulation (the
+   other 7 outcome branches are not state-vector-proved — honest scope).
+3. **A Gottesman PPM update** — measuring `Z` on `|+⟩`: `PPM_preserves_validity_plus_Z`
+   (`PPMOperational.lean:189`, **Verified** by `decide`) shows `apply_PPM_pos` keeps
+   the stabilizer-generator set commuting through the measurement. This is the
+   stabilizer-frame bookkeeping behind every logical measurement.
+
 ## Essential proof techniques
 
 - **Outcome-by-outcome state vectors.** For each measurement result `b` the proof

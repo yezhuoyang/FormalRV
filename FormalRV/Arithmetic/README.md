@@ -63,6 +63,19 @@ for `m=2` it steps `0 → 0 → (0 + 7·2 mod 15) = 14`. `sqir_modmult_const_gat
 `(a·m) mod N`, and `MCPBridge.lean` promotes this Boolean-correct circuit to the
 `MultiplyCircuitProperty` that `Shor` consumes as its oracle.
 
+### More small examples
+
+3. **Controlled modular adder** `controlledModAddConstGate` (`ModularAdder/Defs.lean`)
+   — an 8-step `(x+c) mod N` pipeline (compare, conditional subtract, restore).
+   `controlledModAddConstGate_correct` (`ModularAdder/Proofs3.lean`, **Verified**)
+   proves the target becomes `(x+c) mod N` exactly when the control bit is set, with
+   the workspace restored — the conditional building block the multiplier stacks
+   `bits` times.
+4. **A numeric trace** of `cuccaro_n_bit_adder_full 3 0` on `a=2, b=3`: the MAJ chain
+   computes the carries, the reverse UMA writes the sum register `2+3 = 5 = 101₂`
+   (no overflow, top carry 0) and restores `a=2` — exactly the three
+   `cuccaro_n_bit_adder_full_correct` invariants on concrete inputs.
+
 ## Essential proof techniques
 
 - **Boolean basis-state action, not matrices.** Every gate is given a `Nat → Bool`

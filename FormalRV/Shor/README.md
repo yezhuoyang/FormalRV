@@ -61,6 +61,18 @@ orthonormal (`modmult_eigenstate_orthonormal`). QPE concentrates each `ψₖ`'s 
 bound `φ(r)/r ≥ e⁻²/(log₂N)⁴` yields the headline `Shor_correct_var`
 (`Proofs3.lean:220`): success `≥ κ/(log₂N)⁴`, `κ = 4e⁻²/π²`.
 
+### More small examples
+
+2. **Orbit decomposition for `r=4`.** For `a=7, N=15`, `|1⟩` over the modular orbit
+   equals `(1/2)·∑_{k=0}^{3} ψₖ` with the four eigenstates `ψₖ` orthonormal
+   (`orbit_decomposition_pointwise` + `modmult_eigenstate_orthonormal`,
+   `Eigenstate.lean`, **Verified**) — the Fourier-inversion identity that lets QPE see
+   each eigenphase `k/4` independently.
+3. **Totient bound for `N=15`.** Here `r ∣ φ(15)=8`; for `r=4`, `φ(4)/4 = 1/2 ≥
+   e⁻²/(log₂15)⁴`. `phi_n_over_n_lowerbound` (`Shor/Part3.lean`, **Verified**) proves
+   `φ(r)/r ≥ e⁻²/(log₂N)⁴` in general, so summing the `≥4/(π²r)` peak over the `φ(r)`
+   coprime phases yields the `κ/(log₂N)⁴` success bound.
+
 ## Essential proof techniques
 
 - **Amplitude analysis, not a Gate-IR circuit.** QPE correctness is a statement
