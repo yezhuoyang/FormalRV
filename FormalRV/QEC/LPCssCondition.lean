@@ -331,4 +331,33 @@ theorem liftedProduct_well_shaped (ℓ : Nat) (A : List (List Circ)) (rA nA : Na
   rw [matrix_has_n_cols_of _ _ (key _ hHx), matrix_has_n_cols_of _ _ (key _ hHz)]
   rfl
 
+/-! ## §9. Circulant rows and their overlap (toward the css `orthogonal` cancellation)
+
+    The css condition is `∀ hxrow hzrow, dotBit hxrow hzrow = false`.  Via `liftMat_entry`
+    each lifted-row overlap decomposes into overlaps of CIRCULANT rows, and a circulant-row
+    overlap is a `circMul` convolution coefficient — which the ring cancellation
+    `pHx·pDagger(pHz) = 0` (fed by `circMul_comm`) annihilates.  These are the first steps. -/
+
+/-- The explicit `r`-th row of `circulant ℓ p` (`r < ℓ`): `s ↦ p.contains((s+ℓ−r) mod ℓ)`. -/
+theorem circulant_getD_row (ℓ : Nat) (p : Circ) (r : Nat) (hr : r < ℓ) :
+    (circulant ℓ p).getD r [] = (List.range ℓ).map (fun s => p.contains ((s + ℓ - r % ℓ) % ℓ)) := by
+  unfold circulant
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hr]; rfl
+
+/-- The GF(2) overlap count of two circulant rows is the number of columns `s` where both
+    circulants are set — `#{s < ℓ : (s−r)∈p ∧ (s−r')∈q}`.  (The next step rewrites this count
+    as a `circMul ℓ p (circDagger ℓ q)` convolution coefficient via the `s ↦ (s−r)` bijection.) -/
+theorem circulant_rows_zip (ℓ : Nat) (p q : Circ) (r r' : Nat) (hr : r < ℓ) (hr' : r' < ℓ) :
+    (((circulant ℓ p).getD r []).zip ((circulant ℓ q).getD r' [])).countP (fun x => x.1 && x.2)
+      = ((List.range ℓ).filter
+          (fun s => p.contains ((s + ℓ - r) % ℓ) && q.contains ((s + ℓ - r') % ℓ))).length := by
+  rw [circulant_getD_row ℓ p r hr, circulant_getD_row ℓ q r' hr',
+      Nat.mod_eq_of_lt hr, Nat.mod_eq_of_lt hr',
+      show ((List.range ℓ).map (fun s => p.contains ((s + ℓ - r) % ℓ))).zip
+            ((List.range ℓ).map (fun s => q.contains ((s + ℓ - r') % ℓ)))
+        = (List.range ℓ).map (fun s => (p.contains ((s + ℓ - r) % ℓ), q.contains ((s + ℓ - r') % ℓ)))
+        from by rw [List.zip_map'],
+      List.countP_map, ← List.countP_eq_length_filter]
+  rfl
+
 end FormalRV.QEC.Algebraic
