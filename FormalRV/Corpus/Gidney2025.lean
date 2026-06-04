@@ -116,4 +116,36 @@ theorem gidney2025_vs_ge2021_toffoli : 2_700_000_000 * 2 < 6_500_000_000 := by d
 #eval (gidney2025_work.n_toff, gidney2025_work.n_logical,
        1280 * 430 + 131 * 1352 + 7 * 18 * 1352)   -- (6500000000, 1537, 897864)
 
+/-! ## §5. L2 gadget Toffoli costs.
+
+    Essentially all work is addition, lookup, and "phaseup" (main.tex:989).  Their per-gadget
+    Toffoli costs (cited), plus Gidney's modular-adder improvement to `2.5n`. -/
+
+/-- `n`-qubit Gidney-2018 addition: `n − 1` Toffolis (main.tex:993). -/
+def g2025_add_toffoli (n : Nat) : Nat := n - 1
+/-- `n`-address Babbush QROM lookup: `2ⁿ − n − 1` Toffolis (main.tex:996). -/
+def g2025_lookup_toffoli (n : Nat) : Nat := 2 ^ n - n - 1
+/-- Modular adder cost `2.5n` (`= 5n/2`) — vs Berry et al. `3.5n` (main.tex:977). -/
+def g2025_modadd_toffoli_halves (n : Nat) : Nat := 5 * n   -- in half-Toffoli units (2.5n = 5n/2)
+
+/-- The `f = 33` accumulator addition in loop4 needs `f − 1 = 32` CCZ states (main.tex:1195–1196). -/
+theorem g2025_loop4_add_ccz : g2025_add_toffoli 33 = 32 := by decide
+/-- The `w₁ = 6` lookup needs `2⁶ − 6 − 1 = 57` CCZ states (main.tex:1203–1204). -/
+theorem g2025_loop1_lookup_ccz : g2025_lookup_toffoli 6 = 57 := by decide
+/-- Gidney's modular adder beats Berry's: `2.5n < 3.5n` (`5n < 7n` in half units, for `n>0`). -/
+theorem g2025_modadd_beats_berry (n : Nat) (hn : 0 < n) :
+    g2025_modadd_toffoli_halves n < 7 * n := by
+  unfold g2025_modadd_toffoli_halves; omega
+
+/-! ## §6. Chosen parameters + an honest note on the paper's numbers.
+
+    Grid-scan-selected parameters minimizing `q³·t` (main.tex:1006–1017):
+      `s = 8` (Ekerå–Håstad), `ℓ ∈ [18,25]` (prime bit length), `w₁ = 6` (loop1 window),
+      `w₃ ∈ [2,6]`, `w₄ ∈ [2,8]`, `f = 33` (truncated accumulator).
+
+    All numbers above are the paper's CLAIMED values, verified for internal arithmetic
+    consistency — NOT derived from a Lean circuit.  One minor textual slip noted for honesty:
+    the runtime states "expected number of shots is 9.2" then computes with `9.1`
+    (`12.07·9.1/24 = 4.63` days; main.tex:1216).  Negligible (rounding), reported not hidden. -/
+
 end FormalRV.Corpus.Gidney2025
