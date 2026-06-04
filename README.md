@@ -190,6 +190,116 @@ Each layer is a Lean structure with an explicit **inter-layer contract**; three
 error mechanisms (logical/random, approximation, algorithmic-uncertainty)
 propagate bounds upward toward the success-probability theorem.
 
+## Verified-gadget gallery — every diagram drawn from the emitted code
+
+Each circuit below is **rendered by Qiskit / Stim from a file the Lean emitters
+wrote** — none of it is hand-drawn ASCII. Regenerate the whole gallery with:
+
+```bash
+lake env lean --run scripts/EmitQASM.lean      # Gate-IR circuits  → PyCircuits/qasm/*.qasm
+lake env lean --run scripts/EmitPPMQASM.lean   # PPM gadgets        → PyCircuits/qasm/*.qasm
+lake env lean --run emit_shor_demo.lean        # surgery schedule   → PyCircuits/*.stim
+python PyCircuits/draw_diagrams.py             # all diagrams below → docs/diagrams/*.png
+```
+
+We follow the Shor build-up: Toffoli → adder → modular multiplier → QPE, then the
+fault-tolerant layer (magic-state teleportation → lattice surgery → scheduling).
+
+### 1. Toffoli = 7 T — the atomic non-Clifford cost
+
+<p align="center"><img src="docs/diagrams/toffoli.png" width="220" alt="Toffoli (CCX)"></p>
+
+`toffoli.qasm` is the bare `CCX`. The accounting theorem
+[`tcount_eq_seven_numCCX`](FormalRV/Core/GateQASM.lean) (`Core/GateQASM.lean:33`,
+axiom-free) proves **`tcount g = 7 · numCCX g`** for *every* circuit `g`, so each
+downstream T-count is exactly 7× the Toffoli count — and Qiskit re-counts the
+`ccx` of every emitted file to confirm it. **In Shor:** every nonlinear step
+(carries, modular reduction) is Toffolis; this is the unit the resource estimates
+are denominated in.
+
+### 2. Cuccaro ripple-carry adder — `cuccaro_n_bit_adder_full 3 0`
+
+<p align="center"><img src="docs/diagrams/cuccaro_adder_3bit.png" width="760" alt="3-bit Cuccaro adder"></p>
+
+A complete **3-bit adder on 7 qubits** (18 gates: a forward `MAJ` chain then a
+reverse `UMA` chain; T-count `14·3 = 42`), emitted as OpenQASM 2 from the verified
+`Gate` IR. [`cuccaro_n_bit_adder_full_correct`](FormalRV/Arithmetic/Cuccaro/CuccaroFull.lean)
+(`CuccaroFull.lean:847`, axiom-free) proves the output register holds the
+ripple-carry sum bits `cᵢ ⊕ bᵢ ⊕ aᵢ` and the `a`-register is preserved. **In
+Shor:** adder → modular adder → modular multiplier → controlled modular
+exponentiation — the adder is the bottom of that tower.
+
+### 3. Modular multiplier — `sqir_modmult_const_gate 2 15 7`  (`x ↦ 7·x mod 15`)
+
+<p align="center"><img src="docs/diagrams/modmult_const_2_15_7.png" width="900" alt="modular multiplier x->7x mod 15"></p>
+
+The full **108-gate, 9-qubit** out-of-place modular multiplier (32 Toffolis =
+`8·bits²`, so T-count `56·bits² = 224`) — emitted and Qiskit-gate-count-verified
+(8/8). [`sqir_modmult_const_gate_target_decode`](FormalRV/Arithmetic/SQIRModMult/Proofs2.lean)
+(`SQIRModMult/Proofs2.lean:856`, axiom-free) proves that, applied to input `x`
+with a zero target register, it decodes the target to `(a·x) mod N`. **In Shor:**
+this *is* the controlled-`U` of phase estimation — controlled powers of it compute
+`aˣ mod N`.
+
+### 4. Quantum phase estimation — the frame around the oracle
+
+<p align="center"><img src="docs/diagrams/qpe_frame.png" width="900" alt="QPE schematic"></p>
+
+*Schematic:* the `H` / inverse-QFT frame is QPE's standard structure, but each
+controlled-`U` box **is** the emitted verified modular multiplier above. FormalRV
+proves QPE at the **amplitude level**, not as a Gate-IR circuit:
+[`QPE_MMI_correct`](FormalRV/Shor/PostQFT/Proofs3.lean) (`PostQFT/Proofs3.lean:205`,
+axiom-free) gives the peak-probability bound **`≥ 4/(π²·r)`** at the order `r`, and
+`Shor_correct_var` / `Shor_correct_verified_no_modmult_axioms` lift it to the
+headline success bound **`≥ κ/(log₂N)⁴`** instantiated with the *emitted,
+SQIR-faithful* multiplier (no oracle placeholder, no project-specific axioms).
+
+### 5. Magic-state teleportation (T gadget) — `t_gadget.qasm`
+
+<p align="center"><img src="docs/diagrams/t_gadget.png" width="460" alt="T-gadget teleportation"></p>
+
+The measurement-based `T` gadget, emitted as OpenQASM 3: prepare `|T⟩` on the
+ancilla, entangle, `Z`-measure, and apply the **classically-controlled `S`
+correction** iff the outcome is 1 (the red `if` box).
+[`t_gadget_with_feedback`](FormalRV/PPM/TGadgetTeleport.lean)
+(`TGadgetTeleport.lean:60`, axiom-free) proves the data emerges as `T|ψ⟩` for
+*either* measurement outcome. The companion CCZ gadget (`ccz_gadget.qasm`,
+[`docs/diagrams/ccz_gadget.png`](docs/diagrams/ccz_gadget.png)) is emitted and
+cross-checked by an independent Qiskit simulation. **In Shor:** this is how
+non-Clifford gates are realised fault-tolerantly — magic states injected from the
+factory, the rest of the circuit staying Clifford.
+
+### 6. Surface-code lattice surgery — syndrome extraction (from emitted Stim)
+
+<p align="center"><img src="docs/diagrams/surface3_syndrome.png" width="640" alt="surface-code syndrome extraction"></p>
+
+One `X`-check and one `Z`-check block of the `[[13,1,3]]` surface-code surgery,
+rendered from the Lean-emitted `surface3_surgery.stim` (X-check: ancilla in `|+⟩`,
+`CX anc→data`, X-basis measure; Z-check: `CX data→anc`, Z-basis measure).
+[`surface3_x_surgery_measures_logicalX`](FormalRV/Corpus/SurgeryDemoSurface.lean)
+(`SurgeryDemoSurface.lean:118`, axiom-free) proves the selected ancilla checks
+read the logical `X̄`, and `surface3_x_surgery_verifies` passes the structural
+surgery verifier — independently re-confirmed by Stim's `has_flow`. **In Shor:**
+lattice surgery realises the logical Pauli-product measurements that drive the
+fault-tolerant execution.
+
+### 7. System scheduling invariants — the verified resource ceiling
+
+<p align="center"><img src="docs/diagrams/scheduling_invariants.png" width="900" alt="verified scheduling invariants"></p>
+
+Not a circuit but the **resource bounds**, plotted from the verified theorems.
+*Left* — [`scheduleFootprint_replicate`](FormalRV/LatticeSurgery/ScheduleEmit.lean)
+(`ScheduleEmit.lean:66`): a schedule of `n` surgery merges occupies exactly `28·n`
+physical qubits (`28 = merged_n(14) + |hx|(8) + |hz|(6)`). *Right* —
+`gidney_ekera_2021_reproduced`: plugging GE2021's own inputs into the verified
+surface-model formula reproduces **19.44M ≤ the reported 20M** qubits (~3%), and
+machine-checks that the reported 8 h sits **2–3× under** the naive-sequential time
+ceiling (the gap = pipelining, made explicit). Underpinning both,
+[`naivePeak_le_footprint`](FormalRV/System/NaiveUpperBound.lean)
+(`NaiveUpperBound.lean:86`) proves the sequential schedule's peak demand never
+exceeds the static footprint, for *any* problem size. **In Shor:** these are the
+feasibility ceilings the corpus resource estimates are built on.
+
 ## Repository layout
 
 Each concern is a folder **with its own `README.md`** (purpose + key definitions
