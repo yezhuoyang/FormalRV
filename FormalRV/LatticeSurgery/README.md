@@ -53,21 +53,20 @@ re-derives the same fact externally — the LaSsynth gold standard.
    aliasing bug caught before any physics (the contract file's §22 shows two
    individually-valid certs that must NOT auto-compose).
 
-## 3D spacetime (TQEC) diagrams — the surgery we verify
+## The verified surgery — and its emitted circuits (Stim-rendered)
 
-A lattice-surgery computation is naturally a **3D spacetime diagram** (the TQEC /
-"Game of Surface Codes" idiom): time runs upward, each logical surface-code patch is a
-box whose vertical faces carry the boundary type (X = red / rough, Z = blue / smooth),
-and a surgery **merge** is a tube coloured by the measured Pauli type (X-merge red,
-Z-merge blue). FormalRV verifies the abstract `SurgeryGadget` (merged parity rows +
-Pauli frame, all by `decide`); these diagrams are its spacetime view. Regenerate with
-`python PyCircuits/draw_tqec.py`.
+> *Note:* earlier hand-drawn 3D "block" pictures here were schematic, **not** real TQEC
+> output, and have been removed. The diagrams below are rendered by **Stim** directly from
+> the Lean-emitted `.stim` circuits (`python PyCircuits/draw_stim_spacetime.py`), so they
+> show the *actual* qubits and operations of the verified surgery — nothing hand-placed. A
+> canonical TQEC block-diagram render (the coloured cubes/pipes, via the
+> [`tqec`](https://github.com/tqec/tqec) library) is a tracked follow-up.
 
 **What the verifier checks.** `verify_surgery_gadget` (`LDPCSurgery.lean`) is the
 conjunction of four decidable conditions — `dimensions_consistent`, `tau_s_sufficient`
 (`3·τ_s ≥ 2d`), `merged_is_qldpc`, and `targets_logical_correctly` (the row-span kernel
 condition) — and it applies to *any* surface-code surgery gadget. We instantiate and
-prove it (`= true` by `decide`) across three code families:
+prove it (`= true` by `decide` / `native_decide`) across code families and operations:
 
 | Gadget | Code | Measures | τ_s | merged Hx / Hz | Verified |
 |---|---|---|:--:|:--:|---|
@@ -79,12 +78,11 @@ prove it (`= true` by `decide`) across three code families:
 | `surface3_zz_merge` | surface ⊕ surface (CSS-dual) | joint **Z̄₁Z̄₂** | 2 | 14 / 12 | `surface3_zz_merge_verifies` |
 | `surface3_zzz_merge` | 3 × surface (CSS-dual) | joint **Z̄₁Z̄₂Z̄₃** | 2 | 20 / 18 | `surface3_zzz_merge_verifies` |
 
-<p align="center"><img src="../../docs/diagrams/tqec_xbar.png" width="430" alt="surface3 logical-X-bar measurement, TQEC spacetime"></p>
+The verified surface3 logical-X̄ surgery, rendered by Stim from the emitted
+`surface3_surgery.stim` (28 qubits: each X-check ancilla `R`-eset to `|+⟩`, `CX` onto its
+data support, then measured; followed by the Z-checks):
 
-It is the *same* construction — a data patch + an ancilla patch joined by an X-merge
-tube of height ≈ τ_s — across all three code families:
-
-<p align="center"><img src="../../docs/diagrams/tqec_codes.png" width="980" alt="X-bar surgery across surface / Steane / bivariate-bicycle codes"></p>
+<p align="center"><img src="../../docs/diagrams/stim_surface3_surgery.png" width="900" alt="surface3 surgery syndrome circuit, rendered by Stim from the emitted .stim"></p>
 
 **Multi-patch merges (same framework).** The verifier is not limited to one patch: a
 **joint X̄₁X̄₂ measurement** — the `XX`-merge of a lattice-surgery CNOT — is the gadget
@@ -93,8 +91,6 @@ ancilla coupled to *both* logical supports. It passes the **same** `verify_surge
 (`= true` by `decide` at 27 merged qubits) and the **same** code-general
 `surgery_implements_logical_measurement` (`surface3_xx_merge_implements_logical`, axiom-free).
 `surface3_xxx_merge` does the joint **X̄₁X̄₂X̄₃** on three patches (`native_decide`, 40 qubits).
-
-<p align="center"><img src="../../docs/diagrams/tqec_xxmerge.png" width="560" alt="verified two-patch XX-merge, TQEC spacetime"></p>
 
 **Any code distance.** The per-merge gadget is generic in the distance:
 `surface_d_x_surgery d` (`Corpus/ShorEmitDistance.lean`) builds the surgery gadget on
@@ -111,17 +107,17 @@ def emitShorAtDistance (N a d : Nat) : String :=     -- full Shor(N,a) lattice s
 
 `lake env lean --run emit_shor_distance_demo.lean` emits the first 3 of Shor(15)'s 3072
 merges at **distance 5** — a 708-line Stim circuit, three `[[41,1,5]]` merged-code syndrome
-blocks (`RX` ancilla → `CX` to data → `MX`) → `PyCircuits/shor_distance5_demo.stim`.
+blocks (`RX` ancilla → `CX` to data → `MX`) → `PyCircuits/shor_distance5_demo.stim`, shown
+here Stim-rendered (252 qubits, 126 measurements):
+
+<p align="center"><img src="../../docs/diagrams/stim_shor_d5_prefix.png" width="950" alt="distance-5 full-Shor lattice-surgery prefix, rendered by Stim from the emitted .stim"></p>
 
 **Schedules.** Gadgets compose into a `Schedule` (`SurgerySchedule.lean`), and
 `schedule_runs_as_surgeries` (`SurgerySchedule.lean:76`) proves a schedule runs as the
 sequence of its gadget measurements. Concrete schedules: `cczInjectionSchedule =
 [mA, mB, mC]` (`MagicInjectionSurgery.lean`, the 3 merges of one magic-CCZ injection),
 `demoSchedule = List.replicate 3 surface3_x_surgery` (`SurfaceShorFullStack.lean`), and
-the parametric `shorSchedule` (RSA-2048 = 412,316,860,416 merges, `ShorEmit.lean`). The
-CCZ-injection schedule as a spacetime diagram:
-
-<p align="center"><img src="../../docs/diagrams/tqec_ccz.png" width="430" alt="CCZ magic-injection schedule, TQEC spacetime"></p>
+the parametric `shorSchedule` (RSA-2048 = 412,316,860,416 merges, `ShorEmit.lean`).
 
 **The full lattice-surgery CNOT is VERIFIED.** It is the two-merge schedule
 `surface3_cnot = [surface3_zz_merge, surface3_xx_merge]` (a `ZZ`-merge, then an `XX`-merge,
@@ -130,8 +126,6 @@ framework verifier — `decide`, axiom-clean (`propext`). The Z-merge is handled
 duality** (measuring X̄ of the dual code `{hx := hz, hz := hx}` *is* measuring Z̄), so it reuses
 the **same** `verify_surgery_gadget` with no new machinery.
 
-<p align="center"><img src="../../docs/diagrams/tqec_cnot.png" width="540" alt="verified lattice-surgery CNOT, TQEC spacetime"></p>
-
 **CCX (Toffoli) magic injection — VERIFIED, assuming a logical magic state at a port.** The
 injection is the verified joint **Z̄Z̄Z̄ measurement** (`surface3_zzz_merge`) coupling the data
 to a port that holds a logical `|C̄CZ̄⟩` (the `measure ZZZ` step of the PPM-level CCX lowering
@@ -139,8 +133,6 @@ to a port that holds a logical `|C̄CZ̄⟩` (the `measure ZZZ` step of the PPM-
 `surface3_ccx_injection_verifies` (`native_decide`) checks the port-merge; the magic state at
 the port is an *assumed* input, and the teleportation identity it realises is
 `CCZGadgetTeleport.ccz_teleport_outcome_000`.
-
-<p align="center"><img src="../../docs/diagrams/tqec_ccx.png" width="640" alt="verified CCX magic injection, TQEC spacetime"></p>
 
 > **Honest scope.** Everything above passes the *same* `verify_surgery_gadget` /
 > `verify_surgery_schedule`: single- and multi-patch X̄ merges, the **CSS-dual Z̄ merges**
@@ -154,7 +146,8 @@ the port is an *assumed* input, and the teleportation identity it realises is
 > assumed): the **physical** distance-`d` syndrome circuit with local boundary stitching +
 > decoder + fault tolerance (merged distance `d̃ = Θ(d)`); and **magic-state preparation** — the
 > CCX injection *assumes* the logical magic state at the port (realising `CCZGadgetTeleport`), it
-> does not distill it.
+> does not distill it. The diagrams above are **Stim renders of the emitted circuits**; a canonical
+> 3D TQEC block render (cubes/pipes via the `tqec` library) is a tracked follow-up, not yet produced.
 
 ## Essential proof techniques
 
