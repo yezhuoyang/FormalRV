@@ -97,4 +97,56 @@ theorem circulant_circDagger_eq_transpose (ℓ : Nat) (p : Circ) (hp : ∀ e ∈
   rw [map_range_getD ℓ i _ false hi]
   exact dagger_contains ℓ p hp i j hi hj
 
+/-! ## §4. Commutativity of the ring multiplication `circMul` (for the CSS cancellation) -/
+
+/-- Sum of a pointwise-added map splits. -/
+private theorem sum_map_add (l : List Nat) (A B : Nat → Nat) :
+    (l.map (fun x => A x + B x)).sum = (l.map A).sum + (l.map B).sum := by
+  induction l with
+  | nil => simp
+  | cons a as ih => simp only [List.map_cons, List.sum_cons, ih]; omega
+
+/-- `countP` as a sum of `0/1` indicators. -/
+private theorem countP_eq_sum_ite (q : List Nat) (P : Nat → Bool) :
+    q.countP P = (q.map (fun j => if P j then 1 else 0)).sum := by
+  induction q with
+  | nil => simp
+  | cons a as ih => simp only [List.countP_cons, List.map_cons, List.sum_cons, ih]; omega
+
+/-- **Fubini for `countP` over a product**: the double count is symmetric in the two lists. -/
+private theorem sum_countP_swap (p q : List Nat) (g : Nat → Nat → Bool) :
+    (p.map (fun i => q.countP (fun j => g i j))).sum
+      = (q.map (fun j => p.countP (fun i => g i j))).sum := by
+  induction p with
+  | nil =>
+      simp only [List.map_nil, List.sum_nil, List.countP_nil]
+      induction q with
+      | nil => rfl
+      | cons a as ihq => simp only [List.map_cons, List.sum_cons]; omega
+  | cons i is ih =>
+      simp only [List.map_cons, List.sum_cons, ih, List.countP_cons]
+      rw [sum_map_add q (fun j => is.countP (fun i' => g i' j)) (fun j => if g i j then 1 else 0)]
+      rw [← countP_eq_sum_ite q (fun j => g i j)]; omega
+
+/-- **The ring `R = F₂[x]/(xˡ+1)` is COMMUTATIVE**: `circMul ℓ p q = circMul ℓ q p`.  The
+    multiset of pairwise-sum exponents is symmetric (`i + j = j + i`), so each residue's
+    odd-multiplicity test agrees — by `filter_congr` + the Fubini swap.  This is the
+    commutativity behind the lifted-product CSS cancellation `A⊗A† + A⊗A† = 0`. -/
+theorem circMul_comm (ℓ : Nat) (p q : Circ) : circMul ℓ p q = circMul ℓ q p := by
+  unfold circMul
+  apply List.filter_congr
+  intro e _
+  have key : (p.flatMap (fun i => q.map (fun j => (i + j) % ℓ))).countP (fun x => x = e)
+           = (q.flatMap (fun j => p.map (fun i => (j + i) % ℓ))).countP (fun x => x = e) := by
+    rw [List.countP_flatMap, List.countP_flatMap]
+    simp only [Function.comp_def, List.countP_map]
+    rw [sum_countP_swap p q (fun i j => decide ((i + j) % ℓ = e))]
+    congr 1
+    apply List.map_congr_left
+    intro j _
+    congr 1
+    funext i
+    rw [Nat.add_comm]
+  rw [key]
+
 end FormalRV.QEC.Algebraic
