@@ -283,18 +283,20 @@ surgery verifier — independently re-confirmed by Stim's `has_flow`. **In Shor:
 lattice surgery realises the logical Pauli-product measurements that drive the
 fault-tolerant execution.
 
-**The whole verified computation as a 3D TQEC block graph.** A *fully automatic* translator
-(`PyCircuits/draw_tqec_translator.py`) turns FormalRV's verified system schedule (the `SysCall`
-stream + the zoned `Architecture`) into a **`tqec`-validated** `BlockGraph` — patches placed by
-their system-spec zone/site, `Gate2q` couplings as merge tubes. Below: the **Cuccaro-adder**
-lattice-surgery schedule (147 cubes, `bg.validate()` passes) and, for the canonical block view,
-the lattice-surgery **CNOT** built with the real [`tqec`](https://github.com/tqec/tqec) library:
+**The verified computation as a 3D lattice-surgery layout (Gidney/Fowler style).** Following the
+AutoCCZ layout idiom of Gidney & Fowler ([arXiv:1905.08916](https://arxiv.org/abs/1905.08916),
+Fig.13/16), a **macro compiler** (`PyCircuits/ls_macro_compiler.py`) emits each Cuccaro `MAJ`/`UMA`
+as a reusable surgery block and tiles them into a ripple-carry adder where the **carry propagates
+through space**; a **certificate** (the trusted artifact) checks the layout is conflict-free with a
+chained carry and reports the space-time volume. Left: the lattice-surgery **CNOT** as a
+`tqec`-validated 3D block; right: the certified **3-bit ripple-carry adder** layout:
 
-<p align="center"><img src="docs/diagrams/tqec_adder_from_schedule.png" width="300" alt="Cuccaro-adder lattice-surgery schedule as a tqec-validated 3D block graph">&nbsp;<img src="docs/diagrams/tqec_cnot_blocks.png" width="320" alt="lattice-surgery CNOT as a genuine tqec block graph"></p>
+<p align="center"><img src="docs/diagrams/ls_cnot.png" width="330" alt="lattice-surgery CNOT, 3D surface-code spacetime">&nbsp;<img src="docs/diagrams/ls_adder_macro.png" width="430" alt="3-bit ripple-carry adder, tiled MAJ/UMA lattice-surgery layout, certified"></p>
 
-The verified surgery gadgets themselves — the multi-patch **XX/ZZ merges**, the full **CNOT**
+The verified surgery gadgets — the multi-patch **XX/ZZ merges**, the full **CNOT**
 (`surface3_cnot_verifies`), and the **CCX magic injection** — are in
-[`LatticeSurgery/`](FormalRV/LatticeSurgery), with the full TQEC gallery and honest scope.
+[`LatticeSurgery/`](FormalRV/LatticeSurgery). The **trusted** artifacts are the Lean-verified
+logical circuit + `SysCall` schedule + the layout certificate; the 3D picture only *visualizes* them.
 
 ### 7. System scheduling invariants — the verified resource ceiling
 
