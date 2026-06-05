@@ -50,6 +50,53 @@ estimates against machine-checked bounds** — making the residue that *cannot* 
 Each layer is a Lean structure with an explicit **inter-layer contract**; three error mechanisms
 (logical/random, approximation, algorithmic-uncertainty) propagate bounds up to the success theorem.
 
+## Worked example — the 2-bit adder, end to end
+
+The smallest non-trivial slice of the whole stack: the verified **2-bit Cuccaro adder**
+`cuccaro_n_bit_adder_full 2 0` (proven by `cuccaro_n_bit_adder_full_correct` — target register
+`:= a + b`, read register restored), pushed through every layer. Reproduce:
+
+```bash
+lake env lean --run scripts/EmitAdder2Example.lean            # L2 circuit -> OpenQASM + PPM
+python PyCircuits/ls_compile.py PyCircuits/qasm/adder2.qasm    # -> lattice surgery + certificate + Blender script
+```
+
+**L2 circuit → OpenQASM** (`Core/GateQASM.toQASM`): 5 qubits, `8·cx + 4·ccx`, `tcount 28`. Qiskit
+reloads the file and confirms the gate counts equal Lean's:
+
+```qasm
+qreg q[5];
+cx q[2],q[1]; cx q[2],q[0]; ccx q[0],q[1],q[2];      // MAJ bit 0
+cx q[4],q[3]; cx q[4],q[2]; ccx q[2],q[3],q[4];      // MAJ bit 1
+ccx q[2],q[3],q[4]; cx q[4],q[2]; cx q[2],q[3];      // UMA bit 1
+ccx q[0],q[1],q[2]; cx q[2],q[0]; cx q[0],q[1];      // UMA bit 0
+```
+
+**L3 → PPM** (`compileArithmeticGateToPPM`): 28 commands. Each `cx` becomes a joint `ZZ`
+measurement + Pauli-frame update; each `ccx` injects a magic state and measures `ZZZ`:
+
+```
+M Z 2,1   F 1                # cx 2->1   : joint ZZ measure + frame
+T 2   M Z 0,1,2   F 2        # ccx 0,1->2: inject |C̄CZ̄⟩ + joint ZZZ measure + frame
+```
+
+**System — zoned hardware + verified schedule.** Those merges are scheduled onto a zoned
+architecture and the schedule is *proven* to satisfy every system invariant
+(`System/AdderSystem.adder_n1_strict_system_ok` — operation-capacity, feedback-after-decode,
+slot-capacity, ancilla-freshness):
+
+```
+ZONE Data[0,100)  Ancilla[100,200)  Factory[200,300)  Routing[300,400)    # hardware zones
+FRESHANC z1 · GATE2Q d0–a100 · GATE2Q d50–a100 · MEAS a100 · DECODE        # one merge round, t in µs
+```
+
+**L4 → lattice surgery** (`PyCircuits/ls_compile.py`): the circuit auto-compiles to a
+conflict-free surface-code space-time layout with a **certificate** (the trusted artifact) — 5
+qubits, depth 11, 8 merges, **4 CCZ magic injections**, `conflict_free = True`, space-time
+volume 60 — plus a portable `.glb` and a ray-traced (Blender Cycles) render:
+
+<p align="center"><img src="docs/diagrams/ls_adder2_blender.png" width="440" alt="2-bit Cuccaro adder compiled to surface-code lattice surgery, ray-traced"></p>
+
 ## Repository layout
 
 Each concern is a folder **with its own `README.md`** (purpose, key definitions, key theorems,
