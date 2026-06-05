@@ -146,3 +146,13 @@ reaction latency (`tReactUs`), or resized zones (`myArch`) — and re-run
 `lake env lean --run Example/Adder2EndToEnd.lean`. You get a fresh machine-checked verdict
 (`schedule_fits` passes ⇒ feasible; rejected ⇒ infeasible) and a fresh verified wall-clock lower
 bound. Nothing here is trusted on our word — the proofs are re-checked every run.
+
+## Same QEC, different hardware — lattice surgery on NEUTRAL ATOMS
+
+The lattice-surgery layer above is hardware-agnostic. [`neutral_atom/`](neutral_atom/) compiles a
+verified **distance-3 surface-code XX-merge** onto a **neutral-atom** zoned architecture with
+[ZAC](https://github.com/UCLA-VAST/ZAC) (HPCA 2025) and shows a **GIF of the atoms physically
+moving** (AOD pickup → entanglement zone → Rydberg `CZ` → return) to implement the merge — the
+*same* surface code + *same* verified logical operation, only a different physical realization
+(moving atoms instead of fixed couplers). Full merge: 53 atoms, 88 `CZ`, 13 Rydberg stages,
+ZAC-verified. See [`neutral_atom/README.md`](neutral_atom/README.md).

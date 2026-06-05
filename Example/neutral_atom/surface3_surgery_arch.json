@@ -1,0 +1,43 @@
+{
+    "_comment": "Neutral-atom zoned architecture sized EXACTLY for the distance-3 two-patch surface-code XX-merge (surface3_xx_merge): 26 data + 1 surgery ancilla + 26 syndrome ancillas = 53 atoms. A single storage SLM (memory zone) holds all 53; an entanglement zone hosts pairwise Rydberg CZ; one AOD array moves atoms between the two. Durations in microseconds, distances in micrometers.",
+    "name": "surface3_d3_surgery_arch",
+    "operation_duration": {
+        "rydberg": 0.36,
+        "1qGate": 0.5,
+        "atom_transfer": 15
+    },
+    "operation_fidelity": {
+        "two_qubit_gate": 0.995,
+        "single_qubit_gate": 0.9997,
+        "atom_transfer": 0.999
+    },
+    "qubit_spec": {
+        "T": 1.5e6
+    },
+    "storage_zones": [{
+        "zone_id": 0,
+        "slms": [{
+            "id": 0,
+            "site_seperation": [3, 3],
+            "r": 6,
+            "c": 10,
+            "location": [0, 0]
+        }],
+        "offset": [0, 0],
+        "dimenstion": [30, 18]
+    }],
+    "entanglement_zones": [{
+        "zone_id": 0,
+        "slms": [
+            {"id": 1, "site_seperation": [12, 10], "r": 6, "c": 10, "location": [3, 28]},
+            {"id": 2, "site_seperation": [12, 10], "r": 6, "c": 10, "location": [5, 28]}
+        ],
+        "offset": [3, 28],
+        "dimension": [120, 60]
+    }],
+    "aods": [
+        {"id": 0, "site_seperation": 2, "r": 6, "c": 10}
+    ],
+    "arch_range": [[0, 0], [120, 90]],
+    "rydberg_range": [[[3, 28], [120, 90]]]
+}
