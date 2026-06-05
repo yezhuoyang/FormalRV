@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
 Compile the FormalRV distance-3 two-patch surface-code XX-merge onto a neutral-atom zoned
-architecture with ZAC (UCLA-VAST, HPCA'25), and render a GIF of the atom movement that
-implements the lattice surgery.
+architecture with ZAC (UCLA-VAST, HPCA'25) and render a GIF of the atom movement that implements
+the lattice surgery — with the architecture made CONSISTENT with FormalRV's system-spec zones and
+each frame annotated with the FormalRV SysCall it realizes.
 
-  python run_zac_surgery.py            # full merge
-  python run_zac_surgery.py <N>        # only the first N CZ-gate worth of QASM (smaller GIF)
+  python run_zac_surgery.py            # default: first 4 CZ (one syndrome-check step) + GIF
+  python run_zac_surgery.py <N>        # first N CZ + GIF
+  python run_zac_surgery.py all        # compile the FULL merge + print resources (no GIF)
 
-Pipeline:  surface3_xx_merge.qasm  --ZAC-->  ZAIR atom-movement schedule  -->  GIF (PillowWriter).
-The animation shows AOD pickups, big moves storage<->entanglement zone, and Rydberg CZ flashes
-(the merge's syndrome-extraction two-qubit gates) — the neutral-atom realization of the surgery.
+Atoms are placed into the SAME zones as FormalRV's `myArch` (Adder2EndToEnd.lean): Data (the 27
+data + surgery-ancilla atoms), Ancilla (the 26 syndrome ancillas), Factory (reserved for |CCZ>
+magic — empty here, the merge is Clifford), Routing.  The entanglement zone (Rydberg CZ) is the
+neutral-atom-specific physical realization of FormalRV's logical Gate2q merge.
 """
 import json
 import os
@@ -32,31 +35,80 @@ QASM = os.path.join(HERE, "surface3_xx_merge.qasm")
 GIF = os.path.join(HERE, "surface3_xx_merge_neutral_atom.gif")
 OUT_DIR = os.path.join(HERE, "zac_result")
 
-_orig_update_init = animator_module.Animator.update_init
-ZONE_LABELS = [
-    {"name": "MEMORY / STORAGE ZONE\n53 atoms = 27 data+surgery-ancilla + 26 syndrome ancillas",
-     "color": "#1f77b4", "xy": (-2, -3), "wh": (34, 23)},
-    {"name": "ENTANGLEMENT ZONE  (pairwise Rydberg CZ = the merge's syndrome gates)",
-     "color": "#2ca02c", "xy": (-2, 26), "wh": (124, 60)},
+N_DATA = 27   # qubits 0..26  = 26 data + 1 surgery ancilla  -> Data zone
+N_ANC = 26    # qubits 27..52 = 26 syndrome ancillas          -> Ancilla zone
+
+# Storage row bands (3 rows x 3um each) = the FormalRV zones, mirrored on the atoms.
+ZONE_BANDS = [  # (name, color, y_lo, y_hi)
+    ("DATA (data+surgery anc)", "#1f77b4", -1, 7),
+    ("ANCILLA (syndrome anc)", "#b7791f", 8, 16),
+    ("FACTORY (|CCZ>, reserved)", "#805ad5", 17, 25),
+    ("ROUTING (bus)", "#718096", 26, 34),
 ]
+ENT_BAND = ("ENTANGLEMENT - Rydberg CZ = the merge", "#2ca02c", 46, 108)
+
+# ZAC instruction type -> the FormalRV SysCall it realizes (shown per frame).
+SYSCALL_OF = {
+    "init": "SysCall: FRESHANC (place patches)",
+    "rearrangeJob": "SysCall: routing (AOD transport)",
+    "rydberg": "SysCall: GATE2Q = MERGE (Rydberg CZ)",
+    "1qGate": "SysCall: basis rotation",
+}
+
+
+def build_zone_mapping():
+    """Place atoms into the FormalRV zones: data (0..26) -> Data band (rows 0-2),
+    syndrome ancillas (27..52) -> Ancilla band (rows 3-5).  Returns (slm_id, row, col) per atom."""
+    m = []
+    for q in range(N_DATA):
+        m.append((0, q // 10, q % 10))            # Data: rows 0-2
+    for j in range(N_ANC):
+        m.append((0, 3 + j // 10, j % 10))        # Ancilla: rows 3-5
+    return m
+
+
+_orig_update_init = animator_module.Animator.update_init
+_orig_update = animator_module.Animator.update
 
 
 def patched_update_init(self):
     res = _orig_update_init(self)
-    for z in ZONE_LABELS:
+    # zone outlines + LEFT-MARGIN labels (no overlap with atoms)
+    for name, color, y0, y1 in ZONE_BANDS:
         self.ax.add_patch(matplotlib.patches.Rectangle(
-            z["xy"], z["wh"][0], z["wh"][1], linewidth=2, edgecolor=z["color"],
-            facecolor=z["color"], alpha=0.07, zorder=-10))
-        self.ax.text(z["xy"][0] + z["wh"][0] / 2, z["xy"][1] + z["wh"][1] / 2, z["name"],
-                     color=z["color"], fontsize=10, fontweight="bold", ha="center", va="center",
-                     alpha=0.6, zorder=-9)
+            (-0.5, y0), 30, y1 - y0, linewidth=1.2, edgecolor=color,
+            facecolor=color, alpha=0.05, zorder=-10))
+        # labels placed in the CLEAR area right of the storage (x>=32, below the entanglement zone)
+        self.ax.text(33, (y0 + y1) / 2, name, color=color, fontsize=8.5, fontweight="bold",
+                     ha="left", va="center", zorder=-9)
+    nm, color, y0, y1 = ENT_BAND
+    self.ax.add_patch(matplotlib.patches.Rectangle(
+        (-0.5, y0), 122, y1 - y0, linewidth=1.5, edgecolor=color,
+        facecolor=color, alpha=0.05, zorder=-10))
+    self.ax.text(33, y0 + 2, nm, color=color, fontsize=9, fontweight="bold",
+                 ha="left", va="bottom", zorder=-9)
+    # per-frame SysCall banner — top interior of the plot (clear band above the entanglement zone)
+    self._sc_text = self.ax.text(
+        2, 114, "", fontsize=9, fontweight="bold",
+        color="#c026d3", ha="left", va="top", zorder=20,
+        bbox=dict(boxstyle="round", fc="#faf0ff", ec="#c026d3", alpha=0.95))
+    return res
+
+
+def patched_update(self, f):
+    res = _orig_update(self, f)
+    s = self.inst_str
+    kind = next((k for k in ("rydberg", "rearrangeJob", "1qGate", "init") if k in s), None)
+    if hasattr(self, "_sc_text"):
+        self._sc_text.set_text("FormalRV " + SYSCALL_OF.get(kind, "SysCall: (idle)"))
     return res
 
 
 animator_module.Animator.update_init = patched_update_init
+animator_module.Animator.update = patched_update
 
 
-def patched_animate(self, code, output, scaling_factor=4, font=8, ffmpeg="ffmpeg"):
+def patched_animate(self, code, output, scaling_factor=3.5, font=8, ffmpeg="ffmpeg"):
     matplotlib.rcParams.update({"font.size": font})
     self.code = code
     self.fig, self.ax = self.setup_canvas(scaling_factor)
@@ -73,7 +125,6 @@ animator_module.Animator.animate = patched_animate
 
 
 def maybe_prefix_qasm(max_cz):
-    """Write a prefix QASM with at most max_cz cx gates, for a shorter GIF; return its path."""
     if not max_cz:
         return QASM
     out = os.path.join(HERE, f"surface3_xx_merge_prefix{max_cz}.qasm")
@@ -88,14 +139,11 @@ def maybe_prefix_qasm(max_cz):
         elif s:
             body.append(s)
     open(out, "w").write("\n".join(head + body) + "\n")
-    print(f"prefix QASM: {out} ({ncx} cx)")
     return out
 
 
 def main():
-    # arg: "all" = compile the FULL merge + report resources (no GIF); <N> = first N CZ + GIF;
-    # default = an 8-CZ prefix (~2 syndrome-check merge steps) + GIF.
-    arg = sys.argv[1] if len(sys.argv) > 1 else "8"
+    arg = sys.argv[1] if len(sys.argv) > 1 else "4"
     do_gif = (arg != "all")
     max_cz = 0 if arg == "all" else int(arg)
     qasm = maybe_prefix_qasm(max_cz)
@@ -104,13 +152,14 @@ def main():
     spec = json.load(open(ARCH)); arch = Architecture(spec); arch.preprocessing()
     setting = {"name": "surface3_xx_merge", "arch_spec": ARCH, "dependency": True,
                "dir": OUT_DIR + "/", "routing_strategy": "maximalis_sort",
-               "trivial_placement": True, "dynamic_placement": False, "use_window": True,
+               "trivial_placement": False, "dynamic_placement": False, "use_window": True,
                "window_size": 1000, "reuse": True, "use_verifier": True}
     z = ZAC()
     z.parse_setting(setting)
     z.set_architecture_spec_path(ARCH)
     z.set_architecture(arch)
     z.set_program(qasm)
+    z.set_initial_mapping(build_zone_mapping())
     code = z.solve(save_file=True)
     res = json.load(open(z.code_filename))
     print(f"ZAC compiled: {len(res.get('instructions', []))} ZAIR instructions, "
