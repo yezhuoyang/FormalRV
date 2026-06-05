@@ -42,9 +42,9 @@ Fig. 1: a **qLDPC memory block**, **mediating ancillae**, and **computation qubi
 | Zone (Xu taxonomy) | Role | Here (`surface3_surgery_arch.json`) |
 |---|---|---|
 | **Memory / Data** | logical data patches | storage cols 0–5 — 26 data + 1 surgery ancilla |
-| **Operation-zone Ancilla** (`N_𝒜`) | mediating syndrome ancillae | storage cols 8–13 — 26 ancillas |
-| **Factory** | `\|C̄CZ̄⟩` magic-state factories | storage cols 16–19 — *reserved/empty* (this merge is Clifford) |
-| **Reservoir** | spare qubits | storage cols 21–23 — *reserved* |
+| **Operation-zone Ancilla** (`N_𝒜`) | mediating syndrome ancillae | storage cols 12–17 — 26 ancillas (empty-gap separated from Memory) |
+| **Factory** | `\|C̄CZ̄⟩` magic-state factories | separate reserved region to the right — *empty* (Clifford merge) |
+| **Reservoir** | spare qubits | separate reserved region — *empty* |
 | **Entangling (processor)** | where Rydberg `CZ` fires | SLMs at `y ≥ 32 µm` — the physical **merge** |
 
 Each role is a **spatially separated region** (gaps between Memory · Ancilla · Factory ·

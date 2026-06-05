@@ -1,23 +1,23 @@
 {
-    "_comment": "Neutral-atom zoned architecture for the distance-3 surface-code XX-merge, with the ZONE TAXONOMY of Qian Xu's factoring architecture (the ~10,000-atom layout: memory + processor + factory + operation-zone ancilla N_A + reservoir; see FormalRV Corpus/QianxuBounds + Xu et al. 2024 Nat.Phys. Fig.1). Neutral-atom hardware has ONE physical storage array (all idle atoms) partitioned by ROLE into separated regions, plus an ENTANGLING zone where Rydberg gates fire. Here: storage SLM 0 partitioned (with gaps) into MEMORY/DATA (the surface-code patches, cols 0-5), OPERATION-ZONE ANCILLA (mediating syndrome ancillae, cols 8-13), FACTORY (|CCZ> magic, cols 16-19, reserved/empty -- Clifford merge), RESERVOIR (spare, cols 21-23); the ENTANGLING/processor zone (SLMs 3-4) is where the merge's Rydberg CZ happens. Distances um, durations us.",
+    "_comment": "Neutral-atom zoned architecture for the distance-3 surface-code XX-merge, laid out with WELL-SEPARATED zones following Qian Xu's architecture (Xu et al. 2024 Nat.Phys. Fig.1: distinct memory / mediating-ancilla / computation regions; factoring layout = memory + processor + factory + operation-zone ancilla N_A + reservoir). The storage SLM (id 0) holds MEMORY (cols 0-5) and OPERATION-ANCILLA (cols 12-17) separated by an empty gap (cols 6-11); FACTORY and RESERVOIR are separate reserved regions to the right (empty -- this merge is Clifford); the ENTANGLING/processor zone (SLMs 3-4) sits well above (big y gap), where the Rydberg CZ (the merge) fires. Distances um, durations us.",
     "name": "surface3_qianxu_zoned_arch",
     "operation_duration": {"rydberg": 0.36, "1qGate": 0.5, "atom_transfer": 15},
     "operation_fidelity": {"two_qubit_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},
     "qubit_spec": {"T": 1.5e6},
     "storage_zones": [{
         "zone_id": 0,
-        "slms": [{"id": 0, "site_seperation": [3, 3], "r": 5, "c": 24, "location": [0, 0]}],
-        "offset": [0, 0], "dimenstion": [72, 15]
+        "slms": [{"id": 0, "site_seperation": [3, 3], "r": 5, "c": 18, "location": [0, 0]}],
+        "offset": [0, 0], "dimenstion": [54, 15]
     }],
     "entanglement_zones": [{
         "zone_id": 0,
         "slms": [
-            {"id": 1, "site_seperation": [12, 10], "r": 5, "c": 8, "location": [0, 32]},
-            {"id": 2, "site_seperation": [12, 10], "r": 5, "c": 8, "location": [2, 32]}
+            {"id": 1, "site_seperation": [12, 10], "r": 5, "c": 8, "location": [0, 38]},
+            {"id": 2, "site_seperation": [12, 10], "r": 5, "c": 8, "location": [2, 38]}
         ],
-        "offset": [0, 32], "dimension": [100, 50]
+        "offset": [0, 38], "dimension": [100, 50]
     }],
-    "aods": [{"id": 0, "site_seperation": 2, "r": 8, "c": 24}],
-    "arch_range": [[0, 0], [100, 86]],
-    "rydberg_range": [[[0, 32], [100, 86]]]
+    "aods": [{"id": 0, "site_seperation": 2, "r": 5, "c": 18}],
+    "arch_range": [[0, 0], [105, 90]],
+    "rydberg_range": [[[0, 38], [95, 88]]]
 }

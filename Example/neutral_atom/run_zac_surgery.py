@@ -42,13 +42,13 @@ N_ANC = 26    # qubits 27..52 = 26 syndrome ancillas          -> Ancilla zone
 # reservoir + entangling zone), as separated regions of the one storage array (gaps between them).
 # (name, color, x0, y0, x1, y1, label_xy)
 ZONE_REGIONS = [
-    ("MEMORY", "#1f77b4", -1.5, -1.5, 16.5, 13.5, (7.5, 14.5)),
-    ("ANCILLA (N_A)", "#b7791f", 22.5, -1.5, 40.5, 13.5, (31.5, 14.5)),
-    ("FACTORY", "#805ad5", 46.5, -1.5, 58.5, 13.5, (52.5, 14.5)),
-    ("RESERVOIR", "#718096", 61.5, -1.5, 70.5, 13.5, (66, 14.5)),
+    ("MEMORY", "#1f77b4", -1.5, -1.5, 16.5, 13.5, (7.5, 16)),
+    ("ANCILLA (N_A)", "#b7791f", 34.5, -1.5, 52.5, 13.5, (43.5, 16)),
+    ("FACTORY", "#805ad5", 58, -1.5, 76, 13.5, (67, 16)),
+    ("RESERVOIR", "#718096", 82, -1.5, 100, 13.5, (91, 16)),
 ]
 ENT_REGION = ("ENTANGLING ZONE (processor) - Rydberg CZ = the merge",
-              "#2ca02c", -1.5, 31, 100, 84, (38, 82))
+              "#2ca02c", -1.5, 37, 102, 86, (50, 60))
 
 # ZAC instruction type -> the FormalRV SysCall it realizes (shown per frame).
 SYSCALL_OF = {
@@ -64,9 +64,9 @@ def build_zone_mapping():
     syndrome ancillas (27..52) -> mediating-Ancilla zone (SLM 1).  Returns (slm_id, r, c)."""
     m = []
     for q in range(N_DATA):
-        m.append((0, q // 6, q % 6))              # MEMORY/DATA region: SLM 0, cols 0-5
+        m.append((0, q // 6, q % 6))              # MEMORY region: SLM 0, cols 0-5
     for j in range(N_ANC):
-        m.append((0, j // 6, 8 + j % 6))          # OPERATION-ANCILLA region: SLM 0, cols 8-13
+        m.append((0, j // 6, 12 + j % 6))         # OPERATION-ANCILLA region: SLM 0, cols 12-17
     return m
 
 
@@ -81,7 +81,7 @@ def patched_update_init(self):
         self.ax.add_patch(matplotlib.patches.Rectangle(
             (x0, y0), x1 - x0, y1 - y0, linewidth=1.4, edgecolor=color,
             facecolor=color, alpha=0.06, zorder=-10))
-        self.ax.text(lx, ly, name, color=color, fontsize=7, fontweight="bold",
+        self.ax.text(lx, ly, name, color=color, fontsize=8, fontweight="bold",
                      ha="center", va="bottom", zorder=-9)
     nm, color, x0, y0, x1, y1, (lx, ly) = ENT_REGION
     self.ax.add_patch(matplotlib.patches.Rectangle(
