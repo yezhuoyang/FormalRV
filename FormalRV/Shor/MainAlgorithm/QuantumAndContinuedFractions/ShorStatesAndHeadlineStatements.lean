@@ -1,4 +1,4 @@
-import FormalRV.Shor.MainAlgorithm.QuantumAndContinuedFractions.NumberTheoryAndContinuedFractions
+import FormalRV.Shor.MainAlgorithm.QuantumAndContinuedFractions.ContinuedFractionBridgeAndOrderFinding
 
 namespace FormalRV.SQIRPort
 
