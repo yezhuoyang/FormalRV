@@ -13,7 +13,7 @@ deliberately does not model decoders, code distance, or fault tolerance.
 - `PPM.lean` / `PauliOps.lean` — `PauliString` group ops, symplectic form, commutation lemmas; logical-operator declarations + syntactic measurement verifier.
 - `PPMOperational.lean` — `StabilizerState` + the Gottesman PPM update (`apply_PPM_pos/neg`) with post-condition theorems.
 - `LogicalState.lean` — `Pauli.toMatrix`/`PauliString.toMatrix`, stabilizer projector idempotence/orthogonality/resolution, pointwise-commutation ⇒ matrix-commutation.
-- `CircuitToPPMInterface/Part1..7.lean` (+ umbrella `.lean`) — the arithmetic `Gate → PPMProgram` compiler and semantic-model interface.
+- `CircuitToPPMInterface/{CircuitToPPMInterfaceOverview,CircuitFragmentClassifierAndCompiler,EnrichedPPMStateAndIntegration,PPMBackendLoweringModel,SurgeryGadgetLoweringAndQECInstance,BackendCertificationAndTraceLowering,CircuitToPPMInterfaceModuleEnd}.lean` (+ umbrella `.lean`) — the arithmetic `Gate → PPMProgram` compiler and semantic-model interface.
 - `CircuitToPPMSemanticBridge.lean` — refines compiled PPM runs to `Gate.applyNat` Boolean correctness; transfers decoder postconditions down.
 - `CircuitToPPMObservationBridge.lean` — honest computational-basis reference model closing the ICX-fragment refinement with no external assumption.
 - `CircuitToPPMMagicFactory.lean` / `FactoryHierarchy.lean` — abstract T-factory contracts, magic tokens, atomic-factory vs 8T-to-CCZ specs.
@@ -80,7 +80,7 @@ against a Qiskit density-matrix simulation (`PyCircuits/ppm_qasm_verification.py
 
 The PPM layer turns a reversible `Gate` circuit into a stream of **Pauli-product
 measurements** — the operations a qLDPC / surface code performs natively via lattice
-surgery. `compileArithmeticGateToPPM` (`CircuitToPPMInterface/Part2.lean:159`) does it
+surgery. `compileArithmeticGateToPPM` (`CircuitToPPMInterface/CircuitFragmentClassifierAndCompiler.lean:159`) does it
 gate-by-gate:
 
 ```lean
@@ -123,11 +123,11 @@ Regenerate everything with `lake env lean --run scripts/EmitAdderPPM.lean` then
 complexity, so the non-Clifford obligation is explicit, not buried):
 
 1. **Structural compilation** — `compileArithmeticGateToPPM_sound_from_primitives`
-   (`Part2.lean:327`, **Verified**) reduces correctness to five per-gate obligations
+   (`CircuitFragmentClassifierAndCompiler.lean:327`, **Verified**) reduces correctness to five per-gate obligations
    by induction on the `Gate` IR; the `seq` case uses `PPMProgramRel_append`
    (program concatenation mirrors semantic composition).
 2. **ICX semantic model** — for the Clifford `{I, X, CX}` fragment,
-   `compileICXGateToPPM_sound_from_cxMacro` (`Part2.lean:1367`, **Verified**) proves
+   `compileICXGateToPPM_sound_from_cxMacro` (`CircuitFragmentClassifierAndCompiler.lean:1367`, **Verified**) proves
    the compiled commands match the Gottesman measurement + Pauli-frame transitions on
    a `LogicalPPMState` (stabilizer · frame · magic-counter).
 3. **Transfer to Boolean output** —
