@@ -83,10 +83,12 @@ If you tighten the hardware past feasibility, `schedule_fits` is *rejected* — 
 
 **…and onto real neutral-atom hardware.** The *same* d=3 surface-code lattice surgery compiles to
 a **neutral-atom** zoned machine with [ZAC](https://github.com/UCLA-VAST/ZAC) (HPCA 2025): the 5
-logical qubits become 5 `[[13,1,3]]` patches in a **Memory** zone, the merges/Toffolis fire as
-Rydberg `CZ`s in an **Entangling** zone, and the 4 `|C̄CZ̄⟩` magic states sit in a **Factory** zone —
-81 atoms, ZAC-verified, and the FormalRV system invariants re-proven under neutral-atom capacities.
-The GIF shows the atoms physically moving to implement it ([`Example/neutral_atom/`](Example/neutral_atom)):
+logical qubits become 5 `[[13,1,3]]` patches in a **Memory** zone, every merge fires its **full
+merged-code syndrome** (the verified `surface3_zz_merge` / `surface3_zzz_merge` gadgets) as Rydberg
+`CZ`s in an **Entangling** zone, and the 4 `|C̄CZ̄⟩` magic states sit in a **Factory** zone — 108
+atoms, 1232 `CZ`, 95 Rydberg stages, ZAC-verified, with the FormalRV system invariants re-proven
+under neutral-atom capacities. The GIF shows the atoms physically moving to implement it
+([`Example/neutral_atom/`](Example/neutral_atom)):
 
 <p align="center"><img src="Example/neutral_atom/surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom atom movement implementing the 2-bit adder's distance-3 surface-code lattice surgery"></p>
 

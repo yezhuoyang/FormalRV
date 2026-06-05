@@ -7,13 +7,21 @@
 -/
 import FormalRV.LatticeSurgery.StimEmit
 import FormalRV.Corpus.SurgeryDemoMerge
+import FormalRV.Corpus.SurgeryDemoCNOT
 
 open FormalRV.LatticeSurgery.StimEmit
+open FormalRV.Framework.LDPC
 open FormalRV.Corpus.SurgeryDemoMerge
+open FormalRV.Corpus.SurgeryDemoCNOT
+
+def emit (name : String) (g : SurgeryGadget) : IO Unit := do
+  let stim := surgeryToStim g
+  let lc := (stim.splitOn "\n").length
+  IO.FS.writeFile s!"Example/neutral_atom/{name}.stim" stim
+  IO.println s!"emitted {name}.stim ({lc} lines)"
 
 def main : IO Unit := do
   IO.FS.createDirAll "Example/neutral_atom"
-  let stim := surgeryToStim surface3_xx_merge
-  let lineCount := (stim.splitOn "\n").length
-  IO.FS.writeFile "Example/neutral_atom/surface3_xx_merge.stim" stim
-  IO.println s!"emitted surface3_xx_merge.stim ({lineCount} lines)"
+  emit "surface3_xx_merge" surface3_xx_merge        -- joint X̄₁X̄₂ (building block)
+  emit "surface3_zz_merge" surface3_zz_merge        -- joint Z̄₁Z̄₂  (2-patch full merge TEMPLATE)
+  emit "surface3_zzz_merge" surface3_zzz_merge      -- joint Z̄₁Z̄₂Z̄₃ (3-patch full merge TEMPLATE)
