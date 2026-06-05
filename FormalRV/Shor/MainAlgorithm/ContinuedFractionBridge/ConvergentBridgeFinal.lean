@@ -1,4 +1,4 @@
-import FormalRV.Shor.MainAlgorithm.ContinuedFractionBridge.CFAuxMathlibMatching
+import FormalRV.Shor.MainAlgorithm.ContinuedFractionBridge.CFAuxStreamMatchingStrong
 
 namespace FormalRV.SQIRPort
 

@@ -14,7 +14,7 @@ pipeline) is expressed in terms of these defs. Faithfully mirrors SQIR's
 - `Boolean.lean` — boolean helpers (`majority`, Cuccaro-form identity) for arithmetic proofs.
 - `QuantumGate.lean` — unitary IR: `BaseUnitary`/`UCom`/`Com`, gate shorthands (H,X,T,S,CNOT), `CCX`/`CCZ` decompositions, `WellTyped`.
 - `UnitarySem.lean` — matrix semantics: `uc_eval`, `pad_u`/`pad_ctrl`, single-qubit matrices and their algebra (~2200 lines).
-- `PadAction/` (`Defs` + `Proofs1..3`, re-exported by `PadAction.lean`) — action of padded gates on basis states; the CCX-on-`f_to_vec` proof lives here.
+- `PadAction/` (`PadActionDefinitions` + `PadActionGateEntry`/`PadActionComposite`/`CCXToffoliComplete`, re-exported by `PadAction.lean`) — action of padded gates on basis states; the CCX-on-`f_to_vec` proof lives here.
 - `QuantumLib.lean` — state-vector helpers (`funbool_to_nat`, `basis_vector`, `f_to_vec`); holds 2 Shor-specific axioms.
 - `UnitaryOps.lean` — circuit operations (`invert`, `niter`, control); some lemmas scaffolded.
 - `GateDecompositions.lean` — `toffoliMatrix`, CCX correctness, T/S/H power identities.
@@ -30,7 +30,7 @@ pipeline) is expressed in terms of these defs. Faithfully mirrors SQIR's
 - `toffoliMatrix` (`GateDecompositions.lean`) — the abstract 8×8 Toffoli permutation matrix.
 
 ## Key theorems
-- `f_to_vec_CCX` (`GateDecompositions.lean`) — the 7-T `CCX` flips target `c` iff controls `a,b` are set — **Verified** (only mathlib axioms; proof in `PadAction/Proofs3`).
+- `f_to_vec_CCX` (`GateDecompositions.lean`) — the 7-T `CCX` flips target `c` iff controls `a,b` are set — **Verified** (only mathlib axioms; proof in `PadAction/PadActionComposite`).
 - `CCX_eq_toffoliMatrix` (`GateDecompositions.lean`) — `uc_eval (CCX 0 1 2) = toffoliMatrix` (all 8 basis cases) — **Verified**.
 - `pad_u_mul_pad_u` (`UnitarySem.lean`) — composing two gates at the same qubit = padding their matrix product — **Verified**.
 - `rotation_X/Y/Z/T/S/H` (`UnitarySem.lean`) — each `R(θ,ϕ,λ)` shorthand equals its standard 2×2 matrix — **Verified**.

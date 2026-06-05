@@ -9,9 +9,9 @@ multiplier up to `Shor` as a `MultiplyCircuitProperty`.
 
 ## Layout
 - `Cuccaro/` — Cuccaro–DKM ripple-carry adder family (MAJ/UMA, compare, add/sub-const, mod-reduce, full adder, SQIR-style cond/mod-add, dirty-flag variant).
-- `RippleCarryAdder/` — patched Gidney ripple-carry adder (`Defs` + `Proofs1..5`); forward/reverse cascades and carry-chain induction.
-- `ModularAdder/` — `(x+c) mod N` and its controlled form, built on the patched adder (`Defs` + `Proofs1..4`).
-- `SQIRModMult/` — constant modular multiplier via shift-and-accumulate over Cuccaro mod-add (`Defs` + `Proofs1..4`).
+- `RippleCarryAdder/` — patched Gidney ripple-carry adder (`RippleCarryAdderDefinitions` + `RippleCarryAdderQubitCounts`/`RippleCarryAdderRSA2048Resource`/`RippleCarryAdderDecideWitnesses`/`RippleCarryAdderPropagationReverse`/`RippleCarryAdderUncomputeCascade`); forward/reverse cascades and carry-chain induction.
+- `ModularAdder/` — `(x+c) mod N` and its controlled form, built on the patched adder (`ModularAdderDefinitions` + `ModularAdderPowerOfTwoCase`/`ModularAdderForwardFaithfulness`/`ModularAdderControlledPipeline`/`ModularAdderSwapSemantics`).
+- `SQIRModMult/` — constant modular multiplier via shift-and-accumulate over Cuccaro mod-add (`SQIRModMultDefinitions` + `SQIRModMultBitPositioning`/`SQIRModMultPrefixInvariant`/`SQIRModMultAccumulatorRange`/`SQIRModMultBasicSettingProofs`).
 - `UnaryLookup/` — unary address-decode lookup; indexing landed, gate sequence still a stub.
 - `Correctness.lean` — reusable Gate-IR-to-basis-state action lemmas (CCX/CX/X/seq).
 - `GateToUCom.lean` — faithful translation `Gate -> BaseUCom` for semantic reasoning.
@@ -20,19 +20,19 @@ multiplier up to `Shor` as a `MultiplyCircuitProperty`.
 
 ## Key definitions
 - `cuccaro_MAJ` / `cuccaro_UMA` (`Cuccaro/Cuccaro.lean`) — the two ripple-carry primitives.
-- `gidney_adder_full_faithful_no_measurement_patched` (`RippleCarryAdder/Defs.lean`) — explicit (no-measurement) Gidney adder.
-- `controlledModAddConstGate` (`ModularAdder/Defs.lean`) — 8-step controlled `(x+c) mod N` pipeline.
-- `sqir_modmult_inplace_shifted` (`SQIRModMult/Defs.lean`) — in-place constant modular multiplier.
+- `gidney_adder_full_faithful_no_measurement_patched` (`RippleCarryAdder/RippleCarryAdderDefinitions.lean`) — explicit (no-measurement) Gidney adder.
+- `controlledModAddConstGate` (`ModularAdder/ModularAdderDefinitions.lean`) — 8-step controlled `(x+c) mod N` pipeline.
+- `sqir_modmult_inplace_shifted` (`SQIRModMult/SQIRModMultDefinitions.lean`) — in-place constant modular multiplier.
 - `Gate.toUCom` (`GateToUCom.lean`) — Gate IR to `BaseUCom`.
 
 ## Key theorems
 - `cuccaro_n_bit_adder_full_correct` (`Cuccaro/CuccaroFull.lean`) — full n-bit Cuccaro adder hits its three positional sum/carry/restore invariants — **Verified**.
-- `gidney_adder_full_faithful_no_measurement_patched_correct` (`RippleCarryAdder/Proofs5.lean`) — target register holds the sum bits, reads preserved, carries cleared — **Verified**.
-- `controlledModAddConstGate_correct` (`ModularAdder/Proofs3.lean`) — target becomes `(x+c) mod N` iff control set, workspace restored — **Verified**.
-- `sqir_modmult_inplace_shifted_correct` (`SQIRModMult/Proofs3.lean`) — output register holds `(a·x) mod N` (given `a·ainv ≡ 1`) — **Verified**.
+- `gidney_adder_full_faithful_no_measurement_patched_correct` (`RippleCarryAdder/RippleCarryAdderUncomputeCascade.lean`) — target register holds the sum bits, reads preserved, carries cleared — **Verified**.
+- `controlledModAddConstGate_correct` (`ModularAdder/ModularAdderControlledPipeline.lean`) — target becomes `(x+c) mod N` iff control set, workspace restored — **Verified**.
+- `sqir_modmult_inplace_shifted_correct` (`SQIRModMult/SQIRModMultAccumulatorRange.lean`) — output register holds `(a·x) mod N` (given `a·ainv ≡ 1`) — **Verified**.
 - `toUCom_satisfies_MultiplyCircuitProperty_of_applyNat` (`MCPBridge.lean`) — a Boolean-correct Gate IR compiles to a `MultiplyCircuitProperty` multiplier — **Verified** (conditional on its two encoding hypotheses).
 - `*_meets_paper_claim` T-counts in `Cuccaro/Cuccaro.lean` — gate/T-count equalities by `decide` — **Arithmetic-only**.
-- unary-lookup gate sequence (`UnaryLookup/Defs.lean`) — indexing only; circuit body unwritten — **Scaffolded**.
+- unary-lookup gate sequence (`UnaryLookup/UnaryLookupDefinitions.lean`) — indexing only; circuit body unwritten — **Scaffolded**.
 
 ## Status
 Cuccaro adder, patched Gidney adder, controlled modular adder, and the in-place
@@ -57,17 +57,17 @@ becomes `cᵢ ⊕ bᵢ ⊕ aᵢ`, the `a`-register is restored, and the carry-in
 
 Stacking controlled modular adds gives `sqir_modmult_const_gate 2 15 7` — the
 108-gate `x ↦ 7·x mod 15` multiplier above. The accumulator obeys the
-shift-and-accumulate recurrence `sqir_modmult_acc_spec` (`SQIRModMult/Defs.lean:64`);
+shift-and-accumulate recurrence `sqir_modmult_acc_spec` (`SQIRModMult/SQIRModMultDefinitions.lean`);
 for `m=2` it steps `0 → 0 → (0 + 7·2 mod 15) = 14`. `sqir_modmult_const_gate_target_decode`
-(`SQIRModMult/Proofs2.lean:856`, **Verified**) proves the target decodes to
+(`SQIRModMult/SQIRModMultPrefixInvariant.lean`, **Verified**) proves the target decodes to
 `(a·m) mod N`, and `MCPBridge.lean` promotes this Boolean-correct circuit to the
 `MultiplyCircuitProperty` that `Shor` consumes as its oracle.
 
 ### More small examples
 
-3. **Controlled modular adder** `controlledModAddConstGate` (`ModularAdder/Defs.lean`)
+3. **Controlled modular adder** `controlledModAddConstGate` (`ModularAdder/ModularAdderDefinitions.lean`)
    — an 8-step `(x+c) mod N` pipeline (compare, conditional subtract, restore).
-   `controlledModAddConstGate_correct` (`ModularAdder/Proofs3.lean`, **Verified**)
+   `controlledModAddConstGate_correct` (`ModularAdder/ModularAdderControlledPipeline.lean`, **Verified**)
    proves the target becomes `(x+c) mod N` exactly when the control bit is set, with
    the workspace restored — the conditional building block the multiplier stacks
    `bits` times.

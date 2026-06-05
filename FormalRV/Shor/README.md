@@ -16,22 +16,22 @@ Euler-totient lower bound into the final `Shor_correct_var` theorem.
 - `ControlledGates.lean` — concrete controlled gates (`controlled_X`, `controlled_Rz`) toward a real `control`.
 - `Eigenstate.lean` — Fourier orthogonality, modular-multiplier eigenstates `ψ_k`, orbit decomposition of `|1⟩`.
 - `TotientLowerBound.lean` — elementary `φ(r)/r ≥ e⁻²/(log₂N)⁴` (no Mertens).
-- `PostQFT/` (`Defs`, `Proofs1..3`) — ideal IQFT matrix + the final `QPE_MMI_correct` / `Shor_correct_var`.
-- `Shor/` (`Part1..4`) — defs (`ModMulImpl`, `Shor_final_state`, `probability_of_success`) and the conditional chain.
-- `VerifiedShor/` (`Part1..29`) — the public end-to-end pipeline wrapper.
+- `PostQFT/` (`IQFTDefinitions`, `IQFTCircuitCorrectness`, `IQFTRecursiveArbitrary`, `PostQFTCompletion`) — ideal IQFT matrix + the final `QPE_MMI_correct` / `Shor_correct_var`.
+- `MainAlgorithm/` (`QuantumAndContinuedFractions`, `ContinuedFractionBridge`, `PostProcessingAndMeasurement`, `SuccessProbability`) — defs (`ModMulImpl`, `Shor_final_state`, `probability_of_success`) and the conditional chain.
+- `VerifiedShor/` (`PublicApi`, `ShorSuccessProbabilityTheorems`, …) — the public end-to-end pipeline wrapper.
 
 ## Key definitions
 - `QPE` (`QPE.lean`) — the k+n-qubit QPE circuit (H layer; controlled powers; `QFTinv`).
-- `ModMulImpl` (`Shor/Part1.lean`) — oracle contract: `f i` multiplies by `a^(2^i)` mod N.
-- `Shor_final_state` (`Shor/Part1.lean`) — post-QPE state, `uc_eval (QPE_var …)` on `|0⟩|1⟩|0⟩`.
+- `ModMulImpl` (`MainAlgorithm/QuantumAndContinuedFractions/ShorStatesAndHeadlineStatements.lean`) — oracle contract: `f i` multiplies by `a^(2^i)` mod N.
+- `Shor_final_state` (`MainAlgorithm/QuantumAndContinuedFractions/ShorStatesAndHeadlineStatements.lean`) — post-QPE state, `uc_eval (QPE_var …)` on `|0⟩|1⟩|0⟩`.
 - `modmult_eigenstate` (`Eigenstate.lean`) — Shor eigenstate `ψ_k` over the modular orbit.
-- `IQFT_matrix` (`PostQFT/Defs.lean`) — ideal inverse-QFT matrix, the target for `QFTinv`.
-- `probability_of_success` (`Shor/Part1.lean`) — success measure the headline theorem bounds.
+- `IQFT_matrix` (`PostQFT/IQFTDefinitions.lean`) — ideal inverse-QFT matrix, the target for `QFTinv`.
+- `probability_of_success` (`MainAlgorithm/QuantumAndContinuedFractions/ShorStatesAndHeadlineStatements.lean`) — success measure the headline theorem bounds.
 
 ## Key theorems
-- `Shor_correct_var` (`PostQFT/Proofs3.lean`) — for any `ModMulImpl` oracle, success `≥ κ/(log₂N)⁴`, `κ=4e⁻²/π²` — **Verified** (only `propext`/`Classical.choice`/`Quot.sound`; checked).
-- `QPE_MMI_correct` (`PostQFT/Proofs3.lean`) — QPE peak probability `≥ 4/(π²·r)` at the closest outcome — **Verified** (axiom-free; checked).
-- `phi_n_over_n_lowerbound` (`Shor/Part3.lean`) — totient ratio bound `≥ e⁻²/(log₂N)⁴` — **Verified**.
+- `Shor_correct_var` (`PostQFT/PostQFTCompletion.lean`) — for any `ModMulImpl` oracle, success `≥ κ/(log₂N)⁴`, `κ=4e⁻²/π²` — **Verified** (only `propext`/`Classical.choice`/`Quot.sound`; checked).
+- `QPE_MMI_correct` (`PostQFT/PostQFTCompletion.lean`) — QPE peak probability `≥ 4/(π²·r)` at the closest outcome — **Verified** (axiom-free; checked).
+- `phi_n_over_n_lowerbound` (`MainAlgorithm/PostProcessingAndMeasurement/RFoundGenericAndAssembly.lean`) — totient ratio bound `≥ e⁻²/(log₂N)⁴` — **Verified**.
 - `modmult_eigenstate_orthonormal` (`Eigenstate.lean`) — the `ψ_k` family is orthonormal under `Order a r N` — **Verified**.
 - `orbit_decomposition_pointwise` (`Eigenstate.lean`) — `(1/√r)·∑ ψ_k = |1⟩` (Fourier inversion) — **Verified**.
 - `pad_u_shifted_kron_basis_factors` (`PhaseKickback.lean`) — shifted `pad_u` factors through `kron_vec` — **Verified**.
@@ -41,7 +41,7 @@ Euler-totient lower bound into the final `Shor_correct_var` theorem.
 The two headline theorems (`Shor_correct_var`, `QPE_MMI_correct`) are Verified —
 axiom-free with full semantic proofs, not gate counts. Four `axiom`s remain in
 the folder (`QPE_semantics_full` in `QPE.lean`; the deprecated
-`f_modmult_circuit*` placeholders in `Shor/Part4.lean`), but none lie on the
+`f_modmult_circuit*` placeholders in `MainAlgorithm/SuccessProbability/`), but none lie on the
 proof path of the re-exported results, which instead route through the LSB
 pipeline and (for the fully axiom-free oracle) the SQIR-faithful multiplier in
 `Arithmetic/`.
@@ -55,11 +55,11 @@ controlled-`U` block **is** the emitted verified modular multiplier (`Arithmetic
 For `a=7, N=15` the order is `r=4`, and `|1⟩` decomposes over the modular orbit as
 `(1/√r)·∑ₖ ψₖ` (`orbit_decomposition_pointwise`, `Eigenstate.lean`) with the `ψₖ`
 orthonormal (`modmult_eigenstate_orthonormal`). QPE concentrates each `ψₖ`'s phase
-`k/r` onto the control register: `QPE_MMI_correct` (`PostQFT/Proofs3.lean:205`,
+`k/r` onto the control register: `QPE_MMI_correct` (`PostQFT/PostQFTCompletion.lean`,
 **Verified**, axiom-free) proves the peak outcome `s_closest` carries probability
 `≥ 4/(π²·r)`. Summing over the `φ(r)` coprime residues and applying the totient
 bound `φ(r)/r ≥ e⁻²/(log₂N)⁴` yields the headline `Shor_correct_var`
-(`Proofs3.lean:220`): success `≥ κ/(log₂N)⁴`, `κ = 4e⁻²/π²`.
+(`PostQFTCompletion.lean`): success `≥ κ/(log₂N)⁴`, `κ = 4e⁻²/π²`.
 
 ## Worked example — compiling Shor's circuit to Clifford+T
 
@@ -103,7 +103,7 @@ failure probability are amplitude-level / design concerns (see `QPE_MMI_correct`
    `Eigenstate.lean`, **Verified**) — the Fourier-inversion identity that lets QPE see
    each eigenphase `k/4` independently.
 3. **Totient bound for `N=15`.** Here `r ∣ φ(15)=8`; for `r=4`, `φ(4)/4 = 1/2 ≥
-   e⁻²/(log₂15)⁴`. `phi_n_over_n_lowerbound` (`Shor/Part3.lean`, **Verified**) proves
+   e⁻²/(log₂15)⁴`. `phi_n_over_n_lowerbound` (`MainAlgorithm/PostProcessingAndMeasurement/RFoundGenericAndAssembly.lean`, **Verified**) proves
    `φ(r)/r ≥ e⁻²/(log₂N)⁴` in general, so summing the `≥4/(π²r)` peak over the `φ(r)`
    coprime phases yields the `κ/(log₂N)⁴` success bound.
 
@@ -119,7 +119,7 @@ failure probability are amplitude-level / design concerns (see `QPE_MMI_correct`
   and commutes block-disjointly with the control gates
   (`uc_eval_map_qubits_shift_commutes_pad_u`, `PhaseKickback.lean`), so each `ψₖ`
   simply accrues its phase.
-- **An elementary totient bound.** `phi_n_over_n_lowerbound` (`Shor/Part3.lean`)
+- **An elementary totient bound.** `phi_n_over_n_lowerbound` (`MainAlgorithm/PostProcessingAndMeasurement/RFoundGenericAndAssembly.lean`)
   avoids Mertens: `φ(r)/r = ∏_{p|r}(1−1/p) ≥ (1/2)^{#primes}`, and
   `#distinct primes ≤ log₂ r` because `2^{#primes} ≤ r` — an explicit, if
   conservative, constant.
