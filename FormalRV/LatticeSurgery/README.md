@@ -155,11 +155,25 @@ surface3_xx_merge]`: its two merges become the two spatial pipes. The result is
 
 <p align="center"><img src="../../docs/diagrams/tqec_cnot_from_schedule.png" width="400" alt="FormalRV surface3_cnot schedule rendered as a tqec-validated block graph"></p>
 
-Honest caveat: the merge **count / order / types** come from our schedule, but the spatial
-**layout and cube kinds** are the standard CNOT spacetime supplied by the translator — our
-*algebraic* `SurgeryGadget` carries no geometry. So the translation is real and `tqec`-validated
-for a named operation; a fully *automatic* translator for an arbitrary schedule would need
-geometric layout data added to `SurgeryGadget`.
+(For this named operation the merge count/order/types come from our schedule and the spatial
+layout follows the standard CNOT spacetime.)
+
+**Fully automatic translator — from the system schedule.** `PyCircuits/draw_tqec_translator.py`
+reads a system-level schedule emitted by `scripts/EmitSysCallSchedule.lean` (the verified
+`SysCall` stream + the zoned `Architecture`) and builds a `tqec` `BlockGraph` **automatically,
+with no per-computation hand-coding** — and the geometry is taken from **our system
+specification**: each patch is a verified SysCall *site* placed by its *zone* (Data / Ancilla /
+Factory), time = the SysCall `begin_us`, and each `Gate2q` (ancilla↔data) coupling becomes a
+merge pipe. Demonstrated on the verified PPM surgery block and the **Cuccaro-adder** system
+schedule — both **`tqec`-validated** (`bg.validate()`, 51 / 147 cubes):
+
+<p align="center"><img src="../../docs/diagrams/tqec_ppm_block_from_schedule.png" width="300" alt="FormalRV PPM surgery block auto-translated to a tqec-validated block graph">&nbsp;<img src="../../docs/diagrams/tqec_adder_from_schedule.png" width="280" alt="FormalRV Cuccaro-adder schedule auto-translated to a tqec-validated block graph"></p>
+
+So the translation is **fully automatic for an arbitrary FormalRV schedule** (no hand-coding),
+with the geometry **consistent with our system spec** (zones + sites). Honest scope: the merge
+pipes represent the surgery's `Gate2q` couplings and the layout uses a merge-adjacency ordering
+of the system sites — a structural, `tqec`-validated block graph, not the fully-routed physical
+distance-`d` compilation (which `tqec`'s own compiler would produce from here).
 
 > **Honest scope.** Everything above passes the *same* `verify_surgery_gadget` /
 > `verify_surgery_schedule`: single- and multi-patch X̄ merges, the **CSS-dual Z̄ merges**
@@ -174,10 +188,12 @@ geometric layout data added to `SurgeryGadget`.
 > decoder + fault tolerance (merged distance `d̃ = Θ(d)`); and **magic-state preparation** — the
 > CCX injection *assumes* the logical magic state at the port (realising `CCZGadgetTeleport`), it
 > does not distill it. The diagrams above are **Stim renders of the emitted circuits** plus
-> **genuine `tqec`-library block diagrams** — including one **built from our verified
-> `surface3_cnot` schedule** (`tqec`-validated, 4 correlation surfaces matching `gallery.cnot`).
-> What remains is making that translator *automatic* for an arbitrary schedule — it needs
-> geometric layout data added to the (currently algebraic) `SurgeryGadget`.
+> **genuine `tqec`-library block diagrams** — including the CNOT built from our verified
+> `surface3_cnot` schedule, and a **fully automatic** translator (`draw_tqec_translator.py`) that
+> turns the verified `SysCall` schedule + zoned `Architecture` into a `tqec`-validated `BlockGraph`
+> for an arbitrary schedule (shown on the PPM block and the Cuccaro adder), layout taken from our
+> system zones/sites. What remains is the fully-routed physical distance-`d` compilation (tqec's
+> own compiler picks up from the validated block graph), not the structural block graph itself.
 
 ## Essential proof techniques
 
