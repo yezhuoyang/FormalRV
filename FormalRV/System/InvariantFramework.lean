@@ -2,6 +2,10 @@
   FormalRV.Framework.InvariantFramework — EXTENSIBLE SPACE-TIME INVARIANT
   FRAMEWORK.
 
+  Part of the unified FT-scheduling framework — see `FormalRV.System.FTFramework` for the single
+  entry point.  This is the `SysCall`-side extensible invariant checker; its `DeviceOp` sibling is
+  `FormalRV.System.DeviceSchedule.scheduleValid`.  Connected at the umbrella, not merged.
+
   The fixed resources are qubits/atoms (space), classical compute, and time; a
   schedule makes claims on them.  Every system invariant is a space-time
   PROPOSITION over these resources — a `SpaceTimeInvariant` (named decidable
@@ -176,7 +180,8 @@ def demoArch : ZonedArch :=
       , { name := "Routing",   site_lo := 30, site_hi := 40 } ]
     total_sites := 40
     t_cycle_us  := 100
-    v_max_um_per_us := 5 }
+    v_max_um_per_us := 5
+    t_react_us := 10 }
 
 /-- Route distance function: every channel covers 30 µm (mirror of
     `FTSchedule.demoDist`). -/

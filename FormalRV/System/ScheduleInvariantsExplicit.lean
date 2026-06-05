@@ -89,6 +89,9 @@ structure ZonedArch where
   total_sites  : Nat
   t_cycle_us   : Nat
   v_max_um_per_us : Nat
+  /-- Decoder reaction-time budget (µs): every `DecodeSyndrome` must complete within this, else the
+      decoder cannot keep up with the syndrome stream.  Folded into `all_invariants_ok` (I3). -/
+  t_react_us   : Nat
   deriving Repr, Inhabited
 
 namespace ZonedArch
@@ -264,7 +267,12 @@ def window_throughput_ok (sched : List SysCall)
     * the zoned architecture,
     * the schedule,
     * factory window parameters (window_us, max_per_window),
-    * a route distance function (or zero for no-transit). -/
+    * a route distance function (or zero for no-transit).
+
+    I3 is enforced in full: feedback latency + transit speed (`latency_speed_ok`) **and** decoder
+    reaction time (`decoder_react_ok arch.t_react_us`).  The reaction budget now lives in the
+    architecture (`ZonedArch.t_react_us`), so a decode slower than the budget is rejected here — it
+    no longer needs the separate `decoder_react_ok` call. -/
 def all_invariants_ok
     (arch : ZonedArch)
     (sched : List SysCall)
@@ -274,6 +282,7 @@ def all_invariants_ok
   && capacity_per_cycle_ok arch sched
   && exclusivity_ok sched
   && latency_speed_ok arch.t_cycle_us arch.v_max_um_per_us distance_fn sched
+  && decoder_react_ok arch.t_react_us sched
   && window_throughput_ok sched window_us max_per_window
 
 end FormalRV.Framework.ScheduleInv

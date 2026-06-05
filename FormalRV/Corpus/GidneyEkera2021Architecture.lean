@@ -54,7 +54,7 @@ def ge2021_factory : ArchZone :=
 def ge2021Arch : ZonedArch :=
   { zones := [ge2021_computation, ge2021_factory],
     total_sites := ge2021_total_budget,
-    t_cycle_us := ge2021_cycle_us, v_max_um_per_us := 1 }
+    t_cycle_us := ge2021_cycle_us, v_max_um_per_us := 1, t_react_us := 10 }
 
 /-! ## (3) Rigorous RESOURCE COUNT against the finite zones -/
 

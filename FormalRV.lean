@@ -32,3 +32,5 @@ import FormalRV.Corpus
 import FormalRV.Qualtran
 -- The verifier: airtight Shor-on-LP-code obligation + the #verify_clean enforcement gate.
 import FormalRV.Verifier
+-- Code emission: device-program / QASM serializers (library modules; demos are standalone).
+import FormalRV.Codegen

@@ -12,3 +12,10 @@ Thumbs.db
 
 # Generated API-doc site (scripts/gen_docs.py output)
 /site
+
+# Local Claude Code agent state (memory, session data)
+.claude/
+
+# Python bytecode cache (from codegen verify scripts)
+__pycache__/
+*.pyc

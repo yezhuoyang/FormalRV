@@ -27,7 +27,7 @@
 -/
 import FormalRV.Shor.ProbabilityTransfer
 import FormalRV.Shor.ApproxTransfer
-import FormalRV.Shor.VerifiedShor.Part10
+import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 
 namespace FormalRV.SQIRPort
 

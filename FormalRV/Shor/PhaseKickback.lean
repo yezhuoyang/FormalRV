@@ -25,7 +25,7 @@
 -/
 
 import FormalRV.Shor.ControlledGates
-import FormalRV.Shor.Shor
+import FormalRV.Shor.MainAlgorithm
 
 namespace FormalRV.SQIRPort
 

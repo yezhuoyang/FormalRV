@@ -2,6 +2,13 @@
   FormalRV.System.NaiveUpperBound — a NAIVE, STANDARD, MECHANICAL schedule with
   a VERIFIED resource upper bound, and the GAP to each paper's reported estimate.
 
+  Part of the unified FT-scheduling framework — see `FormalRV.System.FTFramework` for the single
+  entry point.  This module bounds resources on `ResourceEstimate` (the cost-model view); its
+  `DSchedule` sibling is `FormalRV.System.NaiveSchedule` (peak-footprint validity for all sizes),
+  and the two are connected numerically in `ScheduleBounds.naive_opcount_eq_three_toff` /
+  `verified_toff_le_reported`.  `ScheduleBounds.resource_bracket` brackets the lower bound
+  (`ScheduleLowerBound`) and this upper bound around one schedule's workload.
+
   Motivation (John, 2026-06-02).  We cannot verify that a paper's reported
   resource is OPTIMAL (= a lower bound), because the optimal PPM / decoder /
   qubit-routing schedule on the proposed hardware is unknown — finding it is
