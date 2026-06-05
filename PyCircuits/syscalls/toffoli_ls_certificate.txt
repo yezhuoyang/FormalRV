@@ -1,0 +1,8 @@
+qubits: 3
+gates: 3
+depth: 3
+spacetime_volume: 12
+magic_T_states: 4
+conflict_free: True
+two_qubit_merges: 0
+magic_injections: 1

@@ -26,7 +26,9 @@ estimates against machine-checked bounds** — making the residue that *cannot* 
   project axioms, no `sorry` — instantiated with a **constructive** modular multiplier (no oracle).
 - **Proof → runnable code.** The same circuits FormalRV *proves* correct are *emitted* as OpenQASM
   2/3 and Stim, and an **independent** tool (Qiskit, Stim) re-verifies the artifact without trusting
-  Lean — emitted gate counts match the proved counts; Stim `has_flow` re-checks each surgery.
+  Lean — emitted gate counts match the proved counts; Stim `has_flow` re-checks each surgery. The
+  verified schedule also compiles to `tqec`-validated **3D surface-code lattice-surgery layouts**
+  (`.glb` / ray-traced) via [`PyCircuits/ls_compile.py`](PyCircuits/ls_compile.py).
 - **Device scheduling + hard resource bounds.** A unified FT-scheduling framework
   ([`System/FTFramework`](FormalRV/System/FTFramework.lean)): the full ~10⁹-op RSA-2048 schedule
   defined recursively and **proven valid for all sizes**; a kernel-clean lower bound

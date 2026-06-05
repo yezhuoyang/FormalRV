@@ -65,11 +65,15 @@ open FormalRV.Framework.Gate
 /-- Toffoli count of one `n`-bit Gidney ripple-carry adder = `2n`. -/
 def adderToff (n : Nat) : Nat := 2 * n
 
-/-- The `2n` is the PROVED adder Toffoli count, not an assertion:
-    `7·adderToff n = tcount (gidney_adder_full n) = 14n` (7 T per Toffoli, so `2n`
-    Toffolis).  Binds the cost model to `tcount_gidney_adder_full`. -/
-theorem adderToff_eq (n : Nat) : 7 * adderToff n = tcount (gidney_adder_full n) := by
-  rw [tcount_gidney_adder_full]; unfold adderToff; ring
+/-- The `2n` is the PROVED Toffoli count of the **semantically-correct** Gidney adder:
+    `7·adderToff (n+2) = tcount (gidney_adder (n+2)) = 14(n+2)` (7 T per Toffoli, `2(n+2)`
+    Toffolis).  **Rebound** to the faithful, basis-state-proven adder
+    (`gidney_adder` = `gidney_adder_full_faithful_no_measurement`) via
+    `tcount_gidney_adder_full_faithful_no_measurement` — no longer the cost-only skeleton. -/
+theorem adderToff_eq (n : Nat) :
+    7 * adderToff (n + 2) = tcount (gidney_adder (n + 2)) := by
+  unfold gidney_adder
+  rw [tcount_gidney_adder_full_faithful_no_measurement]; unfold adderToff; ring
 
 /-- Controlled modular addition: 4 adder-equivalent sub-blocks (conditional-add,
     compare, conditional-sub, controlled-compare) — the structure of

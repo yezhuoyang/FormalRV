@@ -73,7 +73,12 @@ def ripple_carry_unit_stub (i : Nat) : Gate :=
     Naming: read[i] = Qrisp's a[i], target[i] = Qrisp's b[i],
     carry[i] = Qrisp's gidney_anc[i] (paper's distinct carry wire). -/
 
-/-- One forward-pass step of the Gidney adder at bit position `i`. -/
+/-- ⚠️ **COST-ONLY SKELETON — does NOT compute addition.**  This simplified step omits the
+    carry-propagation CXs (Iter 53 finding below), so for `i > 0` it XORs the wrong value into
+    `carry[i]`.  The semantically-correct, basis-state-proven steps are
+    `gidney_adder_bit_step_faithful_{first,interior,last}`, composed into the correct forward pass
+    `gidney_adder_forward_faithful_full`.  This skeleton is retained ONLY for T-count accounting,
+    which provably equals the correct adder's (`gidney_cost_skeleton_eq_faithful`). -/
 def gidney_adder_bit_step (i : Nat) : Gate :=
   if i = 0 then
     Gate.CCX (read_idx 0) (target_idx 0) (carry_idx 0)
@@ -88,7 +93,9 @@ def gidney_adder_bit_step (i : Nat) : Gate :=
     full forward pass. Mirrors `UnaryLookup.lean`'s `prefix_and_cascade`
     structure 1:1. -/
 
-/-- Full forward pass of an n-bit Gidney adder, composed via Gate.seq. -/
+/-- ⚠️ **COST-ONLY SKELETON** forward pass (built on the wrong `gidney_adder_bit_step`).  NOT
+    semantically correct — use `gidney_adder_forward_faithful_full`.  Retained only for its
+    T-count, which equals the correct adder's by `gidney_cost_skeleton_eq_faithful`. -/
 def gidney_adder_forward : Nat → Gate
   | 0       => Gate.I
   | n + 1   => Gate.seq (gidney_adder_forward n) (gidney_adder_bit_step n)
@@ -119,8 +126,11 @@ def gidney_final_cx_cascade : Nat → Gate
   | n + 1   => Gate.seq (gidney_final_cx_cascade n)
                         (Gate.CX (read_idx n) (target_idx n))
 
-/-- Full n-bit Gidney adder: forward cascade + reverse cascade + final
-    CX stamp. Represents the no-measurement upper bound. -/
+/-- ⚠️ **COST-ONLY SKELETON** full adder (forward + reverse + final CX) built on the wrong
+    bit-step — NOT semantically correct.  Its T-count (`tcount_gidney_adder_full = 14n`) is valid
+    and is what the Shor cost model binds to; the correct, basis-state-proven adder is the faithful
+    cascade (`gidney_adder_forward_faithful_full` + reverse + `gidney_final_cx_cascade`).  See
+    `gidney_cost_skeleton_eq_faithful` for the cost equivalence with the correct adder. -/
 def gidney_adder_full (n : Nat) : Gate :=
   Gate.seq (Gate.seq (gidney_adder_forward n) (gidney_adder_uncompute n))
            (gidney_final_cx_cascade n)
@@ -667,6 +677,12 @@ def gidney_adder_full_faithful_no_measurement : Nat → Gate
                 (Gate.seq (gidney_adder_forward_faithful_full (n + 2))
                           (gidney_final_cx_cascade (n + 2)))
                 (gidney_adder_forward_faithful_full_reverse (n + 2))
+
+/-- **The canonical, semantically-correct Gidney ripple-carry adder.**  Alias for the faithful,
+    basis-state-proven, no-measurement adder (`gidney_adder_full_faithful_no_measurement`).  This
+    — NOT the cost-only `gidney_adder_full` skeleton — is the adder the Shor cost model binds to
+    (`adderToff_eq`), and the canonical name downstream code should use. -/
+def gidney_adder (n : Nat) : Gate := gidney_adder_full_faithful_no_measurement n
 
 /-! ## Full adder on zero input — smoke test (Iter 89, 2026-05-12)
 

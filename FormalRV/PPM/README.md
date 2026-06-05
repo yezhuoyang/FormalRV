@@ -42,6 +42,27 @@ deliberately does not model decoders, code distance, or fault tolerance.
 ## Status
 The Pauli algebra, the Gottesman PPM update on concrete states, and the matrix-level stabilizer-projector / commutation facts are **Verified** and `sorry`-free. The circuit-to-PPM compiler is **Verified** semantically for the ICX (Clifford-X/CX) fragment; Toffoli/CCZ magic injection is **Scaffolded** behind an explicitly named contract (`teleportCCXRel` / `CCX_ok`) that is assumed, not proved. Physical distillation, gate-teleportation circuits, the Gidney-AND measurement equivalence, QEC, and decoders are out of scope and remain unmodelled.
 
+## PPM visualization gallery
+
+Every PPM diagram in this README is rendered (Qiskit / matplotlib) from a program
+**emitted by the verified Lean** — in the Litinski lattice-surgery style: qubit wires,
+joint Pauli measurements as colour-coded box columns (`Z` green) joined by a bar,
+magic-T injections purple, deferred `X`-frames dashed, and a classical record lane of
+blue `mₖ` outcome bits.
+
+| Diagram | Shows |
+|---|---|
+| [`ppm_rules`](../../docs/diagrams/ppm_rules.png) | the two rewrite rules — commuting measurements reorder; measuring an anticommuting Pauli replaces the stabilizer (Gottesman) |
+| [`ppm_cx`](../../docs/diagrams/ppm_cx.png) | `CX` → joint `ZZ` measurement + `X`-frame, with outcome bit `m₀` on the record lane |
+| [`ppm_ccx`](../../docs/diagrams/ppm_ccx.png) | `CCX` → magic-T inject + joint `ZZZ` + `X`-frame |
+| [`ppm_seq`](../../docs/diagrams/ppm_seq.png) | `seq` → programs concatenate; records `m₀, m₁` |
+| [`ppm_adder3`](../../docs/diagrams/ppm_adder3.png) | full PPM program of the verified 3-bit Cuccaro adder — 42 commands, 6 magic-T |
+| [`ppm_modmult`](../../docs/diagrams/ppm_modmult.png) | full PPM program of `x ↦ 7x mod 15` — 248 commands, 32 magic-T, folded |
+
+Reproduce: `lake env lean --run scripts/EmitPPMQASM.lean` (T/CCZ gadgets) ·
+`lake env lean --run scripts/EmitAdderPPM.lean` (adder + multiplier PPM programs) ·
+`python PyCircuits/draw_ppm.py` (all PPM diagrams above).
+
 ## Worked example — the T gate by magic-state teleportation
 
 ![T-gadget teleportation](../../docs/diagrams/t_gadget.png)
