@@ -53,47 +53,31 @@ Each layer is a Lean structure with an explicit **inter-layer contract**; three 
 ## Worked example — the 2-bit adder, end to end
 
 The smallest non-trivial slice of the whole stack: the verified **2-bit Cuccaro adder**
-`cuccaro_n_bit_adder_full 2 0` (proven by `cuccaro_n_bit_adder_full_correct` — target register
-`:= a + b`, read register restored), pushed through every layer. Reproduce:
+`cuccaro_n_bit_adder_full 2 0` (proven by `cuccaro_n_bit_adder_full_correct`: target `:= a+b`, read
+restored), pushed through **every layer** onto a zoned hardware architecture, ending in a
+**re-runnable, machine-checked resource verdict**. Full detail — the complete OpenQASM, the full
+PPM program, the 192-SysCall schedule, and a self-verifying parameterized Lean file — lives in
+**[`Example/`](Example/)**. Run it (and re-run it for *your own* hardware) with:
 
 ```bash
-lake env lean --run scripts/EmitAdder2Example.lean            # L2 circuit -> OpenQASM + PPM
-python PyCircuits/ls_compile.py PyCircuits/qasm/adder2.qasm    # -> lattice surgery + certificate + Blender script
+lake env lean --run Example/Adder2EndToEnd.lean   # type-checks `schedule_fits` + prints the table below
 ```
 
-**L2 circuit → OpenQASM** (`Core/GateQASM.toQASM`): 5 qubits, `8·cx + 4·ccx`, `tcount 28`. Qiskit
-reloads the file and confirms the gate counts equal Lean's:
+**Architecture** — 4 zones × 100 logical-patch sites: `Data[0,100)` · `Ancilla[100,200)` ·
+`Factory[200,300)` (`|C̄CZ̄⟩` magic) · `Routing[300,400)`; `Gate2q‖=1`, decoder `‖=4`, `t_react=10µs`
+— **all editable** in the `EDIT HERE` block (change them, re-run, get a new verified verdict).
 
-```qasm
-qreg q[5];
-cx q[2],q[1]; cx q[2],q[0]; ccx q[0],q[1],q[2];      // MAJ bit 0
-cx q[4],q[3]; cx q[4],q[2]; ccx q[2],q[3],q[4];      // MAJ bit 1
-ccx q[2],q[3],q[4]; cx q[4],q[2]; cx q[2],q[3];      // UMA bit 1
-ccx q[0],q[1],q[2]; cx q[2],q[0]; cx q[0],q[1];      // UMA bit 0
-```
+**Verified resource on that architecture** — every row machine-checked, nothing taken on trust:
 
-**L3 → PPM** (`compileArithmeticGateToPPM`): 28 commands. Each `cx` becomes a joint `ZZ`
-measurement + Pauli-frame update; each `ccx` injects a magic state and measures `ZZZ`:
+| Layer | Resource | Value | Verified by |
+|---|---|---:|---|
+| L2 logical | qubits / Toffoli / T-count | 5 / 4 / 28 | `cuccaro_n_bit_adder_full_correct` (+ Qiskit count re-check) |
+| L3 PPM | `\|C̄CZ̄⟩` magic / joint measurements | 4 / 12 | `compileArithmeticGateToPPM` |
+| System | SysCalls / **wall-clock** | 192 / **192 µs** | `scheduleWallclockUs`; **fits the architecture** via `schedule_fits` |
+| System | **wall-clock lower bound** | **≥ 72 µs** | `gate2q_capacity_lower_bound_us` (⌈72 Gate2q / 1‖⌉·1µs) |
+| L4 surgery | conflict-free layout / volume | ✓ / 60 | `ls_compile` certificate |
 
-```
-M Z 2,1   F 1                # cx 2->1   : joint ZZ measure + frame
-T 2   M Z 0,1,2   F 2        # ccx 0,1->2: inject |C̄CZ̄⟩ + joint ZZZ measure + frame
-```
-
-**System — zoned hardware + verified schedule.** Those merges are scheduled onto a zoned
-architecture and the schedule is *proven* to satisfy every system invariant
-(`System/AdderSystem.adder_n1_strict_system_ok` — operation-capacity, feedback-after-decode,
-slot-capacity, ancilla-freshness):
-
-```
-ZONE Data[0,100)  Ancilla[100,200)  Factory[200,300)  Routing[300,400)    # hardware zones
-FRESHANC z1 · GATE2Q d0–a100 · GATE2Q d50–a100 · MEAS a100 · DECODE        # one merge round, t in µs
-```
-
-**L4 → lattice surgery** (`PyCircuits/ls_compile.py`): the circuit auto-compiles to a
-conflict-free surface-code space-time layout with a **certificate** (the trusted artifact) — 5
-qubits, depth 11, 8 merges, **4 CCZ magic injections**, `conflict_free = True`, space-time
-volume 60 — plus a portable `.glb` and a ray-traced (Blender Cycles) render:
+If you tighten the hardware past feasibility, `schedule_fits` is *rejected* — that is the verdict.
 
 <p align="center"><img src="docs/diagrams/ls_adder2_blender.png" width="440" alt="2-bit Cuccaro adder compiled to surface-code lattice surgery, ray-traced"></p>
 
