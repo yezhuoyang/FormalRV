@@ -678,6 +678,12 @@ def gidney_adder_full_faithful_no_measurement : Nat → Gate
                           (gidney_final_cx_cascade (n + 2)))
                 (gidney_adder_forward_faithful_full_reverse (n + 2))
 
+/-- **The canonical, semantically-correct Gidney ripple-carry adder.**  Alias for the faithful,
+    basis-state-proven, no-measurement adder (`gidney_adder_full_faithful_no_measurement`).  This
+    — NOT the cost-only `gidney_adder_full` skeleton — is the adder the Shor cost model binds to
+    (`adderToff_eq`), and the canonical name downstream code should use. -/
+def gidney_adder (n : Nat) : Gate := gidney_adder_full_faithful_no_measurement n
+
 /-! ## Full adder on zero input — smoke test (Iter 89, 2026-05-12)
 
     The simplest concrete end-to-end case: on all-zero input

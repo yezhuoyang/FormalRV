@@ -1060,9 +1060,9 @@ theorem tcount_gidney_adder_forward_faithful_full (n : Nat) :
 /-- **Cost-equivalence (Iter 53 review-gap closure).** The COST-ONLY skeleton forward pass
     (`gidney_adder_forward`, which is *not* semantically the adder) and the semantically-correct
     faithful forward pass (`gidney_adder_forward_faithful_full`, proven on basis states) have the
-    **same T-count**.  Hence the Shor cost model's binding to the skeleton (`adderToff_eq` →
-    `tcount_gidney_adder_full`) counts the *correct* adder's T-cost: the gates the skeleton omits
-    are carry-propagation CXs, which are T-free. -/
+    **same T-count**.  (The Shor cost model now binds *directly* to the faithful adder via
+    `adderToff_eq`; this records that the deprecated skeleton was always cost-equivalent — the
+    gates it omits are carry-propagation CXs, which are T-free.) -/
 theorem gidney_cost_skeleton_eq_faithful (n : Nat) :
     tcount (gidney_adder_forward (n + 2))
       = tcount (gidney_adder_forward_faithful_full (n + 2)) := by
