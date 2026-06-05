@@ -14,11 +14,11 @@ physically implementing the merge.
 
 <p align="center"><img src="surface3_xx_merge_neutral_atom.gif" width="540" alt="neutral-atom movement implementing one syndrome-check step of the d=3 surface-code XX-merge"></p>
 
-*The GIF (one syndrome-check merge step) is annotated with **(a)** the FormalRV **zones** the atoms
-sit in — Data / Ancilla / Factory / Routing, the SAME zones as the system spec — plus the
-**Entanglement** zone, and **(b)** a magenta banner showing the **FormalRV SysCall** each ZAC
-operation realizes (`FRESHANC` → place patches, `routing` → AOD transport, `GATE2Q` = the merge
-via Rydberg `CZ`).*
+*The GIF (one syndrome-check merge step) is annotated with **(a)** Qian Xu's **zones** as
+spatially-separated regions — Memory · Operation-Ancilla (`N_𝒜`) · Factory · Reservoir, plus the
+**Entangling** (processor) zone above — and **(b)** a magenta banner showing the **FormalRV
+SysCall** each ZAC operation realizes (`FRESHANC` → place patches, `routing` → AOD transport into
+the entangling zone, `GATE2Q` = the merge via Rydberg `CZ`).*
 
 ## Pipeline
 
@@ -30,24 +30,29 @@ FormalRV verified gadget        surface3_xx_merge  (joint X̄₁X̄₂, two [[13
                                        ─►  ZAIR atom-movement schedule  +  annotated GIF
 ```
 
-## Architecture — CONSISTENT with FormalRV's system zones
+## Architecture — Qian Xu's zone taxonomy (the factoring layout)
 
-[`surface3_surgery_arch.json`](surface3_surgery_arch.json) partitions the storage SLM into the
-**same four zones as FormalRV's `myArch`** (`Adder2EndToEnd.lean`), by row band, and adds the
-neutral-atom-specific **entanglement zone**:
+Following **Qian Xu's neutral-atom architecture** — the ~10,000-atom factoring layout
+(*memory + processor + factory + operation-zone ancilla `N_𝒜` + reservoir*, bound in FormalRV's
+[`Corpus/QianxuBounds`](../../FormalRV/Corpus/QianxuBounds.lean)) and Xu et al. 2024 (Nat. Phys.,
+Fig. 1: a **qLDPC memory block**, **mediating ancillae**, and **computation qubits** as distinct
+2D regions). The atoms are **not** stacked in row bands — they sit in **separated regions**
+(physical gaps between them) of the single storage array, plus a distinct **entangling zone**:
 
-| Zone | FormalRV `myArch` | ZAC neutral-atom realization | Holds |
-|---|---|---|---|
-| **Data** | `Data [0,100)` | storage rows 0–2, `3 µm` pitch | 26 data + 1 surgery ancilla |
-| **Ancilla** | `Ancilla [100,200)` | storage rows 3–5 | 26 syndrome ancillas |
-| **Factory** | `Factory [200,300)` | storage rows 6–8 (reserved) | `\|C̄CZ̄⟩` magic — *empty* (this merge is Clifford) |
-| **Routing** | `Routing [300,400)` | storage rows 9–11 | bus |
-| **Entanglement** | *(none — logical Gate2q)* | SLM at `y = 48 µm`, Rydberg range | where the `CZ` (the merge) physically happens |
+| Zone (Xu taxonomy) | Role | Here (`surface3_surgery_arch.json`) |
+|---|---|---|
+| **Memory / Data** | logical data patches | storage cols 0–5 — 26 data + 1 surgery ancilla |
+| **Operation-zone Ancilla** (`N_𝒜`) | mediating syndrome ancillae | storage cols 8–13 — 26 ancillas |
+| **Factory** | `\|C̄CZ̄⟩` magic-state factories | storage cols 16–19 — *reserved/empty* (this merge is Clifford) |
+| **Reservoir** | spare qubits | storage cols 21–23 — *reserved* |
+| **Entangling (processor)** | where Rydberg `CZ` fires | SLMs at `y ≥ 32 µm` — the physical **merge** |
 
-Durations (µs): Rydberg `CZ` `0.36`, atom transfer `15`. Fidelities: 2-qubit `0.995`, transfer
-`0.999`; `T = 1.5 s`. One AOD mover. **The four zones match the system spec exactly; the
-entanglement zone is the extra physical mechanism a neutral-atom machine needs** (a logical merge
-that superconducting does with a fixed coupler, neutral atoms do by transporting atoms together).
+Each role is a **spatially separated region** (gaps between Memory · Ancilla · Factory ·
+Reservoir), and atoms are **shuttled by the AOD into the entangling zone** for the Rydberg `CZ` —
+that movement *is* the lattice surgery. (ZAC's hardware model has one physical storage array +
+entangling zones; the roles are regions of the storage, matching how Xu's logical zones map onto
+the atom array.) Durations (µs): Rydberg `CZ` `0.36`, transfer `15`; fidelities 2-qubit `0.995`,
+transfer `0.999`; `T = 1.5 s`; one AOD mover.
 
 ## Do FormalRV's system invariants hold on neutral atoms? — YES, verified
 
@@ -77,8 +82,8 @@ lake env lean --run Example/neutral_atom/NeutralAtomInvariants.lean
 | entangling `CZ` gates | 88 |
 | **max parallel `CZ` per Rydberg stage** | **12** |
 | Rydberg stages | 13 |
-| ZAIR atom-movement instructions | 169 |
-| schedule runtime | 25 973 µs (≈ 26 ms) |
+| ZAIR atom-movement instructions | 170 |
+| schedule runtime | 22 353 µs (≈ 22 ms) |
 | ZAC gate-scheduling + placement verification | ✓ pass |
 
 ## Reproduce
@@ -95,13 +100,13 @@ lake env lean --run Example/neutral_atom/NeutralAtomInvariants.lean   # invarian
 
 - **Layers.** FormalRV's SysCall schedule is at the **logical** level (logical merges/measures on
   zone *sites*, abstract cycle units); ZAC is at the **physical** level (each logical merge = many
-  atom moves + Rydberg `CZ`s, real µs — this merge is ≈ 26 ms). The zones + SysCalls map across
+  atom moves + Rydberg `CZ`s, real µs — this merge is ≈ 22 ms). The zones + SysCalls map across
   (table above + GIF banner); the absolute time scales differ (logical cycles vs physical µs).
 - **ZAC is a circuit → atom-movement router, not a QEC encoder.** The surface-code + lattice-surgery
   structure lives in the input circuit we emit from the *verified gadget*; ZAC realizes + verifies
   the movement schedule (no atom collisions, valid placement) — it does not re-derive the code.
 - The QASM is the merge's **unitary entangling skeleton** (88 `CZ`); prep/measure SPAM is in place.
 - The GIF renders one syndrome-check step (4 `CZ`) for size; the full merge (13 Rydberg stages,
-  169 instructions) is compiled + verified by `run_zac_surgery.py all`.
+  170 instructions) is compiled + verified by `run_zac_surgery.py all`.
 - **FormalRV proves *what* the surgery does + that the system invariants hold; ZAC shows *how* a
   neutral-atom machine does it.** Complementary, and now consistent (same zones, same invariants).

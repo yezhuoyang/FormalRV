@@ -38,14 +38,17 @@ OUT_DIR = os.path.join(HERE, "zac_result")
 N_DATA = 27   # qubits 0..26  = 26 data + 1 surgery ancilla  -> Data zone
 N_ANC = 26    # qubits 27..52 = 26 syndrome ancillas          -> Ancilla zone
 
-# Storage row bands (3 rows x 3um each) = the FormalRV zones, mirrored on the atoms.
-ZONE_BANDS = [  # (name, color, y_lo, y_hi)
-    ("DATA (data+surgery anc)", "#1f77b4", -1, 7),
-    ("ANCILLA (syndrome anc)", "#b7791f", 8, 16),
-    ("FACTORY (|CCZ>, reserved)", "#805ad5", 17, 25),
-    ("ROUTING (bus)", "#718096", 26, 34),
+# Zone TAXONOMY of Qian Xu's factoring architecture (memory / operation-ancilla / factory /
+# reservoir + entangling zone), as separated regions of the one storage array (gaps between them).
+# (name, color, x0, y0, x1, y1, label_xy)
+ZONE_REGIONS = [
+    ("MEMORY", "#1f77b4", -1.5, -1.5, 16.5, 13.5, (7.5, 14.5)),
+    ("ANCILLA (N_A)", "#b7791f", 22.5, -1.5, 40.5, 13.5, (31.5, 14.5)),
+    ("FACTORY", "#805ad5", 46.5, -1.5, 58.5, 13.5, (52.5, 14.5)),
+    ("RESERVOIR", "#718096", 61.5, -1.5, 70.5, 13.5, (66, 14.5)),
 ]
-ENT_BAND = ("ENTANGLEMENT - Rydberg CZ = the merge", "#2ca02c", 46, 108)
+ENT_REGION = ("ENTANGLING ZONE (processor) - Rydberg CZ = the merge",
+              "#2ca02c", -1.5, 31, 100, 84, (38, 82))
 
 # ZAC instruction type -> the FormalRV SysCall it realizes (shown per frame).
 SYSCALL_OF = {
@@ -57,13 +60,13 @@ SYSCALL_OF = {
 
 
 def build_zone_mapping():
-    """Place atoms into the FormalRV zones: data (0..26) -> Data band (rows 0-2),
-    syndrome ancillas (27..52) -> Ancilla band (rows 3-5).  Returns (slm_id, row, col) per atom."""
+    """Place atoms into SEPARATE zones (distinct SLMs): data (0..26) -> Data zone (SLM 0),
+    syndrome ancillas (27..52) -> mediating-Ancilla zone (SLM 1).  Returns (slm_id, r, c)."""
     m = []
     for q in range(N_DATA):
-        m.append((0, q // 10, q % 10))            # Data: rows 0-2
+        m.append((0, q // 6, q % 6))              # MEMORY/DATA region: SLM 0, cols 0-5
     for j in range(N_ANC):
-        m.append((0, 3 + j // 10, j % 10))        # Ancilla: rows 3-5
+        m.append((0, j // 6, 8 + j % 6))          # OPERATION-ANCILLA region: SLM 0, cols 8-13
     return m
 
 
@@ -73,24 +76,23 @@ _orig_update = animator_module.Animator.update
 
 def patched_update_init(self):
     res = _orig_update_init(self)
-    # zone outlines + LEFT-MARGIN labels (no overlap with atoms)
-    for name, color, y0, y1 in ZONE_BANDS:
+    # separate zone regions (rectangles) + labels in the clear gap between storage and computation
+    for name, color, x0, y0, x1, y1, (lx, ly) in ZONE_REGIONS:
         self.ax.add_patch(matplotlib.patches.Rectangle(
-            (-0.5, y0), 30, y1 - y0, linewidth=1.2, edgecolor=color,
-            facecolor=color, alpha=0.05, zorder=-10))
-        # labels placed in the CLEAR area right of the storage (x>=32, below the entanglement zone)
-        self.ax.text(33, (y0 + y1) / 2, name, color=color, fontsize=8.5, fontweight="bold",
-                     ha="left", va="center", zorder=-9)
-    nm, color, y0, y1 = ENT_BAND
+            (x0, y0), x1 - x0, y1 - y0, linewidth=1.4, edgecolor=color,
+            facecolor=color, alpha=0.06, zorder=-10))
+        self.ax.text(lx, ly, name, color=color, fontsize=7, fontweight="bold",
+                     ha="center", va="bottom", zorder=-9)
+    nm, color, x0, y0, x1, y1, (lx, ly) = ENT_REGION
     self.ax.add_patch(matplotlib.patches.Rectangle(
-        (-0.5, y0), 122, y1 - y0, linewidth=1.5, edgecolor=color,
+        (x0, y0), x1 - x0, y1 - y0, linewidth=1.6, edgecolor=color,
         facecolor=color, alpha=0.05, zorder=-10))
-    self.ax.text(33, y0 + 2, nm, color=color, fontsize=9, fontweight="bold",
-                 ha="left", va="bottom", zorder=-9)
-    # per-frame SysCall banner — top interior of the plot (clear band above the entanglement zone)
+    self.ax.text(lx, ly, nm, color=color, fontsize=9, fontweight="bold",
+                 ha="center", va="bottom", zorder=-9)
+    # per-frame SysCall banner — below the plot (clear of all zones)
     self._sc_text = self.ax.text(
-        2, 114, "", fontsize=9, fontweight="bold",
-        color="#c026d3", ha="left", va="top", zorder=20,
+        0.5, -0.09, "", transform=self.ax.transAxes, fontsize=9.5, fontweight="bold",
+        color="#c026d3", ha="center", va="top", zorder=20,
         bbox=dict(boxstyle="round", fc="#faf0ff", ec="#c026d3", alpha=0.95))
     return res
 
