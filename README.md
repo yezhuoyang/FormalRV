@@ -303,7 +303,7 @@ cross-checked by an independent Qiskit simulation. **In Shor:** this is how
 non-Clifford gates are realised fault-tolerantly — magic states injected from the
 factory, the rest of the circuit staying Clifford.
 
-### 6. Surface-code lattice surgery — syndrome extraction (from emitted Stim)
+### 6. Surface-code lattice surgery — syndrome circuit + verified 3D TQEC blocks
 
 <p align="center"><img src="docs/diagrams/surface3_syndrome.png" width="640" alt="surface-code syndrome extraction"></p>
 
@@ -316,6 +316,19 @@ read the logical `X̄`, and `surface3_x_surgery_verifies` passes the structural
 surgery verifier — independently re-confirmed by Stim's `has_flow`. **In Shor:**
 lattice surgery realises the logical Pauli-product measurements that drive the
 fault-tolerant execution.
+
+**The whole verified computation as a 3D TQEC block graph.** A *fully automatic* translator
+(`PyCircuits/draw_tqec_translator.py`) turns FormalRV's verified system schedule (the `SysCall`
+stream + the zoned `Architecture`) into a **`tqec`-validated** `BlockGraph` — patches placed by
+their system-spec zone/site, `Gate2q` couplings as merge tubes. Below: the **Cuccaro-adder**
+lattice-surgery schedule (147 cubes, `bg.validate()` passes) and, for the canonical block view,
+the lattice-surgery **CNOT** built with the real [`tqec`](https://github.com/tqec/tqec) library:
+
+<p align="center"><img src="docs/diagrams/tqec_adder_from_schedule.png" width="300" alt="Cuccaro-adder lattice-surgery schedule as a tqec-validated 3D block graph">&nbsp;<img src="docs/diagrams/tqec_cnot_blocks.png" width="320" alt="lattice-surgery CNOT as a genuine tqec block graph"></p>
+
+The verified surgery gadgets themselves — the multi-patch **XX/ZZ merges**, the full **CNOT**
+(`surface3_cnot_verifies`), and the **CCX magic injection** — are in
+[`LatticeSurgery/`](FormalRV/LatticeSurgery), with the full TQEC gallery and honest scope.
 
 ### 7. System scheduling invariants — the verified resource ceiling
 
