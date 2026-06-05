@@ -40,7 +40,7 @@
   - Prove WellTyped (assuming `flagPos < dim`).
 -/
 import FormalRV.Arithmetic.Cuccaro.CuccaroCompare
-import FormalRV.Shor.Shor
+import FormalRV.Shor.MainAlgorithm
 
 namespace FormalRV.BQAlgo
 

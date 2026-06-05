@@ -18,7 +18,7 @@ import FormalRV.Shor.QPE
 import FormalRV.Shor.QPEAmplitude
 import FormalRV.Shor.Eigenstate
 import FormalRV.Shor.TotientLowerBound
-import FormalRV.Shor.Shor.Part1
+import FormalRV.Shor.MainAlgorithm.QuantumAndContinuedFractions
 
 namespace FormalRV.SQIRPort
 

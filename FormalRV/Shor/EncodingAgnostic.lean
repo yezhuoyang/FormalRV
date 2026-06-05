@@ -18,7 +18,7 @@
 
   This is ADDITIVE: it does not modify the verified headline.
 -/
-import FormalRV.Shor.Shor.Part4
+import FormalRV.Shor.MainAlgorithm.SuccessProbability
 
 namespace FormalRV.Shor.EncodingAgnostic
 

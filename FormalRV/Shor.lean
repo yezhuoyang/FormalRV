@@ -18,7 +18,7 @@ import FormalRV.Shor.PostQFT
 import FormalRV.Shor.ProbabilityTransfer
 import FormalRV.Shor.QPE
 import FormalRV.Shor.QPEAmplitude
-import FormalRV.Shor.Shor
+import FormalRV.Shor.MainAlgorithm
 import FormalRV.Shor.SuccessSensitivity
 import FormalRV.Shor.TotientLowerBound
 import FormalRV.Shor.VerifiedShor

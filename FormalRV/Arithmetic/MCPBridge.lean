@@ -19,7 +19,7 @@
   consumed by `f_modmult_circuit_MMI`.
 -/
 import FormalRV.Arithmetic.Correctness
-import FormalRV.Shor.Shor
+import FormalRV.Shor.MainAlgorithm
 import FormalRV.Shor.PostQFT
 import FormalRV.Arithmetic.ModularAdder
 
