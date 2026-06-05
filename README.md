@@ -302,14 +302,17 @@ logical circuit + `SysCall` schedule + the layout certificate; the 3D picture on
 (QASM or a gate list) into a surface-code lattice-surgery space-time layout: it ASAP-schedules the
 gates (conflict-free by construction), maps each gate to a merge / magic-injection / CCZ-factory,
 emits a **certificate** (depth, T-count, space-time volume, `conflict_free`), and writes
-**publication-quality** output — a portable **`.glb`** (open in any glTF viewer or Blender) plus a
-shaded `.png`:
+**publication-quality** output — a portable **`.glb`** (glTF), a shaded `.png`, and a **Blender
+Python script** for a **ray-traced Cycles render**:
 
 ```bash
-python PyCircuits/ls_compile.py mycircuit.qasm   # -> docs/diagrams/ls_mycircuit.{glb,png} + certificate
+python PyCircuits/ls_compile.py mycircuit.qasm                     # -> ls_mycircuit.{glb,png} + _blender.py + certificate
+blender --background --python docs/diagrams/ls_mycircuit_blender.py   # -> ray-traced ls_mycircuit_blender.png
 ```
 
-<p align="center"><img src="docs/diagrams/ls_toffoli.png" width="380" alt="Toffoli lattice surgery, auto-compiled">&nbsp;<img src="docs/diagrams/ls_adder3.png" width="380" alt="3-bit Cuccaro adder lattice surgery, auto-compiled"></p>
+Ray-traced (Blender Cycles) output — the auto-compiled 3-bit Cuccaro adder and a Toffoli (CCX magic injection):
+
+<p align="center"><img src="docs/diagrams/ls_adder3_blender.png" width="430" alt="3-bit Cuccaro adder lattice surgery, ray-traced">&nbsp;<img src="docs/diagrams/ls_toffoli_blender.png" width="300" alt="Toffoli lattice surgery, ray-traced"></p>
 
 ### 7. System scheduling invariants — the verified resource ceiling
 
