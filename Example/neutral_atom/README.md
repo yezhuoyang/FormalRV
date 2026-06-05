@@ -42,9 +42,9 @@ Fig. 1: a **qLDPC memory block**, **mediating ancillae**, and **computation qubi
 | Zone (Xu taxonomy) | Role | Here (`surface3_surgery_arch.json`) |
 |---|---|---|
 | **Memory / Data** | logical data patches | storage cols 0–5 — 26 data + 1 surgery ancilla |
-| **Operation-zone Ancilla** (`N_𝒜`) | mediating syndrome ancillae | storage cols 12–17 — 26 ancillas (empty-gap separated from Memory) |
-| **Factory** | `\|C̄CZ̄⟩` magic-state factories | separate reserved region to the right — *empty* (Clifford merge) |
-| **Reservoir** | spare qubits | separate reserved region — *empty* |
+| **Operation-zone Ancilla** (`N_𝒜`) | mediating syndrome ancillae | storage cols 10–15 — 26 ancillas (empty-gap separated from Memory) |
+| **Factory** | `\|C̄CZ̄⟩` magic-state factories | storage cols 20–25 — idle trap sites, reserved (Clifford merge) |
+| **Reservoir** | spare qubits | storage cols 30–33 — idle trap sites, spare |
 | **Entangling (processor)** | where Rydberg `CZ` fires | SLMs at `y ≥ 32 µm` — the physical **merge** |
 
 Each role is a **spatially separated region** (gaps between Memory · Ancilla · Factory ·
@@ -82,8 +82,8 @@ lake env lean --run Example/neutral_atom/NeutralAtomInvariants.lean
 | entangling `CZ` gates | 88 |
 | **max parallel `CZ` per Rydberg stage** | **12** |
 | Rydberg stages | 13 |
-| ZAIR atom-movement instructions | 170 |
-| schedule runtime | 22 353 µs (≈ 22 ms) |
+| ZAIR atom-movement instructions | 172 |
+| schedule runtime | 24 599 µs (≈ 25 ms) |
 | ZAC gate-scheduling + placement verification | ✓ pass |
 
 ## Reproduce
@@ -100,13 +100,13 @@ lake env lean --run Example/neutral_atom/NeutralAtomInvariants.lean   # invarian
 
 - **Layers.** FormalRV's SysCall schedule is at the **logical** level (logical merges/measures on
   zone *sites*, abstract cycle units); ZAC is at the **physical** level (each logical merge = many
-  atom moves + Rydberg `CZ`s, real µs — this merge is ≈ 22 ms). The zones + SysCalls map across
+  atom moves + Rydberg `CZ`s, real µs — this merge is ≈ 25 ms). The zones + SysCalls map across
   (table above + GIF banner); the absolute time scales differ (logical cycles vs physical µs).
 - **ZAC is a circuit → atom-movement router, not a QEC encoder.** The surface-code + lattice-surgery
   structure lives in the input circuit we emit from the *verified gadget*; ZAC realizes + verifies
   the movement schedule (no atom collisions, valid placement) — it does not re-derive the code.
 - The QASM is the merge's **unitary entangling skeleton** (88 `CZ`); prep/measure SPAM is in place.
 - The GIF renders one syndrome-check step (4 `CZ`) for size; the full merge (13 Rydberg stages,
-  170 instructions) is compiled + verified by `run_zac_surgery.py all`.
+  172 instructions) is compiled + verified by `run_zac_surgery.py all`.
 - **FormalRV proves *what* the surgery does + that the system invariants hold; ZAC shows *how* a
   neutral-atom machine does it.** Complementary, and now consistent (same zones, same invariants).

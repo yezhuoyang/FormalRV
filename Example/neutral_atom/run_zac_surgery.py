@@ -43,12 +43,12 @@ N_ANC = 26    # qubits 27..52 = 26 syndrome ancillas          -> Ancilla zone
 # (name, color, x0, y0, x1, y1, label_xy)
 ZONE_REGIONS = [
     ("MEMORY", "#1f77b4", -1.5, -1.5, 16.5, 13.5, (7.5, 16)),
-    ("ANCILLA (N_A)", "#b7791f", 34.5, -1.5, 52.5, 13.5, (43.5, 16)),
-    ("FACTORY", "#805ad5", 58, -1.5, 76, 13.5, (67, 16)),
-    ("RESERVOIR", "#718096", 82, -1.5, 100, 13.5, (91, 16)),
+    ("ANCILLA (N_A)", "#b7791f", 28.5, -1.5, 46.5, 13.5, (37.5, 16)),
+    ("FACTORY", "#805ad5", 58.5, -1.5, 76.5, 13.5, (67.5, 16)),
+    ("RESERVOIR", "#718096", 88.5, -1.5, 100.5, 13.5, (94.5, 16)),
 ]
 ENT_REGION = ("ENTANGLING ZONE (processor) - Rydberg CZ = the merge",
-              "#2ca02c", -1.5, 37, 102, 86, (50, 60))
+              "#2ca02c", -1.5, 39, 104, 91, (52, 62))
 
 # ZAC instruction type -> the FormalRV SysCall it realizes (shown per frame).
 SYSCALL_OF = {
@@ -66,7 +66,7 @@ def build_zone_mapping():
     for q in range(N_DATA):
         m.append((0, q // 6, q % 6))              # MEMORY region: SLM 0, cols 0-5
     for j in range(N_ANC):
-        m.append((0, j // 6, 12 + j % 6))         # OPERATION-ANCILLA region: SLM 0, cols 12-17
+        m.append((0, j // 6, 10 + j % 6))         # OPERATION-ANCILLA region: SLM 0, cols 10-15
     return m
 
 
@@ -79,9 +79,9 @@ def patched_update_init(self):
     # separate zone regions (rectangles) + labels in the clear gap between storage and computation
     for name, color, x0, y0, x1, y1, (lx, ly) in ZONE_REGIONS:
         self.ax.add_patch(matplotlib.patches.Rectangle(
-            (x0, y0), x1 - x0, y1 - y0, linewidth=1.4, edgecolor=color,
-            facecolor=color, alpha=0.06, zorder=-10))
-        self.ax.text(lx, ly, name, color=color, fontsize=8, fontweight="bold",
+            (x0, y0), x1 - x0, y1 - y0, linewidth=2.5, edgecolor=color,
+            facecolor=color, alpha=0.13, zorder=-10))
+        self.ax.text(lx, ly, name, color=color, fontsize=9, fontweight="bold",
                      ha="center", va="bottom", zorder=-9)
     nm, color, x0, y0, x1, y1, (lx, ly) = ENT_REGION
     self.ax.add_patch(matplotlib.patches.Rectangle(
@@ -110,17 +110,19 @@ animator_module.Animator.update_init = patched_update_init
 animator_module.Animator.update = patched_update
 
 
-def patched_animate(self, code, output, scaling_factor=3.5, font=8, ffmpeg="ffmpeg"):
+def patched_animate(self, code, output, scaling_factor=7, font=9, ffmpeg="ffmpeg"):
     matplotlib.rcParams.update({"font.size": font})
     self.code = code
-    self.fig, self.ax = self.setup_canvas(scaling_factor)
+    self.fig, self.ax = self.setup_canvas(scaling_factor)   # 2x larger figure (was 3.5)
     self.title = self.ax.set_title("")
     self.inst_str = ""
     num_frame = self.create_schedule()
-    print(f"    animation frames: {self.INIT_FRM + num_frame}")
-    anim = FuncAnimation(self.fig, self.update, init_func=self.update_init,
-                         frames=self.INIT_FRM + num_frame)
-    anim.save(output, writer=PillowWriter(fps=self.FPS))
+    total = self.INIT_FRM + num_frame
+    step = 3                                                 # subsample frames to keep the GIF small
+    frames = list(range(0, total, step))
+    print(f"    animation frames: {len(frames)} of {total} (every {step})")
+    anim = FuncAnimation(self.fig, self.update, init_func=self.update_init, frames=frames)
+    anim.save(output, writer=PillowWriter(fps=max(3, self.FPS // step)))
 
 
 animator_module.Animator.animate = patched_animate
