@@ -1,0 +1,8 @@
+n_bits: 3
+blocks: 6
+factories: 3
+spacetime_volume: 14.77
+conflict_free: True
+conflicts: []
+carry_chain_ok: True
+bbox: [0.0, 4.4, 0.0, 9.4]
