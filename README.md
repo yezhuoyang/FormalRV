@@ -298,6 +298,19 @@ The verified surgery gadgets — the multi-patch **XX/ZZ merges**, the full **CN
 [`LatticeSurgery/`](FormalRV/LatticeSurgery). The **trusted** artifacts are the Lean-verified
 logical circuit + `SysCall` schedule + the layout certificate; the 3D picture only *visualizes* them.
 
+**Any circuit → lattice surgery, automatically.** `PyCircuits/ls_compile.py` turns *any* circuit
+(QASM or a gate list) into a surface-code lattice-surgery space-time layout: it ASAP-schedules the
+gates (conflict-free by construction), maps each gate to a merge / magic-injection / CCZ-factory,
+emits a **certificate** (depth, T-count, space-time volume, `conflict_free`), and writes
+**publication-quality** output — a portable **`.glb`** (open in any glTF viewer or Blender) plus a
+shaded `.png`:
+
+```bash
+python PyCircuits/ls_compile.py mycircuit.qasm   # -> docs/diagrams/ls_mycircuit.{glb,png} + certificate
+```
+
+<p align="center"><img src="docs/diagrams/ls_toffoli.png" width="380" alt="Toffoli lattice surgery, auto-compiled">&nbsp;<img src="docs/diagrams/ls_adder3.png" width="380" alt="3-bit Cuccaro adder lattice surgery, auto-compiled"></p>
+
 ### 7. System scheduling invariants — the verified resource ceiling
 
 <p align="center"><img src="docs/diagrams/scheduling_invariants.png" width="900" alt="verified scheduling invariants"></p>
