@@ -19,7 +19,7 @@
 
   No `sorry`, no new `axiom`.
 -/
-import FormalRV.Arithmetic.SQIRModMult.Defs
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultDefinitions
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 
 namespace FormalRV.BQAlgo

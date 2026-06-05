@@ -1,7 +1,7 @@
-import FormalRV.PPM.CircuitToPPMInterface.Part1
-import FormalRV.PPM.CircuitToPPMInterface.Part2
-import FormalRV.PPM.CircuitToPPMInterface.Part3
-import FormalRV.PPM.CircuitToPPMInterface.Part4
-import FormalRV.PPM.CircuitToPPMInterface.Part5
-import FormalRV.PPM.CircuitToPPMInterface.Part6
-import FormalRV.PPM.CircuitToPPMInterface.Part7
+import FormalRV.PPM.CircuitToPPMInterface.CircuitToPPMInterfaceOverview
+import FormalRV.PPM.CircuitToPPMInterface.CircuitFragmentClassifierAndCompiler
+import FormalRV.PPM.CircuitToPPMInterface.EnrichedPPMStateAndIntegration
+import FormalRV.PPM.CircuitToPPMInterface.PPMBackendLoweringModel
+import FormalRV.PPM.CircuitToPPMInterface.SurgeryGadgetLoweringAndQECInstance
+import FormalRV.PPM.CircuitToPPMInterface.BackendCertificationAndTraceLowering
+import FormalRV.PPM.CircuitToPPMInterface.CircuitToPPMInterfaceModuleEnd

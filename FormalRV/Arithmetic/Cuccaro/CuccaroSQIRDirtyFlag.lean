@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.Defs
-import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.Proofs1
-import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.Proofs2
-import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.Proofs3
+import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.CuccaroModularAddDefinitions
+import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.CuccaroDirtyFlagStageCorrectness
+import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.CuccaroCleanModularAddCorrectness
+import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag.CuccaroControlledModularAddCorrectness

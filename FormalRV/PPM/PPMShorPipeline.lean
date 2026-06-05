@@ -20,7 +20,7 @@
 import FormalRV.PPM.MagicGadgetInterface
 import FormalRV.PPM.CCZGadgetTeleport
 import FormalRV.Shor.ProbabilityTransfer
-import FormalRV.Shor.VerifiedShor.Part10
+import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 import FormalRV.Shor.SuccessSensitivity
 
 open scoped Matrix

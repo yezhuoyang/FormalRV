@@ -22,7 +22,7 @@
   component theorems (see the `lookupAddGate` docstring), and the multi-window value
   identity is the proven `WindowedArith.windowedLookupFold_modProductAdd`.
 -/
-import FormalRV.Arithmetic.UnaryLookup.Defs
+import FormalRV.Arithmetic.UnaryLookup.UnaryLookupDefinitions
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 import FormalRV.Shor.WindowedArith
 

@@ -32,8 +32,8 @@
 import FormalRV.PPM.GateToPPMResource
 import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
 import FormalRV.Arithmetic.SQIRModMult.ModExpCount
-import FormalRV.Arithmetic.SQIRModMult.Proofs2
-import FormalRV.Arithmetic.SQIRModMult.Proofs3
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultPrefixInvariant
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
 
 namespace FormalRV.PPM.ModMultPPMResource
 

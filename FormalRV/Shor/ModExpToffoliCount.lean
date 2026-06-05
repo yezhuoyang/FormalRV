@@ -51,7 +51,7 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.PPM.CircuitToPPMResource
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs1
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderQubitCounts
 
 namespace FormalRV.Shor.ModExpToffoliCount
 

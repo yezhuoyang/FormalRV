@@ -1,6 +1,6 @@
-import FormalRV.Arithmetic.RippleCarryAdder.Defs
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs1
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs2
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs3
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs4
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs5
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderDefinitions
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderQubitCounts
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderRSA2048Resource
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderDecideWitnesses
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderPropagationReverse
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderUncomputeCascade
