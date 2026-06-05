@@ -1,5 +1,5 @@
-import FormalRV.Arithmetic.ModularAdder.Defs
-import FormalRV.Arithmetic.ModularAdder.Proofs1
-import FormalRV.Arithmetic.ModularAdder.Proofs2
-import FormalRV.Arithmetic.ModularAdder.Proofs3
-import FormalRV.Arithmetic.ModularAdder.Proofs4
+import FormalRV.Arithmetic.ModularAdder.ModularAdderDefinitions
+import FormalRV.Arithmetic.ModularAdder.ModularAdderPowerOfTwoCase
+import FormalRV.Arithmetic.ModularAdder.ModularAdderForwardFaithfulness
+import FormalRV.Arithmetic.ModularAdder.ModularAdderControlledPipeline
+import FormalRV.Arithmetic.ModularAdder.ModularAdderSwapSemantics

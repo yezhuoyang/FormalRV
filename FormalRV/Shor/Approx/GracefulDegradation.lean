@@ -17,7 +17,7 @@
 
   Kernel-clean; additive (does not touch the verified headline).
 -/
-import FormalRV.Shor.Shor.Part3
+import FormalRV.Shor.MainAlgorithm.PostProcessingAndMeasurement
 
 namespace FormalRV.Shor.Approx
 

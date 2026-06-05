@@ -1,4 +1,10 @@
 /-
+  Part of the unified FT-scheduling framework — see `FormalRV.System.FTFramework` for the single
+  entry point.  This is the `DeviceOp`/`DSchedule` validity checker (with placement evolution); its
+  `SysCall` sibling is `FormalRV.System.InvariantFramework` / `ScheduleInv.all_invariants_ok`.  The
+  two are connected at the umbrella, not merged (the `SysCall`↔`DeviceOp` merge is deliberately
+  avoided to keep the concrete-schedule literals stable).
+
   FormalRV.System.DeviceSchedule — an END-TO-END device-schedule execution engine and validity
   checker for fault-tolerant quantum computation, built on the architecture-agnostic
   `RoutingResourceModel` (which is proven consistent with Litinski surface-code lattice surgery

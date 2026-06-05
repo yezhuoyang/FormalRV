@@ -28,7 +28,7 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.PPM.CircuitToPPMResource
-import FormalRV.Arithmetic.RippleCarryAdder.Proofs4
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderPropagationReverse
 
 namespace FormalRV.PPM.GateToPPMResource
 

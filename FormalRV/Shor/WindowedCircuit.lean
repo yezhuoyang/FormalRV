@@ -19,7 +19,7 @@
   `FormalRV.Shor.WindowedCircuitExec`.
 -/
 import FormalRV.Shor.WindowedLookupAdd
-import FormalRV.Arithmetic.UnaryLookup.Proofs1
+import FormalRV.Arithmetic.UnaryLookup.UnaryLookupGateDerivations
 
 namespace FormalRV.Shor.WindowedCircuit
 

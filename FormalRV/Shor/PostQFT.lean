@@ -1,4 +1,4 @@
-import FormalRV.Shor.PostQFT.Defs
-import FormalRV.Shor.PostQFT.Proofs1
-import FormalRV.Shor.PostQFT.Proofs2
-import FormalRV.Shor.PostQFT.Proofs3
+import FormalRV.Shor.PostQFT.IQFTDefinitions
+import FormalRV.Shor.PostQFT.IQFTCircuitCorrectness
+import FormalRV.Shor.PostQFT.IQFTRecursiveArbitrary
+import FormalRV.Shor.PostQFT.PostQFTCompletion

@@ -1,4 +1,4 @@
-import FormalRV.Core.PadAction.Defs
-import FormalRV.Core.PadAction.Proofs1
-import FormalRV.Core.PadAction.Proofs2
-import FormalRV.Core.PadAction.Proofs3
+import FormalRV.Core.PadAction.PadActionDefinitions
+import FormalRV.Core.PadAction.PadActionGateEntry
+import FormalRV.Core.PadAction.PadActionComposite
+import FormalRV.Core.PadAction.CCXToffoliComplete

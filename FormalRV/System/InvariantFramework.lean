@@ -2,6 +2,10 @@
   FormalRV.Framework.InvariantFramework — EXTENSIBLE SPACE-TIME INVARIANT
   FRAMEWORK.
 
+  Part of the unified FT-scheduling framework — see `FormalRV.System.FTFramework` for the single
+  entry point.  This is the `SysCall`-side extensible invariant checker; its `DeviceOp` sibling is
+  `FormalRV.System.DeviceSchedule.scheduleValid`.  Connected at the umbrella, not merged.
+
   The fixed resources are qubits/atoms (space), classical compute, and time; a
   schedule makes claims on them.  Every system invariant is a space-time
   PROPOSITION over these resources — a `SpaceTimeInvariant` (named decidable

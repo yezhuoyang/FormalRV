@@ -16,7 +16,7 @@
   Boolean `applyNat`.)
 -/
 import FormalRV.Shor.WindowedCircuit
-import FormalRV.Arithmetic.UnaryLookup.Proofs1
+import FormalRV.Arithmetic.UnaryLookup.UnaryLookupGateDerivations
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 
 namespace FormalRV.Shor.MeasUncompute

@@ -16,7 +16,7 @@
 
   Kernel-clean; no sorry, no new axiom.
 -/
-import FormalRV.Shor.Shor.Part1
+import FormalRV.Shor.MainAlgorithm.QuantumAndContinuedFractions
 
 namespace FormalRV.SQIRPort
 

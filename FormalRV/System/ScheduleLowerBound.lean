@@ -154,9 +154,17 @@ theorem magic_spacetime_floor (sched : DSchedule) (T Q fq prod : Nat)
 
 /-! ## §3. The RSA-2048 floor and the gap to paper / naive. -/
 
+/-- The verified windowed RSA-2048 Toffoli (= CCZ magic) budget — the single canonical constant the
+    naive schedule, the lower bound, and the hardware-sensitivity floors all denominate against. -/
+def rsa2048_toffoli_budget : Nat := 2622824448
+
 /-- The magic-state spacetime floor for windowed RSA-2048, in qubit·µs:
     `K · fq · prod = 2 622 824 448 · 2565 · 12000`. -/
 def rsa2048_floor_qubit_us : Nat := 2622824448 * (2565 * 12000)
+
+/-- The floor is denominated against the canonical Toffoli budget. -/
+theorem rsa2048_floor_uses_budget :
+    rsa2048_floor_qubit_us = rsa2048_toffoli_budget * (2565 * 12000) := rfl
 
 /-- The floor in qubit·HOURS (÷ 3.6×10⁹ µs/h) ≈ `2.24×10⁷`. -/
 def rsa2048_floor_qubit_hours : Nat := rsa2048_floor_qubit_us / 3600000000

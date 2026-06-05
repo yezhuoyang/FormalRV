@@ -18,7 +18,7 @@
   Both are kernel-clean; rendering (ops → text) is a syntactic serialization.
 -/
 import FormalRV.Arithmetic.Correctness
-import FormalRV.Arithmetic.ModularAdder.Defs
+import FormalRV.Arithmetic.ModularAdder.ModularAdderDefinitions
 
 namespace FormalRV.Codegen
 
