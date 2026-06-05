@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """
-Compile the FormalRV distance-3 two-patch surface-code XX-merge onto a neutral-atom zoned
-architecture with ZAC (UCLA-VAST, HPCA'25) and render a GIF of the atom movement that implements
-the lattice surgery — with the architecture made CONSISTENT with FormalRV's system-spec zones and
-each frame annotated with the FormalRV SysCall it realizes.
+Compile the FormalRV 2-bit Cuccaro adder's distance-3 SURFACE-CODE LATTICE SURGERY
+(surface3_adder2_d3.qasm: 5 [[13,1,3]] patches + the adder's 12 merges + 4 magic injections) onto
+a neutral-atom zoned architecture with ZAC (UCLA-VAST, HPCA'25), and render a GIF of the atom
+movement, annotated with Qian Xu's zones and the FormalRV SysCall each ZAC op realizes.
 
-  python run_zac_surgery.py            # default: first 4 CZ (one syndrome-check step) + GIF
+  python run_zac_surgery.py            # default: first 8 CZ + GIF
   python run_zac_surgery.py <N>        # first N CZ + GIF
-  python run_zac_surgery.py all        # compile the FULL merge + print resources (no GIF)
+  python run_zac_surgery.py all        # compile the FULL adder surgery + report resources (no GIF)
 
-Atoms are placed into the SAME zones as FormalRV's `myArch` (Adder2EndToEnd.lean): Data (the 27
-data + surgery-ancilla atoms), Ancilla (the 26 syndrome ancillas), Factory (reserved for |CCZ>
-magic — empty here, the merge is Clifford), Routing.  The entanglement zone (Rydberg CZ) is the
-neutral-atom-specific physical realization of FormalRV's logical Gate2q merge.
+Atoms are placed by ROLE (surface3_adder2_d3.roles.json) into Qian Xu's zones: MEMORY (the 5 d=3
+patches), OPERATION-ANCILLA (the 12 merge ancillae), FACTORY (the 4 |CCZ> magic atoms, used),
+RESERVOIR.  The ENTANGLING zone (Rydberg CZ) is where the merges + magic injections physically fire.
 """
 import json
 import os
@@ -30,25 +29,24 @@ matplotlib.use("Agg")
 import matplotlib.patches  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+import json as _json
 ARCH = os.path.join(HERE, "surface3_surgery_arch.json")
-QASM = os.path.join(HERE, "surface3_xx_merge.qasm")
-GIF = os.path.join(HERE, "surface3_xx_merge_neutral_atom.gif")
+QASM = os.path.join(HERE, "surface3_adder2_d3.qasm")
+GIF = os.path.join(HERE, "surface3_adder2_d3_neutral_atom.gif")
+ROLES = os.path.join(HERE, "surface3_adder2_d3.roles.json")
 OUT_DIR = os.path.join(HERE, "zac_result")
-
-N_DATA = 27   # qubits 0..26  = 26 data + 1 surgery ancilla  -> Data zone
-N_ANC = 26    # qubits 27..52 = 26 syndrome ancillas          -> Ancilla zone
 
 # Zone TAXONOMY of Qian Xu's factoring architecture (memory / operation-ancilla / factory /
 # reservoir + entangling zone), as separated regions of the one storage array (gaps between them).
 # (name, color, x0, y0, x1, y1, label_xy)
 ZONE_REGIONS = [
-    ("MEMORY", "#1f77b4", -1.5, -1.5, 16.5, 13.5, (7.5, 16)),
-    ("ANCILLA (N_A)", "#b7791f", 28.5, -1.5, 46.5, 13.5, (37.5, 16)),
-    ("FACTORY", "#805ad5", 58.5, -1.5, 76.5, 13.5, (67.5, 16)),
-    ("RESERVOIR", "#718096", 88.5, -1.5, 100.5, 13.5, (94.5, 16)),
+    ("MEMORY (5 d=3 patches)", "#1f77b4", -1.5, -1.5, 37.5, 13.5, (18, 16)),
+    ("ANCILLA", "#b7791f", 46.5, -1.5, 55.5, 13.5, (51, 16)),
+    ("FACTORY", "#805ad5", 64.5, -1.5, 70.5, 13.5, (67.5, 16)),
+    ("RES", "#718096", 76.5, -1.5, 88.5, 13.5, (82.5, 16)),
 ]
-ENT_REGION = ("ENTANGLING ZONE (processor) - Rydberg CZ = the merge",
-              "#2ca02c", -1.5, 39, 104, 91, (52, 62))
+ENT_REGION = ("ENTANGLING ZONE (processor) - Rydberg CZ = the merges + magic injection",
+              "#2ca02c", -1.5, 39, 96, 91, (48, 60))
 
 # ZAC instruction type -> the FormalRV SysCall it realizes (shown per frame).
 SYSCALL_OF = {
@@ -60,13 +58,18 @@ SYSCALL_OF = {
 
 
 def build_zone_mapping():
-    """Place atoms into SEPARATE zones (distinct SLMs): data (0..26) -> Data zone (SLM 0),
-    syndrome ancillas (27..52) -> mediating-Ancilla zone (SLM 1).  Returns (slm_id, r, c)."""
-    m = []
-    for q in range(N_DATA):
-        m.append((0, q // 6, q % 6))              # MEMORY region: SLM 0, cols 0-5
-    for j in range(N_ANC):
-        m.append((0, j // 6, 10 + j % 6))         # OPERATION-ANCILLA region: SLM 0, cols 10-15
+    """Place each atom into its Qian-Xu zone by ROLE (from surface3_adder2_d3.roles.json):
+    data -> MEMORY (5 patch-rows, cols 0-12); merge ancilla -> OPERATION-ANCILLA (cols 16-18);
+    magic atom -> FACTORY (cols 22-23).  All in storage SLM 0.  Returns (slm_id, row, col)."""
+    roles = _json.load(open(ROLES))["roles"]
+    m, mi, ki = [], 0, 0
+    for i, role in enumerate(roles):
+        if role == "data":                         # MEMORY: 5 patches as rows of 13
+            m.append((0, i // 13, i % 13))
+        elif role == "merge":                      # OPERATION-ANCILLA: cols 16-18
+            m.append((0, mi // 3, 16 + mi % 3)); mi += 1
+        else:                                      # magic -> FACTORY: cols 22-23
+            m.append((0, ki // 2, 22 + ki % 2)); ki += 1
     return m
 
 
@@ -118,7 +121,7 @@ def patched_animate(self, code, output, scaling_factor=7, font=9, ffmpeg="ffmpeg
     self.inst_str = ""
     num_frame = self.create_schedule()
     total = self.INIT_FRM + num_frame
-    step = 3                                                 # subsample frames to keep the GIF small
+    step = 4                                                 # subsample frames to keep the GIF small
     frames = list(range(0, total, step))
     print(f"    animation frames: {len(frames)} of {total} (every {step})")
     anim = FuncAnimation(self.fig, self.update, init_func=self.update_init, frames=frames)
@@ -147,7 +150,7 @@ def maybe_prefix_qasm(max_cz):
 
 
 def main():
-    arg = sys.argv[1] if len(sys.argv) > 1 else "4"
+    arg = sys.argv[1] if len(sys.argv) > 1 else "8"
     do_gif = (arg != "all")
     max_cz = 0 if arg == "all" else int(arg)
     qasm = maybe_prefix_qasm(max_cz)

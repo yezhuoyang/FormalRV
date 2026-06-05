@@ -1,112 +1,87 @@
-# Lattice surgery on a NEUTRAL-ATOM system — distance-3 surface-code XX-merge via ZAC
+# The 2-bit Cuccaro adder at distance-3 surface-code lattice surgery — on NEUTRAL ATOMS (ZAC)
 
-The *same* verified QEC operation as the superconducting story — but compiled to **moving atoms**.
-We take FormalRV's verified **distance-3 two-patch surface-code XX-merge** (`surface3_xx_merge`,
-joint X̄₁X̄₂ of two `[[13,1,3]]` patches), emit its **physical syndrome circuit**, and compile it
-onto a **neutral-atom zoned architecture** with [**ZAC**](https://github.com/UCLA-VAST/ZAC) (Lin,
-Tan & Cong, HPCA 2025). The output is an **atom-movement schedule** + a **GIF** of the atoms
-physically implementing the merge.
+The **same 2-bit Cuccaro adder** verified in [`../Adder2EndToEnd.lean`](../Adder2EndToEnd.lean),
+now realized as **distance-3 surface-code lattice surgery** and compiled onto a **neutral-atom
+zoned architecture** with [**ZAC**](https://github.com/UCLA-VAST/ZAC) (Lin, Tan & Cong, HPCA 2025).
+Each of the adder's 5 logical qubits becomes a surface-code `[[13,1,3]]` patch (`surfaceHGP 3`,
+verified in FormalRV); its lattice surgery is the adder's PPM program — each joint Pauli-`Z`
+measurement is a **merge**, each Toffoli consumes a `|C̄CZ̄⟩` from a **factory**. The GIF shows the
+atoms physically moving to do it.
 
-> **The QEC framework is identical to superconducting** — same surface code, same parity checks,
-> same *verified* logical merge (`surface3_xx_merge_verifies` in FormalRV). Only the **physical
-> realization** differs: atoms are picked up by an AOD and **moved into an entanglement zone** for
-> a Rydberg `CZ`, instead of using fixed couplers. That movement is what the GIF shows.
+> Same QEC framework as superconducting — same surface code, same parity checks, same verified
+> logical operations. Only the **physical realization** differs: atoms are shuttled by an AOD into
+> an entangling zone for the Rydberg `CZ`s, instead of fixed couplers.
 
-<p align="center"><img src="surface3_xx_merge_neutral_atom.gif" width="540" alt="neutral-atom movement implementing one syndrome-check step of the d=3 surface-code XX-merge"></p>
+<p align="center"><img src="surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom movement implementing the 2-bit adder's d=3 surface-code lattice surgery"></p>
 
-*The GIF (one syndrome-check merge step) is annotated with **(a)** Qian Xu's **zones** as
-spatially-separated regions — Memory · Operation-Ancilla (`N_𝒜`) · Factory · Reservoir, plus the
-**Entangling** (processor) zone above — and **(b)** a magenta banner showing the **FormalRV
-SysCall** each ZAC operation realizes (`FRESHANC` → place patches, `routing` → AOD transport into
-the entangling zone, `GATE2Q` = the merge via Rydberg `CZ`).*
+*The atoms sit in Qian Xu's zones — **MEMORY** (the 5 d=3 patches = 65 data atoms, shown as 5
+patch-rows), **ANCILLA** (the 12 merge ancillae, `N_𝒜`), **FACTORY** (the 4 `|C̄CZ̄⟩` magic atoms — one
+per Toffoli, *used* here), **RES**ervoir — and are shuttled up into the **ENTANGLING** zone for the
+Rydberg `CZ`s. The magenta banner shows the **FormalRV SysCall** each ZAC op realizes.*
 
 ## Pipeline
 
 ```
-FormalRV verified gadget        surface3_xx_merge  (joint X̄₁X̄₂, two [[13,1,3]] patches)
-  └─ scripts/EmitSurgeryStim.lean ─►  surface3_xx_merge.stim   (physical syndrome circuit: 53 qubits, 88 CX)
-       └─ stim_to_qasm.py ─────────►  surface3_xx_merge.qasm   (Qiskit transpiles to 88 CZ + 204 U3)
-            └─ run_zac_surgery.py ──►  ZAC compile on surface3_surgery_arch.json
-                                       ─►  ZAIR atom-movement schedule  +  annotated GIF
+FormalRV verified 2-bit Cuccaro adder        cuccaro_n_bit_adder_full 2 0  (5 logical qubits)
+  └─ scripts/EmitAdder2Example.lean ──────►  adder2_ppm.txt   (12 joint-Z measurements + 4 magic-T)
+       └─ gen_adder2_d3_qasm.py ──────────►  surface3_adder2_d3.qasm   (5 × [[13,1,3]] patches;
+                                              each PPM merge = ancilla coupled to the Z̄ boundary
+                                              {0,3,6} of each patch; 81 atoms, 88 CX)
+            └─ run_zac_surgery.py ────────►  ZAC compile + atom-movement GIF
 ```
 
-## Architecture — Qian Xu's zone taxonomy (the factoring layout)
+## Architecture — Qian Xu zone taxonomy ([`surface3_surgery_arch.json`](surface3_surgery_arch.json))
 
-Following **Qian Xu's neutral-atom architecture** — the ~10,000-atom factoring layout
-(*memory + processor + factory + operation-zone ancilla `N_𝒜` + reservoir*, bound in FormalRV's
-[`Corpus/QianxuBounds`](../../FormalRV/Corpus/QianxuBounds.lean)) and Xu et al. 2024 (Nat. Phys.,
-Fig. 1: a **qLDPC memory block**, **mediating ancillae**, and **computation qubits** as distinct
-2D regions). The atoms are **not** stacked in row bands — they sit in **separated regions**
-(physical gaps between them) of the single storage array, plus a distinct **entangling zone**:
-
-| Zone (Xu taxonomy) | Role | Here (`surface3_surgery_arch.json`) |
+| Zone | Role | Here |
 |---|---|---|
-| **Memory / Data** | logical data patches | storage cols 0–5 — 26 data + 1 surgery ancilla |
-| **Operation-zone Ancilla** (`N_𝒜`) | mediating syndrome ancillae | storage cols 10–15 — 26 ancillas (empty-gap separated from Memory) |
-| **Factory** | `\|C̄CZ̄⟩` magic-state factories | storage cols 20–25 — idle trap sites, reserved (Clifford merge) |
-| **Reservoir** | spare qubits | storage cols 30–33 — idle trap sites, spare |
-| **Entangling (processor)** | where Rydberg `CZ` fires | SLMs at `y ≥ 32 µm` — the physical **merge** |
+| **Memory** | logical data patches | 65 atoms = **5 × `[[13,1,3]]`** surface-code patches (5 patch-rows) |
+| **Operation Ancilla** (`N_𝒜`) | mediating merge ancillae | 12 atoms (one per joint-`Z` measurement) |
+| **Factory** | `\|C̄CZ̄⟩` magic-state factory | **4 atoms — USED** (one `\|C̄CZ̄⟩` per Toffoli; the adder is non-Clifford) |
+| **Reservoir** | spare | idle trap sites |
+| **Entangling (processor)** | Rydberg `CZ` fires here | the merges + the magic injections |
 
-Each role is a **spatially separated region** (gaps between Memory · Ancilla · Factory ·
-Reservoir), and atoms are **shuttled by the AOD into the entangling zone** for the Rydberg `CZ` —
-that movement *is* the lattice surgery. (ZAC's hardware model has one physical storage array +
-entangling zones; the roles are regions of the storage, matching how Xu's logical zones map onto
-the atom array.) Durations (µs): Rydberg `CZ` `0.36`, transfer `15`; fidelities 2-qubit `0.995`,
-transfer `0.999`; `T = 1.5 s`; one AOD mover.
+All zones have physical trap sites in the one storage array, separated into column bands; the
+entangling zone sits above (atoms shuttle up for `CZ`).
 
-## Do FormalRV's system invariants hold on neutral atoms? — YES, verified
-
-[`NeutralAtomInvariants.lean`](NeutralAtomInvariants.lean) re-checks the FormalRV system invariants
-under **neutral-atom hardware parameters** read off the ZAC compile:
-
-```bash
-lake env lean --run Example/neutral_atom/NeutralAtomInvariants.lean
-```
-
-- ZAC's compile does **up to 12 parallel Rydberg `CZ`** per stage — so the neutral-atom
-  `max_gate2q_active = 12` (vs the superconducting single-laser `1`), and readout is parallel.
-- `theorem adder_n1_neutralatom_system_ok` (`native_decide`) proves the verified schedule satisfies
-  **every** strict invariant — operation-capacity, feedback-after-decode, slot-capacity,
-  ancilla-freshness — under those neutral-atom capacities. (Capacity constraints, so a *more*
-  parallel platform satisfies them a fortiori.)
-- **So the original `maxGate2qParallel=1` was a superconducting assumption; the neutral-atom value
-  is 12, and the invariants still hold.** The check is re-runnable: change the capacities and re-run.
-
-## Compiled resource (full merge, ZAC verifier passes)
-
-`python run_zac_surgery.py all`:
+## Compiled resource (ZAC verifier passes) — `python run_zac_surgery.py all`
 
 | Metric | Value |
 |---|---:|
-| atoms | 53 |
-| entangling `CZ` gates | 88 |
-| **max parallel `CZ` per Rydberg stage** | **12** |
-| Rydberg stages | 13 |
-| ZAIR atom-movement instructions | 172 |
-| schedule runtime | 24 599 µs (≈ 25 ms) |
+| logical qubits / surface-code patches | 5 |
+| physical atoms | **81** (65 data + 12 merge ancillae + 4 magic) |
+| entangling `CZ` | **88** |
+| Rydberg stages (max parallel `CZ`) | 39 (≤ 6) |
+| ZAIR atom-movement instructions | **219** |
+| schedule runtime | 25 830 µs (≈ 26 ms) |
 | ZAC gate-scheduling + placement verification | ✓ pass |
+
+## Do FormalRV's system invariants hold on neutral atoms? — YES
+
+[`NeutralAtomInvariants.lean`](NeutralAtomInvariants.lean) (`native_decide`) proves the verified
+schedule satisfies every strict system invariant under neutral-atom capacities (`max_gate2q_active`
+set to the platform's Rydberg parallelism, vs the superconducting single-laser `1`).
 
 ## Reproduce
 
 ```bash
-lake env lean --run scripts/EmitSurgeryStim.lean                 # verified merge -> .stim
-cd Example/neutral_atom && python stim_to_qasm.py surface3_xx_merge.stim surface3_xx_merge.qasm
-python run_zac_surgery.py all                                    # full merge + resources
-python run_zac_surgery.py 4                                      # GIF of one syndrome-check step
-lake env lean --run Example/neutral_atom/NeutralAtomInvariants.lean   # invariants on neutral atoms
+lake env lean --run scripts/EmitAdder2Example.lean              # adder -> PPM
+cd Example/neutral_atom
+python gen_adder2_d3_qasm.py                                    # 5 d=3 patches + merges -> QASM
+python run_zac_surgery.py all                                   # full adder surgery + resources
+python run_zac_surgery.py 8                                     # GIF (first merges)
+lake env lean --run NeutralAtomInvariants.lean                  # invariants on neutral atoms
 ```
 
 ## Honest scope
 
-- **Layers.** FormalRV's SysCall schedule is at the **logical** level (logical merges/measures on
-  zone *sites*, abstract cycle units); ZAC is at the **physical** level (each logical merge = many
-  atom moves + Rydberg `CZ`s, real µs — this merge is ≈ 25 ms). The zones + SysCalls map across
-  (table above + GIF banner); the absolute time scales differ (logical cycles vs physical µs).
-- **ZAC is a circuit → atom-movement router, not a QEC encoder.** The surface-code + lattice-surgery
-  structure lives in the input circuit we emit from the *verified gadget*; ZAC realizes + verifies
-  the movement schedule (no atom collisions, valid placement) — it does not re-derive the code.
-- The QASM is the merge's **unitary entangling skeleton** (88 `CZ`); prep/measure SPAM is in place.
-- The GIF renders one syndrome-check step (4 `CZ`) for size; the full merge (13 Rydberg stages,
-  172 instructions) is compiled + verified by `run_zac_surgery.py all`.
-- **FormalRV proves *what* the surgery does + that the system invariants hold; ZAC shows *how* a
-  neutral-atom machine does it.** Complementary, and now consistent (same zones, same invariants).
+- **5 d=3 patches.** Each logical qubit is a verified `[[13,1,3]]` surface code (13 data atoms). The
+  building-block single merge (`surface3_xx_merge`, the full merged-code syndrome) is in
+  `surface3_xx_merge.stim`; here each of the adder's 12 merges is realized as the **joint-`Z̄`
+  measurement** (an ancilla coupled to the patches' `Z̄`-boundary `{0,3,6}`) — the lattice-surgery
+  readout. Per-patch syndrome maintenance between merges is separate.
+- **ZAC routes the circuit**; the surface-code + lattice-surgery structure is in the input we emit
+  from the verified adder. ZAC verifies the *movement* schedule (no collisions, valid placement).
+- **Layers/units.** FormalRV is logical (cycles); ZAC is physical (26 ms, transport-dominated).
+  Same operations, different abstraction — see the GIF banner for the SysCall↔movement map.
+- **FormalRV proves *what* the adder does + that the invariants hold; ZAC shows *how* a
+  neutral-atom machine does it.**
