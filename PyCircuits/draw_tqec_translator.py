@@ -38,7 +38,7 @@ def parse_schedule(path):
     zones, scs = [], []
     for ln in open(path):
         p = ln.split()
-        if not p:
+        if not p or p[0].startswith("#"):     # skip blank lines and '#' comments
             continue
         if p[0] == "ZONE":
             zones.append((p[1], int(p[2]), int(p[3])))

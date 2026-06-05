@@ -17,6 +17,37 @@ Everything below is the **actual emitted output** of the real compilers — not 
 
 ---
 
+## Notation — instruction syntax
+
+Each artifact file also carries this legend as a `#`-comment header (the `#` lines are skipped by
+the parsers, so the files stay machine-readable).
+
+**PPM program** ([`adder2_ppm.txt`](adder2_ppm.txt)) — one instruction per line:
+
+| Instruction | Operands | Meaning |
+|---|---|---|
+| `M <P> q1,q2,…` | Pauli `P∈{X,Y,Z}` + qubit list | Measure the **joint** Pauli `P` on those qubits, i.e. `P_q1 ⊗ P_q2 ⊗ …` — one destructive multi-qubit **logical-parity** measurement. e.g. `M Z 2,1` = measure `Z₂ ⊗ Z₁` (the joint Z-parity of qubits 2 and 1). |
+| `F q1,q2,…` | qubit list | **Pauli-frame update**: a *classically-tracked* Pauli correction on those qubits, conditioned on earlier measurement outcomes (the measurement-gadget feed-forward — **not** a physical gate). |
+| `T q` | qubit | Consume one **magic state** routed to qubit `q` (the only non-Clifford resource; each Toffoli/CCX consumes one `\|CCZ⟩` magic state via this injection). So `T 2` is *not* a physical T-gate on a wire — it marks one magic-state consumption. |
+
+**System-call schedule** ([`adder2_full_schedule.txt`](adder2_full_schedule.txt)) — every data line is
+`<OP> <operands…> <begin_us> <end_us>`; the **last two integers are always the µs time interval**:
+
+| Instruction | Operands (before the two times) | Meaning |
+|---|---|---|
+| `FRESHANC <zone> <b> <e>` | zone id | Allocate a **fresh ancilla** patch in `<zone>` (zone `1` = the Ancilla zone). e.g. `FRESHANC 1 0 1` = fresh ancilla in zone 1 during `[0,1) µs`. |
+| `GATE2Q <q1> <q2> <b> <e>` | two patch **sites** | A two-qubit op between sites `q1,q2` — here a surgery merge / syndrome CX. e.g. `GATE2Q 0 100 1 2` = couple data-site 0 with ancilla-site 100 during `[1,2) µs`. |
+| `MEAS <q> <b> <e>` | site | Measure the logical patch at site `q`. |
+| `DECODE <round> <b> <e>` | round id | Run the decoder on round `<round>`'s syndrome. |
+| `PFU <corr> <b> <e>` | correction id | **P**auli-**F**rame **U**pdate — apply the classically-conditioned Pauli correction `<corr>` (the system-level feed-forward; the scheduling-layer cousin of the PPM `F`). |
+| `MAGIC <fzone> <b> <e>` | factory zone | Request a magic state from factory zone `<fzone>`. |
+| `GATE1Q <q> <b> <e>` · `TRANSIT <q> <ch> <b> <e>` | site · site+channel | One-qubit gate · route a qubit through a routing channel. |
+
+**Sites** are global patch indices grouped into zones: `Data [0,100)`, `Ancilla [100,200)`,
+`Factory [200,300)`, `Routing [300,400)`.
+
+---
+
 ## L1 / L2 — the verified logical circuit
 
 `cuccaro_n_bit_adder_full 2 0`, proven by **`cuccaro_n_bit_adder_full_correct`** (target register

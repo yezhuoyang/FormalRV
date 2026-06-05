@@ -1,3 +1,18 @@
+# System-call (SysCall) schedule: the verified surgery operations placed on the zoned hardware
+# over time. One SysCall per line; lines beginning with '#' are comments. EVERY data line ends
+# with two integers <begin_us> <end_us> = the microsecond interval the operation occupies.
+# The tokens BEFORE those two times are the operands:
+#   FRESHANC <zone> <b> <e>     allocate a fresh ancilla patch in zone <zone>  (zone 1 = Ancilla)
+#   GATE2Q  <q1> <q2> <b> <e>   two-qubit op between patch SITES q1,q2 (a surgery merge / syndrome CX)
+#   MEAS    <q> <b> <e>         measure the logical patch at site q
+#   DECODE  <round> <b> <e>     run the decoder on the syndrome of round <round>
+#   PFU     <corr> <b> <e>      PFU = Pauli-Frame Update: apply classically-conditioned Pauli
+#                               correction <corr> (the system-level feed-forward; cf. PPM 'F')
+#   MAGIC   <fzone> <b> <e>     request a magic state from factory zone <fzone>
+#   GATE1Q  <q> <b> <e>         one-qubit gate on site q ;  TRANSIT <q> <ch> <b> <e>  route q via channel ch
+# SITES live in zones: Data [0,100)  Ancilla [100,200)  Factory [200,300)  Routing [300,400).
+# e.g. 'FRESHANC 1 0 1' = fresh ancilla in zone 1 during [0,1) us; 'GATE2Q 0 100 1 2' = merge
+# data-site 0 with ancilla-site 100 during [1,2) us.
 FRESHANC 1 0 1
 GATE2Q 0 100 1 2
 GATE2Q 50 100 2 3

@@ -124,9 +124,26 @@ def kindStr : SysCallKind → String
   | .DecodeSyndrome r      => s!"DECODE {r}"
   | .PauliFrameUpdate c    => s!"PFU {c}"
 
+def schedHeader : String :=
+  "# System-call (SysCall) schedule: the verified surgery operations placed on the zoned hardware\n" ++
+  "# over time. One SysCall per line; lines beginning with '#' are comments. EVERY data line ends\n" ++
+  "# with two integers <begin_us> <end_us> = the microsecond interval the operation occupies.\n" ++
+  "# The tokens BEFORE those two times are the operands:\n" ++
+  "#   FRESHANC <zone> <b> <e>     allocate a fresh ancilla patch in zone <zone>  (zone 1 = Ancilla)\n" ++
+  "#   GATE2Q  <q1> <q2> <b> <e>   two-qubit op between patch SITES q1,q2 (a surgery merge / syndrome CX)\n" ++
+  "#   MEAS    <q> <b> <e>         measure the logical patch at site q\n" ++
+  "#   DECODE  <round> <b> <e>     run the decoder on the syndrome of round <round>\n" ++
+  "#   PFU     <corr> <b> <e>      PFU = Pauli-Frame Update: apply classically-conditioned Pauli\n" ++
+  "#                               correction <corr> (the system-level feed-forward; cf. PPM 'F')\n" ++
+  "#   MAGIC   <fzone> <b> <e>     request a magic state from factory zone <fzone>\n" ++
+  "#   GATE1Q  <q> <b> <e>         one-qubit gate on site q ;  TRANSIT <q> <ch> <b> <e>  route q via channel ch\n" ++
+  "# SITES live in zones: Data [0,100)  Ancilla [100,200)  Factory [200,300)  Routing [300,400).\n" ++
+  "# e.g. 'FRESHANC 1 0 1' = fresh ancilla in zone 1 during [0,1) us; 'GATE2Q 0 100 1 2' = merge\n" ++
+  "# data-site 0 with ancilla-site 100 during [1,2) us.\n"
+
 def main : IO Unit := do
   let schedLines := exampleSchedule.map (fun sc => s!"{kindStr sc.kind} {sc.begin_us} {sc.end_us}")
-  IO.FS.writeFile "Example/adder2_full_schedule.txt" (String.intercalate "\n" schedLines ++ "\n")
+  IO.FS.writeFile "Example/adder2_full_schedule.txt" (schedHeader ++ String.intercalate "\n" schedLines ++ "\n")
   IO.println "════════ 2-bit Cuccaro adder — verified resource on the chosen architecture ════════"
   IO.println "ARCHITECTURE (sites per zone):  Data[0,100)  Ancilla[100,200)  Factory[200,300)  Routing[300,400)"
   IO.println s!"HARDWARE PARAMS:  gate2q‖={maxGate2qParallel}  meas‖={maxMeasParallel}  t_gate2q={gate2qUs}µs  t_react={tReactUs}µs"

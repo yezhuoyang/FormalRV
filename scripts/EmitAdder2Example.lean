@@ -31,5 +31,15 @@ def main : IO Unit := do
   IO.FS.writeFile "PyCircuits/qasm/adder2.qasm" (toQASM g)
   IO.println s!"adder2 QASM: qubits={maxQubit g + 1} numX={numX g} numCX={numCX g} numCCX={numCCX g} gcount={gcount g} tcount={tcount g}"
   let prog := compileArithmeticGateToPPM g
-  IO.FS.writeFile "PyCircuits/ppm/adder2_ppm.txt" (String.intercalate "\n" (prog.map cmdStr) ++ "\n")
+  let ppmHeader : String :=
+    "# PPM program (Pauli-Product-Measurement / Litinski form) of the 2-bit Cuccaro adder.\n" ++
+    "# One instruction per line; lines beginning with '#' are comments. Syntax:\n" ++
+    "#   M <P> q1,q2,...  measure the joint Pauli operator P on qubits q1,q2,... (i.e. P_q1 (x) P_q2 (x) ...,\n" ++
+    "#                    P in {X,Y,Z}); a single destructive multi-qubit LOGICAL-PARITY measurement.\n" ++
+    "#                    e.g. 'M Z 2,1' = measure Z_2 (x) Z_1 (the joint Z-parity of qubits 2 and 1).\n" ++
+    "#   F q1,q2,...      Pauli-FRAME update: a classically-tracked Pauli correction on those qubits,\n" ++
+    "#                    conditioned on earlier measurement outcomes (feed-forward; NOT a physical gate).\n" ++
+    "#   T q              consume one MAGIC state routed to qubit q (the only non-Clifford resource;\n" ++
+    "#                    each Toffoli/CCX consumes one |CCZ> magic state via this injection).\n"
+  IO.FS.writeFile "PyCircuits/ppm/adder2_ppm.txt" (ppmHeader ++ String.intercalate "\n" (prog.map cmdStr) ++ "\n")
   IO.println s!"adder2 PPM: {prog.length} commands"
