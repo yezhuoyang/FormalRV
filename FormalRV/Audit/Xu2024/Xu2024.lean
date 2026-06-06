@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.Xu2024 — Phase-C corpus paper #6.
+  FormalRV.Audit.Xu2024.Xu2024 — Phase-C corpus paper #6.
 
   Xu et al. 2024, "Constant-overhead fault-tolerant quantum
   computation with reconfigurable atom arrays" (Nat. Phys. 20).
@@ -31,7 +31,7 @@ import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.Xu2024
+namespace FormalRV.Audit.Xu2024.Xu2024
 
 open FormalRV.Framework FormalRV.Qualtran
 
@@ -73,4 +73,4 @@ example : xu2024_hw.cycle_time_us_tenths = 24000 * gidney_fowler_realistic.cycle
   show 240000 = 24000 * 10
   rfl
 
-end FormalRV.Corpus.Xu2024
+end FormalRV.Audit.Xu2024.Xu2024

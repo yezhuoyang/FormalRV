@@ -26,8 +26,6 @@ import FormalRV.LatticeSurgery
 import FormalRV.System
 -- The four inter-layer contract interfaces.
 import FormalRV.Framework
--- The seven corpus papers.
-import FormalRV.Corpus
 -- Per-paper reader-facing audit (import-only; #check + #print axioms).
 import FormalRV.Audit
 -- Teaching entry point: standard textbook Shor + surface-code lattice surgery (START HERE).

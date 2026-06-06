@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.Babbush2026 — Phase-C corpus paper #5.
+  FormalRV.Audit.Babbush2026.Babbush2026 — Phase-C corpus paper #5.
 
   Babbush et al. 2026, "Approaching ECC-256 with less than half a
   million physical qubits" (low-qubit variant). Surface code on
@@ -31,7 +31,7 @@ import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.Babbush2026
+namespace FormalRV.Audit.Babbush2026.Babbush2026
 
 open FormalRV.Framework FormalRV.Qualtran
 
@@ -65,4 +65,4 @@ example : babbush_instance.2.1.n = 425 ∧
           babbush_instance.2.1.d = 14 := ⟨rfl, rfl, rfl⟩
 example : babbush_instance.2.2 = gidney_fowler_realistic := rfl
 
-end FormalRV.Corpus.Babbush2026
+end FormalRV.Audit.Babbush2026.Babbush2026

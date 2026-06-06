@@ -1,6 +1,6 @@
 /-
 ================================================================================
-  FormalRV.Corpus.Pinnacle — formalization FRAMEWORK for the Pinnacle Architecture.
+  FormalRV.Audit.Pinnacle.Pinnacle — formalization FRAMEWORK for the Pinnacle Architecture.
 ================================================================================
   Paul Webster et al., "The Pinnacle Architecture: Reducing the cost of breaking
   RSA-2048 to 100 000 physical qubits using quantum LDPC codes," arXiv:2602.11457v2
@@ -40,9 +40,9 @@
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.GF2Rank
 import FormalRV.Audit.CainXu2026.QianxuCodeParams
-import FormalRV.Corpus.Webster2026
+import FormalRV.Audit.Pinnacle.Webster2026
 
-namespace FormalRV.Corpus.Pinnacle
+namespace FormalRV.Audit.Pinnacle.Pinnacle
 
 open FormalRV.QEC.Algebraic
 open FormalRV.Audit.CainXu2026.QianxuCodeParams
@@ -74,9 +74,9 @@ theorem pinnacle_gb_72_k_derived : derivedK pinnacle_gb_72 = 12 := by native_dec
     stubbed — deriving `k` at 1620 columns needs the GB homological formula, out of brute
     rank reach, exactly as for lp_20 in cain-xu). -/
 theorem pinnacle_rsa_code_recorded :
-    FormalRV.Corpus.Webster2026.webster_code.n = 1620 ∧
-    FormalRV.Corpus.Webster2026.webster_code.k = 16 ∧
-    FormalRV.Corpus.Webster2026.webster_code.d = 24 := by
+    FormalRV.Audit.Pinnacle.Webster2026.webster_code.n = 1620 ∧
+    FormalRV.Audit.Pinnacle.Webster2026.webster_code.k = 16 ∧
+    FormalRV.Audit.Pinnacle.Webster2026.webster_code.d = 24 := by
   refine ⟨by decide, by decide, by decide⟩
 
-end FormalRV.Corpus.Pinnacle
+end FormalRV.Audit.Pinnacle.Pinnacle

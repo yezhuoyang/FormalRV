@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.Webster2026 — Phase-C corpus paper #4.
+  FormalRV.Audit.Pinnacle.Webster2026 — Phase-C corpus paper #4.
 
   Webster et al. 2026 ("Pinnacle"), reconfigurable-atom-array Shor
   on **generalised-bicycle (GB) qLDPC codes**. Conceptually closest
@@ -26,7 +26,7 @@ import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.Webster2026
+namespace FormalRV.Audit.Pinnacle.Webster2026
 
 open FormalRV.Framework FormalRV.Qualtran
 
@@ -60,4 +60,4 @@ example : webster_instance.2.1.n = 1620 ∧
           webster_instance.2.1.d = 24 := ⟨rfl, rfl, rfl⟩
 example : webster_instance.2.2.physical_error_thousandths = 1 := by rfl
 
-end FormalRV.Corpus.Webster2026
+end FormalRV.Audit.Pinnacle.Webster2026
