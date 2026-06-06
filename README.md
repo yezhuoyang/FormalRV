@@ -129,6 +129,14 @@ numbers are *recorded* claims — per-paper parity matrices are stubbed) and mac
 bound where possible. The one cross-cutting **verified** result — order-finding success
 `≥ κ/(log₂N)⁴`, axiom-free — holds for *every* instance (it is `N`-parametric).
 
+**Per-paper audit → [`FormalRV/Audit/`](FormalRV/Audit).** One reader-verifiable file per paper that
+**redefines nothing** — it imports the real theorems and exposes them with `#check` / `#print axioms`,
+framed by the paper's headline claim, the *settings a reader should check* match the paper, *our
+approach*, the *gap we determined*, and what is *still unsolved*. Verify any one paper with, e.g.,
+`lake build FormalRV.Audit.Gidney2025` (compilation = every cited theorem type-checks; `#print axioms`
+shows the exact trust base). The two Gidney papers are the most complete; the LDPC-Shor and
+neutral-atom papers have open problems, each named in its file.
+
 | Paper | Headline claim | What FormalRV machine-checks |
 |---|---|---|
 | **cain-xu-2026** (focus) — [2603.28627](https://arxiv.org/abs/2603.28627) | RSA-2048 in ~10⁴ qubits, ~1 week | ➗ recovers Eqs. E3/E4/E9; ➗ `decide`-proved 95× qubit·hour win vs GE2021; ✅ verified adder/lookup T-counts |

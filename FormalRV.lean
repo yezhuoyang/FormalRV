@@ -28,6 +28,8 @@ import FormalRV.System
 import FormalRV.Framework
 -- The seven corpus papers.
 import FormalRV.Corpus
+-- Per-paper reader-facing audit (import-only; #check + #print axioms).
+import FormalRV.Audit
 -- Qualtran physical-parameter bridge.
 import FormalRV.Qualtran
 -- The verifier: airtight Shor-on-LP-code obligation + the #verify_clean enforcement gate.
