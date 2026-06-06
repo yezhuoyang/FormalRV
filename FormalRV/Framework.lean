@@ -7,6 +7,7 @@ import FormalRV.Framework.L4_QECCode
 import FormalRV.Framework.ResourceEstimate
 import FormalRV.Framework.ResourceBounds
 import FormalRV.Framework.CostModel
+import FormalRV.Framework.PaperClaims
 
 /-!
 # FormalRV.Framework

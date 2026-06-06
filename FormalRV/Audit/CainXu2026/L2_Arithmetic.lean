@@ -4,7 +4,7 @@
   The paper's per-Toffoli costs (Eqs E3/E4/E9).  E3/E4 are RECOVERED as exact
   structural identities (✅ verify-clean); E9 is an arithmetic (decide) bound (➗).
 -/
-import FormalRV.Audit.Common.PaperClaims
+import FormalRV.Framework.PaperClaims
 import FormalRV.Verifier
 
 -- ✅ Eq. E3: the Gidney-variant n-bit adder costs exactly 25·n τ_s:

@@ -21,16 +21,12 @@
 -/
 
 import FormalRV.QEC.Instances
-import FormalRV.QEC.GF2Rank
+import FormalRV.QEC.CodeDimension   -- general helper `derivedK` (k = n − rank Hx − rank Hz)
 
 namespace FormalRV.Audit.CainXu2026.QianxuCodeParams
 
 open FormalRV.QEC.Instances
-open FormalRV.Framework.LDPC
-
-/-- The logical-qubit count DERIVED from a CSS code's parity matrices:
-    `k = n − rank(H_X) − rank(H_Z)` over GF(2). -/
-def derivedK (c : FormalRV.QEC.CSSCode) : Nat := c.n - rank c.hx - rank c.hz
+open FormalRV.QEC   -- brings the general `derivedK`
 
 /-- **bb18's k = 10, DERIVED from its constructed matrices** (n=248, rank H_X =
     rank H_Z = 119), matching the paper's `[[248,10,18]]`.  Not hardcoded — computed

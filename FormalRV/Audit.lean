@@ -1,18 +1,19 @@
 /-
   FormalRV.Audit — one reader-facing audit file per paper.
 
-  Each `FormalRV/Audit/<Paper>.lean` REDEFINES NOTHING: it imports the real
-  definitions/theorems from `Corpus/` (and the shared `Framework/` · `Shor/`
-  folders) and exposes them with `#check` / `#print axioms`, framed by a docstring
-  that states the paper's headline claim, the SETTINGS a reader should check against
-  the paper, OUR APPROACH, the GAP we determined, and what is STILL UNSOLVED.
+  Each `FormalRV/Audit/<Paper>/` holds ONLY that paper's specific implementation +
+  scheduling, and imports ONLY general/reusable code from the framework folders
+  (`Shor`, `LatticeSurgery`, `QEC`, `System`, `PPM`, `Framework`, `Verifier`, …) —
+  never another paper.  Its layer files expose the relevant theorems with `#check` /
+  `#verify_clean`, framed by a docstring that states the paper's headline claim, the
+  SETTINGS a reader should check against the paper, OUR APPROACH, the GAP we
+  determined, and what is STILL UNSOLVED.
 
   A reader verifies any single paper with, e.g.,
       lake build FormalRV.Audit.Gidney2025
   Compilation confirms every cited theorem type-checks; the `#print axioms` lines
   reveal the exact trust base.  See FormalRV/Audit/README.md for the index table.
 -/
-import FormalRV.Audit.Common            -- shared infrastructure (used by several paper audits)
 import FormalRV.Audit.Peng2022          -- the cross-cutting order-finding success bound
 import FormalRV.Audit.Gidney2025
 import FormalRV.Audit.GidneyEkera2021

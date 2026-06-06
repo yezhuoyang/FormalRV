@@ -6,13 +6,13 @@
   Output: Example/neutral_atom/surface3_xx_merge.stim
 -/
 import FormalRV.LatticeSurgery.StimEmit
-import FormalRV.Audit.Common.SurgeryDemoMerge
-import FormalRV.Audit.Common.SurgeryDemoCNOT
+import FormalRV.LatticeSurgery.SurgeryDemoMerge
+import FormalRV.LatticeSurgery.SurgeryDemoCNOT
 
 open FormalRV.LatticeSurgery.StimEmit
 open FormalRV.Framework.LDPC
-open FormalRV.Audit.Common.SurgeryDemoMerge
-open FormalRV.Audit.Common.SurgeryDemoCNOT
+open FormalRV.LatticeSurgery.SurgeryDemoMerge
+open FormalRV.LatticeSurgery.SurgeryDemoCNOT
 
 def emit (name : String) (g : SurgeryGadget) : IO Unit := do
   let stim := surgeryToStim g

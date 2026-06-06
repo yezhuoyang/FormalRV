@@ -34,6 +34,15 @@ import FormalRV.Shor.WindowedPPM
 import FormalRV.Shor.WindowedShorConnection
 import FormalRV.Shor.WindowedTimeCost
 import FormalRV.Shor.WindowedWidth
+import FormalRV.Shor.ShorEmit
+import FormalRV.Shor.ShorEmitDistance
+import FormalRV.Shor.ShorPPMEndToEnd
+import FormalRV.Shor.ShorPPMUnitaryReduction
+import FormalRV.Shor.ShorModMulPPMFactoryE2E
+import FormalRV.Shor.WindowedShorPPMFactoryE2E
+import FormalRV.Shor.TeleportCCXGrounded
+import FormalRV.Shor.ShorCriticalPathFloor
+import FormalRV.Shor.ShorFullMachineRequirement
 
 /-!
 # FormalRV.Shor

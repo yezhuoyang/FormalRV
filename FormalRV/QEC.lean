@@ -3,6 +3,7 @@ import FormalRV.QEC.GF2Linear
 import FormalRV.QEC.GF2Linearity
 import FormalRV.QEC.GF2Rank
 import FormalRV.QEC.CSSCode
+import FormalRV.QEC.CodeDimension
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Logical
 import FormalRV.QEC.LogicalFinder
@@ -14,6 +15,7 @@ import FormalRV.QEC.QECCodeInstances
 import FormalRV.QEC.Instances
 import FormalRV.QEC.LPInstancesValid
 import FormalRV.QEC.Addressing
+import FormalRV.QEC.GateSyndromeWorkedExample
 
 /-!
 # FormalRV.QEC
