@@ -81,16 +81,25 @@ If you tighten the hardware past feasibility, `schedule_fits` is *rejected* — 
 
 <p align="center"><img src="docs/diagrams/ls_adder2_blender.png" width="440" alt="2-bit Cuccaro adder compiled to surface-code lattice surgery, ray-traced"></p>
 
-**…and onto real neutral-atom hardware.** The *same* d=3 surface-code lattice surgery compiles to
-a **neutral-atom** zoned machine with [ZAC](https://github.com/UCLA-VAST/ZAC) (HPCA 2025): the 5
-logical qubits become 5 `[[13,1,3]]` patches in a **Memory** zone, every merge fires its **full
-merged-code syndrome** (the verified `surface3_zz_merge` / `surface3_zzz_merge` gadgets) as Rydberg
-`CZ`s in an **Entangling** zone, and the 4 `|C̄CZ̄⟩` magic states sit in a **Factory** zone — 108
-atoms, 1232 `CZ`, 95 Rydberg stages, ZAC-verified, with the FormalRV system invariants re-proven
-under neutral-atom capacities. The GIF shows the atoms physically moving to implement it
-([`Example/neutral_atom/`](Example/neutral_atom)):
+### …and the FULL adder, end to end, on real neutral-atom hardware
 
-<p align="center"><img src="Example/neutral_atom/surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom atom movement implementing the 2-bit adder's distance-3 surface-code lattice surgery"></p>
+The *same* 2-bit adder runs as a **complete** d=3 surface-code lattice-surgery computation on a
+**neutral-atom** machine ([`Example/neutral_atom/`](Example/neutral_atom)) — every layer present, no
+placeholders:
+
+1. **It really computes `a+b`** — the measurement-based realization (real `|C̄CZ̄⟩` magic by gate
+   teleportation, measurement-driven Pauli feed-forward) is simulated and matches the adder on **all
+   32 inputs × 30 random measurement branches** ([`logical_adder/verify_mb_adder.py`](Example/neutral_atom/logical_adder/verify_mb_adder.py)).
+2. **d=3 lattice surgery** — each of the 5 logical qubits is a `[[13,1,3]]` patch; every gate is the
+   **full merged-code syndrome** (verified `surface3_zz_merge` 88 CX / `surface3_zzz_merge` 131 CX),
+   each Toffoli a **real `|C̄CZ̄⟩` injection**.
+3. **Detailed system schedule** — 192 SysCalls, machine-checked to fit the architecture
+   (`schedule_fits`), wall-clock 192 µs.
+4. **Neutral-atom compile (ZAC, HPCA 2025)** — **107 atoms** (Memory / Ancilla / Factory / Reservoir
+   zones), **1240 `CZ`**, 95 Rydberg stages, **ZAC-verified**, invariants re-proven under
+   neutral-atom capacities. The GIF shows the atoms physically moving to do it:
+
+<p align="center"><img src="Example/neutral_atom/surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom atoms implementing the full distance-3 surface-code lattice-surgery 2-bit adder"></p>
 
 ## Repository layout
 

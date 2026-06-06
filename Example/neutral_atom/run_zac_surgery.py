@@ -114,7 +114,7 @@ animator_module.Animator.update_init = patched_update_init
 animator_module.Animator.update = patched_update
 
 
-def patched_animate(self, code, output, scaling_factor=7, font=9, ffmpeg="ffmpeg"):
+def patched_animate(self, code, output, scaling_factor=6, font=9, ffmpeg="ffmpeg"):
     matplotlib.rcParams.update({"font.size": font})
     self.code = code
     self.fig, self.ax = self.setup_canvas(scaling_factor)   # 2x larger figure (was 3.5)
@@ -122,7 +122,7 @@ def patched_animate(self, code, output, scaling_factor=7, font=9, ffmpeg="ffmpeg
     self.inst_str = ""
     num_frame = self.create_schedule()
     total = self.INIT_FRM + num_frame
-    step = 4                                                 # subsample frames to keep the GIF small
+    step = 9                                                 # subsample frames to keep the GIF small
     frames = list(range(0, total, step))
     print(f"    animation frames: {len(frames)} of {total} (every {step})")
     anim = FuncAnimation(self.fig, self.update, init_func=self.update_init, frames=frames)

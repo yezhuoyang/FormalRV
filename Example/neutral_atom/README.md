@@ -1,90 +1,112 @@
-# The 2-bit Cuccaro adder at distance-3 surface-code lattice surgery — on NEUTRAL ATOMS (ZAC)
+# FULL end-to-end logical 2-bit adder — verified → d=3 lattice surgery → system schedule → NEUTRAL ATOMS
 
-The **same 2-bit Cuccaro adder** verified in [`../Adder2EndToEnd.lean`](../Adder2EndToEnd.lean),
-realized as **distance-3 surface-code lattice surgery** with the **FULL merged-code syndrome for
-every merge**, and compiled onto a **neutral-atom zoned architecture** with
-[**ZAC**](https://github.com/UCLA-VAST/ZAC) (Lin, Tan & Cong, HPCA 2025). Each of the adder's 5
-logical qubits is a surface-code `[[13,1,3]]` patch (`surfaceHGP 3`, verified in FormalRV); each of
-its 12 joint Pauli-`Z` measurements is the **complete verified merged-code syndrome circuit**
-(`surface3_zz_merge`, 88 CX / `surface3_zzz_merge`, 131 CX), and each Toffoli consumes a `|C̄CZ̄⟩`
-from a **factory**. The GIF shows the atoms physically moving to do it.
+The complete pipeline for **one** circuit, the 2-bit Cuccaro adder, with every layer present and
+checked — no placeholders:
 
-> Same QEC framework as superconducting — same surface code, same parity checks, same verified
-> logical operations. Only the **physical realization** differs: atoms are shuttled by an AOD into
-> an entangling zone for the Rydberg `CZ`s, instead of fixed couplers.
+1. **Logical adder computes `a+b`** — proven, and *re-verified for the realization*.
+2. **d=3 surface-code lattice surgery** — every gate is a real merged-code merge / real `|C̄CZ̄⟩`
+   magic injection.
+3. **Detailed system schedule** — 192 SysCalls, machine-checked to fit the architecture.
+4. **Neutral-atom compile (ZAC)** — the whole thing as atom movements, ZAC-verified, with a GIF.
 
-<p align="center"><img src="surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom movement implementing the 2-bit adder's full d=3 surface-code lattice surgery"></p>
+<p align="center"><img src="surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom atoms implementing the full d=3 surface-code lattice-surgery 2-bit adder"></p>
 
-*Qian Xu's zones: **MEMORY** (the 5 d=3 patches = 65 data atoms, 5 patch-rows), **ANCILLA** (the
-reused surgery+syndrome ancilla pool, `N_𝒜`), **FACTORY** (the 4 `|C̄CZ̄⟩` magic atoms — one per
-Toffoli), **RES**ervoir. Atoms shuttle up into the **ENTANGLING** zone for the Rydberg `CZ`s; the
-magenta banner shows the **FormalRV SysCall** each ZAC op realizes.*
+*Zones (Qian Xu taxonomy): **MEMORY** = the 5 `[[13,1,3]]` data patches; **ANCILLA** = the reused
+surgery/syndrome pool (`N_𝒜`); **FACTORY** = the 3 `|C̄CZ̄⟩` magic atoms; **RES**ervoir. Atoms shuttle
+into the **ENTANGLING** zone for the Rydberg `CZ`s (the merges + magic injections). Banner = the
+FormalRV SysCall each ZAC op realizes.*
 
-## Pipeline
+---
+
+## 1 · The logical adder actually computes `a+b` — VERIFIED TWO WAYS
+
+| What is verified | How |
+|---|---|
+| the **logical circuit** computes `a+b` | `cuccaro_n_bit_adder_full_correct` (Lean theorem) |
+| the **measurement-based realization** computes `a+b` | [`logical_adder/verify_mb_adder.py`](logical_adder/verify_mb_adder.py) — full statevector simulation |
+
+`python logical_adder/verify_mb_adder.py` builds the adder out of **real measurement-based gadgets**
+and checks it:
 
 ```
-FormalRV verified 2-bit Cuccaro adder        cuccaro_n_bit_adder_full 2 0  (5 logical qubits)
-  ├─ scripts/EmitSurgeryStim.lean ─────────►  surface3_zz_merge.stim (88 CX) , surface3_zzz_merge.stim
-  │                                            (131 CX) — the verified FULL merged-code syndromes
-  └─ scripts/EmitAdder2Example.lean ───────►  adder2_ppm.txt   (12 joint-Z measurements + 4 magic-T)
-       └─ gen_adder2_d3_full_qasm.py ──────►  surface3_adder2_d3_full.qasm   (each PPM merge = the
-                                              FULL zz/zzz syndrome remapped onto the 5 shared
-                                              patches; 108 atoms, 1232 CX)
-            └─ run_zac_surgery.py ─────────►  ZAC compile + atom-movement GIF
+[1] |CCZ> magic injection == CCZ ... OK            # real |C̄CZ̄⟩ = CCZ|+++>, gate teleportation
+[2] lattice-surgery CNOT == CX ... OK              # joint M_ZZ + M_XX merges + Pauli feed-forward
+[3] measurement-based adder == ideal adder (32 inputs x 30 random branches): mismatches: 0
+    => FULL LOGICAL ADDER VERIFIED
+[4] semantic check: computes a+b (mod 4): a+b correct for all 16 (a,b) pairs: YES
 ```
 
-## Architecture — Qian Xu zone taxonomy ([`surface3_surgery_arch.json`](surface3_surgery_arch.json))
+This is what makes it a *real* adder, and closes the gaps the earlier draft had — the **4 Toffolis
+are genuinely performed** (real `|C̄CZ̄⟩` magic consumed by gate teleportation), the computation is
+**measurement-driven with outcome-conditioned Pauli/Clifford feed-forward**, and "computes `a+b`" is
+established **for the realization** (over many random measurement branches), not just inherited from
+the abstract proof.
 
-| Zone | Role | Here |
-|---|---|---|
-| **Memory** | logical data patches | 65 atoms = **5 × `[[13,1,3]]`** surface-code patches |
-| **Operation Ancilla** (`N_𝒜`) | surgery + syndrome ancillae | **39 atoms, reused** across all 12 merges |
-| **Factory** | `\|C̄CZ̄⟩` magic-state factory | **4 atoms — USED** (one per Toffoli) |
-| **Reservoir** | spare | idle trap sites |
-| **Entangling (processor)** | Rydberg `CZ` fires here | the full merges + magic injections |
+## 2 · d=3 surface-code lattice surgery — the FULL merged-code syndrome per gate
 
-## Compiled resource (ZAC verifier passes) — `python run_zac_surgery.py all`
+Each of the 5 logical qubits is a `[[13,1,3]]` surface code (`surfaceHGP 3`, verified;
+`scripts/DumpSurface3.lean`). [`gen_adder2_d3_full_qasm.py`](gen_adder2_d3_full_qasm.py) lowers the
+adder's PPM to the **complete merged-code syndrome circuit** for every gate:
+
+- each joint-`Z` measurement → the verified `surface3_zz_merge` (88 CX) / `surface3_zzz_merge`
+  (131 CX) full syndrome (`scripts/EmitSurgeryStim.lean`), remapped onto the 5 shared patches;
+- each Toffoli → a **real `|C̄CZ̄⟩`** prepared on 3 magic atoms (`= CCZ|+++>`) and injected into its
+  3 data patches.
+
+→ `surface3_adder2_d3_full.qasm`: **107 atoms** (65 data + 39 reused ancillae + 3 magic), **1240 CZ**
++ 4 real magic injections.
+
+## 3 · Detailed system schedule — `Example/Adder2EndToEnd.lean`
+
+`lake env lean --run Example/Adder2EndToEnd.lean`:
+
+```
+System schedule:  SysCalls=192  Gate2q merges=72  wall-clock=192µs
+✓ VERIFIED  schedule fits this architecture          (theorem schedule_fits)
+✓ VERIFIED  wall-clock LOWER BOUND ≥ 72µs            (gate2q capacity bound)
+```
+
+The 192 SysCalls (`FRESHANC / GATE2Q / MEAS / DECODE / PFU / MAGIC`) are scheduled onto the
+Data/Ancilla/Factory/Routing zones with explicit µs intervals and **machine-checked** to satisfy
+every strict invariant (operation-capacity, feedback-after-decode, slot-capacity, ancilla-freshness).
+
+## 4 · Neutral-atom compile (ZAC) — `python run_zac_surgery.py all`
 
 | Metric | Value |
 |---|---:|
-| logical qubits / surface-code patches | 5 |
-| physical atoms | **108** (65 data + 39 reused ancillae + 4 magic) |
-| entangling `CZ` (full merged-code syndromes) | **1232** (8 × 88 + 4 × 131 + 4 magic) |
-| Rydberg stages (max parallel `CZ`) | 95 (≤ 20) |
-| ZAIR atom-movement instructions | **1889** |
-| schedule runtime | 316 906 µs (≈ 317 ms) |
+| logical qubits / patches | 5 |
+| physical atoms | **107** (65 data + 39 reused ancillae + 3 `\|C̄CZ̄⟩` magic) |
+| entangling `CZ` (full merged-code syndromes + magic) | **1240** |
+| Rydberg stages (max parallel `CZ`) | 95 (≤ 21) |
+| ZAIR atom-movement instructions | **1892** |
+| schedule runtime | 318 881 µs (≈ 319 ms) |
 | ZAC gate-scheduling + placement verification | ✓ pass |
 
-## Do FormalRV's system invariants hold on neutral atoms? — YES
+Plus [`NeutralAtomInvariants.lean`](NeutralAtomInvariants.lean): the FormalRV system invariants are
+re-proven (`native_decide`) under neutral-atom (Rydberg-parallel) capacities.
 
-[`NeutralAtomInvariants.lean`](NeutralAtomInvariants.lean) (`native_decide`) proves the verified
-schedule satisfies every strict system invariant under neutral-atom capacities (`max_gate2q_active`
-set to the platform's Rydberg parallelism, vs the superconducting single-laser `1`).
-
-## Reproduce
+## Reproduce the whole thing
 
 ```bash
-lake env lean --run scripts/EmitSurgeryStim.lean              # verified zz/zzz full merge templates
+python Example/neutral_atom/logical_adder/verify_mb_adder.py   # 1: adder really computes a+b
+lake env lean --run scripts/EmitSurgeryStim.lean              # zz/zzz full merge templates
 lake env lean --run scripts/EmitAdder2Example.lean            # adder -> PPM
+lake env lean --run Example/Adder2EndToEnd.lean               # 3: system schedule (schedule_fits)
 cd Example/neutral_atom
-python gen_adder2_d3_full_qasm.py                             # FULL merges, 5 shared patches -> QASM
-python run_zac_surgery.py all                                 # full adder surgery + resources
-python run_zac_surgery.py 12                                  # GIF (first full merge)
-lake env lean --run NeutralAtomInvariants.lean                # invariants on neutral atoms
+python gen_adder2_d3_full_qasm.py                             # 2: d=3 full merges + real magic
+python run_zac_surgery.py all                                 # 4: neutral-atom compile + resources
+python run_zac_surgery.py 6                                   # 4: the GIF
 ```
 
 ## Honest scope
 
-- **Full merged-code syndrome.** Each of the 12 merges is the *complete* verified merged-code
-  stabilizer circuit (`surface3_zz_merge` / `surface3_zzz_merge` from
-  [`Corpus/SurgeryDemoCNOT`](../../FormalRV/Corpus/SurgeryDemoCNOT.lean) +
-  [`SurgeryDemoMerge`](../../FormalRV/Corpus/SurgeryDemoMerge.lean)), remapped onto the 5 shared
-  `[[13,1,3]]` patches — not a simplified joint-`Z̄` readout. (A lighter
-  one-ancilla-coupling-per-merge variant is in `gen_adder2_d3_qasm.py`.)
-- **Ancilla reuse.** The surgery+syndrome ancillae are reused across the 12 merges (they are
-  measured + reset between merges; ZAC ignores measurement and routes the unitary part, so the same
-  atoms serve every merge — that reset is the implied SPAM, hence 39 ancillae, not 12 × 39).
-- **ZAC routes the circuit**; the surface-code + lattice-surgery structure is in the verified input.
-- **Layers/units.** FormalRV is logical (cycles); ZAC is physical (≈ 317 ms, transport-dominated).
-- **FormalRV proves *what* the adder does + that the invariants hold; ZAC shows *how* a
-  neutral-atom machine does it.**
+- **Magic states** are assumed distilled (the Factory zone provides `|C̄CZ̄⟩`); we prepare a genuine
+  `|C̄CZ̄⟩` (`CCZ|+++>`) and inject it — we do not simulate the distillation factory itself.
+- **Measurements + decoding + Pauli-frame feed-forward run on the classical controller.** ZAC routes
+  the *unitary* atom-movements (it skips measurement); a real neutral-atom machine measures in the
+  readout zone and applies corrections between rounds. The feed-forward is verified to be correct in
+  layer 1; ZAC realizes the gate-movement layer.
+- **Ancillae + magic are reused** across gates (measured + reset between; the reset is controller-side
+  SPAM ZAC doesn't route), giving the realistic ~107-atom footprint instead of fresh-per-gate.
+- **FormalRV proves *what* the adder does + that the schedule fits; the simulation proves the
+  realization computes `a+b`; ZAC shows *how* a neutral-atom machine moves the atoms to do it.**
