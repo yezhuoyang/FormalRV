@@ -9,6 +9,10 @@
 
 📖 **API docs:** <https://yezhuoyang.github.io/FormalRV/>
 
+▶ **New here?** Start with [`FormalRV.StandardShor`](FormalRV/StandardShor.lean) — the standard,
+textbook Shor + surface-code lattice surgery, curated as a four-step learning path
+([guide](FormalRV/StandardShor/README.md)). Read it before the advanced low-overhead papers.
+
 ---
 
 ## Goal
@@ -128,6 +132,14 @@ Files are named for their content and kept small (topical modules behind a `<Nam
 numbers are *recorded* claims — per-paper parity matrices are stubbed) and machine-checks a narrower
 bound where possible. The one cross-cutting **verified** result — order-finding success
 `≥ κ/(log₂N)⁴`, axiom-free — holds for *every* instance (it is `N`-parametric).
+
+**Per-paper audit → [`FormalRV/Audit/`](FormalRV/Audit).** One reader-verifiable file per paper that
+**redefines nothing** — it imports the real theorems and exposes them with `#check` / `#print axioms`,
+framed by the paper's headline claim, the *settings a reader should check* match the paper, *our
+approach*, the *gap we determined*, and what is *still unsolved*. Verify any one paper with, e.g.,
+`lake build FormalRV.Audit.Gidney2025` (compilation = every cited theorem type-checks; `#print axioms`
+shows the exact trust base). The two Gidney papers are the most complete; the LDPC-Shor and
+neutral-atom papers have open problems, each named in its file.
 
 | Paper | Headline claim | What FormalRV machine-checks |
 |---|---|---|

@@ -19,3 +19,6 @@ Thumbs.db
 # Python bytecode cache (from codegen verify scripts)
 __pycache__/
 *.pyc
+
+# Downloaded paper sources (arXiv e-prints; kept local for formalization reference)
+/papers/
