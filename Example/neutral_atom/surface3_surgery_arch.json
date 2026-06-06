@@ -1,0 +1,23 @@
+{
+    "_comment": "Neutral-atom zoned architecture for the 2-bit Cuccaro ADDER at distance-3 surface-code lattice surgery, FULL MERGE (each of the 12 joint-Z measurements is the COMPLETE verified merged-code syndrome: surface3_zz_merge 88 CX / surface3_zzz_merge 131 CX, remapped onto the 5 shared patches). Same circuit as Example/Adder2EndToEnd.lean. Qian Xu zone taxonomy (Xu et al. 2024 Nat.Phys. Fig.1; factoring layout memory+processor+factory+operation-ancilla N_A+reservoir). 108 atoms: 5 surface-code [[13,1,3]] patches = 65 data atoms (MEMORY, 5 patch-rows), 39 reused surgery+syndrome ancillae (OPERATION-ANCILLA N_A), 4 |CCZ> magic atoms for the 4 Toffolis (FACTORY -- used). Storage SLM 0 partitioned into these zones by column band; the ENTANGLING/processor zone (SLMs 1-2) above is where the Rydberg CZ fire. Distances um, durations us.",
+    "name": "adder2_d3_full_qianxu_zoned_arch",
+    "operation_duration": {"rydberg": 0.36, "1qGate": 0.5, "atom_transfer": 15},
+    "operation_fidelity": {"two_qubit_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},
+    "qubit_spec": {"T": 1.5e6},
+    "storage_zones": [{
+        "zone_id": 0,
+        "slms": [{"id": 0, "site_seperation": [3, 3], "r": 5, "c": 32, "location": [0, 0]}],
+        "offset": [0, 0], "dimenstion": [96, 15]
+    }],
+    "entanglement_zones": [{
+        "zone_id": 0,
+        "slms": [
+            {"id": 1, "site_seperation": [12, 10], "r": 5, "c": 8, "location": [0, 40]},
+            {"id": 2, "site_seperation": [12, 10], "r": 5, "c": 8, "location": [2, 40]}
+        ],
+        "offset": [0, 40], "dimension": [100, 50]
+    }],
+    "aods": [{"id": 0, "site_seperation": 2, "r": 5, "c": 30}],
+    "arch_range": [[0, 0], [100, 92]],
+    "rydberg_range": [[[0, 40], [95, 90]]]
+}

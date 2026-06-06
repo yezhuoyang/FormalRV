@@ -50,6 +50,57 @@ estimates against machine-checked bounds** — making the residue that *cannot* 
 Each layer is a Lean structure with an explicit **inter-layer contract**; three error mechanisms
 (logical/random, approximation, algorithmic-uncertainty) propagate bounds up to the success theorem.
 
+## Worked example — the 2-bit adder, end to end
+
+The smallest non-trivial slice of the whole stack: the verified **2-bit Cuccaro adder**
+`cuccaro_n_bit_adder_full 2 0` (proven by `cuccaro_n_bit_adder_full_correct`: target `:= a+b`, read
+restored), pushed through **every layer** onto a zoned hardware architecture, ending in a
+**re-runnable, machine-checked resource verdict**. Full detail — the complete OpenQASM, the full
+PPM program, the 192-SysCall schedule, and a self-verifying parameterized Lean file — lives in
+**[`Example/`](Example/)**. Run it (and re-run it for *your own* hardware) with:
+
+```bash
+lake env lean --run Example/Adder2EndToEnd.lean   # type-checks `schedule_fits` + prints the table below
+```
+
+**Architecture** — 4 zones × 100 logical-patch sites: `Data[0,100)` · `Ancilla[100,200)` ·
+`Factory[200,300)` (`|C̄CZ̄⟩` magic) · `Routing[300,400)`; `Gate2q‖=1`, decoder `‖=4`, `t_react=10µs`
+— **all editable** in the `EDIT HERE` block (change them, re-run, get a new verified verdict).
+
+**Verified resource on that architecture** — every row machine-checked, nothing taken on trust:
+
+| Layer | Resource | Value | Verified by |
+|---|---|---:|---|
+| L2 logical | qubits / Toffoli / T-count | 5 / 4 / 28 | `cuccaro_n_bit_adder_full_correct` (+ Qiskit count re-check) |
+| L3 PPM | `\|C̄CZ̄⟩` magic / joint measurements | 4 / 12 | `compileArithmeticGateToPPM` |
+| System | SysCalls / **wall-clock** | 192 / **192 µs** | `scheduleWallclockUs`; **fits the architecture** via `schedule_fits` |
+| System | **wall-clock lower bound** | **≥ 72 µs** | `gate2q_capacity_lower_bound_us` (⌈72 Gate2q / 1‖⌉·1µs) |
+| L4 surgery | conflict-free layout / volume | ✓ / 60 | `ls_compile` certificate |
+
+If you tighten the hardware past feasibility, `schedule_fits` is *rejected* — that is the verdict.
+
+<p align="center"><img src="docs/diagrams/ls_adder2_blender.png" width="440" alt="2-bit Cuccaro adder compiled to surface-code lattice surgery, ray-traced"></p>
+
+### …and the FULL adder, end to end, on real neutral-atom hardware
+
+The *same* 2-bit adder runs as a **complete** d=3 surface-code lattice-surgery computation on a
+**neutral-atom** machine ([`Example/neutral_atom/`](Example/neutral_atom)) — every layer present, no
+placeholders:
+
+1. **It really computes `a+b`** — the measurement-based realization (real `|C̄CZ̄⟩` magic by gate
+   teleportation, measurement-driven Pauli feed-forward) is simulated and matches the adder on **all
+   32 inputs × 30 random measurement branches** ([`logical_adder/verify_mb_adder.py`](Example/neutral_atom/logical_adder/verify_mb_adder.py)).
+2. **d=3 lattice surgery** — each of the 5 logical qubits is a `[[13,1,3]]` patch; every gate is the
+   **full merged-code syndrome** (verified `surface3_zz_merge` 88 CX / `surface3_zzz_merge` 131 CX),
+   each Toffoli a **real `|C̄CZ̄⟩` injection**.
+3. **Detailed system schedule** — 192 SysCalls, machine-checked to fit the architecture
+   (`schedule_fits`), wall-clock 192 µs.
+4. **Neutral-atom compile (ZAC, HPCA 2025)** — **107 atoms** (Memory / Ancilla / Factory / Reservoir
+   zones), **1240 `CZ`**, 95 Rydberg stages, **ZAC-verified**, invariants re-proven under
+   neutral-atom capacities. The GIF shows the atoms physically moving to do it:
+
+<p align="center"><img src="Example/neutral_atom/surface3_adder2_d3_neutral_atom.gif" width="560" alt="neutral-atom atoms implementing the full distance-3 surface-code lattice-surgery 2-bit adder"></p>
+
 ## Repository layout
 
 Each concern is a folder **with its own `README.md`** (purpose, key definitions, key theorems,

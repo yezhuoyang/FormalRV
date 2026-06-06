@@ -1,0 +1,158 @@
+# Worked example — the 2-bit Cuccaro adder, end to end
+
+Full detail at **every layer** for the smallest non-trivial circuit, so you can inspect each
+step and **verify it yourself** — and re-run the resource verification on **your own hardware**.
+
+> **The source of truth is [`Adder2EndToEnd.lean`](Adder2EndToEnd.lean)** in this folder.
+> ```bash
+> lake env lean --run Example/Adder2EndToEnd.lean
+> ```
+> Running it **type-checks every theorem** below (including `schedule_fits` — a machine-checked
+> proof that the surgery schedule fits the architecture) and prints the resource table. **Edit the
+> `EDIT HERE` block (zones, decoder width, parallelism, reaction latency), re-run, and you get a new
+> machine-checked verdict + new verified bounds.** If your hardware can't host the schedule, the
+> proof is *rejected* — that's the verification.
+
+Everything below is the **actual emitted output** of the real compilers — not hand-typed.
+
+---
+
+## Notation — instruction syntax
+
+Each artifact file also carries this legend as a `#`-comment header (the `#` lines are skipped by
+the parsers, so the files stay machine-readable).
+
+**PPM program** ([`adder2_ppm.txt`](adder2_ppm.txt)) — one instruction per line:
+
+| Instruction | Operands | Meaning |
+|---|---|---|
+| `M <P> q1,q2,…` | Pauli `P∈{X,Y,Z}` + qubit list | Measure the **joint** Pauli `P` on those qubits, i.e. `P_q1 ⊗ P_q2 ⊗ …` — one destructive multi-qubit **logical-parity** measurement. e.g. `M Z 2,1` = measure `Z₂ ⊗ Z₁` (the joint Z-parity of qubits 2 and 1). |
+| `F q1,q2,…` | qubit list | **Pauli-frame update**: a *classically-tracked* Pauli correction on those qubits, conditioned on earlier measurement outcomes (the measurement-gadget feed-forward — **not** a physical gate). |
+| `T q` | qubit | Consume one **magic state** routed to qubit `q` (the only non-Clifford resource; each Toffoli/CCX consumes one `\|CCZ⟩` magic state via this injection). So `T 2` is *not* a physical T-gate on a wire — it marks one magic-state consumption. |
+
+**System-call schedule** ([`adder2_full_schedule.txt`](adder2_full_schedule.txt)) — every data line is
+`<OP> <operands…> <begin_us> <end_us>`; the **last two integers are always the µs time interval**:
+
+| Instruction | Operands (before the two times) | Meaning |
+|---|---|---|
+| `FRESHANC <zone> <b> <e>` | zone id | Allocate a **fresh ancilla** patch in `<zone>` (zone `1` = the Ancilla zone). e.g. `FRESHANC 1 0 1` = fresh ancilla in zone 1 during `[0,1) µs`. |
+| `GATE2Q <q1> <q2> <b> <e>` | two patch **sites** | A two-qubit op between sites `q1,q2` — here a surgery merge / syndrome CX. e.g. `GATE2Q 0 100 1 2` = couple data-site 0 with ancilla-site 100 during `[1,2) µs`. |
+| `MEAS <q> <b> <e>` | site | Measure the logical patch at site `q`. |
+| `DECODE <round> <b> <e>` | round id | Run the decoder on round `<round>`'s syndrome. |
+| `PFU <corr> <b> <e>` | correction id | **P**auli-**F**rame **U**pdate — apply the classically-conditioned Pauli correction `<corr>` (the system-level feed-forward; the scheduling-layer cousin of the PPM `F`). |
+| `MAGIC <fzone> <b> <e>` | factory zone | Request a magic state from factory zone `<fzone>`. |
+| `GATE1Q <q> <b> <e>` · `TRANSIT <q> <ch> <b> <e>` | site · site+channel | One-qubit gate · route a qubit through a routing channel. |
+
+**Sites** are global patch indices grouped into zones: `Data [0,100)`, `Ancilla [100,200)`,
+`Factory [200,300)`, `Routing [300,400)`.
+
+---
+
+## L1 / L2 — the verified logical circuit
+
+`cuccaro_n_bit_adder_full 2 0`, proven by **`cuccaro_n_bit_adder_full_correct`** (target register
+`:= a + b mod 4`, read register restored, carry preserved) — a *theorem*, not a test. 5 qubits.
+
+## L2 → OpenQASM ([`adder2.qasm`](adder2.qasm)) — Qiskit re-verifies the counts
+
+`Core/GateQASM.toQASM` emits the full circuit; `5` qubits, `8·cx + 4·ccx`, `tcount 28`.
+`python PyCircuits/verified_circuit_qasm_count.py` reloads it in Qiskit and confirms the gate
+counts equal the Lean-proved numbers.
+
+```qasm
+OPENQASM 2.0; include "qelib1.inc"; qreg q[5];
+cx q[2],q[1]; cx q[2],q[0]; ccx q[0],q[1],q[2];      // MAJ bit 0
+cx q[4],q[3]; cx q[4],q[2]; ccx q[2],q[3],q[4];      // MAJ bit 1
+ccx q[2],q[3],q[4]; cx q[4],q[2]; cx q[2],q[3];      // UMA bit 1
+ccx q[0],q[1],q[2]; cx q[2],q[0]; cx q[0],q[1];      // UMA bit 0
+```
+
+## L3 → PPM ([`adder2_ppm.txt`](adder2_ppm.txt)) — the real `compileArithmeticGateToPPM`
+
+28 commands. Each `cx` → joint `ZZ` measurement + Pauli-frame update; each `ccx` → inject a
+`|C̄CZ̄⟩` magic state + joint `ZZZ` measurement + frame update:
+
+```
+M Z 2,1 · F 1            M Z 2,0 · F 0            T 2 · M Z 0,1,2 · F 2     # MAJ bit 0
+M Z 4,3 · F 3            M Z 4,2 · F 2            T 4 · M Z 2,3,4 · F 4     # MAJ bit 1
+T 4 · M Z 2,3,4 · F 4    M Z 4,2 · F 2            M Z 2,3 · F 3            # UMA bit 1
+T 2 · M Z 0,1,2 · F 2    M Z 2,0 · F 0            M Z 0,1 · F 1            # UMA bit 0
+```
+
+→ **4 `|C̄CZ̄⟩` magic states** (one per Toffoli) and **12 joint logical measurements**
+(`numCX + numCCX = 8 + 4`).
+
+## System — the hardware architecture (zoned), editable
+
+| Zone | Sites | Role |
+|---|---|---|
+| **Data** | `[0, 100)` — 100 patches | computation / register qubits |
+| **Ancilla** | `[100, 200)` — 100 patches | surgery routing ancillae |
+| **Factory** | `[200, 300)` — 100 patches | magic-state (`\|C̄CZ̄⟩`) factories |
+| **Routing** | `[300, 400)` — 100 patches | bus / transit |
+
+Operation-capacity model (`adder_demo_opCap`): **Gate2q ‖ = 1** (single-laser hardware),
+measure / decode / feedback ‖ = 4 each, gate1q ‖ = 4, magic-req / fresh-ancilla / transit ‖ = 100.
+Timing: `t_react = 10 µs`, window `= 1000 µs`. **All of these are the `EDIT HERE` knobs.**
+
+## System — the full schedule ([`adder2_full_schedule.txt`](adder2_full_schedule.txt), 192 SysCalls)
+
+The 12 PPM measurements lower to 12 surgery merge blocks (3 syndrome rounds each), scheduled onto
+the zones with explicit `begin..end` µs. Excerpt (one merge block):
+
+```
+FRESHANC 1 0 1        # allocate a fresh ancilla patch in zone 1 (Ancilla)
+GATE2Q 0 100 1 2      # merge data-site 0 with ancilla-site 100   (one syndrome round)
+GATE2Q 50 100 2 3     # merge data-site 50 with ancilla-site 100
+MEAS 100 3 4          # measure the ancilla (the joint-parity readout)
+DECODE 0 4 5          # decode the syndrome
+... (× 12 blocks, then PauliFrameUpdate)
+```
+
+This schedule is **proven** to satisfy *every* strict system invariant on the architecture above —
+operation-capacity, feedback-after-decode, slot-capacity, ancilla-freshness — by
+**`schedule_fits`** (`= all_invariants_strict_with_slot_capacity_and_freshness_ok … = true`,
+`native_decide`).
+
+## L4 → lattice surgery ([certificate](adder2_ls_certificate.txt))
+
+`python PyCircuits/ls_compile.py PyCircuits/qasm/adder2.qasm` auto-compiles the circuit to a
+conflict-free surface-code space-time layout with a **certificate** (the trusted artifact) and a
+ray-traced render:
+
+<p align="center"><img src="../docs/diagrams/ls_adder2_blender.png" width="460" alt="2-bit adder, surface-code lattice surgery, ray-traced"></p>
+
+```
+qubits 5 · depth 11 · two_qubit_merges 8 · magic_injections 4 · conflict_free True · spacetime_volume 60
+```
+
+## Final verified resource — on the default architecture
+
+| Layer | Resource | Value | Verified by |
+|---|---|---:|---|
+| L2 logical | qubits / Toffolis / CX / T-count | 5 / 4 / 8 / 28 | `cuccaro_n_bit_adder_full_correct` + `Core/GateQASM` (Qiskit) |
+| L3 PPM | `\|C̄CZ̄⟩` magic states | 4 | `compileArithmeticGateToPPM` |
+| L3 PPM | joint logical measurements | 12 | `compileArithmeticGateToPPM` |
+| System | SysCalls / merges / **wall-clock** | 192 / 72 / **192 µs** | `scheduleWallclockUs` (foldl over the schedule) |
+| System | **schedule fits architecture** | ✓ | **`schedule_fits`** (all strict invariants) |
+| System | **wall-clock lower bound** | **≥ 72 µs** | `gate2q_capacity_lower_bound_us` (⌈72 Gate2q / 1‖⌉ · 1 µs) |
+| L4 surgery | conflict-free layout, volume | ✓ / 60 | `ls_compile` certificate |
+
+## Re-run on YOUR hardware
+
+Open [`Adder2EndToEnd.lean`](Adder2EndToEnd.lean), change the `EDIT HERE` block — e.g. a wider
+decoder bank (`maxMeasParallel`), more Gate2q parallelism (`maxGate2qParallel`), a different
+reaction latency (`tReactUs`), or resized zones (`myArch`) — and re-run
+`lake env lean --run Example/Adder2EndToEnd.lean`. You get a fresh machine-checked verdict
+(`schedule_fits` passes ⇒ feasible; rejected ⇒ infeasible) and a fresh verified wall-clock lower
+bound. Nothing here is trusted on our word — the proofs are re-checked every run.
+
+## Same QEC, different hardware — lattice surgery on NEUTRAL ATOMS
+
+The lattice-surgery layer above is hardware-agnostic. [`neutral_atom/`](neutral_atom/) compiles a
+verified **distance-3 surface-code XX-merge** onto a **neutral-atom** zoned architecture with
+[ZAC](https://github.com/UCLA-VAST/ZAC) (HPCA 2025) and shows a **GIF of the atoms physically
+moving** (AOD pickup → entanglement zone → Rydberg `CZ` → return) to implement the merge — the
+*same* surface code + *same* verified logical operation, only a different physical realization
+(moving atoms instead of fixed couplers). Full merge: 53 atoms, 88 `CZ`, 13 Rydberg stages,
+ZAC-verified. See [`neutral_atom/README.md`](neutral_atom/README.md).
