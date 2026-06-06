@@ -1,9 +1,5 @@
 import FormalRV.Corpus.Babbush2026
 import FormalRV.Corpus.Gidney2025
-import FormalRV.Corpus.GidneyEkera2021
-import FormalRV.Corpus.GidneyEkera2021Architecture
-import FormalRV.Corpus.GE2021DecoderWired
-import FormalRV.Corpus.GidneyEkera2021Reproduction
 import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.Pinnacle
 import FormalRV.Corpus.Webster2026

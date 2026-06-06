@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.GE2021DecoderWired — wire the decoder-backlog model into the
+  FormalRV.Audit.GidneyEkera2021.GE2021DecoderWired — wire the decoder-backlog model into the
   GE2021 system context as a COMPOSED `SpaceTimeInvariant`, so `checkAll` itself
   rejects a decoder-under-provisioned schedule.
 
@@ -12,14 +12,14 @@
   No `sorry`, no new `axiom`.
 -/
 
-import FormalRV.Corpus.GidneyEkera2021Architecture
+import FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Architecture
 import FormalRV.Audit.Common.DecoderBacklogModel
 
-namespace FormalRV.Corpus.GE2021DecoderWired
+namespace FormalRV.Audit.GidneyEkera2021.GE2021DecoderWired
 
 open FormalRV.Framework.InvariantFramework
 open FormalRV.System.DependencyGraph
-open FormalRV.Corpus.GidneyEkera2021Architecture
+open FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Architecture
 open FormalRV.Audit.Common.SurfaceShorFullSchedule
 open FormalRV.Audit.Common.DecoderBacklogModel
 
@@ -64,4 +64,4 @@ theorem decoder_inv_composes (lanes : Nat) :
       = (checkAll baseInvariants ge2021Ctx && (ge2021DecoderInv lanes).check ge2021Ctx) :=
   checkAll_snoc baseInvariants (ge2021DecoderInv lanes) ge2021Ctx
 
-end FormalRV.Corpus.GE2021DecoderWired
+end FormalRV.Audit.GidneyEkera2021.GE2021DecoderWired

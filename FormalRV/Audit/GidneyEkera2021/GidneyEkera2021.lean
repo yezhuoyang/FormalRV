@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.GidneyEkera2021 — Phase-C corpus paper #2.
+  FormalRV.Audit.GidneyEkera2021.GidneyEkera2021 — Phase-C corpus paper #2.
 
   Gidney & Ekerå 2021, "How to factor 2048-bit RSA integers in 8 hours
   using 20 million noisy qubits."  Surface-code on superconducting
@@ -24,7 +24,7 @@ import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.GidneyEkera2021
+namespace FormalRV.Audit.GidneyEkera2021.GidneyEkera2021
 
 open FormalRV.Framework FormalRV.Qualtran
 
@@ -57,4 +57,4 @@ example : ge2021_instance.2.1.n = 1568 ∧
           ge2021_instance.2.1.d = 27 := ⟨rfl, rfl, rfl⟩
 example : ge2021_instance.2.2 = gidney_fowler_realistic := rfl
 
-end FormalRV.Corpus.GidneyEkera2021
+end FormalRV.Audit.GidneyEkera2021.GidneyEkera2021

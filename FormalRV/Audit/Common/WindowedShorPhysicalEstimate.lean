@@ -32,7 +32,7 @@
   The reported `20 M` / `8 h` remain the paper's headline constants (`PaperClaims`); this file shows
   the verified circuit reproduces them to the right order from first principles + the patch formula.
 -/
-import FormalRV.Corpus.GidneyEkera2021
+import FormalRV.Audit.GidneyEkera2021.GidneyEkera2021
 import FormalRV.Audit.Common.PaperClaims
 import FormalRV.Shor.WindowedCostModel
 import FormalRV.Audit.Common.WindowedShorPPMFactoryE2E
@@ -43,7 +43,7 @@ open FormalRV.Framework
 open FormalRV.Framework.Architecture
 open FormalRV.Framework.ScheduleInv
 open FormalRV.Framework.CircuitToPPMFactoryProvision
-open FormalRV.Corpus.GidneyEkera2021
+open FormalRV.Audit.GidneyEkera2021.GidneyEkera2021
 open FormalRV.PaperClaims
 
 /-! ## §1. Surface-code physical-qubit model (the missing patch formula). -/

@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.GidneyEkera2021Reproduction — reproduce Gidney–Ekerå 2021's
+  FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Reproduction — reproduce Gidney–Ekerå 2021's
   RSA-2048 resource estimate with our VERIFIED surface-code framework, and pin the
   gap.  (gidney-ekera-2021, arXiv:1905.09749, "How to factor 2048-bit RSA integers
   in 8 hours using 20 million noisy qubits.")
@@ -42,7 +42,7 @@
 import FormalRV.System.NaiveUpperBound
 import FormalRV.Audit.Common.SurfaceSystemCompile
 
-namespace FormalRV.Corpus.GidneyEkera2021Reproduction
+namespace FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Reproduction
 
 open FormalRV.System.NaiveUpperBound
 open FormalRV.Audit.Common.SurfaceSystemCompile
@@ -98,4 +98,4 @@ theorem gidney_ekera_2021_reproduced :
       ∧ ge2021_naive.time_us_tenths ≤ 3 * ge2021_reported_time_us_tenths) :=
   ⟨ge2021_qubits_reproduce_reported, ge2021_time_gap_2_to_3x⟩
 
-end FormalRV.Corpus.GidneyEkera2021Reproduction
+end FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Reproduction

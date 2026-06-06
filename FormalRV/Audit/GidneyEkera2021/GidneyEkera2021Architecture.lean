@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.GidneyEkera2021Architecture — a FINITE, GE2021-parameterised
+  FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Architecture — a FINITE, GE2021-parameterised
   zoned architecture, against which the resource count and the system invariants
   are RIGOROUS (the zones hold a bounded number of physical qubits, and the
   capacity invariant rejects anything that does not fit).
@@ -21,9 +21,9 @@
 -/
 
 import FormalRV.Audit.Common.SurfaceShorFullSchedule
-import FormalRV.Corpus.GidneyEkera2021Reproduction
+import FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Reproduction
 
-namespace FormalRV.Corpus.GidneyEkera2021Architecture
+namespace FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Architecture
 
 open FormalRV.Framework.Architecture
 open FormalRV.Framework.InvariantFramework
@@ -113,4 +113,4 @@ def ge2021_overflow_ctx : SystemCtx := { ge2021Ctx with sched := ge2021_overflow
 theorem ge2021_overflow_rejected :
     checkAll baseInvariants ge2021_overflow_ctx = false := by decide
 
-end FormalRV.Corpus.GidneyEkera2021Architecture
+end FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Architecture
