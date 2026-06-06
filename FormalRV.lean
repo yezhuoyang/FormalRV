@@ -30,6 +30,8 @@ import FormalRV.Framework
 import FormalRV.Corpus
 -- Per-paper reader-facing audit (import-only; #check + #print axioms).
 import FormalRV.Audit
+-- Teaching entry point: standard textbook Shor + surface-code lattice surgery (START HERE).
+import FormalRV.StandardShor
 -- Qualtran physical-parameter bridge.
 import FormalRV.Qualtran
 -- The verifier: airtight Shor-on-LP-code obligation + the #verify_clean enforcement gate.
