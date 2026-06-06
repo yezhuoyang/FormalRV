@@ -52,7 +52,7 @@ import FormalRV.Corpus.QianxuBounds
 import FormalRV.Corpus.QianxuLPComputation
 import FormalRV.Corpus.QianxuLPFullSchedule
 import FormalRV.Corpus.QianxuGadgetDerivedResource
-import FormalRV.Corpus.PaperClaims
+import FormalRV.Audit.Common.PaperClaims
 
 /-! ## The recorded tuple (⬜) — reader checks the settings -/
 #check @FormalRV.Corpus.CainXu.cainxu_instance

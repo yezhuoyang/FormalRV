@@ -27,13 +27,13 @@
 
 import FormalRV.Corpus.QianxuLPSurgery
 import FormalRV.Corpus.QianxuBounds
-import FormalRV.Corpus.SurfaceShorResourceCount
+import FormalRV.Audit.Common.SurfaceShorResourceCount
 
 namespace FormalRV.Corpus.QianxuGadgetDerivedResource
 
 open FormalRV.Corpus.QianxuLPSurgery
 open FormalRV.Corpus.QianxuBounds
-open FormalRV.Corpus.SurfaceShorResourceCount
+open FormalRV.Audit.Common.SurfaceShorResourceCount
 open FormalRV.Framework.LDPC
 
 /-! ## §1. τ_s and the footprint, DERIVED from the verified LP gadget -/

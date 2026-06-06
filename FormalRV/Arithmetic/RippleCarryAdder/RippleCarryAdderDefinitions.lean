@@ -1,7 +1,7 @@
 import FormalRV.Core.Gate
 import FormalRV.Arithmetic.Cuccaro.Cuccaro
 import FormalRV.Arithmetic.Correctness
-import FormalRV.Corpus.PaperClaims
+import FormalRV.Audit.Common.PaperClaims
 import FormalRV.PPM.GidneyAND
 import Mathlib.Tactic.IntervalCases
 

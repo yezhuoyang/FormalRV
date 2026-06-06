@@ -13,15 +13,15 @@
 -/
 
 import FormalRV.Corpus.GidneyEkera2021Architecture
-import FormalRV.Corpus.DecoderBacklogModel
+import FormalRV.Audit.Common.DecoderBacklogModel
 
 namespace FormalRV.Corpus.GE2021DecoderWired
 
 open FormalRV.Framework.InvariantFramework
 open FormalRV.System.DependencyGraph
 open FormalRV.Corpus.GidneyEkera2021Architecture
-open FormalRV.Corpus.SurfaceShorFullSchedule
-open FormalRV.Corpus.DecoderBacklogModel
+open FormalRV.Audit.Common.SurfaceShorFullSchedule
+open FormalRV.Audit.Common.DecoderBacklogModel
 
 /-- The decoder-backlog invariant: the schedule is decoder-SOUND iff the decode
     fabric is backlog-free (lanes ≥ patches·decodeLatency).  Wraps the parametric

@@ -43,7 +43,7 @@ import FormalRV.Corpus.GidneyEkera2021
 import FormalRV.Corpus.GidneyEkera2021Architecture
 import FormalRV.Corpus.GidneyEkera2021Reproduction
 import FormalRV.Corpus.GE2021DecoderWired
-import FormalRV.Corpus.NaiveBaselineCost
+import FormalRV.Audit.Common.NaiveBaselineCost
 
 /-! ## The recorded parametric tuple (⬜) — reader checks the settings -/
 #check @FormalRV.Corpus.GidneyEkera2021.ge2021_instance        -- (Shor q_A=3072, d=27 patch, 1µs/1e-3)
@@ -67,8 +67,8 @@ import FormalRV.Corpus.NaiveBaselineCost
 #check @FormalRV.Corpus.GE2021DecoderWired.ge2021_underprovisioned_decoder_rejected
 
 /-! ## Naive baseline quantifies the factory-farm gap (➗) -/
-#check @FormalRV.Corpus.NaiveBaselineCost.time_gap        -- ~1097× slower without the factory farm
-#check @FormalRV.Corpus.NaiveBaselineCost.spacetime_gap   -- ~529× in qubit·hours
+#check @FormalRV.Audit.Common.NaiveBaselineCost.time_gap        -- ~1097× slower without the factory farm
+#check @FormalRV.Audit.Common.NaiveBaselineCost.spacetime_gap   -- ~529× in qubit·hours
 
 /-! ## Axiom audit on the capstone -/
 #print axioms FormalRV.Corpus.GidneyEkera2021Reproduction.gidney_ekera_2021_reproduced

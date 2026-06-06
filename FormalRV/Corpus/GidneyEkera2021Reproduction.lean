@@ -40,12 +40,12 @@
 -/
 
 import FormalRV.System.NaiveUpperBound
-import FormalRV.Corpus.SurfaceSystemCompile
+import FormalRV.Audit.Common.SurfaceSystemCompile
 
 namespace FormalRV.Corpus.GidneyEkera2021Reproduction
 
 open FormalRV.System.NaiveUpperBound
-open FormalRV.Corpus.SurfaceSystemCompile
+open FormalRV.Audit.Common.SurfaceSystemCompile
 
 /-! ## The distance-27 code is a REAL verified construction, not a stub -/
 
