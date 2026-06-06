@@ -81,7 +81,7 @@
 import FormalRV.LatticeSurgery.LDPCSurgery
 import FormalRV.LatticeSurgery.LatticeSurgeryPPMContract
 import FormalRV.PPM.GE2021PPMSysInv
-import FormalRV.Corpus.SurgeryDemoSteane
+import FormalRV.Audit.Common.SurgeryDemoSteane
 
 namespace FormalRV.Framework.SurgeryGadgetToSysCalls
 
@@ -1092,7 +1092,7 @@ theorem topology_demo_cert_from_combined_verifier :
 /-- The Steane X-surgery gadget wrapped as a topology
     schedulable.  Reuses `Corpus.SurgeryDemoSteane.steane_x_surgery`. -/
 def topology_steane_x : TopologySchedulableSurgeryGadget :=
-  { gadget      := FormalRV.Corpus.SurgeryDemoSteane.steane_x_surgery
+  { gadget      := FormalRV.Audit.Common.SurgeryDemoSteane.steane_x_surgery
     start_us    := 0
     dataSite    := fun j => j         -- data qubit j ↦ site j
     ancillaSite := fun i => 100 + i   -- ancilla qubit i ↦ site 100 + i

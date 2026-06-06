@@ -4,7 +4,7 @@
 
   ## Why this exists ("semantic proof BEFORE resource proof", John 2026-06-03)
 
-  The Gidney-2025 corpus entry (`FormalRV.Corpus.Gidney2025`) tallies the paper's resource numbers.
+  The Gidney-2025 corpus entry (`FormalRV.Audit.Gidney2025.Gidney2025`) tallies the paper's resource numbers.
   Those numbers are only meaningful if the underlying algorithm actually computes `g^e mod N`.  This
   directory proves the arithmetic core of that algorithm, bottom-up, each layer `#verify_clean`
   (axiom-clean, no `sorry`).  Formulas are cited against `Gidney1million/main.tex` §"Approximate

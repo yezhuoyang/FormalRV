@@ -1,45 +1,52 @@
-# `FormalRV/Audit/` — per-paper audit, reader-verifiable
+# `FormalRV/Audit/` — per-paper audit, reader-verifiable, one folder per paper
 
-One file per paper. Each file **redefines nothing** — it `import`s the real
-definitions and theorems from [`Corpus/`](../Corpus) (and the shared
-[`Framework/`](../Framework) · [`Shor/`](../Shor) folders) and exposes them with
-`#check` / `#print axioms`, wrapped in a docstring that states, for that paper:
+Each paper has its **own folder** with the **same uniform structure**, and `Audit/Common/` holds the
+shared machinery (surface-code surgery gadgets, the Shor/Surface/Windowed pipeline, cost/decoder/zone
+models, paper-claim constants) that several papers reuse. A paper folder **redefines nothing** — it
+imports the real theorems and re-presents them by layer.
 
-1. **the headline claim**,
-2. **the settings a reader should check** match the paper (the recorded inputs),
-3. **our approach** to verifying it,
-4. **the gap we determined** (claim vs. what is machine-checked), and
-5. **what is still unsolved**.
+```
+Audit/
+  Common/                     -- shared infrastructure (FormalRV.Audit.Common.*)
+  <Paper>/                    -- CainXu2026 · GidneyEkera2021 · Gidney2025 · Pinnacle · Babbush2026 · Xu2024 · Peng2022
+    Hardware.lean             -- physical assumptions (error, cycle, reaction)
+    SystemZones.lean          -- zoned architecture + invariant checks (or a documented GAP)
+    L1_Algorithm.lean         -- the ShorAlgorithm instance + the shared success bound
+    L2_Arithmetic.lean        -- verified adders/lookups/modexp (or GAP)
+    L3_PPM.lean               -- Pauli-product-measurement correctness (or GAP)
+    L4_Code.lean              -- the QEC code + k derived from matrices (or GAP)
+    Verifier.lean             -- the end-to-end obligation + #verify_clean (the anti-cheat gate)
+    README.md                 -- claim · settings-to-check · approach · gap · still-unsolved
+  <Paper>.lean                -- the folder index (imports the seven structure files)
+```
 
-So a reader can: confirm each cited theorem **type-checks** (the file compiles),
-see the **exact trust base** (`#print axioms`), check that each paper's **settings
-are recorded correctly**, and understand **our approach + the gap** — per paper.
+## The rigor / anti-cheating contract (enforced on build)
+
+`Verifier.lean` (and each layer file) runs **`#verify_clean`** — it ACCEPTS a theorem only if its
+transitive axioms ⊆ `{propext, Classical.choice, Quot.sound}`; a `sorry` or a native-tainted axiom
+makes the **build fail**. So a folder cannot pass by "counting numbers". Every layer is exactly one of:
+
+- ✅ **verified** — a semantic-correctness theorem the gate ACCEPTS, or
+- ➗ **arithmetic-only** — a `decide`/`native_decide` numeric bound, labelled as *not* semantic, or
+- ⬜ **GAP** — a documented note with **no** theorem (never a number passed off as a proof).
 
 ## How to verify one paper
 
 ```bash
-lake build FormalRV.Audit.Gidney2025      # or any paper below
+lake build FormalRV.Audit.CainXu2026      # or any folder below
 ```
 
-Compilation = every `#check`'d theorem exists and type-checks. The `#print axioms`
-lines print the actual axioms each headline result depends on (the honest trust base
-— e.g. `propext`/`Quot.sound` for axiom-clean results, or the QPE axiom block for the
-order-finding bound). The whole `Audit/` folder is part of the default build
-(`lake build`), so any drift breaks CI.
+## Index (✅ verify-clean · ➗ arithmetic-only · ⬜ recorded/GAP)
 
-## Index (legend: ✅ verified-semantic · ➗ arithmetic-only `decide` · ⬜ recorded/assumed)
+| Folder | Paper | Status in one line |
+|---|---|---|
+| [`Peng2022`](Peng2022) | peng-2022 ([2204.07112](https://arxiv.org/abs/2204.07112)) | ✅ **the cross-cutting bound** — order finding ≥ κ/(log₂N)⁴, N-parametric; the rest is honest GAP (algorithm-level paper) |
+| [`Gidney2025`](Gidney2025) | gidney-2025 ([2505.15917](https://arxiv.org/abs/2505.15917)) | ✅ CFS residue engine axiom-clean; ✅ tally < 10⁶; ⬜ Assumption 1 / quantum half |
+| [`GidneyEkera2021`](GidneyEkera2021) | GE-2021 ([1905.09749](https://arxiv.org/abs/1905.09749)) | ✅ capstone axiom-free (19.44M ≤ 20M; 8 h under the ceiling); ✅ finite-zone invariants |
+| [`CainXu2026`](CainXu2026) | cain-xu-2026 ([2603.28627](https://arxiv.org/abs/2603.28627)) | ✅ modexp-on-LP code-preservation + LP surgery + verified resource bounds; ➗ k derived; ⬜ optimisation gaps sized |
+| [`Pinnacle`](Pinnacle) | webster-2026 ([2602.11457](https://arxiv.org/abs/2602.11457)) | ➗ GB code k derived; ✅ RSA instance recorded; ⬜ gadget/engine/<100k bound (roadmap) |
+| [`Babbush2026`](Babbush2026) | babbush-2026 ([2603.28846](https://arxiv.org/abs/2603.28846)) | ✅ shared bound (modulus-agnostic); ➗ magic-state floor; ⬜ first non-RSA, end-to-end open |
+| [`Xu2024`](Xu2024) | xu-2024 ([2308.08648](https://arxiv.org/abs/2308.08648)) | ➗ 24,000× cycle-time outlier; ⬜ tuple (the arch the neutral-atom demo realizes) |
 
-| Audit file | Paper | Headline | What the audit shows |
-|---|---|---|---|
-| [`Peng2022`](Peng2022.lean) | peng-2022 ([2204.07112](https://arxiv.org/abs/2204.07112)) | machine-checked end-to-end Shor | ✅ **the cross-cutting result lives here** — order-finding success `≥ κ/(log₂N)⁴`, N-parametric; `#print axioms` reveals the QPE axiom block |
-| [`Gidney2025`](Gidney2025.lean) | gidney-2025 ([2505.15917](https://arxiv.org/abs/2505.15917)) | RSA-2048, <1M qubits, <1 week | ✅ CFS residue-arithmetic engine axiom-clean (RNS/CRT/modexp/Ekerå–Håstad); ➗ resource tally 897,864 < 10⁶; Assumption 1 stated, never asserted |
-| [`GidneyEkera2021`](GidneyEkera2021.lean) | gidney-ekera-2021 ([1905.09749](https://arxiv.org/abs/1905.09749)) | 20M qubits, ~8 h | ✅ reproduced as a verified ceiling (19.44M ≤ 20M); ➗ invariants machine-checked, over-budget rejected; 8 h sits 2–3× under the verified time ceiling |
-| [`CainXu2026`](CainXu2026.lean) | cain-xu-2026 ([2603.28627](https://arxiv.org/abs/2603.28627)) | RSA-2048, ~10⁴ qubits, ~1 week | ✅ modexp-on-LP code-preservation (induction, scale-free) + LP-code surgery; ➗ k derived from parity matrices, Eqs E3/E4/E9, the ~10⁴ q claim **bracketed** between verified bounds; gaps (parallelism, factory-sharing) sized |
-| [`Webster2026`](Webster2026.lean) | webster-2026 ([2602.11457](https://arxiv.org/abs/2602.11457)) | RSA-2048, <100k qubits | ⬜ parameter-binding tuple through the shared interface (framework slot; GB matrices stubbed) |
-| [`Babbush2026`](Babbush2026.lean) | babbush-2026 ([2603.28846](https://arxiv.org/abs/2603.28846)) | ECC-256, <500k qubits, 18–23 min | ⬜ tuple (first **non-RSA** stress test of the modulus-agnostic interface); ➗ verified magic-state spacetime floor |
-| [`Xu2024`](Xu2024.lean) | xu-2024 ([2308.08648](https://arxiv.org/abs/2308.08648)) | constant-overhead FTQC, 24 ms cycle | ⬜ tuple; ➗ cross-checks the 24,000× cycle-time outlier (the arch the neutral-atom demo realizes) |
-
-The two **Gidney** papers are the most complete (verified semantic cores). The two
-**LDPC-Shor** papers (cain-xu-2026, webster-2026) and the neutral-atom papers
-(xu-2024, babbush-2026) still have open problems — each named under *STILL UNSOLVED*
-in its file. This folder is the framework; the gaps are explicit and sized.
+The two Gidney papers + cain-xu have substantial ✅ stacks; the LDPC-Shor/neutral-atom papers
+(Pinnacle, Babbush2026, Xu2024) have open problems, each named under *STILL UNSOLVED* in its folder.

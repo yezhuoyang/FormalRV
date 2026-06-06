@@ -31,9 +31,9 @@ import FormalRV.Shor.SuccessSensitivity
 import FormalRV.Shor.PostQFT.PostQFTCompletion
 import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
-import FormalRV.Corpus.SurgeryDemoCNOT
-import FormalRV.Corpus.SurfaceShorPPMEndToEnd
-import FormalRV.Corpus.SurfaceShorFullStack
+import FormalRV.Audit.Common.SurgeryDemoCNOT
+import FormalRV.Audit.Common.SurfaceShorPPMEndToEnd
+import FormalRV.Audit.Common.SurfaceShorFullStack
 
 namespace FormalRV.StandardShor
 
@@ -53,15 +53,15 @@ alias cuccaroAdderCorrect := FormalRV.BQAlgo.cuccaro_n_bit_adder_full_correct
 
 /-! ### Step 3 — logical gates as distance-3 surface-code lattice surgery (✅ verified) -/
 /-- A logical CNOT = a verified ZZ-merge then XX-merge of two [[13,1,3]] surface patches. -/
-alias surfaceCnotVerifies := FormalRV.Corpus.SurgeryDemoCNOT.surface3_cnot_verifies
+alias surfaceCnotVerifies := FormalRV.Audit.Common.SurgeryDemoCNOT.surface3_cnot_verifies
 /-- A logical Toffoli = a verified |C̄CZ̄⟩ magic injection on the surface code. -/
-alias surfaceToffoliInjectionVerifies := FormalRV.Corpus.SurgeryDemoCNOT.surface3_ccx_injection_verifies
+alias surfaceToffoliInjectionVerifies := FormalRV.Audit.Common.SurgeryDemoCNOT.surface3_ccx_injection_verifies
 
 /-! ### Step 4 — end to end on the surface code (✅ verified) -/
 /-- The Shor PPM program is physically realized as a surface-code surgery schedule. -/
-alias surfaceShorEndToEnd := FormalRV.Corpus.SurfaceShorPPMEndToEnd.surface_shor_ppm_physically_realized
+alias surfaceShorEndToEnd := FormalRV.Audit.Common.SurfaceShorPPMEndToEnd.surface_shor_ppm_physically_realized
 /-- The full surface-code schedule reduces the stabilizer state (whole-stack check). -/
-alias surfaceFullStack := FormalRV.Corpus.SurfaceShorFullStack.surface_schedule_full_stack
+alias surfaceFullStack := FormalRV.Audit.Common.SurfaceShorFullStack.surface_schedule_full_stack
 
 end FormalRV.StandardShor
 

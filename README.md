@@ -120,36 +120,34 @@ honest status):
 | [`LatticeSurgery/`](FormalRV/LatticeSurgery) | surgery merge/split + system-call contracts |
 | [`System/`](FormalRV/System) | scheduling / device / resource-bound framework (`FTFramework`) |
 | [`Framework/`](FormalRV/Framework) | the four inter-layer contract interfaces (L1–L4) |
-| [`Corpus/`](FormalRV/Corpus) | the seven corpus-paper bindings + paper-claim constants |
+| [`Audit/`](FormalRV/Audit) | one folder per paper (uniform Hardware/Zones/L1–L4/Verifier structure) + `Audit/Common/` shared machinery |
 | [`Qualtran/`](FormalRV/Qualtran) | Qualtran `PhysicalParameters` data bridge |
 | [`Codegen/`](FormalRV/Codegen) | the verified QASM / device-program emitters |
 
 Files are named for their content and kept small (topical modules behind a `<Name>.lean` umbrella).
 
-## Corpus: claim vs. verified
+## Per-paper audit — claim vs. verified
 
-`Corpus/` records each paper's page-cited numbers as `paper_claim_*` constants (the qubit/time
-numbers are *recorded* claims — per-paper parity matrices are stubbed) and machine-checks a narrower
-bound where possible. The one cross-cutting **verified** result — order-finding success
-`≥ κ/(log₂N)⁴`, axiom-free — holds for *every* instance (it is `N`-parametric).
+Each paper has its **own folder** under [`FormalRV/Audit/`](FormalRV/Audit) with a **uniform
+structure** — `Hardware` · `SystemZones` · `L1_Algorithm` · `L2_Arithmetic` · `L3_PPM` · `L4_Code` ·
+`Verifier` · `README` — that **redefines nothing** (it imports the real theorems from `Audit/Common/`
+and `Framework`/`Shor`/`QEC`). Rigor is **enforced on build**: each folder's `Verifier.lean` runs
+`#verify_clean`, the gate that ACCEPTS a theorem only if its transitive axioms ⊆
+`{propext, Classical.choice, Quot.sound}` — so a `sorry` or native-tainted axiom makes the build
+**fail**. Each layer is exactly one of ✅ *verify-clean semantic* · ➗ *arithmetic-only* (`decide`) ·
+⬜ *documented GAP* (never a counted number masquerading as a proof). Verify one paper with, e.g.,
+`lake build FormalRV.Audit.Gidney2025`. The one cross-cutting ✅ result — order-finding success
+`≥ κ/(log₂N)⁴`, N-parametric — lives in `Audit/Peng2022` and is reused by every paper's L1.
 
-**Per-paper audit → [`FormalRV/Audit/`](FormalRV/Audit).** One reader-verifiable file per paper that
-**redefines nothing** — it imports the real theorems and exposes them with `#check` / `#print axioms`,
-framed by the paper's headline claim, the *settings a reader should check* match the paper, *our
-approach*, the *gap we determined*, and what is *still unsolved*. Verify any one paper with, e.g.,
-`lake build FormalRV.Audit.Gidney2025` (compilation = every cited theorem type-checks; `#print axioms`
-shows the exact trust base). The two Gidney papers are the most complete; the LDPC-Shor and
-neutral-atom papers have open problems, each named in its file.
-
-| Paper | Headline claim | What FormalRV machine-checks |
+| Paper folder | Headline claim | What is machine-checked (✅ semantic · ➗ arithmetic · ⬜ gap) |
 |---|---|---|
-| **cain-xu-2026** (focus) — [2603.28627](https://arxiv.org/abs/2603.28627) | RSA-2048 in ~10⁴ qubits, ~1 week | ➗ recovers Eqs. E3/E4/E9; ➗ `decide`-proved 95× qubit·hour win vs GE2021; ✅ verified adder/lookup T-counts |
-| **gidney-ekera-2021** — [1905.09749](https://arxiv.org/abs/1905.09749) | 20M qubits, ~8 h | ✅ naive footprint is a feasible ceiling for any size; ➗ reproduces 19.44M ≤ 20M; the 8 h sits 2–3× under the verified time ceiling |
-| **gidney-2025** — [2505.15917](https://arxiv.org/abs/2505.15917) | <1M qubits, <1 week | ✅ the CFS residue-arithmetic engine, axiom-clean (CRT, exact reconstruction, modexp, Ekerå–Håstad); Assumption 1 stated, never asserted |
-| **webster-2026** — [2602.11457](https://arxiv.org/abs/2602.11457) | RSA-2048 in <100k qubits | ⬜ parameter-binding tuple (params type-check through the shared interface) |
-| **babbush-2026** — [2603.28846](https://arxiv.org/abs/2603.28846) | ECC-256 in <500k qubits, 18–23 min | ⬜ parameter-binding tuple — the first non-RSA stress test of the L1 interface |
-| **xu-2024** — [2308.08648](https://arxiv.org/abs/2308.08648) | constant-overhead FTQC, 24 ms cycle | ⬜ tuple; ➗ cross-checks the 24,000× cycle-time outlier |
-| **peng-2022** (SQIR/Coq) — [2204.07112](https://arxiv.org/abs/2204.07112) | machine-checked gate-count bound | ✅ **the headline result lives here** — the axiom-free success bound, ported from SQIR's Coq proof |
+| [`CainXu2026`](FormalRV/Audit/CainXu2026) (focus) — [2603.28627](https://arxiv.org/abs/2603.28627) | RSA-2048 in ~10⁴ qubits, ~1 week | ✅ modexp PRESERVES the LP code (induction, scale-free) + LP-surgery gadget + lower≤upper soundness + verified resource upper bound + 10⁹-PPM schedule; ➗ k DERIVED from matrices, Eqs E3/E4/E9; ⬜ factory-sharing/parallelism gaps sized |
+| [`GidneyEkera2021`](FormalRV/Audit/GidneyEkera2021) — [1905.09749](https://arxiv.org/abs/1905.09749) | 20M qubits, ~8 h | ✅ CAPSTONE axiom-free: 19.44M ≤ 20M, 8 h sits 2–3× under the verified time ceiling; ✅ finite-zone invariants (over-budget rejected) |
+| [`Gidney2025`](FormalRV/Audit/Gidney2025) — [2505.15917](https://arxiv.org/abs/2505.15917) | <1M qubits, <1 week | ✅ CFS residue-arithmetic engine axiom-clean (faithful RNS, exact CRT, bounded truncation, Ekerå–Håstad); ✅ tally 897,864 < 10⁶; ⬜ Assumption 1 stated-never-asserted; ⬜ quantum half |
+| [`Pinnacle`](FormalRV/Audit/Pinnacle) (webster-2026) — [2602.11457](https://arxiv.org/abs/2602.11457) | RSA-2048 in <100k qubits | ➗ GB code k=12 DERIVED from matrices ([[72,12,6]]); ✅ RSA instance recorded; ⬜ measurement gadget / magic engine / <100k bound (roadmap, OPEN) |
+| [`Babbush2026`](FormalRV/Audit/Babbush2026) — [2603.28846](https://arxiv.org/abs/2603.28846) | ECC-256 in <500k qubits, 18–23 min | ✅ shared bound (confirms modulus-agnostic L1); ➗ verified magic-state spacetime floor; ⬜ first non-RSA, end-to-end OPEN |
+| [`Xu2024`](FormalRV/Audit/Xu2024) — [2308.08648](https://arxiv.org/abs/2308.08648) | constant-overhead FTQC, 24 ms cycle | ➗ the 24,000× cycle-time outlier cross-check; ⬜ tuple (the arch the neutral-atom demo realizes) |
+| [`Peng2022`](FormalRV/Audit/Peng2022) (SQIR/Coq) — [2204.07112](https://arxiv.org/abs/2204.07112) | machine-checked Shor | ✅ **the cross-cutting bound lives here** — order-finding success ≥ κ/(log₂N)⁴, N-parametric (axiom-clean) |
 
 Legend: ✅ *Verified* semantic theorem · ➗ *Arithmetic-only* (`decide`) · ⬜ *Recorded/Assumed*.
 

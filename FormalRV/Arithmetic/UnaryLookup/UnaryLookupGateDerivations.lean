@@ -1,5 +1,5 @@
 import FormalRV.Core.Gate
-import FormalRV.Corpus.PaperClaims
+import FormalRV.Audit.Common.PaperClaims
 import FormalRV.Arithmetic.Correctness
 import FormalRV.Arithmetic.UnaryLookup.UnaryLookupDefinitions
 
