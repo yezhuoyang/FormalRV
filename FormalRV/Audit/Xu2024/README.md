@@ -16,6 +16,7 @@ non-1µs hardware in the corpus). The constant-overhead claim itself is OPEN.
 | L2 / L3 | `L2_Arithmetic.lean` / `L3_PPM.lean` | ⬜ GAP |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded LP code [[544,80,12]] |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ➗ 24,000× cycle-time outlier cross-check; constant-overhead claim OPEN |
+| Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; the L4 line displays a real bivariate-bicycle LP-family code `[[72,12,6]]` standing in for Xu2024's `[[544,80,12]]`) |
 
 ## STILL UNSOLVED
 - code-distance verification from the parity matrices; the subthreshold logical-error ansatz;

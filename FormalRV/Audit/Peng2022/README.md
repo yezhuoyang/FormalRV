@@ -18,6 +18,7 @@ honest ⬜ GAPs (not faked). [`Verifier.lean`](Verifier.lean) `#verify_clean`-AC
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ⬜ GAP — no lattice-surgery / PPM layer |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ trivial (1,1,1) placeholder — the bound is code-agnostic |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ✅ algorithm success ≥ κ/(log₂N)⁴ (axiom-clean) |
+| Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (L1 = Peng's verified Shor circuit; L3/L4/system show the standard surface code other papers pair with this code-agnostic algorithm) |
 
 ## STILL UNSOLVED
 - the ported QPE peak / continued-fractions semantics are the open frontier (the bound is clean at
