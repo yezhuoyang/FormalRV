@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuLPComputation — the RESOURCE OF A COMPUTATION on the LP code,
+  FormalRV.Audit.CainXu2026.QianxuLPComputation — the RESOURCE OF A COMPUTATION on the LP code,
   on top of a SEMANTICALLY-VERIFIED multi-PPM computation.
 
   John: verifying the code + a single PPM is not enough — we must verify the RESOURCE
@@ -21,11 +21,11 @@
   No `sorry`, no `axiom`.
 -/
 
-import FormalRV.Corpus.QianxuPPMonLP
+import FormalRV.Audit.CainXu2026.QianxuPPMonLP
 
-namespace FormalRV.Corpus.QianxuLPComputation
+namespace FormalRV.Audit.CainXu2026.QianxuLPComputation
 
-open FormalRV.Corpus.QianxuPPMonLP
+open FormalRV.Audit.CainXu2026.QianxuPPMonLP
 open FormalRV.QEC.LogicalFinder
 open FormalRV.Framework.LDPC
 open FormalRV.Framework.SurgeryCorrect
@@ -99,4 +99,4 @@ theorem lp20_computation_resource :
     ∧ computationQubits 4350 894 2565 = 7809 :=
   ⟨computation_measures_both, lp20_computation_time, lp20_computation_qubits⟩
 
-end FormalRV.Corpus.QianxuLPComputation
+end FormalRV.Audit.CainXu2026.QianxuLPComputation

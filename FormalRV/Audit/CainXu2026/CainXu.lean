@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.CainXu — Phase-C corpus paper #1: Cain–Xu et al.
+  FormalRV.Audit.CainXu2026.CainXu — Phase-C corpus paper #1: Cain–Xu et al.
   2026 (qianxu).
 
   Phase C first slice. Cain–Xu et al. 2026 (the "qianxu" paper in our
@@ -25,7 +25,7 @@ import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.CainXu
+namespace FormalRV.Audit.CainXu2026.CainXu
 
 open FormalRV.Framework FormalRV.Qualtran
 
@@ -85,4 +85,4 @@ def bb_first_x_check : List Bool :=
 example : bb_first_x_check.length = 144 := by native_decide
 example : (bb_first_x_check.filter id).length = 6 := by native_decide
 
-end FormalRV.Corpus.CainXu
+end FormalRV.Audit.CainXu2026.CainXu

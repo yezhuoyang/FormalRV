@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuLPSystemSchedule — the SYSTEM-LEVEL realisation of the 7809-qubit
+  FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule — the SYSTEM-LEVEL realisation of the 7809-qubit
   LP upper bound: the T-cultivation assumption made explicit, the syndrome-extraction +
   decode schedule constructed, and capacity/exclusivity PROVEN (7809 is conflict-free).
 
@@ -31,10 +31,10 @@
   No `sorry`, no `axiom`.  Pure `decide`.
 -/
 
-import FormalRV.Corpus.QianxuVerifiedUpperBound
+import FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound
 import FormalRV.System.InvariantFramework
 
-namespace FormalRV.Corpus.QianxuLPSystemSchedule
+namespace FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule
 
 open FormalRV.Framework.Architecture
 open FormalRV.Framework.ScheduleInv
@@ -63,7 +63,7 @@ theorem lp_zones_partition :
 /-- The architecture's total equals the verified upper bound's qubit figure. -/
 theorem lp_total_is_upper_bound :
     lpArch.total_sites
-      = FormalRV.Corpus.QianxuVerifiedUpperBound.upperQubits 4350 894 2565 := by decide
+      = FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.upperQubits 4350 894 2565 := by decide
 
 /-! ## §2. (Q1) The T-CULTIVATION assumption, made EXPLICIT -/
 
@@ -154,4 +154,4 @@ theorem lp_system_realises_upper_bound :
   ⟨lp_zones_partition, lp_factory_throughput_adequate, lpCtx_all_invariants,
    lp_overflow_rejected⟩
 
-end FormalRV.Corpus.QianxuLPSystemSchedule
+end FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule

@@ -36,8 +36,8 @@
 import FormalRV.Audit.Common.ShorPPMEndToEnd
 import FormalRV.Audit.Common.ShorPPMUnitaryReduction
 import FormalRV.Audit.Common.TeleportCCXGrounded
-import FormalRV.Corpus.QianxuLPSurgery
-import FormalRV.Corpus.QianxuModExpLP
+import FormalRV.Audit.CainXu2026.QianxuLPSurgery
+import FormalRV.Audit.CainXu2026.QianxuModExpLP
 
 namespace FormalRV.Audit.Common.ShorOnLPBridge
 
@@ -48,10 +48,10 @@ open FormalRV.Framework.CircuitToPPMFactoryProvision
 open FormalRV.BQAlgo
 open FormalRV.Audit.Common.ShorModMulPPMFactoryE2E
 open FormalRV.Audit.Common.ShorPPMEndToEnd
-open FormalRV.Corpus.QianxuPPMonLP
-open FormalRV.Corpus.QianxuLPComputation
-open FormalRV.Corpus.QianxuModExpLP
-open FormalRV.Corpus.QianxuLPSurgery
+open FormalRV.Audit.CainXu2026.QianxuPPMonLP
+open FormalRV.Audit.CainXu2026.QianxuLPComputation
+open FormalRV.Audit.CainXu2026.QianxuModExpLP
+open FormalRV.Audit.CainXu2026.QianxuLPSurgery
 open FormalRV.Framework.CircuitToPPMInterface
 open FormalRV.QEC.LogicalFinder
 open FormalRV.Framework.PauliSem

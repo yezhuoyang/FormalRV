@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuGadgetDerivedResource — GROUND the resource constants in a
+  FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource — GROUND the resource constants in a
   CONSTRUCTED, VERIFIED surgery gadget on the LP code (closing seam 7).
 
   The audit's seam 7: "resource numbers (τ_s, per-Toffoli cost, ancilla) are Nat arithmetic
@@ -25,14 +25,14 @@
   No `sorry`, no `axiom`.
 -/
 
-import FormalRV.Corpus.QianxuLPSurgery
-import FormalRV.Corpus.QianxuBounds
+import FormalRV.Audit.CainXu2026.QianxuLPSurgery
+import FormalRV.Audit.CainXu2026.QianxuBounds
 import FormalRV.Audit.Common.SurfaceShorResourceCount
 
-namespace FormalRV.Corpus.QianxuGadgetDerivedResource
+namespace FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource
 
-open FormalRV.Corpus.QianxuLPSurgery
-open FormalRV.Corpus.QianxuBounds
+open FormalRV.Audit.CainXu2026.QianxuLPSurgery
+open FormalRV.Audit.CainXu2026.QianxuBounds
 open FormalRV.Audit.Common.SurfaceShorResourceCount
 open FormalRV.Framework.LDPC
 
@@ -82,4 +82,4 @@ theorem resource_grounded_in_verified_gadget (cycle : Nat) :
     ∧ surgeryPhysQubits bb_x_surgery = 39 :=
   ⟨bb_x_surgery_verifies, perPPM_time_from_verified_gadget cycle, lpGadget_footprint⟩
 
-end FormalRV.Corpus.QianxuGadgetDerivedResource
+end FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource

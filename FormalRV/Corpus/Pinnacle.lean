@@ -39,13 +39,13 @@
 -/
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.GF2Rank
-import FormalRV.Corpus.QianxuCodeParams
+import FormalRV.Audit.CainXu2026.QianxuCodeParams
 import FormalRV.Corpus.Webster2026
 
 namespace FormalRV.Corpus.Pinnacle
 
 open FormalRV.QEC.Algebraic
-open FormalRV.Corpus.QianxuCodeParams
+open FormalRV.Audit.CainXu2026.QianxuCodeParams
 
 /-! ## The Pinnacle GB-code family — k DERIVED from constructed matrices (✅)
 

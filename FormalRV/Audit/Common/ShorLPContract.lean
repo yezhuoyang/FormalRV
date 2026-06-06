@@ -31,8 +31,8 @@
   No `sorry`, no `axiom`.
 -/
 
-import FormalRV.Corpus.QianxuVerifiedUpperBound
-import FormalRV.Corpus.QianxuLPSurgery
+import FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound
+import FormalRV.Audit.CainXu2026.QianxuLPSurgery
 import FormalRV.Audit.Common.ShorOnLPBridge
 
 namespace FormalRV.Audit.Common.ShorLPContract
@@ -143,10 +143,10 @@ structure Certificate (code : CSSCode) where
   n_LP : Nat
   N_A : Nat
   factory : Nat
-  hQubitBound : qubitBound = FormalRV.Corpus.QianxuVerifiedUpperBound.upperQubits n_LP N_A factory
-  hTimeBound  : timeBound = FormalRV.Corpus.QianxuVerifiedUpperBound.upperTimeUs numPPMs tau_s cycle
+  hQubitBound : qubitBound = FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.upperQubits n_LP N_A factory
+  hTimeBound  : timeBound = FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.upperTimeUs numPPMs tau_s cycle
   hTimeIsUpperBound : ∀ depth, depth ≤ numPPMs →
-    depth * tau_s * cycle ≤ FormalRV.Corpus.QianxuVerifiedUpperBound.upperTimeUs numPPMs tau_s cycle
+    depth * tau_s * cycle ≤ FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.upperTimeUs numPPMs tau_s cycle
 
 /-! ## §3. The ACCEPTANCE checker (the decidable, machine-checked core) -/
 

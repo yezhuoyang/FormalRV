@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuLPSurgery — a lattice-surgery gadget ON THE LP qLDPC CODE
+  FormalRV.Audit.CainXu2026.QianxuLPSurgery — a lattice-surgery gadget ON THE LP qLDPC CODE
   (closing seam 4: "no SurgeryGadget exists on any LP code; all physical compilation
   was on the surface code").
 
@@ -31,7 +31,7 @@ import FormalRV.QEC.LogicalFinder
 import FormalRV.LatticeSurgery.LDPCSurgery
 import FormalRV.LatticeSurgery.SurgeryCorrect
 
-namespace FormalRV.Corpus.QianxuLPSurgery
+namespace FormalRV.Audit.CainXu2026.QianxuLPSurgery
 
 open FormalRV.QEC.LogicalFinder
 open FormalRV.Framework
@@ -129,4 +129,4 @@ theorem LP_code_has_verified_surgery :
     ∧ (bbSmall.hz.all (fun r => ! gf2dot r bbLogX0) && ! inRowspace bbSmall.hx bbLogX0) = true :=
   ⟨bb_x_surgery_verifies, bb_surgery_target_is_logical⟩
 
-end FormalRV.Corpus.QianxuLPSurgery
+end FormalRV.Audit.CainXu2026.QianxuLPSurgery

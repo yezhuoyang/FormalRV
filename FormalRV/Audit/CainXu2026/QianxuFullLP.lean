@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuFullLP — apply the verified logical-finder + resource framework
+  FormalRV.Audit.CainXu2026.QianxuFullLP — apply the verified logical-finder + resource framework
   to the FULL LP codes of qianxu's paper, and REPORT THE GAPS.
 
   The logical-qubit-counting algorithm (`LogicalFinder`) is kernel-clean verified on a
@@ -25,14 +25,14 @@
 
 import FormalRV.QEC.Instances
 import FormalRV.QEC.GF2Rank
-import FormalRV.Corpus.QianxuBounds
+import FormalRV.Audit.CainXu2026.QianxuBounds
 
-namespace FormalRV.Corpus.QianxuFullLP
+namespace FormalRV.Audit.CainXu2026.QianxuFullLP
 
 open FormalRV.QEC.Instances
 open FormalRV.Framework.LDPC
 open FormalRV.Framework.Resource
-open FormalRV.Corpus.QianxuBounds
+open FormalRV.Audit.CainXu2026.QianxuBounds
 
 /-! ## §1. FULL LP-code logical-qubit counts, DERIVED from the matrices -/
 
@@ -107,4 +107,4 @@ theorem full_lp_report :
     ∧ lp20_time_bounds.bracketed = true := by
   refine ⟨lp16_k_derived, lp20_qubit_bracketed, lp20_qubit_gap, lp20_time_bracketed⟩
 
-end FormalRV.Corpus.QianxuFullLP
+end FormalRV.Audit.CainXu2026.QianxuFullLP

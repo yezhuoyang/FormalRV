@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuCodeParams — DERIVE the logical-qubit count k of qianxu's
+  FormalRV.Audit.CainXu2026.QianxuCodeParams — DERIVE the logical-qubit count k of qianxu's
   codes from their CONSTRUCTED parity matrices (closing the "k is hardcoded" gap the
   self-critique named as THE foundational missing deliverable).
 
@@ -23,7 +23,7 @@
 import FormalRV.QEC.Instances
 import FormalRV.QEC.GF2Rank
 
-namespace FormalRV.Corpus.QianxuCodeParams
+namespace FormalRV.Audit.CainXu2026.QianxuCodeParams
 
 open FormalRV.QEC.Instances
 open FormalRV.Framework.LDPC
@@ -47,4 +47,4 @@ theorem bb18_n : bb18.n = 248 := by decide
 /-- The derived k matches the paper's reported logical count for bb18. -/
 theorem bb18_k_matches_paper : derivedK bb18 = 10 := bb18_k_derived
 
-end FormalRV.Corpus.QianxuCodeParams
+end FormalRV.Audit.CainXu2026.QianxuCodeParams

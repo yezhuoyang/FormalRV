@@ -42,44 +42,47 @@ STILL UNSOLVED (this is an LDPC-Shor paper): LP distance d not derived from the
 
 This file REDEFINES NOTHING.  Build:  `lake build FormalRV.Audit.CainXu2026`.
 -/
-import FormalRV.Corpus.CainXu
-import FormalRV.Corpus.QianxuVerifiedUpperBound
-import FormalRV.Corpus.QianxuModExpLP
-import FormalRV.Corpus.QianxuPPMonLP
-import FormalRV.Corpus.QianxuLPSurgery
-import FormalRV.Corpus.QianxuFullLP
-import FormalRV.Corpus.QianxuBounds
-import FormalRV.Corpus.QianxuLPComputation
-import FormalRV.Corpus.QianxuLPFullSchedule
-import FormalRV.Corpus.QianxuGadgetDerivedResource
+import FormalRV.Audit.CainXu2026.QianxuCodeParams
+import FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule
+import FormalRV.Audit.CainXu2026.QianxuNaiveConstructions
+import FormalRV.Audit.CainXu2026.CainXu
+import FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound
+import FormalRV.Audit.CainXu2026.QianxuModExpLP
+import FormalRV.Audit.CainXu2026.QianxuPPMonLP
+import FormalRV.Audit.CainXu2026.QianxuLPSurgery
+import FormalRV.Audit.CainXu2026.QianxuFullLP
+import FormalRV.Audit.CainXu2026.QianxuBounds
+import FormalRV.Audit.CainXu2026.QianxuLPComputation
+import FormalRV.Audit.CainXu2026.QianxuLPFullSchedule
+import FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource
 import FormalRV.Audit.Common.PaperClaims
 
 /-! ## The recorded tuple (⬜) — reader checks the settings -/
-#check @FormalRV.Corpus.CainXu.cainxu_instance
+#check @FormalRV.Audit.CainXu2026.CainXu.cainxu_instance
 
 /-! ## Semantic correctness on the REAL LP code (✅ verified-semantic) -/
-#check @FormalRV.Corpus.QianxuModExpLP.modexp_preserves_code          -- ∀ PPM seq: code survives (induction)
-#check @FormalRV.Corpus.QianxuModExpLP.logical_computation_preserves_code
-#check @FormalRV.Corpus.QianxuPPMonLP.ppm_on_LP_is_verified           -- per-PPM is a correct logical meas
-#check @FormalRV.Corpus.QianxuLPSurgery.LP_code_has_verified_surgery  -- surgery gadget on LP (not surface)
-#check @FormalRV.Corpus.QianxuLPSurgery.bb_LP_surgery_implements_logical_X
-#check @FormalRV.Corpus.QianxuLPComputation.computation_order_independent
-#check @FormalRV.Corpus.QianxuGadgetDerivedResource.resource_grounded_in_verified_gadget
+#check @FormalRV.Audit.CainXu2026.QianxuModExpLP.modexp_preserves_code          -- ∀ PPM seq: code survives (induction)
+#check @FormalRV.Audit.CainXu2026.QianxuModExpLP.logical_computation_preserves_code
+#check @FormalRV.Audit.CainXu2026.QianxuPPMonLP.ppm_on_LP_is_verified           -- per-PPM is a correct logical meas
+#check @FormalRV.Audit.CainXu2026.QianxuLPSurgery.LP_code_has_verified_surgery  -- surgery gadget on LP (not surface)
+#check @FormalRV.Audit.CainXu2026.QianxuLPSurgery.bb_LP_surgery_implements_logical_X
+#check @FormalRV.Audit.CainXu2026.QianxuLPComputation.computation_order_independent
+#check @FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource.resource_grounded_in_verified_gadget
 
 /-! ## Resource: soundness (lower ≤ upper) + the verified upper bound (✅ / ➗) -/
-#check @FormalRV.Corpus.QianxuBounds.qubit_lower_le_upper
-#check @FormalRV.Corpus.QianxuBounds.time_floor_all_schedules
-#check @FormalRV.Corpus.QianxuVerifiedUpperBound.qianxu_verified_upper_bound  -- 7809 q, 1.3e13 µs ceiling
+#check @FormalRV.Audit.CainXu2026.QianxuBounds.qubit_lower_le_upper
+#check @FormalRV.Audit.CainXu2026.QianxuBounds.time_floor_all_schedules
+#check @FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.qianxu_verified_upper_bound  -- 7809 q, 1.3e13 µs ceiling
 
 /-! ## Finite instantiation: k DERIVED from parity matrices (➗ native_decide) -/
-#check @FormalRV.Corpus.QianxuFullLP.lp16_k_derived          -- k = 744 = 2610 − rank Hx − rank Hz
-#check @FormalRV.Corpus.QianxuFullLP.lp20_k_derived          -- k = 1224
+#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp16_k_derived          -- k = 744 = 2610 − rank Hx − rank Hz
+#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_k_derived          -- k = 1224
 
 /-! ## The GAP, quantified (➗ decide-arithmetic) -/
-#check @FormalRV.Corpus.QianxuFullLP.lp20_qubit_bracketed    -- 4350 ≤ 10000 ≤ 14961
-#check @FormalRV.Corpus.QianxuFullLP.lp20_qubit_gap          -- 4961-qubit factory-sharing gap
-#check @FormalRV.Corpus.QianxuFullLP.lp20_time_gap           -- ~1000× parallelisation gap
-#check @FormalRV.Corpus.QianxuFullLP.full_lp_report
+#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_qubit_bracketed    -- 4350 ≤ 10000 ≤ 14961
+#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_qubit_gap          -- 4961-qubit factory-sharing gap
+#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_time_gap           -- ~1000× parallelisation gap
+#check @FormalRV.Audit.CainXu2026.QianxuFullLP.full_lp_report
 
 /-! ## Eqs E3 / E4 / E9 recovered (✅ / ➗) -/
 #check @FormalRV.PaperClaims.gidney_n_bit_adder_meets_qianxu_E3       -- 25n τ_s
@@ -87,8 +90,8 @@ import FormalRV.Audit.Common.PaperClaims
 #check @FormalRV.PaperClaims.qianxu_E9_full_lookup_via_toffoli_count  -- 22,720 τ_s
 
 /-! ## Full ~10⁹-cycle modexp schedule valid by induction (✅) -/
-#check @FormalRV.Corpus.QianxuLPFullSchedule.full_modexp_10e9_schedule_valid
+#check @FormalRV.Audit.CainXu2026.QianxuLPFullSchedule.full_modexp_10e9_schedule_valid
 
 /-! ## Axiom audit on the headline semantic result -/
-#print axioms FormalRV.Corpus.QianxuVerifiedUpperBound.qianxu_verified_upper_bound
-#print axioms FormalRV.Corpus.QianxuModExpLP.modexp_preserves_code
+#print axioms FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.qianxu_verified_upper_bound
+#print axioms FormalRV.Audit.CainXu2026.QianxuModExpLP.modexp_preserves_code

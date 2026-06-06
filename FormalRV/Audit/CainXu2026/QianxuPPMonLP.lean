@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuPPMonLP — END-TO-END SEMANTIC CORRECTNESS of a NAIVE PPM on a
+  FormalRV.Audit.CainXu2026.QianxuPPMonLP — END-TO-END SEMANTIC CORRECTNESS of a NAIVE PPM on a
   real bivariate-bicycle (qianxu LP-family) code, BEFORE any resource bound.
 
   John's bottom line: "verify the fully end-to-end semantic correctness of LP code
@@ -30,7 +30,7 @@ import FormalRV.QEC.LogicalFinder
 import FormalRV.LatticeSurgery.SurgeryCorrect
 import FormalRV.LatticeSurgery.SurgeryReadout
 
-namespace FormalRV.Corpus.QianxuPPMonLP
+namespace FormalRV.Audit.CainXu2026.QianxuPPMonLP
 
 open FormalRV.QEC.LogicalFinder
 open FormalRV.Framework.LDPC
@@ -81,4 +81,4 @@ theorem ppm_on_LP_is_verified :
     ∧ apply_PPM_pos bbCodeState (zbar 0) = afterMeasureZ0 :=
   ⟨bbCodeState_valid, naive_PPM_measures_logical_Z0⟩
 
-end FormalRV.Corpus.QianxuPPMonLP
+end FormalRV.Audit.CainXu2026.QianxuPPMonLP

@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuModExpLP — the FULL modexp on the LP code, verified PARAMETRICALLY
+  FormalRV.Audit.CainXu2026.QianxuModExpLP — the FULL modexp on the LP code, verified PARAMETRICALLY
   (any number of PPMs), then its resource.
 
   John: "we need to verify the full modexp with LP code!!!"  The full Shor modular
@@ -23,12 +23,12 @@
   verified here.)
 -/
 
-import FormalRV.Corpus.QianxuLPComputation
+import FormalRV.Audit.CainXu2026.QianxuLPComputation
 
-namespace FormalRV.Corpus.QianxuModExpLP
+namespace FormalRV.Audit.CainXu2026.QianxuModExpLP
 
-open FormalRV.Corpus.QianxuPPMonLP
-open FormalRV.Corpus.QianxuLPComputation
+open FormalRV.Audit.CainXu2026.QianxuPPMonLP
+open FormalRV.Audit.CainXu2026.QianxuLPComputation
 open FormalRV.QEC.LogicalFinder
 open FormalRV.Framework.LDPC
 open FormalRV.Framework.SurgeryCorrect
@@ -160,4 +160,4 @@ theorem full_modexp_on_LP :
   ⟨fun ps h g hg => modexp_preserves_code ps h g hg,
    naive_PPM_measures_logical_Z0, lp20_modexp_time, lp20_computation_qubits⟩
 
-end FormalRV.Corpus.QianxuModExpLP
+end FormalRV.Audit.CainXu2026.QianxuModExpLP

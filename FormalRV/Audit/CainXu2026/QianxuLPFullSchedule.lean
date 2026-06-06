@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuLPFullSchedule — the FULL enumerated modexp schedule (all ≈10⁹
+  FormalRV.Audit.CainXu2026.QianxuLPFullSchedule — the FULL enumerated modexp schedule (all ≈10⁹
   PPM cycles) is system-correct, proven the SMART way: by INDUCTION on the tile count, so
   the certificate is O(|block|) and holds for ANY N — the 10⁹-cycle schedule included.
 
@@ -26,17 +26,17 @@
   No `sorry`, no `axiom`.  Kernel `decide` on the block only.
 -/
 
-import FormalRV.Corpus.QianxuLPSystemSchedule
+import FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule
 import FormalRV.System.CompressedRepeatSoundness
 
-namespace FormalRV.Corpus.QianxuLPFullSchedule
+namespace FormalRV.Audit.CainXu2026.QianxuLPFullSchedule
 
 open FormalRV.Framework.Architecture
 open FormalRV.Framework.ScheduleInv
 open FormalRV.Framework.SystemInvariantStrengthening
 open FormalRV.Framework.LayeredArtifactInterface
 open FormalRV.Framework.CompressedRepeatSoundness
-open FormalRV.Corpus.QianxuLPSystemSchedule
+open FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule
 
 /-! ## §1. The per-PPM block (one logical operation): syndrome + PPM + decode, MAGIC-FREE -/
 
@@ -115,4 +115,4 @@ theorem full_modexp_schedule_conflict_free (N : Nat) :
   ⟨(full_modexp_schedule_valid N).2.2.1, (full_modexp_schedule_valid N).1,
    lp_factory_throughput_adequate⟩
 
-end FormalRV.Corpus.QianxuLPFullSchedule
+end FormalRV.Audit.CainXu2026.QianxuLPFullSchedule

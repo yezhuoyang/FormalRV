@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuBounds — verified UPPER and LOWER bounds on qianxu's QUBIT
+  FormalRV.Audit.CainXu2026.QianxuBounds — verified UPPER and LOWER bounds on qianxu's QUBIT
   MEMORY and RUNNING TIME, built by filling in (naively) the constructions the paper
   leaves undetailed, and quantifying the GAP to their optimized claim.
 
@@ -30,7 +30,7 @@
 import FormalRV.Framework.ResourceBounds
 import FormalRV.System.DependencyGraph
 
-namespace FormalRV.Corpus.QianxuBounds
+namespace FormalRV.Audit.CainXu2026.QianxuBounds
 
 open FormalRV.Framework.Resource
 open FormalRV.System.DependencyGraph
@@ -130,4 +130,4 @@ theorem qianxu_time_gap : qianxu_time_bounds.optimizationGap = 12_870_000_000 :=
     the irreducible depth allows). -/
 theorem qianxu_time_respects_floor : qianxu_time_bounds.respectsFloor = true := by decide
 
-end FormalRV.Corpus.QianxuBounds
+end FormalRV.Audit.CainXu2026.QianxuBounds

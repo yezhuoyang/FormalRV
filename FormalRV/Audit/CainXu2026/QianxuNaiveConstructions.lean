@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuNaiveConstructions — name the two NAIVE constructions that
+  FormalRV.Audit.CainXu2026.QianxuNaiveConstructions — name the two NAIVE constructions that
   justify qianxu's resource UPPER bounds, the pieces the paper leaves undetailed.
 
   qianxu omits (a) how to compile a PPM with their LP code, and (b) how to
@@ -20,11 +20,11 @@
   No `sorry`, no `axiom`.
 -/
 
-import FormalRV.Corpus.QianxuBounds
+import FormalRV.Audit.CainXu2026.QianxuBounds
 
-namespace FormalRV.Corpus.QianxuNaiveConstructions
+namespace FormalRV.Audit.CainXu2026.QianxuNaiveConstructions
 
-open FormalRV.Corpus.QianxuBounds
+open FormalRV.Audit.CainXu2026.QianxuBounds
 
 /-! ## (a) Naive PPM-on-LP compilation: merged-code qubit cost -/
 
@@ -82,4 +82,4 @@ theorem naive_constructions_justify_upper_bounds (tau_s cycle : Nat) :
     ∧ naivePPMonLP_qubits 4350 894 = 5244 := by
   exact ⟨fun t => naiveSequential_is_timeUpper t tau_s cycle, qianxu_naivePPM_footprint⟩
 
-end FormalRV.Corpus.QianxuNaiveConstructions
+end FormalRV.Audit.CainXu2026.QianxuNaiveConstructions

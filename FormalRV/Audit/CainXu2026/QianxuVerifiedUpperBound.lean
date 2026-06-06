@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.QianxuVerifiedUpperBound — the CAPSTONE: a VERIFIABLE UPPER BOUND on
+  FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound — the CAPSTONE: a VERIFIABLE UPPER BOUND on
   qianxu's resource, grounded in a SEMANTICALLY-VERIFIED construction (the semantic gap
   closed).
 
@@ -26,10 +26,10 @@
 -/
 
 import FormalRV.QEC.LogicalMeasurementGeneral
-import FormalRV.Corpus.QianxuGadgetDerivedResource
-import FormalRV.Corpus.QianxuModExpLP
+import FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource
+import FormalRV.Audit.CainXu2026.QianxuModExpLP
 
-namespace FormalRV.Corpus.QianxuVerifiedUpperBound
+namespace FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound
 
 open FormalRV.QEC
 open FormalRV.QEC.LogicalMeasurementGeneral
@@ -143,4 +143,4 @@ theorem qianxu_verified_upper_bound :
     ∧ upperTimeUs 1_000_000_000 13 1000 = 13_000_000_000_000 :=
   ⟨(bbSmall_upper_bound_verified 13 1000).1, lp20_qubit_upper, lp20_time_upper⟩
 
-end FormalRV.Corpus.QianxuVerifiedUpperBound
+end FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound
