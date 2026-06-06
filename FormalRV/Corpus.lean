@@ -14,6 +14,7 @@ import FormalRV.Corpus.LaSsynthImport
 import FormalRV.Corpus.MagicInjectionSurgery
 import FormalRV.Corpus.PaperClaims
 import FormalRV.Corpus.Peng2022
+import FormalRV.Corpus.Pinnacle
 import FormalRV.Corpus.QianxuBounds
 import FormalRV.Corpus.QianxuGadgetDerivedResource
 import FormalRV.Corpus.QianxuLPComputation

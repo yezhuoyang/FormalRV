@@ -1,14 +1,16 @@
 /-
 ================================================================================
-  AUDIT — Webster et al. 2026, RSA-2048 on a GB-qLDPC stack  (arXiv:2602.11457)
+  AUDIT — Webster et al. 2026, "The Pinnacle Architecture"  (arXiv:2602.11457)
 ================================================================================
-HEADLINE CLAIM:  RSA-2048 in < 100,000 physical qubits.
+HEADLINE CLAIM:  RSA-2048 in < 100,000 physical qubits, via generalised-bicycle (GB)
+  qLDPC codes (Processing Units + Magic Engines + Memory; Pauli-based computation).
 
-STATUS (⬜ recorded/assumed):  Phase-C parameter-binding tuple.  The paper's
-  algorithm / code / hardware settings are bound through the SHARED L1–L4 interface
-  and smoke-checked by reflexivity; semantic verification is deferred.  This is the
-  FRAMEWORK SLOT — a reader sees exactly which settings are recorded and what is not
-  yet proved.
+STATUS (⬜ tuple + ✅ GB-code framework STARTED):  the parameter tuple is bound
+  through the shared L1–L4 interface; AND the semantic formalization has begun
+  (`Corpus/Pinnacle.lean`) — a representative GB code of the Pinnacle family is
+  CONSTRUCTED and its logical count is DERIVED from the parity matrices (not asserted),
+  reusing the cain-xu LDPC machinery.  The RSA-scale instance + the gates/resources
+  remain on the roadmap (named below).
 
 SETTINGS A READER SHOULD CHECK MATCH THE PAPER:
   • q_A = 3072  (Ekerå–Håstad window count, matching GE2021)
@@ -21,21 +23,31 @@ OUR APPROACH:  record (L1 ShorAlgorithm, L4 GB-qLDPC QECCode, hardware) as Lean 
   the verified papers, so later ticks can add code + resource proofs WITHOUT changing
   the framework.
 
-THE GAP WE DETERMINED:  parameter recording only — the GB parity matrices hx, hz are
-  stubbed `[]`.  No verification yet of GB code properties, the Type-B distance-scaling
-  conjecture, success rates, resource bounds, or the < 100k-qubit claim.
+THE GAP WE DETERMINED:  the GB-code-PARAMETER framework is now verified on a
+  representative `[[72,12,6]]` Pinnacle-family code (k derived from the matrices); the
+  RSA-scale GB `[[1620,16,24]]` parity matrices are still recorded/stubbed (deriving k
+  at 1620 columns needs the GB homological formula, brute-rank-infeasible), and the
+  measurement gadget / magic engine / < 100k resource bound are not yet built.
 
-STILL UNSOLVED:  explicit GB parity-check matrices; GB distance scaling; L3 PPM
-  fault-tolerance schedule; end-to-end resource estimation / <100k validation;
-  the L1 `rsa_correct` body (shared across papers; awaits the SQIR/Coq port —
-  see Audit/Peng2022.lean).
+STILL UNSOLVED (the Pinnacle roadmap, in `Corpus/Pinnacle.lean`):  RSA-scale GB matrices
+  + k; the Processing-Unit logical-Pauli-measurement gadget; the Magic Engine resource
+  model; PBC compilation + the < 100k-qubit bound; the L1 `rsa_correct` body (shared;
+  awaits the SQIR/Coq port — see Audit/Peng2022.lean).
 
 This file REDEFINES NOTHING.  Build:  `lake build FormalRV.Audit.Webster2026`.
 -/
 import FormalRV.Corpus.Webster2026
+import FormalRV.Corpus.Pinnacle
 
 /-! ## Recorded settings through the shared interface (⬜) — reader checks these -/
 #check @FormalRV.Corpus.Webster2026.webster_shor       -- q_A = 3072
 #check @FormalRV.Corpus.Webster2026.webster_code       -- GB [[1620, 16, 24]]
 #check @FormalRV.Corpus.Webster2026.webster_hw         -- 1e-3, 1 µs
 #check @FormalRV.Corpus.Webster2026.webster_instance   -- ShorAlgorithm × QECCode × QualtranPhysicalParameters
+
+/-! ## GB-code parameter framework STARTED (✅ verified) — Corpus/Pinnacle.lean -/
+#check @FormalRV.Corpus.Pinnacle.pinnacle_gb_72_n          -- [[72,…]] GB code constructed
+#check @FormalRV.Corpus.Pinnacle.pinnacle_gb_72_css        -- valid CSS code
+#check @FormalRV.Corpus.Pinnacle.pinnacle_gb_72_k_derived  -- k = 12 DERIVED from the matrices
+#check @FormalRV.Corpus.Pinnacle.pinnacle_rsa_code_recorded -- RSA instance [[1620,16,24]] recorded
+#print axioms FormalRV.Corpus.Pinnacle.pinnacle_gb_72_k_derived
