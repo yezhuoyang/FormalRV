@@ -38,14 +38,13 @@
   ≥ κ/(log₂N)⁴, N-parametric) is SHARED — it already covers Pinnacle's algorithm layer.
 -/
 import FormalRV.QEC.FrontendAlgebraic
-import FormalRV.QEC.GF2Rank
-import FormalRV.Audit.CainXu2026.QianxuCodeParams
+import FormalRV.QEC.CodeDimension   -- general helper `derivedK` (no longer a cross-paper import)
 import FormalRV.Audit.Pinnacle.Webster2026
 
 namespace FormalRV.Audit.Pinnacle.Pinnacle
 
 open FormalRV.QEC.Algebraic
-open FormalRV.Audit.CainXu2026.QianxuCodeParams
+open FormalRV.QEC   -- brings the general `derivedK`
 
 /-! ## The Pinnacle GB-code family — k DERIVED from constructed matrices (✅)
 

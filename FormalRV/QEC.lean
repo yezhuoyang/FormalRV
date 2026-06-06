@@ -3,6 +3,7 @@ import FormalRV.QEC.GF2Linear
 import FormalRV.QEC.GF2Linearity
 import FormalRV.QEC.GF2Rank
 import FormalRV.QEC.CSSCode
+import FormalRV.QEC.CodeDimension
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Logical
 import FormalRV.QEC.LogicalFinder
