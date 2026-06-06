@@ -21,6 +21,7 @@ demonstrated as **feasible ceilings** under the paper's own parameters — not a
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ✅ shared verified surface-code surgery (one logical PPM) |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded rotated surface code d=27 (parity matrices not constructed) |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ✅ CAPSTONE (axiom-free): 19.44 M ≤ 20 M; 8 h sits 2–3× UNDER the verified time ceiling |
+| Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; GE2021 params noted in comments) |
 
 ## Our approach
 A finite zoned architecture machine-checks the reported 20 M as a real budget (over-budget schedules
