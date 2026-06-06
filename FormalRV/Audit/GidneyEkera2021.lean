@@ -16,3 +16,6 @@ import FormalRV.Audit.GidneyEkera2021.L2_Arithmetic
 import FormalRV.Audit.GidneyEkera2021.L3_PPM
 import FormalRV.Audit.GidneyEkera2021.L4_Code
 import FormalRV.Audit.GidneyEkera2021.Verifier
+import FormalRV.Audit.GidneyEkera2021.WindowedShorPhysicalEstimate
+import FormalRV.Audit.GidneyEkera2021.NaiveBaselineCost
+import FormalRV.Audit.GidneyEkera2021.WindowedShorDeviceSchedule

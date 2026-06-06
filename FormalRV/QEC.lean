@@ -15,6 +15,7 @@ import FormalRV.QEC.QECCodeInstances
 import FormalRV.QEC.Instances
 import FormalRV.QEC.LPInstancesValid
 import FormalRV.QEC.Addressing
+import FormalRV.QEC.GateSyndromeWorkedExample
 
 /-!
 # FormalRV.QEC

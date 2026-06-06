@@ -20,7 +20,7 @@
   No `sorry`, no new `axiom`.
 -/
 
-import FormalRV.Audit.Common.SurfaceShorFullSchedule
+import FormalRV.LatticeSurgery.SurfaceShorFullSchedule
 import FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Reproduction
 
 namespace FormalRV.Audit.GidneyEkera2021.GidneyEkera2021Architecture
@@ -29,7 +29,7 @@ open FormalRV.Framework.Architecture
 open FormalRV.Framework.InvariantFramework
 open FormalRV.Framework.ScheduleInv
 open FormalRV.System.DependencyGraph
-open FormalRV.Audit.Common.SurfaceShorFullSchedule
+open FormalRV.LatticeSurgery.SurfaceShorFullSchedule
 
 /-! ## (1) GE2021 hardware + architecture parameters (cited) -/
 

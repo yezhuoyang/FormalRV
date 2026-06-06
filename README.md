@@ -120,7 +120,7 @@ honest status):
 | [`LatticeSurgery/`](FormalRV/LatticeSurgery) | surgery merge/split + system-call contracts |
 | [`System/`](FormalRV/System) | scheduling / device / resource-bound framework (`FTFramework`) |
 | [`Framework/`](FormalRV/Framework) | the four inter-layer contract interfaces (L1–L4) |
-| [`Audit/`](FormalRV/Audit) | one folder per paper (uniform Hardware/Zones/L1–L4/Verifier structure) + `Audit/Common/` shared machinery |
+| [`Audit/`](FormalRV/Audit) | one folder per paper (uniform Hardware/Zones/L1–L4/Verifier) — paper-specific only; all general/reusable code lives in the framework folders above |
 | [`Qualtran/`](FormalRV/Qualtran) | Qualtran `PhysicalParameters` data bridge |
 | [`Codegen/`](FormalRV/Codegen) | the verified QASM / device-program emitters |
 
@@ -130,8 +130,10 @@ Files are named for their content and kept small (topical modules behind a `<Nam
 
 Each paper has its **own folder** under [`FormalRV/Audit/`](FormalRV/Audit) with a **uniform
 structure** — `Hardware` · `SystemZones` · `L1_Algorithm` · `L2_Arithmetic` · `L3_PPM` · `L4_Code` ·
-`Verifier` · `README` — that **redefines nothing** (it imports the real theorems from `Audit/Common/`
-and `Framework`/`Shor`/`QEC`). Rigor is **enforced on build**: each folder's `Verifier.lean` runs
+`Verifier` · `README`. **All general/reusable code lives in the framework folders** (`LatticeSurgery`,
+`Shor`, `System`, `QEC`, `PPM`, `Framework`, …); a paper folder holds **only that paper's specific
+implementation + scheduling** and imports *only* general code — never another paper. Rigor is
+**enforced on build**: each folder's `Verifier.lean` runs
 `#verify_clean`, the gate that ACCEPTS a theorem only if its transitive axioms ⊆
 `{propext, Classical.choice, Quot.sound}` — so a `sorry` or native-tainted axiom makes the build
 **fail**. Each layer is exactly one of ✅ *verify-clean semantic* · ➗ *arithmetic-only* (`decide`) ·

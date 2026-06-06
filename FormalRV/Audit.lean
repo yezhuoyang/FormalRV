@@ -12,7 +12,6 @@
   Compilation confirms every cited theorem type-checks; the `#print axioms` lines
   reveal the exact trust base.  See FormalRV/Audit/README.md for the index table.
 -/
-import FormalRV.Audit.Common            -- shared infrastructure (used by several paper audits)
 import FormalRV.Audit.Peng2022          -- the cross-cutting order-finding success bound
 import FormalRV.Audit.Gidney2025
 import FormalRV.Audit.GidneyEkera2021

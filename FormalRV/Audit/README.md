@@ -1,24 +1,31 @@
 # `FormalRV/Audit/` — per-paper audit, reader-verifiable, one folder per paper
 
-Each paper has its **own folder** with the **same uniform structure**, and `Audit/Common/` holds the
-shared machinery (surface-code surgery gadgets, the Shor/Surface/Windowed pipeline, cost/decoder/zone
-models, paper-claim constants) that several papers reuse. A paper folder **redefines nothing** — it
-imports the real theorems and re-presents them by layer.
+Each paper has its **own folder** with the **same uniform structure**. **All general / reusable code
+lives in the framework folders** (`Arithmetic`, `Codegen`, `Core`, `LatticeSurgery`, `QEC`, `PPM`,
+`Shor`, `System`, `Framework`, `Qualtran`, `Verifier`) — the surgery gadgets, the Shor/surface
+pipeline, the resource/decoder/zone models, the claim constants, the verifiers. A paper folder holds
+**only that paper's specific implementation + scheduling**, and may import **only** general framework
+folders — never another `Audit/<Paper2>/`. (There is no `Audit/Common/`.)
 
 ```
 Audit/
-  Common/                     -- shared infrastructure (FormalRV.Audit.Common.*)
   <Paper>/                    -- CainXu2026 · GidneyEkera2021 · Gidney2025 · Pinnacle · Babbush2026 · Xu2024 · Peng2022
     Hardware.lean             -- physical assumptions (error, cycle, reaction)
-    SystemZones.lean          -- zoned architecture + invariant checks (or a documented GAP)
+    SystemZones.lean          -- the paper's zoned architecture + invariant checks (or a documented GAP)
     L1_Algorithm.lean         -- the ShorAlgorithm instance + the shared success bound
-    L2_Arithmetic.lean        -- verified adders/lookups/modexp (or GAP)
-    L3_PPM.lean               -- Pauli-product-measurement correctness (or GAP)
-    L4_Code.lean              -- the QEC code + k derived from matrices (or GAP)
+    L2_Arithmetic.lean        -- the paper's arithmetic results (or GAP)
+    L3_PPM.lean               -- the paper's Pauli-product-measurement results (or GAP)
+    L4_Code.lean              -- the paper's QEC code + k derived from matrices (or GAP)
     Verifier.lean             -- the end-to-end obligation + #verify_clean (the anti-cheat gate)
     README.md                 -- claim · settings-to-check · approach · gap · still-unsolved
-  <Paper>.lean                -- the folder index (imports the seven structure files)
+    <paper-specific .lean>    -- this paper's own implementation/bridge/scheduling files
+  <Paper>.lean                -- the folder index (imports the folder's files)
 ```
+
+Each paper folder imports its general dependencies from the framework folders (e.g. the success bound
+from `Shor`/`StandardShor`, surgery gadgets from `LatticeSurgery`, `derivedK` from `QEC`, resource
+models from `System`); a paper's *own* bridge/instantiation files (e.g. cain-xu's `Qianxu*`,
+`ShorOnLPBridge`) live inside its folder.
 
 ## The rigor / anti-cheating contract (enforced on build)
 

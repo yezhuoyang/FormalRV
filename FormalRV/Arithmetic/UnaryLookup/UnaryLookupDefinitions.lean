@@ -1,5 +1,5 @@
 import FormalRV.Core.Gate
-import FormalRV.Audit.Common.PaperClaims
+import FormalRV.Framework.PaperClaims
 import FormalRV.Arithmetic.Correctness
 
 namespace FormalRV.BQAlgo
