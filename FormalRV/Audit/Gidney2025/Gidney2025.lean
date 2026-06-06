@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.Gidney2025 — Phase-C corpus paper #3.
+  FormalRV.Audit.Gidney2025.Gidney2025 — Phase-C corpus paper #3.
 
   Gidney 2025, "How to factor 2048-bit RSA integers with less than a
   million noisy qubits" (arXiv:2505.15917). Surface-code + yoked-
@@ -25,7 +25,7 @@ import FormalRV.Framework.L4_QECCode
 import FormalRV.Framework.ResourceEstimate
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.Gidney2025
+namespace FormalRV.Audit.Gidney2025.Gidney2025
 
 open FormalRV.Framework FormalRV.Framework.Resource FormalRV.Qualtran
 
@@ -200,4 +200,4 @@ theorem g2025_modadd_beats_berry (n : Nat) (hn : 0 < n) :
     * Minor textual slip (reported, not hidden): runtime states "9.2 shots" then computes with
       "9.1" (`12.07·9.1/24 = 4.63` days; main.tex:1216).  Negligible. -/
 
-end FormalRV.Corpus.Gidney2025
+end FormalRV.Audit.Gidney2025.Gidney2025

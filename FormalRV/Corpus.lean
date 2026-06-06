@@ -1,6 +1,4 @@
 import FormalRV.Corpus.Babbush2026
-import FormalRV.Corpus.Gidney2025
-import FormalRV.Corpus.Peng2022
 import FormalRV.Corpus.Pinnacle
 import FormalRV.Corpus.Webster2026
 import FormalRV.Corpus.Xu2024

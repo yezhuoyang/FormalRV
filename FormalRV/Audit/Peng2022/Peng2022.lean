@@ -1,5 +1,5 @@
 /-
-  FormalRV.Corpus.Peng2022 — Phase-C corpus paper #7 (last).
+  FormalRV.Audit.Peng2022.Peng2022 — Phase-C corpus paper #7 (last).
 
   Peng et al. 2022, the **SQIR/Coq mechanised proof** of Shor's
   algorithm. End-to-end formally verified in Coq using SQIR + RCIR
@@ -30,7 +30,7 @@ import FormalRV.Framework.L1_Algorithm
 import FormalRV.Framework.L4_QECCode
 import FormalRV.Qualtran.Bridge
 
-namespace FormalRV.Corpus.Peng2022
+namespace FormalRV.Audit.Peng2022.Peng2022
 
 open FormalRV.Framework FormalRV.Qualtran
 
@@ -63,4 +63,4 @@ example : peng_instance.2.1.n = 1 ∧
           peng_instance.2.1.d = 1 := ⟨rfl, rfl, rfl⟩
 example : peng_instance.2.2 = default_params := rfl
 
-end FormalRV.Corpus.Peng2022
+end FormalRV.Audit.Peng2022.Peng2022
