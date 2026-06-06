@@ -1,97 +1,20 @@
 /-
 ================================================================================
-  AUDIT — Cain, Xu et al. 2026, RSA-2048 on a neutral-atom qLDPC stack
-          (lifted-product codes)   (arXiv:2603.28627)        [FOCUS PAPER]
+  AUDIT — cain-xu-2026, RSA-2048 on a lifted-product qLDPC stack (arXiv:2603.28627)
 ================================================================================
-HEADLINE CLAIM:  RSA-2048 in ~10,000 qubits, in ~1 week (with parallelisation).
+  Per-paper audit folder with the UNIFORM structure:
+    Hardware · SystemZones · L1_Algorithm · L2_Arithmetic · L3_PPM · L4_Code · Verifier.
+  It REDEFINES NOTHING — it imports the real theorems (now under `FormalRV.Audit.CainXu2026.*`)
+  and re-presents them per layer, with `#verify_clean` (the anti-cheat gate) on every theorem
+  marked ✅.  See `CainXu2026/README.md` for the headline claim, the settings to check, our
+  approach, and the honest per-layer ledger + the named GAPs.
 
-STATUS:  the deepest LDPC-Shor audit.  We CLOSE the semantic-correctness loop on
-  the REAL lifted-product (LP) code family and BRACKET the resource claim between a
-  verified naive upper bound and a structural lower bound; the remaining distance is
-  the paper's UNCONSTRUCTED optimizations, each named and sized.
-
-SETTINGS A READER SHOULD CHECK MATCH THE PAPER:
-  • LP memory  lp_20^{3,7} = [[4350, 1224, 20]]  (k DERIVED from parity matrices)
-  • bb18 = [[248, 10, ≤18]] ;  per-Toffoli τ_s: adder 25, ctl-adder 15, lookup 71
-  • operation-zone ancilla N_𝒜 = 894 ;  bb18 factory ≈ 2565 ;  cycle 1 µs ; 1e-3
-  • Eqs E3 (25n τ_s adder), E4 (30n τ_s ctl-adder), E9 (lookup) at RSA-2048
-
-OUR APPROACH  (four layers):
-  • PARAMETRIC SEMANTIC: a naive modexp = sequence of logical-Z PPMs PRESERVES every
-    code stabilizer, proved by INDUCTION (holds at the full ~10⁹-PPM scale without
-    enumeration) on the real [[18,2,d]] BB code; a lattice-surgery gadget on the LP
-    family implements a genuine logical-Pauli measurement.
-  • RESOURCE: upper bound by an explicit naive construction; lower bound by structure
-    (data block incompressible below rate; critical-path Toffoli depth); soundness
-    lemmas prove lower ≤ upper.
-  • FINITE INSTANTIATION: bb18/lp_16/lp_20 logical counts k DERIVED from parity
-    matrices via GF(2) rank.
-  • SYSTEM: the full ~10⁹-cycle modexp schedule is system-correct by induction on the
-    tiled block (Lean never materialises the 10⁹-cycle list).
-
-THE GAP WE DETERMINED  (claim ~10⁴ q / ~1 week sits BETWEEN our bounds):
-  • verified naive UPPER bound: 7,809 q (full zoned 14,961 q), ~1.3×10¹³ µs (~150 d)
-  • the ~4,961-qubit gap = factory-sharing / multi-block packing (NOT constructed)
-  • the ~1000× time gap = the parallelisation trick (NOT constructed; only naive
-    sequential is proven)
-
-STILL UNSOLVED (this is an LDPC-Shor paper): LP distance d not derived from the
-  lifted-product formula (out of scope); full LP parity matrices externally sourced;
-  parallelisation + factory-sharing not constructed; distillation correctness assumed;
-  decoder algorithm unspecified (only its reaction budget is checked).
-
-This file REDEFINES NOTHING.  Build:  `lake build FormalRV.Audit.CainXu2026`.
+  Verify the whole paper:  `lake build FormalRV.Audit.CainXu2026`
 -/
-import FormalRV.Audit.CainXu2026.QianxuCodeParams
-import FormalRV.Audit.CainXu2026.QianxuLPSystemSchedule
-import FormalRV.Audit.CainXu2026.QianxuNaiveConstructions
-import FormalRV.Audit.CainXu2026.CainXu
-import FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound
-import FormalRV.Audit.CainXu2026.QianxuModExpLP
-import FormalRV.Audit.CainXu2026.QianxuPPMonLP
-import FormalRV.Audit.CainXu2026.QianxuLPSurgery
-import FormalRV.Audit.CainXu2026.QianxuFullLP
-import FormalRV.Audit.CainXu2026.QianxuBounds
-import FormalRV.Audit.CainXu2026.QianxuLPComputation
-import FormalRV.Audit.CainXu2026.QianxuLPFullSchedule
-import FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource
-import FormalRV.Audit.Common.PaperClaims
-
-/-! ## The recorded tuple (⬜) — reader checks the settings -/
-#check @FormalRV.Audit.CainXu2026.CainXu.cainxu_instance
-
-/-! ## Semantic correctness on the REAL LP code (✅ verified-semantic) -/
-#check @FormalRV.Audit.CainXu2026.QianxuModExpLP.modexp_preserves_code          -- ∀ PPM seq: code survives (induction)
-#check @FormalRV.Audit.CainXu2026.QianxuModExpLP.logical_computation_preserves_code
-#check @FormalRV.Audit.CainXu2026.QianxuPPMonLP.ppm_on_LP_is_verified           -- per-PPM is a correct logical meas
-#check @FormalRV.Audit.CainXu2026.QianxuLPSurgery.LP_code_has_verified_surgery  -- surgery gadget on LP (not surface)
-#check @FormalRV.Audit.CainXu2026.QianxuLPSurgery.bb_LP_surgery_implements_logical_X
-#check @FormalRV.Audit.CainXu2026.QianxuLPComputation.computation_order_independent
-#check @FormalRV.Audit.CainXu2026.QianxuGadgetDerivedResource.resource_grounded_in_verified_gadget
-
-/-! ## Resource: soundness (lower ≤ upper) + the verified upper bound (✅ / ➗) -/
-#check @FormalRV.Audit.CainXu2026.QianxuBounds.qubit_lower_le_upper
-#check @FormalRV.Audit.CainXu2026.QianxuBounds.time_floor_all_schedules
-#check @FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.qianxu_verified_upper_bound  -- 7809 q, 1.3e13 µs ceiling
-
-/-! ## Finite instantiation: k DERIVED from parity matrices (➗ native_decide) -/
-#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp16_k_derived          -- k = 744 = 2610 − rank Hx − rank Hz
-#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_k_derived          -- k = 1224
-
-/-! ## The GAP, quantified (➗ decide-arithmetic) -/
-#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_qubit_bracketed    -- 4350 ≤ 10000 ≤ 14961
-#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_qubit_gap          -- 4961-qubit factory-sharing gap
-#check @FormalRV.Audit.CainXu2026.QianxuFullLP.lp20_time_gap           -- ~1000× parallelisation gap
-#check @FormalRV.Audit.CainXu2026.QianxuFullLP.full_lp_report
-
-/-! ## Eqs E3 / E4 / E9 recovered (✅ / ➗) -/
-#check @FormalRV.PaperClaims.gidney_n_bit_adder_meets_qianxu_E3       -- 25n τ_s
-#check @FormalRV.PaperClaims.ctl_adder_n_bit_meets_qianxu_E4          -- 30n τ_s
-#check @FormalRV.PaperClaims.qianxu_E9_full_lookup_via_toffoli_count  -- 22,720 τ_s
-
-/-! ## Full ~10⁹-cycle modexp schedule valid by induction (✅) -/
-#check @FormalRV.Audit.CainXu2026.QianxuLPFullSchedule.full_modexp_10e9_schedule_valid
-
-/-! ## Axiom audit on the headline semantic result -/
-#print axioms FormalRV.Audit.CainXu2026.QianxuVerifiedUpperBound.qianxu_verified_upper_bound
-#print axioms FormalRV.Audit.CainXu2026.QianxuModExpLP.modexp_preserves_code
+import FormalRV.Audit.CainXu2026.Hardware
+import FormalRV.Audit.CainXu2026.SystemZones
+import FormalRV.Audit.CainXu2026.L1_Algorithm
+import FormalRV.Audit.CainXu2026.L2_Arithmetic
+import FormalRV.Audit.CainXu2026.L3_PPM
+import FormalRV.Audit.CainXu2026.L4_Code
+import FormalRV.Audit.CainXu2026.Verifier
