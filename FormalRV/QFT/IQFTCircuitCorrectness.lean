@@ -1,6 +1,6 @@
-import FormalRV.Shor.PhaseKickback
-import FormalRV.Shor.QPEAmplitude
-import FormalRV.Shor.PostQFT.IQFTDefinitions
+import FormalRV.QPE.PhaseKickback
+import FormalRV.QPE.QPEAmplitude
+import FormalRV.QFT.IQFTDefinitions
 
 namespace FormalRV.SQIRPort
 open FormalRV.Framework

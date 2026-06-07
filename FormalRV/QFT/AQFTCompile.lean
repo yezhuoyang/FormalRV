@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.AQFTCompile — an ACTUAL Clifford+T compiler for the
+  FormalRV.QFT.AQFTCompile — an ACTUAL Clifford+T compiler for the
   inverse-QFT phase ladder of Shor's QPE, with derived approximation
   error.  No existence axiom: `compileLadder` is a real circuit
   transformation, proven to emit only Clifford+T gates, and its total
@@ -21,7 +21,7 @@
   already exact Clifford+T, so together they compile QPE's circuit to
   Clifford+T up to the stated, derived error.
 -/
-import FormalRV.Shor.QPE
+import FormalRV.QPE.QPE
 import FormalRV.Core.ApproxQFT
 
 namespace FormalRV.Framework.AQFTCompile

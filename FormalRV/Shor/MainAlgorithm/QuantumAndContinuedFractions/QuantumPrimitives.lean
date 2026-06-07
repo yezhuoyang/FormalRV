@@ -14,8 +14,8 @@ import Mathlib.Algebra.ContinuedFractions.TerminatedStable
 import Mathlib.Data.Int.GCD
 import FormalRV.Core.QuantumGate
 import FormalRV.Core.QuantumLib
-import FormalRV.Shor.QPE
-import FormalRV.Shor.QPEAmplitude
+import FormalRV.QPE.QPE
+import FormalRV.QPE.QPEAmplitude
 import FormalRV.Shor.Eigenstate
 import FormalRV.Shor.TotientLowerBound
 

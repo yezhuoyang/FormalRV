@@ -48,7 +48,7 @@ import FormalRV.Core.QuantumGate
 import FormalRV.Core.UnitarySem
 import FormalRV.Core.UnitaryOps
 import FormalRV.Core.PadAction
-import FormalRV.Shor.QPE
+import FormalRV.QPE.QPE
 
 namespace FormalRV.SQIRPort
 

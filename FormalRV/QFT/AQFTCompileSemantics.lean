@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.AQFTCompileSemantics — SEMANTIC correctness of the AQFT
+  FormalRV.QFT.AQFTCompileSemantics — SEMANTIC correctness of the AQFT
   compiler (the linear-algebra proof, not just the Clifford+T gate-set).
 
   `compileLadder` is diagonal in the computational basis, so its action is
@@ -24,8 +24,8 @@
 
   Machine-validated; kernel-clean ([propext, Classical.choice, Quot.sound]).
 -/
-import FormalRV.Shor.AQFTCompile
-import FormalRV.Shor.ControlledGates
+import FormalRV.QFT.AQFTCompile
+import FormalRV.QPE.ControlledGates
 
 namespace FormalRV.Framework.AQFTCompile
 

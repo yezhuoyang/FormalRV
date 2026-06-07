@@ -16,6 +16,9 @@ import FormalRV.Core
 import FormalRV.Arithmetic
 -- L1 algorithm: Shor order finding + QPE.
 import FormalRV.Shor
+-- Quantum phase estimation + quantum Fourier transform (general; siblings of Shor).
+import FormalRV.QPE
+import FormalRV.QFT
 -- L4 QEC codes.
 import FormalRV.QEC
 -- L3 Pauli-product measurement + magic factories.

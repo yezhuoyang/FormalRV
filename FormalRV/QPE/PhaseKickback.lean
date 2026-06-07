@@ -24,7 +24,7 @@
   the control-stub fix.
 -/
 
-import FormalRV.Shor.ControlledGates
+import FormalRV.QPE.ControlledGates
 import FormalRV.Shor.MainAlgorithm
 
 namespace FormalRV.SQIRPort
