@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.Reconstruction — the EXACT CRT reconstruction of the CFS modular
+  FormalRV.Audit.Gidney2025.CFS.Reconstruction — the EXACT CRT reconstruction of the CFS modular
   exponentiation (Gidney 2025 §"Approximate Residue Arithmetic", eq:comp_v / the `∑ r_j u_j` form).
 
   Per "semantic proof BEFORE resource proof".  Layer 1 (`ResidueArith`) proved the residue modexp
@@ -20,8 +20,8 @@
   hypothesis `hu`; constructing such `u_j` from modular inverses is classical precomputation, not a
   quantum cost, and any concrete CRT basis satisfies it.
 -/
-import FormalRV.Shor.CFS.ResidueArith
-import FormalRV.Shor.CFS.ResidueNumberSystem
+import FormalRV.Audit.Gidney2025.CFS.ResidueArith
+import FormalRV.Audit.Gidney2025.CFS.ResidueNumberSystem
 import FormalRV.Verifier.ProofGate
 
 namespace FormalRV.CFS

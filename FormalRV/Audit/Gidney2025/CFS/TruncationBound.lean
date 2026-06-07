@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.TruncationBound — SEMANTIC layer 3 of the Gidney-2025 / Chevignard–Fouque–
+  FormalRV.Audit.Gidney2025.CFS.TruncationBound — SEMANTIC layer 3 of the Gidney-2025 / Chevignard–Fouque–
   Schrottenloher factoring algorithm: the APPROXIMATE-reconstruction deviation bound.
 
   Per "semantic proof BEFORE resource proof".  Layers 1–2 (`ResidueArith`, `ResidueNumberSystem`)

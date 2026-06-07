@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.ApproxPeriodFinding — the bridge from the modular-deviation bound to APPROXIMATE
+  FormalRV.Audit.Gidney2025.CFS.ApproxPeriodFinding — the bridge from the modular-deviation bound to APPROXIMATE
   PERIODICITY, the first half of "deviation → success" (Gidney 2025, §"Approximate Period Finding",
   main.tex line 432–440).
 
@@ -33,7 +33,7 @@
   This file closes the purely-arithmetic entry point (1's classical premise: bounded deviation ⟹
   approximate periodicity).
 -/
-import FormalRV.Shor.CFS.ModularDeviation
+import FormalRV.Audit.Gidney2025.CFS.ModularDeviation
 
 namespace FormalRV.CFS
 

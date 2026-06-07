@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.ModularDeviation — the paper's MODULAR-DEVIATION metric `Δ_N` and the proof
+  FormalRV.Audit.Gidney2025.CFS.ModularDeviation — the paper's MODULAR-DEVIATION metric `Δ_N` and the proof
   that it accumulates linearly with the number of operations (Gidney 2025, main.tex line 296–311).
 
   Per "semantic proof BEFORE resource proof".  CFS replaces exact arithmetic by truncated arithmetic,

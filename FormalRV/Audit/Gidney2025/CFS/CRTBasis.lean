@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.CRTBasis — CONSTRUCTION of the CRT contribution factors `u_j` from modular
+  FormalRV.Audit.Gidney2025.CFS.CRTBasis — CONSTRUCTION of the CRT contribution factors `u_j` from modular
   inverses, discharging the `u_j mod p_i = δ_{i,j}` hypothesis of `CFS.Reconstruction`.
 
   The reconstruction theorem (`CFS.Reconstruction.reconstruction`) took the existence of a CRT basis
@@ -12,7 +12,7 @@
   basis hypothesis at all (`reconstruction_explicit`).  Only classical (precomputable) data is used;
   `crtBasis` is `noncomputable` solely because it goes through `ZMod`'s inverse.
 -/
-import FormalRV.Shor.CFS.Reconstruction
+import FormalRV.Audit.Gidney2025.CFS.Reconstruction
 
 namespace FormalRV.CFS
 

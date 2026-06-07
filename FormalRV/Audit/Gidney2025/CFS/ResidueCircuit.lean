@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.ResidueCircuit — CLASSICAL SEMANTICS of the reversible residue multiplications,
+  FormalRV.Audit.Gidney2025.CFS.ResidueCircuit — CLASSICAL SEMANTICS of the reversible residue multiplications,
   the circuit-level half of Gidney 2025's arithmetic (controlled modular multiplications on the
   residue registers; main.tex eq:define-rk, the "series of multiplications controlled by the qubits
   of e").
@@ -31,7 +31,7 @@
   - The QUANTUM (unitary, on superpositions) faithfulness of the assembled circuit — reuses the SQIR
     modmult port's unitary correctness; the controlled-on-`e_k` structure matches `ModMulImpl`.
 -/
-import FormalRV.Shor.CFS.ResidueArith
+import FormalRV.Audit.Gidney2025.CFS.ResidueArith
 import FormalRV.Verifier.ProofGate
 
 namespace FormalRV.CFS

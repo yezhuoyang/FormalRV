@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.TruncatedAccumulation — the FUSION of the truncation count (layer 4) and the
+  FormalRV.Audit.Gidney2025.CFS.TruncatedAccumulation — the FUSION of the truncation count (layer 4) and the
   modular-deviation metric (layer 5): a single integer-model statement that the CFS truncated
   accumulator deviates from the exact value by `≤ A · 2^t`, i.e. `Δ_N ≤ |P|·ℓ·2^{-f}` (eq:modevbound).
 
@@ -18,7 +18,7 @@
     * `modDev_truncAcc_normalized` — the paper's normalised form `Δ_N/N ≤ |P|·ℓ·2^{-f}` (eq:modevbound),
       under `2^{t+f} ≤ N` (i.e. `t = len N − f`, eq for `t`), with `A = |P|·ℓ`.
 -/
-import FormalRV.Shor.CFS.ModularDeviation
+import FormalRV.Audit.Gidney2025.CFS.ModularDeviation
 
 namespace FormalRV.CFS
 

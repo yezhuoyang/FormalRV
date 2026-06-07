@@ -16,7 +16,7 @@
   This file verifies the paper's INTERNAL ARITHMETIC consistency (its component
   tallies add up to its stated totals — the SystemZones `decide` theorems) and
   the SEMANTIC CORE of the algorithm's novel content (the CFS residue-arithmetic
-  engine, proved bottom-up and axiom-clean in `FormalRV.Shor.CFS`).  It is NOT a
+  engine, proved bottom-up and axiom-clean in `FormalRV.Audit.Gidney2025.CFS`).  It is NOT a
   closed whole-circuit semantic theorem that the circuit factors RSA-2048.
 
   Chosen parameters (grid-scan-selected, minimizing `q³·t`; main.tex:1006–1037):
@@ -56,8 +56,8 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.Audit.Gidney2025.SystemZones
-import FormalRV.Shor.CFS.EkeraHastad
-import FormalRV.Shor.CFS.Assumptions
+import FormalRV.Audit.Gidney2025.CFS.EkeraHastad
+import FormalRV.Audit.Gidney2025.CFS.Assumptions
 import FormalRV.Verifier
 
 namespace FormalRV.Audit.Gidney2025

@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.ResidueNumberSystem — SEMANTIC layer 2 of the Gidney-2025 / Chevignard–
+  FormalRV.Audit.Gidney2025.CFS.ResidueNumberSystem — SEMANTIC layer 2 of the Gidney-2025 / Chevignard–
   Fouque–Schrottenloher factoring algorithm: the RESIDUE NUMBER SYSTEM is faithful.
 
   Per "semantic proof BEFORE resource proof".  `ResidueArith.lean` proved that computing the

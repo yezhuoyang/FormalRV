@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS — SEMANTIC foundation of the Chevignard–Fouque–Schrottenloher approximate-
+  FormalRV.Audit.Gidney2025.CFS — SEMANTIC foundation of the Chevignard–Fouque–Schrottenloher approximate-
   residue-arithmetic factoring algorithm (the arithmetic engine of Gidney 2025, arXiv:2505.15917).
 
   ## Why this exists ("semantic proof BEFORE resource proof", John 2026-06-03)
@@ -50,14 +50,14 @@
     exists / is findable in `O(2^f·poly)` time.  Encoded as `CFS.Assumptions.Assumption1` (a `Prop`),
     NEVER asserted — the paper's own conjecture stays a conjecture.
 -/
-import FormalRV.Shor.CFS.ResidueArith
-import FormalRV.Shor.CFS.ResidueNumberSystem
-import FormalRV.Shor.CFS.Reconstruction
-import FormalRV.Shor.CFS.CRTBasis
-import FormalRV.Shor.CFS.TruncationBound
-import FormalRV.Shor.CFS.ModularDeviation
-import FormalRV.Shor.CFS.TruncatedAccumulation
-import FormalRV.Shor.CFS.ApproxPeriodFinding
-import FormalRV.Shor.CFS.ResidueCircuit
-import FormalRV.Shor.CFS.EkeraHastad
-import FormalRV.Shor.CFS.Assumptions
+import FormalRV.Audit.Gidney2025.CFS.ResidueArith
+import FormalRV.Audit.Gidney2025.CFS.ResidueNumberSystem
+import FormalRV.Audit.Gidney2025.CFS.Reconstruction
+import FormalRV.Audit.Gidney2025.CFS.CRTBasis
+import FormalRV.Audit.Gidney2025.CFS.TruncationBound
+import FormalRV.Audit.Gidney2025.CFS.ModularDeviation
+import FormalRV.Audit.Gidney2025.CFS.TruncatedAccumulation
+import FormalRV.Audit.Gidney2025.CFS.ApproxPeriodFinding
+import FormalRV.Audit.Gidney2025.CFS.ResidueCircuit
+import FormalRV.Audit.Gidney2025.CFS.EkeraHastad
+import FormalRV.Audit.Gidney2025.CFS.Assumptions

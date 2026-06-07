@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.EkeraHastad — the Ekerå–Håstad short-discrete-log factoring
+  FormalRV.Audit.Gidney2025.EkeraHastad — the Ekerå–Håstad short-discrete-log factoring
   encoding used by Gidney–Ekerå (arXiv:1905.09749, "How to factor 2048-bit RSA
   integers in 8 hours…").
 
@@ -43,7 +43,7 @@
 -/
 import FormalRV.Shor.EncodingAgnostic
 
-namespace FormalRV.Shor.EkeraHastad
+namespace FormalRV.Audit.Gidney2025.EkeraHastad
 
 open scoped BigOperators
 open FormalRV.Shor.EncodingAgnostic
@@ -252,4 +252,4 @@ theorem EHShortDLPSuccess.goodProb_ge_eighth (S : EHShortDLPSuccess) (ℓ m : Na
         rw [hp]; exact mul_le_mul_of_nonneg_right hcount (by positivity)
     _ ≤ S.goodProb := S.goodProb_ge
 
-end FormalRV.Shor.EkeraHastad
+end FormalRV.Audit.Gidney2025.EkeraHastad

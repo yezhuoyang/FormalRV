@@ -17,3 +17,5 @@ import FormalRV.Audit.Gidney2025.L3_PPM
 import FormalRV.Audit.Gidney2025.L4_Code
 import FormalRV.Audit.Gidney2025.Verifier
 import FormalRV.Audit.Gidney2025.Codegen
+import FormalRV.Audit.Gidney2025.CFS
+import FormalRV.Audit.Gidney2025.EkeraHastad

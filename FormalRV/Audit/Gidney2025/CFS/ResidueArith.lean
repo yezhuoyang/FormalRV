@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.ResidueArith — SEMANTIC foundation of the Gidney-2025 / Chevignard–Fouque–
+  FormalRV.Audit.Gidney2025.CFS.ResidueArith — SEMANTIC foundation of the Gidney-2025 / Chevignard–Fouque–
   Schrottenloher approximate-residue-arithmetic factoring algorithm.
 
   Per the discipline "semantic proof BEFORE resource proof": before the Gidney-2025 resource

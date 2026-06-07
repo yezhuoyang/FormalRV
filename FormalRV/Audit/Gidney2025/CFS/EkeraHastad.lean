@@ -1,5 +1,5 @@
 /-
-  FormalRV.Shor.CFS.EkeraHastad — the CLASSICAL post-processing of Ekerå–Håstad period finding
+  FormalRV.Audit.Gidney2025.CFS.EkeraHastad — the CLASSICAL post-processing of Ekerå–Håstad period finding
   (Gidney 2025, §"Ekerå–Håstad Period Finding", main.tex line 822–851), which turns the recovered
   discrete log into the factorisation of `N`.
 

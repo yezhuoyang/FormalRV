@@ -1,16 +1,16 @@
 /-
-  FormalRV.Shor.CFS.Assumptions — the ONE genuine conjecture underlying CFS / Gidney 2025, stated
+  FormalRV.Audit.Gidney2025.CFS.Assumptions — the ONE genuine conjecture underlying CFS / Gidney 2025, stated
   precisely as a `Prop` and NEVER asserted (Gidney 2025, main.tex "Assumption 1", line 345–348).
 
   Per the project's assumption discipline: things provable by mathematics become theorems (layers
-  1–5 of `FormalRV.Shor.CFS`); things genuinely NOT provable become explicit, named assumptions
+  1–5 of `FormalRV.Audit.Gidney2025.CFS`); things genuinely NOT provable become explicit, named assumptions
   taken as hypotheses — never silently `axiom`-ed true.  CFS rests on exactly one such conjecture:
   that a prime set with a large product AND a tiny modular deviation can be found.  We give its
   EXISTENCE statement here (the paper's `O(2^f·poly)` findability is a strengthening we do not need
   for correctness).  No theorem in this directory proves `Assumption1`; downstream results that need
   it take it as a hypothesis, so the dependency is visible.
 -/
-import FormalRV.Shor.CFS.ModularDeviation
+import FormalRV.Audit.Gidney2025.CFS.ModularDeviation
 
 namespace FormalRV.CFS
 
