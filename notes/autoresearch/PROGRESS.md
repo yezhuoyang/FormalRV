@@ -25,7 +25,7 @@
 
 ## MILESTONE BOARD
 - [x] M1 WS1a  welded textbook modexp (semantics+count, one family)   ✓ DONE (commit 195ffbe + resource weld)
-- [ ] M2 WS2'  Steane/[[18,2,d]] proven CSS + kernel-clean k
+- [~] M2 WS2'  Steane/[[18,2,d]] proven CSS + kernel-clean k   ← Steane DONE (kernel-clean); next: [[18,2,d]] + derivedK-meaningfulness bridge
 - [ ] M3 WS3   stabilizer-faithful PPM + magic-injection gadget
 - [ ] M4 WS7   inhabit VerifiedShorOnCode (small code) + Certificate
 - [ ] M5 WS5   parallel schedule + factory throughput + floor instantiation + gate Example
@@ -99,3 +99,20 @@
 - NEXT (M2): prove css_condition + kernel-clean derivedK for a small real code (Steane [[7,1,3]] first —
   smallest, decide-tractable; then [[18,2,d]] bbSmall). Recon: locate Steane/bbSmall CSSCode instances,
   check whether css_condition is decide-able at n=7, and whether derivedK is decide (not native_decide).
+
+### ITER 4 @ 2026-06-07 — M2 Steane chunk DONE (green, kernel-clean, gated)
+- MILESTONE: M2 (WS2').
+- ATTEMPTED: kernel-clean named+gated validity for the smallest real code (Steane [[7,1,3]]).
+- RESULT: green. New file FormalRV/QEC/SmallCodeValidity.lean (wired into QEC umbrella):
+  steaneCSS_is_CSS (css_condition=true, axioms []), steaneCSS_k_derived (derivedK=1, [propext]),
+  steane_valid_code_k1 (css ∧ derivedK=1 ∧ explicit valid LogicalBasis of size 1, [propext]).
+  All #verify_clean-ACCEPTED; NO native_decide. Promotes the previously-ungated `example` at
+  Logical.lean:131 to gated theorems and ties the rank-derived k to an explicit valid logical basis
+  (addresses the "derivedK is CSS-blind / meaningless" half of H7/H8 for the small code).
+- ERROR+ROOT-CAUSE: none.
+- REFLECTION: at n=7 kernel `decide` handles rank/orthogonality instantly — the native_decide in the
+  big-code k-derivations is a SCALE issue, not a necessity. Confirms the M-plan: small code kernel-clean
+  now; large codes need a structured rank argument (or honest relabel) later.
+- NEXT: (a) [[18,2,d]] bbSmall — try `decide` for css_condition + derivedK at n=18 (may need the
+  structured argument if decide is too slow); (b) the homological bridge `derivedK = #logical` under
+  css_condition so the rank formula is meaningful for codes too large to decide; (c) then M3 (PPM).
