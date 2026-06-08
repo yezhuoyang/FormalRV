@@ -25,7 +25,7 @@
 
 ## MILESTONE BOARD
 - [x] M1 WS1a  welded textbook modexp (semantics+count, one family)   ✓ DONE (commit 195ffbe + resource weld)
-- [~] M2 WS2'  Steane/[[18,2,d]] proven CSS + kernel-clean k   ← Steane DONE (kernel-clean); next: [[18,2,d]] + derivedK-meaningfulness bridge
+- [~] M2 WS2'  Steane + [[18,2,d]] BB DONE kernel-clean; REMAINING: large LP codes (lp16/20/24) css_condition + structured-rank k (decide infeasible at n=4350) — hard/multi-turn
 - [ ] M3 WS3   stabilizer-faithful PPM + magic-injection gadget
 - [ ] M4 WS7   inhabit VerifiedShorOnCode (small code) + Certificate
 - [ ] M5 WS5   parallel schedule + factory throughput + floor instantiation + gate Example
@@ -116,3 +116,21 @@
 - NEXT: (a) [[18,2,d]] bbSmall — try `decide` for css_condition + derivedK at n=18 (may need the
   structured argument if decide is too slow); (b) the homological bridge `derivedK = #logical` under
   css_condition so the rank formula is meaningful for codes too large to decide; (c) then M3 (PPM).
+
+### ITER 5 @ 2026-06-07 — M2 extended to [[18,2,d]] BB code (green, kernel-clean, gated)
+- MILESTONE: M2 (WS2').
+- ATTEMPTED: extend kernel-clean validity to bbSmall = [[18,2,d]] bivariate-bicycle (CainXu's BB family),
+  the code whose k the audit (H8) flagged as native_decide.
+- RESULT: green. Probed first (#eval + timed decide): css_condition, derivedK=2, and
+  bbSmallLogicalBasis.valid ALL provable by KERNEL `decide` at n=18 within budget — native_decide was
+  unnecessary. Added bbSmall_is_CSS / bbSmall_k_derived / bbSmall_valid_code_k2 to SmallCodeValidity.lean,
+  all #verify_clean-ACCEPTED ([propext]); 6 gated kernel-clean theorems total (Steane + bbSmall).
+- ERROR+ROOT-CAUSE: minor — bbSmall lives in namespace FormalRV.QEC.LogicalFinder (not bare QEC);
+  css_condition needs dot-notation (bbSmall.css_condition), bare `css_condition x` hit autoImplicit.
+  Fixed by `open FormalRV.QEC.LogicalFinder` + dot notation. (api-misuse class.)
+- REFLECTION: native_decide in the small/medium codes was caution, not necessity — kernel decide works
+  to n=18. The REAL H7/H8 residue is only the LARGE LP codes (n=4350): decide is infeasible there and
+  GF2Rank has NO rank-nullity/ker/dim theorems, so the meaningful-k closure needs a from-scratch
+  structured GF(2) argument (homological derivedK = #logical) — a genuine multi-turn task, flagged below.
+- NEXT: M3 (PPM stabilizer-faithful) is the next milestone per plan. The large-LP-code css_condition +
+  structured-rank k is a separate hard track (NEEDS sustained effort; candidate for a dedicated push).

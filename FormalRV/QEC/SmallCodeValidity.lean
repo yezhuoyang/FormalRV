@@ -15,10 +15,13 @@
   bridge that makes the rank formula meaningful for codes too large to `decide`.)
 -/
 import FormalRV.QEC.Logical
+import FormalRV.QEC.LogicalFinder
 import FormalRV.QEC.CodeDimension
 import FormalRV.Verifier.ProofGate
 
 namespace FormalRV.QEC
+
+open FormalRV.QEC.LogicalFinder
 
 /-- **Steane is a genuine CSS code** — `H_X · H_Z^T = 0`, by kernel `decide` (not `native_decide`). -/
 theorem steaneCSS_is_CSS : steaneCSS.css_condition = true := by decide
@@ -38,10 +41,36 @@ theorem steane_valid_code_k1 :
     ∧ steaneLogical.valid = true := by
   refine ⟨?_, ?_, ?_⟩ <;> decide
 
+/-! ## The [[18,2,d]] bivariate-bicycle code (the CainXu2026 BB family) — now KERNEL-clean.
+
+The audit (H8) flagged that the BB/LP codes' `derivedK` used `native_decide` (the `ofReduceBool`
+axiom, outside the kernel). For this [[18,2,d]] code that is unnecessary: kernel `decide` discharges
+both the CSS condition and the rank-derived `k = 2` (it is slower than native, but real, axiom-clean,
+and accepted by the project's own gate). -/
+
+/-- **bbSmall is a genuine CSS code** (`H_X·H_Z^T = 0`), by kernel `decide` — NOT `native_decide`. -/
+theorem bbSmall_is_CSS : bbSmall.css_condition = true := by decide
+
+/-- **bbSmall derived dimension** `k = 2` by kernel `decide` (replaces the audited native_decide). -/
+theorem bbSmall_k_derived : derivedK bbSmall = 2 := by decide
+
+/-- **★ M2 — `derivedK = 2` is a MEANINGFUL logical count for the [[18,2,d]] BB code (kernel-clean).**
+As for Steane: genuinely CSS, rank-derived `k = 2`, and an explicit valid logical basis of exactly
+size 2 (`bbSmallLogicalBasis`) exists — all by kernel `decide`, all `#verify_clean`-accepted. This is
+the BB-code family CainXu2026 uses, now with a kernel-clean (not native) dimension. -/
+theorem bbSmall_valid_code_k2 :
+    bbSmall.css_condition = true
+    ∧ derivedK bbSmall = 2
+    ∧ bbSmallLogicalBasis.valid = true := by
+  refine ⟨?_, ?_, ?_⟩ <;> decide
+
 /-! ## Anti-cheat gate: the build FAILS if these stop being kernel-clean (no native_decide allowed). -/
 
 #verify_clean steaneCSS_is_CSS
 #verify_clean steaneCSS_k_derived
 #verify_clean steane_valid_code_k1
+#verify_clean bbSmall_is_CSS
+#verify_clean bbSmall_k_derived
+#verify_clean bbSmall_valid_code_k2
 
 end FormalRV.QEC
