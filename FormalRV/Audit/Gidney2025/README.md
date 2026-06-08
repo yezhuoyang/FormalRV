@@ -11,12 +11,13 @@ named GAP. [`Verifier.lean`](Verifier.lean) `#verify_clean`-ACCEPTS the CFS chai
 | Layer | File | Status |
 |---|---|---|
 | Hardware | [`Hardware.lean`](Hardware.lean) | recorded (1e-3, 1 µs; hot d=25, cold 430/logical) |
-| System zones | [`SystemZones.lean`](SystemZones.lean) | ⬜ GAP — footprint checked as a tally, not a zoned schedule |
+| System zones | [`SystemZones.lean`](SystemZones.lean) | ➗ footprint / Toffoli / window TALLIES reconcile + gap-vs-GE2021; ⬜ GAP — a tally, not a zoned schedule |
 | L1 algorithm | [`L1_Algorithm.lean`](L1_Algorithm.lean) | ✅ shared N-parametric success bound |
 | L2 arithmetic | [`L2_Arithmetic.lean`](L2_Arithmetic.lean) | ✅ **CFS engine axiom-clean** — exact RNS modexp, exact CRT reconstruction, bounded truncation |
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ⬜ GAP — surface-code realization of the residue circuit not assembled |
-| L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded hot surface code d=25 |
+| L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded hot surface code d=25 + parametric tuple |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ✅ resource tally 897,864 < 10⁶ + ✅ Ekerå–Håstad recovery; ⬜ Assumption 1 |
+| Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; Gidney-2025 params noted in comments) |
 
 ## STILL UNSOLVED
 - the QUANTUM half (QPE recovers the discrete log w.h.p.; the masked-state amplitude identity);

@@ -5,9 +5,9 @@
   AXIOM-CLEAN — exact modexp via faithful RNS (CRT injectivity), exact CRT reconstruction
   with a CONSTRUCTED basis, and a bounded truncation error.  All ✅ verify-clean.
 -/
-import FormalRV.Shor.CFS.ResidueNumberSystem
-import FormalRV.Shor.CFS.CRTBasis
-import FormalRV.Shor.CFS.TruncatedAccumulation
+import FormalRV.Audit.Gidney2025.CFS.ResidueNumberSystem
+import FormalRV.Audit.Gidney2025.CFS.CRTBasis
+import FormalRV.Audit.Gidney2025.CFS.TruncatedAccumulation
 import FormalRV.Verifier
 
 #verify_clean FormalRV.CFS.rns_faithful                    -- RNS faithful = CRT injectivity

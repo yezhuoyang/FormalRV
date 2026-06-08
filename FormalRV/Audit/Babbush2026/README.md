@@ -16,6 +16,7 @@ modulus-agnostic) + a verified magic-state spacetime FLOOR. The end-to-end oblig
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ⬜ GAP |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded surface code [[425,1,14]] |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ➗ verified magic-state spacetime FLOOR (769,500 qubit·hours); end-to-end OPEN |
+| Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; Babbush params noted in comments) |
 
 ## STILL UNSOLVED
 - the L1 `rsa_correct` body (shared, pending the SQIR/Coq port — see Audit/Peng2022);

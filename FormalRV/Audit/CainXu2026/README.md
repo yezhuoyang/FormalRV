@@ -2,6 +2,8 @@
 
 **Headline claim:** RSA-2048 in ~10,000 physical qubits, in ~1 week (with parallelisation).
 
+Per-paper audit folder, uniform structure (Hardware · SystemZones · L1_Algorithm · L2_Arithmetic ·
+L3_PPM · L4_Code · Verifier · Codegen), all in ONE flat namespace `FormalRV.Audit.CainXu2026`.
 This folder follows the framework **rigorously** — semantic correctness first, resource next —
 and the [`Verifier.lean`](Verifier.lean) gate runs `#verify_clean` on every theorem marked ✅, so a
 `sorry`/native axiom would **fail the build**. Nothing here is "a counted number claimed as a proof":
@@ -23,6 +25,7 @@ the ➗ rows are explicitly arithmetic-only, and the open problems are named und
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ✅ each PPM is a correct logical measurement; ✅ the whole modexp PRESERVES the code (induction, scale-free) |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ✅ structurally-verified LP-code surgery gadget; ➗ k=10/1224 DERIVED from matrices (`native_decide`) |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ✅ verified resource UPPER BOUND + ✅ lower-≤-upper SOUNDNESS |
+| Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; cain-xu's real bb18/lp20 codes noted in comments) |
 
 ## Our approach
 Semantic core: a naive modexp = a sequence of logical-Z PPMs PRESERVES every stabilizer of the real
