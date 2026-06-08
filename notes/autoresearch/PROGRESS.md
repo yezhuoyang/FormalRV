@@ -12,10 +12,11 @@
   is clean / coordination is decided.
 
 ## STATE
-- **LOOP STATUS: PAUSED (2026-06-07)** — another agent is mid-refactor (Shor/ → Arithmetic/, 48 renames,
-  237 changes). My cron (4b79c4e5) DELETED. M1 work (ModExpWelded.lean) preserved as untracked, builds
-  green + kernel-clean in the current (refactored) worktree. Resume only after coordination decided.
-- Current milestone: **M1 (WS1a — welded textbook modexp theorem) — CORE DONE, awaiting safe integration**
+- **LOOP STATUS: OFF (manual, by user choice).** Concurrency RESOLVED: the refactor lives in a SEPARATE
+  worktree `C:/Users/yezhu/Documents/FormalRV-windowed` on branch `feat/windowed-shor` — it no longer
+  touches this worktree. I work here on `feat/ldpc-ppm-correctness` (currently at the pre-refactor
+  `8a1251e` base). Loop re-armed ONLY in an isolated worktree, never on a shared tree.
+- Current milestone: **M2 (WS2' — Steane/[[18,2,d]] proven CSS + kernel-clean k)**. M1 DONE ✓.
 - Branch: `feat/ldpc-ppm-correctness`
 - Crown-jewel axiom check (must stay clean): `Shor_correct_var`,
   `Shor_correct_verified_no_modmult_axioms` = `[propext, Classical.choice, Quot.sound]` ✓ (baseline)
@@ -23,7 +24,7 @@
   native_decide → structured-proof-or-honest-relabel. (See memory: formalrv-audit-and-remediation.)
 
 ## MILESTONE BOARD
-- [~] M1 WS1a  welded textbook modexp (semantics+count, one family)   ← CORE DONE (green); remaining: shor_resource_welded + wire to root
+- [x] M1 WS1a  welded textbook modexp (semantics+count, one family)   ✓ DONE (commit 195ffbe + resource weld)
 - [ ] M2 WS2'  Steane/[[18,2,d]] proven CSS + kernel-clean k
 - [ ] M3 WS3   stabilizer-faithful PPM + magic-injection gadget
 - [ ] M4 WS7   inhabit VerifiedShorOnCode (small code) + Certificate
@@ -80,3 +81,21 @@
 - NEXT (iter 3): add `shor_resource_welded` chaining shor_modexp_welded semantics into Shor_correct_var
   (BasicSettingRelaxed) so ONE theorem carries success-bound AND count; wire ModExpWelded into the
   Arithmetic umbrella so the gate runs in the full build; then flip M1 to [x] and start M2.
+
+### ITER 3 @ 2026-06-07 — M1 COMPLETE (green, kernel-clean, gated, wired)
+- MILESTONE: M1 (WS1a) → DONE.
+- CONTEXT: concurrency resolved (refactor isolated to worktree FormalRV-windowed / branch
+  feat/windowed-shor). My worktree clean at 8a1251e. M1 core committed as 195ffbe (explicit paths).
+- ATTEMPTED: add `shor_resource_welded` + wire ModExpWelded into the SQIRModMult umbrella.
+- RESULT: **green**. `lake build FormalRV.Arithmetic.SQIRModMult` OK (8349 jobs). `shor_resource_welded`
+  conjoins (i) the headline success bound `≥ κ/(log₂N)⁴` (via Shor_correct_verified_no_modmult_axioms)
+  and (ii) the total T-count `m*112*bits²` (via tcount_verified_modexp_chain) at bits=log₂(2N)+1 — on
+  the SAME family f_modmult_circuit_verified_bits. #verify_clean ACCEPTS all three welded theorems;
+  module now in the umbrella so the full build runs the gate.
+- ERROR+ROOT-CAUSE: none. (Earlier git entanglement was a process error, not a proof error; see LESSONS.)
+- REFLECTION: M1 closes H5/H6 — resource numbers now provably ride the circuit that makes Shor succeed.
+  The textbook count (112*bits²/iterate) is honest-but-larger than the paper-optimal; M7/WS1b is where
+  the windowed weld reproduces the paper number.
+- NEXT (M2): prove css_condition + kernel-clean derivedK for a small real code (Steane [[7,1,3]] first —
+  smallest, decide-tractable; then [[18,2,d]] bbSmall). Recon: locate Steane/bbSmall CSSCode instances,
+  check whether css_condition is decide-able at n=7, and whether derivedK is decide (not native_decide).

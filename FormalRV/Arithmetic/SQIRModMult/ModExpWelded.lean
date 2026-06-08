@@ -17,6 +17,7 @@
 -/
 import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultBasicSettingProofs
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Verifier.ProofGate
 
@@ -81,9 +82,34 @@ theorem shor_modexp_welded (a ainv N m bits : Nat)
   · exact f_modmult_circuit_verified_bits_uc_well_typed a ainv N bits hbits (by omega) hN hN2
   · exact tcount_verified_modexp_chain a ainv N bits m hcop_a hcop_ainv hodd (by omega)
 
+/-- **★ WS1a — success bound AND resource count, one theorem, one circuit.**
+Chains the welded family into the verified Shor success theorem: at the canonical
+register size `bits = log₂(2N)+1`, the SAME family `f_modmult_circuit_verified_bits`
+both (i) drives order-finding to success probability `≥ κ/(log₂N)⁴` and (ii) has the
+exact total T-count `m·112·bits²`. This is the end-to-end weld: the resource number
+is reported for the very circuit proven to make Shor succeed. -/
+theorem shor_resource_welded (a r N m ainv : Nat)
+    (h_basic_r : BasicSettingRelaxed a r N m (Nat.log2 (2 * N) + 1))
+    (h_inv : a * ainv % N = 1)
+    (hcop_a : Nat.Coprime a N) (hcop_ainv : Nat.Coprime ainv N)
+    (hodd : Odd N) (h1 : 1 < N) :
+    FormalRV.SQIRPort.probability_of_success a r N m (Nat.log2 (2 * N) + 1)
+        (sqir_modmult_rev_anc (Nat.log2 (2 * N) + 1))
+        (f_modmult_circuit_verified_bits a ainv N (Nat.log2 (2 * N) + 1))
+      ≥ FormalRV.SQIRPort.κ / (Nat.log2 N : ℝ) ^ 4
+    ∧ (∑ i ∈ Finset.range m,
+        tcount (sqir_modmult_MCP_gate (Nat.log2 (2 * N) + 1) N
+          ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)))
+        = m * (112 * (Nat.log2 (2 * N) + 1) ^ 2) := by
+  refine ⟨?_, ?_⟩
+  · exact Shor_correct_verified_no_modmult_axioms a r N m ainv h_basic_r h_inv
+  · exact tcount_verified_modexp_chain a ainv N (Nat.log2 (2 * N) + 1) m
+      hcop_a hcop_ainv hodd h1
+
 /-! ## Anti-cheat gate: the build FAILS if these stop being axiom-clean. -/
 
 #verify_clean shor_modexp_welded
 #verify_clean tcount_verified_modexp_chain
+#verify_clean shor_resource_welded
 
 end FormalRV.BQAlgo
