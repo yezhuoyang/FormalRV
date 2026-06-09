@@ -69,6 +69,7 @@ import FormalRV.Shor.VerifiedShor
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.RelaxedSetting
+import FormalRV.Arithmetic.ModExp
 
 namespace FormalRV.BQAlgo.WindowedShorConnection
 

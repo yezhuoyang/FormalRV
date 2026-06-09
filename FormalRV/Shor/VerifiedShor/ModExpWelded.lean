@@ -21,6 +21,7 @@ import FormalRV.Shor.VerifiedShor.ShorFromVerifiedModMulFamily
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Verifier.ProofGate
 import FormalRV.Shor.VerifiedShor.RelaxedSetting
+import FormalRV.Arithmetic.ModExp
 
 namespace FormalRV.BQAlgo
 

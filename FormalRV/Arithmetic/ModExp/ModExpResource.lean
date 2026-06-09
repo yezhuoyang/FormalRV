@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.ModExp.ModExpCount — EXACT T-counts of two concrete mod-exp-shaped
+  FormalRV.Arithmetic.ModExp.ModExpResource — EXACT T-counts of two concrete mod-exp-shaped
   `Gate` IR chains.  The counts are exact and machine-checked; the LABELS below are carefully
   honest about what each chain is (a counting audit, 2026-06-03, flagged earlier overclaims).
 
@@ -27,7 +27,7 @@
 
   EXACT counts derived by induction (math — the 2048 circuit is never built), no `sorry`/`axiom`.
 -/
-import FormalRV.Arithmetic.ModMult.Internal.ToffoliCount
+import FormalRV.Arithmetic.ModMult
 
 namespace FormalRV.BQAlgo
 
