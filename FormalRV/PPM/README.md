@@ -110,7 +110,7 @@ visible as the climb-then-descend of the joint measurements:
 
 <p align="center"><img src="../../docs/diagrams/ppm_adder3.png" width="980" alt="3-bit Cuccaro adder compiled to a full PPM program"></p>
 
-And the modular multiplier `x ↦ 7x mod 15` (`sqir_modmult_const_gate 2 15 7`) compiles
+And the modular multiplier `x ↦ 7x mod 15` (`modmult_const_gate 2 15 7`) compiles
 to a **248-command PPM program with 32 magic-T injections** (its 32 Toffolis), folded
 into rows:
 

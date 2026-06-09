@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.ReservedExtensionSlot
 
 namespace VerifiedShor
@@ -37,7 +37,7 @@ currently fallback wrappers.
 Real interface routing across the entire chain requires R5b'
 (enrich `ControlledModAddImpl.clean` bundle with per-position
 conjuncts) and replaying the funext-style proofs of
-`sqir_modmult_step_state_eq` and downstream theorems.  All of that
+`modmult_step_state_eq` and downstream theorems.  All of that
 work would replace the wrapper proofs without changing the
 statements below. -/
 

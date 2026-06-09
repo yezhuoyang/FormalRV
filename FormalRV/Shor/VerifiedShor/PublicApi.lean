@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 
 open FormalRV.SQIRPort
 open FormalRV.BQAlgo
@@ -23,7 +23,7 @@ open FormalRV.Framework (Gate update)
 
 This module exposes the verified-Shor result under stable, human-readable
 names.  The underlying implementation lives in
-`FormalRV.BQAlgo.SQIRModMult` (the SQIR-faithful modular multiplier)
+`FormalRV.BQAlgo.ModMult` (the SQIR-faithful modular multiplier)
 and the relaxed parametric Shor theorem chain.
 
 The result is kernel-clean: each public theorem below has axiom

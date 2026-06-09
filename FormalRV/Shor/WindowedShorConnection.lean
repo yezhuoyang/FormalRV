@@ -48,7 +48,7 @@
     1. An in-place wrapper (compute into a workspace accumulator,
        SWAP into the data register, then windowed-uncompute the
        original `x` using the inverse `c⁻¹ mod N`) — the windowed
-       analogue of `sqir_modmult_inplace_candidate`.
+       analogue of `modmult_inplace_candidate`.
     2. The output/uncompute adapter mapping the `windowed2Input`
        layout back to `encodeDataZeroAnc` (clearing the window
        registers, moving the result to the data register).
@@ -67,7 +67,8 @@
 -/
 import FormalRV.Shor.VerifiedShor
 import FormalRV.Arithmetic.MCPBridge
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
+import FormalRV.Shor.VerifiedShor.RelaxedSetting
 
 namespace FormalRV.BQAlgo.WindowedShorConnection
 
@@ -283,7 +284,7 @@ theorem shor_correct_of_windowedCompletion
       * `toyWindowed2SelectedAddGate_state_mul_correct` (PROVEN,
         window-preserving selected-add) for stage 3,
       * `windowed2Value_of_x_mod` (PROVEN) to decode the window value,
-      * `sqir_modmult_inverse_clear_arith` (PROVEN, SQIRModMult.lean
+      * `modmult_inverse_clear_arith` (PROVEN, ModMult.lean
         §, q_start-independent) for the modular-inverse cancellation
         `(x + (N-ainv)·((c·x)%N)) % N = 0`.
 
@@ -347,7 +348,7 @@ theorem windowedInplaceModMul_roundTrip
   -- Decode the window value: windowed2Value (bits of (c*x)%N) = (c*x)%N.
   rw [windowed2Value_of_x_mod, h_numWin, Nat.mod_eq_of_lt hcx_pow]
   -- Modular-inverse cancellation: (x + (N-ainv)·((c*x)%N)) % N = 0.
-  rw [sqir_modmult_inverse_clear_arith N c ainv x hN_pos hx h_ainv_le h_inv]
+  rw [modmult_inverse_clear_arith N c ainv x hN_pos hx h_ainv_le h_inv]
   -- Stage 5 (unload): windowed2Input 0 (windows = (c*x)%N) ↦ encodeDataZeroAnc ((c*x)%N).
   rw [h_unload ((c * x) % N) hcx_pow]
 
@@ -358,7 +359,7 @@ theorem windowedInplaceModMul_roundTrip
     hence self-inverse.  Granting that involution, the unload step is
     just the loader run a second time on the loaded state — exactly
     the `forward + involution ⇒ reverse` pattern the codebase already
-    uses for `sqir_encode_to_mult_adapter_reverse`
+    uses for `encode_to_mult_adapter_reverse`
     (`reverse_register_swap_involution_general`).
 
     This lemma discharges `h_unload` from the single hypothesis
@@ -1077,7 +1078,7 @@ theorem exists_even_bits_setting_sizing
     composition `windowedInplaceModMul_roundTrip` becomes an
     UNCONDITIONAL Boolean round-trip of the canonical `encodeDataZeroAnc`
     layout: `|x⟩|0⟩ ↦ |(c·x) % N⟩|0⟩`.  This is the windowed (Pipeline C)
-    analogue of `sqir_modmult_inplace_candidate`, and the exact
+    analogue of `modmult_inplace_candidate`, and the exact
     `EncodeRoundTripModMul.roundTrip` obligation for the windowed
     multiplier (for any constant `c` equipped with a modular inverse
     `ainv`). -/

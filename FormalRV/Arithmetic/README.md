@@ -11,7 +11,7 @@ multiplier up to `Shor` as a `MultiplyCircuitProperty`.
 - `Cuccaro/` — Cuccaro–DKM ripple-carry adder family (MAJ/UMA, compare, add/sub-const, mod-reduce, full adder, SQIR-style cond/mod-add, dirty-flag variant).
 - `RippleCarryAdder/` — patched Gidney ripple-carry adder (`RippleCarryAdderDefinitions` + `RippleCarryAdderQubitCounts`/`RippleCarryAdderRSA2048Resource`/`RippleCarryAdderDecideWitnesses`/`RippleCarryAdderPropagationReverse`/`RippleCarryAdderUncomputeCascade`); forward/reverse cascades and carry-chain induction.
 - `ModularAdder/` — `(x+c) mod N` and its controlled form, built on the patched adder (`ModularAdderDefinitions` + `ModularAdderPowerOfTwoCase`/`ModularAdderForwardFaithfulness`/`ModularAdderControlledPipeline`/`ModularAdderSwapSemantics`).
-- `SQIRModMult/` — constant modular multiplier via shift-and-accumulate over Cuccaro mod-add (`SQIRModMultDefinitions` + `SQIRModMultBitPositioning`/`SQIRModMultPrefixInvariant`/`SQIRModMultAccumulatorRange`/`SQIRModMultBasicSettingProofs`).
+- `ModMult/` — constant modular multiplier via shift-and-accumulate over Cuccaro mod-add (`ModMultDefinitions` + `ModMultBitPositioning`/`ModMultPrefixInvariant`/`ModMultAccumulatorRange`/`ModMultBasicSettingProofs`).
 - `UnaryLookup/` — unary address-decode lookup; indexing landed, gate sequence still a stub.
 - `Correctness.lean` — reusable Gate-IR-to-basis-state action lemmas (CCX/CX/X/seq).
 - `GateToUCom.lean` — faithful translation `Gate -> BaseUCom` for semantic reasoning.
@@ -22,14 +22,14 @@ multiplier up to `Shor` as a `MultiplyCircuitProperty`.
 - `cuccaro_MAJ` / `cuccaro_UMA` (`Cuccaro/Cuccaro.lean`) — the two ripple-carry primitives.
 - `gidney_adder_full_faithful_no_measurement_patched` (`RippleCarryAdder/RippleCarryAdderDefinitions.lean`) — explicit (no-measurement) Gidney adder.
 - `controlledModAddConstGate` (`ModularAdder/ModularAdderDefinitions.lean`) — 8-step controlled `(x+c) mod N` pipeline.
-- `sqir_modmult_inplace_shifted` (`SQIRModMult/SQIRModMultDefinitions.lean`) — in-place constant modular multiplier.
+- `modmult_inplace_shifted` (`ModMult/ModMultDefinitions.lean`) — in-place constant modular multiplier.
 - `Gate.toUCom` (`GateToUCom.lean`) — Gate IR to `BaseUCom`.
 
 ## Key theorems
 - `cuccaro_n_bit_adder_full_correct` (`Cuccaro/CuccaroFull.lean`) — full n-bit Cuccaro adder hits its three positional sum/carry/restore invariants — **Verified**.
 - `gidney_adder_full_faithful_no_measurement_patched_correct` (`RippleCarryAdder/RippleCarryAdderUncomputeCascade.lean`) — target register holds the sum bits, reads preserved, carries cleared — **Verified**.
 - `controlledModAddConstGate_correct` (`ModularAdder/ModularAdderControlledPipeline.lean`) — target becomes `(x+c) mod N` iff control set, workspace restored — **Verified**.
-- `sqir_modmult_inplace_shifted_correct` (`SQIRModMult/SQIRModMultAccumulatorRange.lean`) — output register holds `(a·x) mod N` (given `a·ainv ≡ 1`) — **Verified**.
+- `modmult_inplace_shifted_correct` (`ModMult/ModMultAccumulatorRange.lean`) — output register holds `(a·x) mod N` (given `a·ainv ≡ 1`) — **Verified**.
 - `toUCom_satisfies_MultiplyCircuitProperty_of_applyNat` (`MCPBridge.lean`) — a Boolean-correct Gate IR compiles to a `MultiplyCircuitProperty` multiplier — **Verified** (conditional on its two encoding hypotheses).
 - `*_meets_paper_claim` T-counts in `Cuccaro/Cuccaro.lean` — gate/T-count equalities by `decide` — **Arithmetic-only**.
 - unary-lookup gate sequence (`UnaryLookup/UnaryLookupDefinitions.lean`) — indexing only; circuit body unwritten — **Scaffolded**.
@@ -55,11 +55,11 @@ becomes `cᵢ ⊕ bᵢ ⊕ aᵢ`, the `a`-register is restored, and the carry-in
 
 ![modular multiplier x->7x mod 15](../../docs/diagrams/modmult_const_2_15_7.png)
 
-Stacking controlled modular adds gives `sqir_modmult_const_gate 2 15 7` — the
+Stacking controlled modular adds gives `modmult_const_gate 2 15 7` — the
 108-gate `x ↦ 7·x mod 15` multiplier above. The accumulator obeys the
-shift-and-accumulate recurrence `sqir_modmult_acc_spec` (`SQIRModMult/SQIRModMultDefinitions.lean`);
-for `m=2` it steps `0 → 0 → (0 + 7·2 mod 15) = 14`. `sqir_modmult_const_gate_target_decode`
-(`SQIRModMult/SQIRModMultPrefixInvariant.lean`, **Verified**) proves the target decodes to
+shift-and-accumulate recurrence `modmult_acc_spec` (`ModMult/ModMultDefinitions.lean`);
+for `m=2` it steps `0 → 0 → (0 + 7·2 mod 15) = 14`. `modmult_const_gate_target_decode`
+(`ModMult/ModMultPrefixInvariant.lean`, **Verified**) proves the target decodes to
 `(a·m) mod N`, and `MCPBridge.lean` promotes this Boolean-correct circuit to the
 `MultiplyCircuitProperty` that `Shor` consumes as its oracle.
 
@@ -94,5 +94,5 @@ for `m=2` it steps `0 → 0 → (0 + 7·2 mod 15) = 14`. `sqir_modmult_const_gat
   the reverse `UMA` chain then algebraically inverts each `MAJ` to deposit the sum.
 - **A solvable recurrence for multiplication.** Because each step adds the
   *constant* `(a·2^k) mod N` (no cross-bit dependency), the accumulator recurrence
-  closes by induction on the bit index (`sqir_modmult_acc_spec_eq_mul_mod`),
+  closes by induction on the bit index (`modmult_acc_spec_eq_mul_mod`),
   evaluating to `(a·m) mod N` after all `bits` steps.

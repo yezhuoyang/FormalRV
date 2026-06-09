@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.MultiplierStepLayerIntro
 
 namespace VerifiedShor
@@ -31,7 +31,7 @@ install/skip-j machinery.
 
 ### Scope (R5c)
 R5c ONLY exposes the layout.  The existing multiplier proof chain
-(`sqir_modmult_step_target_decode`, `sqir_modmult_step_workspace`,
+(`modmult_step_target_decode`, `modmult_step_workspace`,
 etc.) still uses the SQIR-specific names directly.  Refactoring
 those is later work.
 

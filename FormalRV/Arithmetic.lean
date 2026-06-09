@@ -18,8 +18,12 @@ import FormalRV.Arithmetic.GateToUCom
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Arithmetic.ModularAdder
 import FormalRV.Arithmetic.RCIR
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderDef
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderCorrectness
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderResource
 import FormalRV.Arithmetic.RippleCarryAdder
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
+import FormalRV.Arithmetic.ModExp
 import FormalRV.Arithmetic.UnaryLookup
 import FormalRV.Arithmetic.Windowed
 

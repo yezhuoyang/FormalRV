@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification
 
 namespace VerifiedShor
@@ -197,7 +197,7 @@ workspace — specifically at data positions `[0, bits)` when the
 workspace starts at `q_start = bits`.
 
 This section:
-1. Generalizes `sqir_style_controlledModAddConst_gate_commute_update_outside_fun`
+1. Generalizes `style_controlledModAddConst_gate_commute_update_outside_fun`
    to arbitrary `q_start` and `flagPos`.
 2. Defines q_start-parametric versions of the three case gates and
    the composed selected-add gate.
@@ -243,7 +243,7 @@ theorem sqir_modAdd_qstart_commute_update_disjoint
           flagPos updateIdx v _ hupdate_out hupdate_ne_flag]
     rw [sqir_conditionalSubConstGate_commute_update_outside_fun bits q_start N
           flagPos updateIdx v _ hupdate_out hupdate_ne_flag]
-    rw [sqir_controlledCompareConst_commute_update_outside_fun bits q_start c
+    rw [controlledCompareConst_commute_update_outside_fun bits q_start c
           controlIdx flagPos updateIdx v _
           hupdate_out hupdate_ne_flag hupdate_ne_control]
     rw [Gate.applyNat_CX_commute_update_outside_fun controlIdx flagPos updateIdx v _
@@ -1099,7 +1099,7 @@ the gate's support. Specifically:
 
 The proof composes primitive frame lemmas (`Gate.applyNat_X_commute
 _update_outside_fun`, `applyNat_CCX_commute_update_disjoint`,
-`sqir_style_controlledModAddConst_gate_commute_update_outside_fun`)
+`style_controlledModAddConst_gate_commute_update_outside_fun`)
 through `applyNat_seq_commute_update` per case gate (Case 1, 2, 3), then
 chains the three case gates via two more `applyNat_seq_commute_update`. -/
 theorem toyWindow2SelectedAddGate_commute_update_inactive
@@ -1134,7 +1134,7 @@ theorem toyWindow2SelectedAddGate_commute_update_inactive
                   = update (Gate.applyNat
                      (sqir_style_controlledModAddConst_gate bits 2 N
                        (tableValue a N 2 k 1) flagIdx 1) f') p v :=
-    fun f' => sqir_style_controlledModAddConst_gate_commute_update_outside_fun
+    fun f' => style_controlledModAddConst_gate_commute_update_outside_fun
                 bits N (tableValue a N 2 k 1) flagIdx p v f'
                 hp_out hp_ne_one hp_ne_flag
   have hM2 : ∀ f', Gate.applyNat
@@ -1143,7 +1143,7 @@ theorem toyWindow2SelectedAddGate_commute_update_inactive
                   = update (Gate.applyNat
                      (sqir_style_controlledModAddConst_gate bits 2 N
                        (tableValue a N 2 k 2) flagIdx 1) f') p v :=
-    fun f' => sqir_style_controlledModAddConst_gate_commute_update_outside_fun
+    fun f' => style_controlledModAddConst_gate_commute_update_outside_fun
                 bits N (tableValue a N 2 k 2) flagIdx p v f'
                 hp_out hp_ne_one hp_ne_flag
   have hM3 : ∀ f', Gate.applyNat
@@ -1152,7 +1152,7 @@ theorem toyWindow2SelectedAddGate_commute_update_inactive
                   = update (Gate.applyNat
                      (sqir_style_controlledModAddConst_gate bits 2 N
                        (tableValue a N 2 k 3) flagIdx 1) f') p v :=
-    fun f' => sqir_style_controlledModAddConst_gate_commute_update_outside_fun
+    fun f' => style_controlledModAddConst_gate_commute_update_outside_fun
                 bits N (tableValue a N 2 k 3) flagIdx p v f'
                 hp_out hp_ne_one hp_ne_flag
   -- Case-1 gate commute (5-layer seq X-CCX-M-CCX-X).

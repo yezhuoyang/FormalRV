@@ -1,13 +1,9 @@
 import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag
 import FormalRV.Arithmetic.ModularAdder
 import FormalRV.Arithmetic.MCPBridge
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultEncoding
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSpec
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultQStart
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultFamily
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSizing
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.RelaxedBasicSetting
+import FormalRV.Shor.VerifiedShor.RelaxedSetting
 
 namespace FormalRV.BQAlgo
 open FormalRV.Framework

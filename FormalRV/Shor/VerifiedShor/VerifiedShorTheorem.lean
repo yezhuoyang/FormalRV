@@ -1,13 +1,9 @@
 import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag
 import FormalRV.Arithmetic.ModularAdder
 import FormalRV.Arithmetic.MCPBridge
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultEncoding
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSpec
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultQStart
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultFamily
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSizing
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.RelaxedQPE_MMI
+import FormalRV.Shor.VerifiedShor.RelaxedSetting
 
 namespace FormalRV.BQAlgo
 open FormalRV.Framework
@@ -79,7 +75,7 @@ axiom-free result is one of:
   the sizing is auto-discharged at `bits = Nat.log2 (2*N) + 1`.
 
 These theorems use the verified SQIR modular multiplier
-(`f_modmult_circuit_verified_bits` → `sqir_modmult_MCP_gate`) and
+(`f_modmult_circuit_verified_bits` → `modmult_MCP_gate`) and
 NOT the placeholder `f_modmult_circuit`.  Their axiom dependency is
 exactly `[propext, Classical.choice, Quot.sound]` (the standard kernel).
 

@@ -1,13 +1,7 @@
 import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag
 import FormalRV.Arithmetic.ModularAdder
 import FormalRV.Arithmetic.MCPBridge
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultEncoding
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSpec
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultQStart
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultFamily
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSizing
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultPrefixInvariant
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRangeCleanBundleAndAdapter
+import FormalRV.Arithmetic.ModMult
 
 namespace FormalRV.BQAlgo
 open FormalRV.Framework
@@ -85,11 +79,11 @@ theorem f_modmult_circuit_verified_per_iterate
   show FormalRV.SQIRPort.MultiplyCircuitProperty
     ((a^(2^i)) % N) N (n + 1) (sqir_modmult_rev_anc (n + 1))
     (Gate.toUCom ((n + 1) + sqir_modmult_rev_anc (n + 1))
-      (sqir_modmult_MCP_gate (n + 1) N ((a^(2^i)) % N) ((ainv^(2^i)) % N)))
-  have h_mcp := sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty
+      (modmult_MCP_gate (n + 1) N ((a^(2^i)) % N) ((ainv^(2^i)) % N)))
+  have h_mcp := modmult_MCP_gate_satisfies_MultiplyCircuitProperty
     (n + 1) N ((a^(2^i)) % N) ((ainv^(2^i)) % N)
     (by omega : 1 ≤ n + 1) hN_pos hN hN2 h_ainv_le h_inv_i
-  unfold sqir_total_dim at h_mcp
+  unfold modmult_total_dim at h_mcp
   exact h_mcp
 
 /-- **`ModMulImpl` for the verified family.** -/
@@ -108,9 +102,9 @@ theorem f_modmult_circuit_verified_uc_well_typed
   intro i
   unfold f_modmult_circuit_verified
   apply uc_well_typed_toUCom_of_Gate_WellTyped
-  have h_wt := sqir_modmult_MCP_gate_wellTyped (n + 1) N
+  have h_wt := modmult_MCP_gate_wellTyped (n + 1) N
     ((a^(2^i)) % N) ((ainv^(2^i)) % N) (by omega : 1 ≤ n + 1) hN_pos hN hN2
-  unfold sqir_total_dim at h_wt
+  unfold modmult_total_dim at h_wt
   exact h_wt
 
 /-! ### BasicSetting bridge for the verified family. -/
@@ -166,9 +160,9 @@ theorem f_modmult_circuit_verified_bits_MMI
   have h_inv_i : ((a^(2^i)) % N) * ((ainv^(2^i)) % N) % N = 1 :=
     pow_iter_inverse_mod a ainv N i hN_ge_2 h_inv
   apply MultiplyCircuitProperty_of_mod hN_pos
-  have h_mcp := sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty
+  have h_mcp := modmult_MCP_gate_satisfies_MultiplyCircuitProperty
     bits N ((a^(2^i)) % N) ((ainv^(2^i)) % N) hbits hN_pos hN hN2 h_ainv_le h_inv_i
-  unfold sqir_total_dim at h_mcp
+  unfold modmult_total_dim at h_mcp
   exact h_mcp
 
 /-- **uc_well_typed for the bits-parameterized family.** -/
@@ -179,9 +173,9 @@ theorem f_modmult_circuit_verified_bits_uc_well_typed
   intro i
   unfold f_modmult_circuit_verified_bits
   apply uc_well_typed_toUCom_of_Gate_WellTyped
-  have h_wt := sqir_modmult_MCP_gate_wellTyped bits N
+  have h_wt := modmult_MCP_gate_wellTyped bits N
     ((a^(2^i)) % N) ((ainv^(2^i)) % N) hbits hN_pos hN hN2
-  unfold sqir_total_dim at h_wt
+  unfold modmult_total_dim at h_wt
   exact h_wt
 
 /-- **Verified Shor probability bound — bits-parameterized.**

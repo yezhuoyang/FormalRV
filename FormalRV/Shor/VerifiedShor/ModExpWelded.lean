@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.SQIRModMult.ModExpWelded — WS1a: the WELDED modexp theorem.
+  FormalRV.Arithmetic.ModMult.ModExpWelded — WS1a: the WELDED modexp theorem.
 
   Audit gap H5/H6: the verified Shor *semantics* rode on the family
   `f_modmult_circuit_verified_bits`, while the RSA-2048 *resource counts* rode on
@@ -15,12 +15,12 @@
     • well-typed: `f_modmult_circuit_verified_bits_uc_well_typed`
     • per-gate T-count: `tcount_sqir_modmult_MCP_gate_shor` = 112·bits² (constant)
 -/
-import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
 import FormalRV.Shor.VerifiedShor.ShorFromVerifiedModMulFamily
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Verifier.ProofGate
+import FormalRV.Shor.VerifiedShor.RelaxedSetting
 
 namespace FormalRV.BQAlgo
 
@@ -32,14 +32,14 @@ definition, `Gate.toUCom` of exactly the gate the count below is taken on. -/
 theorem family_iterate_gate (a ainv N bits i : Nat) :
     f_modmult_circuit_verified_bits a ainv N bits i
       = Gate.toUCom (bits + sqir_modmult_rev_anc bits)
-          (sqir_modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)) := rfl
+          (modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)) := rfl
 
 /-- **Per-iterate T-count is the constant `112·bits²`**, for every Shor iterate `i`,
 whenever `a`, `ainv` are coprime to the odd modulus `N > 1`. -/
 theorem tcount_verified_family_iterate (a ainv N bits i : Nat)
     (hcop_a : Nat.Coprime a N) (hcop_ainv : Nat.Coprime ainv N)
     (hodd : Odd N) (h1 : 1 < N) :
-    tcount (sqir_modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N))
+    tcount (modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N))
       = 112 * bits ^ 2 := by
   apply tcount_sqir_modmult_MCP_gate_shor
   · exact (ZMod.coprime_mod_iff_coprime (a ^ (2 ^ i)) N).mpr (coprime_pow a N (2 ^ i) hcop_a)
@@ -55,7 +55,7 @@ theorem tcount_verified_modexp_chain (a ainv N bits m : Nat)
     (hcop_a : Nat.Coprime a N) (hcop_ainv : Nat.Coprime ainv N)
     (hodd : Odd N) (h1 : 1 < N) :
     (∑ i ∈ Finset.range m,
-        tcount (sqir_modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)))
+        tcount (modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)))
       = m * (112 * bits ^ 2) := by
   have h := Finset.sum_congr rfl (fun i (_ : i ∈ Finset.range m) =>
       tcount_verified_family_iterate a ainv N bits i hcop_a hcop_ainv hodd h1)
@@ -76,7 +76,7 @@ theorem shor_modexp_welded (a ainv N m bits : Nat)
         (f_modmult_circuit_verified_bits a ainv N bits)
     ∧ (∀ i, FormalRV.SQIRPort.uc_well_typed (f_modmult_circuit_verified_bits a ainv N bits i))
     ∧ (∑ i ∈ Finset.range m,
-        tcount (sqir_modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)))
+        tcount (modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)))
         = m * (112 * bits ^ 2) := by
   refine ⟨?_, ?_, ?_⟩
   · exact f_modmult_circuit_verified_bits_MMI a ainv N bits hbits hN_ge_2 hN hN2 h_inv
@@ -99,7 +99,7 @@ theorem shor_resource_welded (a r N m ainv : Nat)
         (f_modmult_circuit_verified_bits a ainv N (Nat.log2 (2 * N) + 1))
       ≥ FormalRV.SQIRPort.κ / (Nat.log2 N : ℝ) ^ 4
     ∧ (∑ i ∈ Finset.range m,
-        tcount (sqir_modmult_MCP_gate (Nat.log2 (2 * N) + 1) N
+        tcount (modmult_MCP_gate (Nat.log2 (2 * N) + 1) N
           ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)))
         = m * (112 * (Nat.log2 (2 * N) + 1) ^ 2) := by
   refine ⟨?_, ?_⟩

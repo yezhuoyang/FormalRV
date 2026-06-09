@@ -23,11 +23,7 @@
 import FormalRV.Core.GateQASM
 import FormalRV.Core.UnitaryOps
 import FormalRV.Arithmetic.GateToUCom
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultEncoding
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSpec
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultQStart
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultFamily
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSizing
+import FormalRV.Arithmetic.ModMult
 
 namespace FormalRV.Shor.ControlledModExpCount
 
@@ -186,9 +182,9 @@ theorem ucApp1_npar {dim : Nat} (g : Nat → BaseUCom dim) (m : Nat) :
     counted — the earlier "ill-posed" was only about collapsing the mixed-angle rotations into a
     single magic-state number, which still needs per-rotation synthesis. -/
 
-#eval let g := sqir_modmult_MCP_gate 2 15 7 13
+#eval let g := modmult_MCP_gate 2 15 7 13
       (numCCX g, numCX g, numX g, gNumI g)                          -- (64, 168, 0, gNumI)
-#eval let g := sqir_modmult_MCP_gate 2 15 7 13
+#eval let g := modmult_MCP_gate 2 15 7 13
       -- controlled oracle: (CNOTs, rotations) via the proved §5 formula
       (2 * (gNumI g + numX g + 9 * numCCX g) + 6 * (numCX g + 6 * numCCX g),
        4 * (gNumI g + numX g + 9 * numCCX g) + 9 * (numCX g + 6 * numCCX g))

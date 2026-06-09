@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.ModMulInterfaceViaExisting
 
 namespace VerifiedShor
@@ -59,16 +59,16 @@ interface-routed one), and package the result as a
   (R6h-real) via def-eq.
 * `ModMul.circuitFamily_modMulImpl_real_via_interfaces`:
   the per-iterate `ModMulImpl` proof, replaying the structure of
-  `f_modmult_circuit_verified_bits_MMI` (SQIRModMult.lean:2639) but
+  `f_modmult_circuit_verified_bits_MMI` (ModMult.lean:2639) but
   using `MCPAdapter.sqirCuccaro_satisfiesMultiplyCircuitProperty_real_via_interfaces`
-  in place of `sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty`.
+  in place of `modmult_MCP_gate_satisfies_MultiplyCircuitProperty`.
 * `verifiedSqirModMulFamily_real_via_interfaces`: the `VerifiedModMulFamily`
   package using the real MMI.
 * `verifiedSqirModMulFamily_real_via_interfaces_eq` (rfl): the real
   package equals the existing `verifiedSqirModMulFamily`.
 
 None of these calls
-`sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty`,
+`modmult_MCP_gate_satisfies_MultiplyCircuitProperty`,
 `ModMul.circuitFamily_modMulImpl`,
 `f_modmult_circuit_verified_bits_MMI`, or any other forbidden
 theorem.  Allowed deps: `MultiplyCircuitProperty_of_mod` (mod-up

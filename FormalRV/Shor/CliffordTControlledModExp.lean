@@ -22,7 +22,7 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.Core.GateQASM
-import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
+import FormalRV.Arithmetic.ModMult
 
 namespace FormalRV.Shor.CliffordTControlledModExp
 
@@ -64,14 +64,14 @@ def ctrlModExpChain (m cq anc bits N a ainv : Nat) : Gate :=
   match m with
   | 0 => Gate.I
   | k + 1 => Gate.seq (ctrlModExpChain k cq anc bits N a ainv)
-                      (ctrlGate cq anc (sqir_modmult_MCP_gate bits N a ainv))
+                      (ctrlGate cq anc (modmult_MCP_gate bits N a ainv))
 
 /-- **EXACT magic-state count of the Clifford+T controlled mod-exp**: `m` times the per-oracle
     `numCX + 3·numCCX`.  Fully Clifford+T — an exact integer, not a bound. -/
 theorem numCCX_ctrlModExpChain (m cq anc bits N a ainv : Nat) :
     numCCX (ctrlModExpChain m cq anc bits N a ainv)
-      = m * (numCX (sqir_modmult_MCP_gate bits N a ainv)
-              + 3 * numCCX (sqir_modmult_MCP_gate bits N a ainv)) := by
+      = m * (numCX (modmult_MCP_gate bits N a ainv)
+              + 3 * numCCX (modmult_MCP_gate bits N a ainv)) := by
   induction m with
   | zero => simp [ctrlModExpChain, numCCX]
   | succ k ih =>
@@ -81,8 +81,8 @@ theorem numCCX_ctrlModExpChain (m cq anc bits N a ainv : Nat) :
 /-- The controlled mod-exp is Clifford+T: T-count `= 7 ×` its magic count. -/
 theorem tcount_ctrlModExpChain (m cq anc bits N a ainv : Nat) :
     tcount (ctrlModExpChain m cq anc bits N a ainv)
-      = 7 * (m * (numCX (sqir_modmult_MCP_gate bits N a ainv)
-              + 3 * numCCX (sqir_modmult_MCP_gate bits N a ainv))) := by
+      = 7 * (m * (numCX (modmult_MCP_gate bits N a ainv)
+              + 3 * numCCX (modmult_MCP_gate bits N a ainv))) := by
   rw [tcount_eq_seven_numCCX, numCCX_ctrlModExpChain]
 
 /-! ## §3. The data-independent core, and a concrete EXACT number.
@@ -96,10 +96,10 @@ theorem tcount_ctrlModExpChain (m cq anc bits N a ainv : Nat) :
 theorem ctrl_oracle_toffoli_core (bits N a ainv : Nat)
     (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
     (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
-    numCX (sqir_modmult_MCP_gate bits N a ainv)
-        + 3 * numCCX (sqir_modmult_MCP_gate bits N a ainv)
-      = numCX (sqir_modmult_MCP_gate bits N a ainv) + 48 * bits ^ 2 := by
-  have h : numCCX (sqir_modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
+    numCX (modmult_MCP_gate bits N a ainv)
+        + 3 * numCCX (modmult_MCP_gate bits N a ainv)
+      = numCX (modmult_MCP_gate bits N a ainv) + 48 * bits ^ 2 := by
+  have h : numCCX (modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
     have := tcount_sqir_modmult_MCP_gate_shor bits N a ainv hcop hcopinv hpos hlt hodd h1
     rw [tcount_eq_seven_numCCX] at this; omega
   rw [h]; ring
@@ -112,9 +112,9 @@ theorem numCCX_ctrlModExpChain_shor (m cq anc bits N a ainv : Nat)
     (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
     (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
     numCCX (ctrlModExpChain m cq anc bits N a ainv)
-      = m * numCX (sqir_modmult_MCP_gate bits N a ainv) + m * (48 * bits ^ 2) := by
+      = m * numCX (modmult_MCP_gate bits N a ainv) + m * (48 * bits ^ 2) := by
   rw [numCCX_ctrlModExpChain]
-  have h : numCCX (sqir_modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
+  have h : numCCX (modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
     have := tcount_sqir_modmult_MCP_gate_shor bits N a ainv hcop hcopinv hpos hlt hodd h1
     rw [tcount_eq_seven_numCCX] at this; omega
   rw [h]; ring
@@ -126,7 +126,7 @@ theorem shor2048_ctrl_magic_core :
     (2 * 2048) * (48 * 2048 ^ 2) = 824633720832 := by norm_num
 
 -- Concrete EXACT magic-state count at bits=2 (N=15,a=7,ainv=13): a fully Clifford+T number.
-#eval let g := sqir_modmult_MCP_gate 2 15 7 13
+#eval let g := modmult_MCP_gate 2 15 7 13
       (numCX g, numCCX g, numCX g + 3 * numCCX g)     -- (168, 64, 360)  magic per ctrl-oracle
 -- whole controlled mod-exp (m = 2·bits = 4 oracles): exact magic = 4·360 = 1440
 #eval numCCX (ctrlModExpChain 4 0 99 2 15 7 13)        -- 1440

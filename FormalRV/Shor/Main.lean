@@ -1,5 +1,5 @@
 import FormalRV.Shor.PostQFT
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
 
 /-!
@@ -19,7 +19,7 @@ axiom-free (check with `#print axioms`):
   `ModMulImpl`, order finding succeeds with probability `≥ κ / (log₂ N)⁴`
   where `κ = 4·e⁻²/π²`.
 * `FormalRV.Shor_correct_verified_no_modmult_axioms`
-  (`Arithmetic/SQIRModMult.lean`) — the same statement instantiated with a
+  (`Arithmetic/ModMult.lean`) — the same statement instantiated with a
   constructively-defined, SQIR-faithful modular multiplier, so there is no
   oracle placeholder at all.
 * `FormalRV.QPE_MMI_correct`
