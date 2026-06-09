@@ -7,9 +7,7 @@ import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSizing
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultBitPositioning
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultPrefixInvariant
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultBasicSettingProofs
 import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultCorrectness
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultResource
 import FormalRV.Arithmetic.SQIRModMult.ModExpCount
-import FormalRV.Arithmetic.SQIRModMult.ModExpWelded

@@ -17,7 +17,8 @@
 -/
 import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
 import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultBasicSettingProofs
+import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
+import FormalRV.Shor.VerifiedShor.ShorFromVerifiedModMulFamily
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Verifier.ProofGate
 

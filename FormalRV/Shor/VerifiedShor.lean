@@ -1,4 +1,9 @@
 import FormalRV.Shor.VerifiedShor.PublicApi
+import FormalRV.Shor.VerifiedShor.ShorFromVerifiedModMulFamily
+import FormalRV.Shor.VerifiedShor.RelaxedBasicSetting
+import FormalRV.Shor.VerifiedShor.RelaxedQPE_MMI
+import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
+import FormalRV.Shor.VerifiedShor.ModExpWelded
 import FormalRV.Shor.VerifiedShor.ShorSettingCircuitSizing
 import FormalRV.Shor.VerifiedShor.ShorSettingLemmas
 import FormalRV.Shor.VerifiedShor.CircuitSizingStub

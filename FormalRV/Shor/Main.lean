@@ -1,5 +1,6 @@
 import FormalRV.Shor.PostQFT
 import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
 
 /-!
 # FormalRV — the main theorem

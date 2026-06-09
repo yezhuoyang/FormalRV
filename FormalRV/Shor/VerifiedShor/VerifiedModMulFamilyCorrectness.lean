@@ -1,5 +1,6 @@
 import FormalRV.Arithmetic.SQIRModMult
 import FormalRV.Shor.VerifiedShor.ShorSuccessProbabilityTheorems
+import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
 
 namespace VerifiedShor
 open FormalRV.SQIRPort
