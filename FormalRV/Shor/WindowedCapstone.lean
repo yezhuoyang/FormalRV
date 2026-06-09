@@ -20,7 +20,7 @@
   concrete circuit (`windowedMulCircuit`, a `Gate`) is executed on genuinely
   qubit-encoded integers at two window sizes in `WindowedCircuitExec`.
 -/
-import FormalRV.Shor.WindowedArith
+import FormalRV.Arithmetic.Windowed.WindowedArith
 import FormalRV.Shor.WindowedPPM
 
 namespace FormalRV.Shor.WindowedCapstone

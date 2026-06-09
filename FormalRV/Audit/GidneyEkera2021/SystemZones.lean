@@ -32,7 +32,7 @@ import FormalRV.LatticeSurgery.SurfaceShorFullSchedule
 import FormalRV.System.NaiveUpperBound
 import FormalRV.System.DecoderBacklogModel
 import FormalRV.Framework.PaperClaims
-import FormalRV.Shor.WindowedCostModel
+import FormalRV.Arithmetic.Windowed.WindowedCostModel
 import FormalRV.Shor.WindowedShorPPMFactoryE2E
 import FormalRV.System.DeviceSchedule
 import FormalRV.System.MagicScheduleComplete

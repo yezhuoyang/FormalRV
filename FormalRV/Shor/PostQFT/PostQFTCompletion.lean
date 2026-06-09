@@ -228,70 +228,10 @@ theorem Shor_correct_var
       QPE_MMI_correct a' r' N' m' n' anc' k' f' h_b h_m h_w h_k)
     (fun r' N' h_pos h_le => phi_n_over_n_lowerbound r' N' h_pos h_le)
 
-/-- **`Shor_correct`** (Coq: `Shor.v:1295`). The specialised version
-at `f_modmult_circuit`. Re-declared in PostQFT since `Shor.lean`'s
-version was deleted along with the axiom. Uses the proved
-`Shor_correct_var`.
-
-**DEPRECATED (2026-05-29, Tick 84):** This theorem depends on the
-deprecated placeholder axioms `f_modmult_circuit`,
-`f_modmult_circuit_MMI`, and `f_modmult_circuit_uc_well_typed`.
-Cite `FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms`
-instead — that is the verified, axiom-free Shor theorem using the
-SQIR-faithful modular multiplier. -/
-@[deprecated "Use FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms instead — that theorem does not depend on the placeholder f_modmult_circuit* axioms" (since := "2026-05-29")]
-theorem Shor_correct
-    (a N : Nat) (h_aN : 0 < a ∧ a < N) (h_coprime : Nat.gcd a N = 1) :
-    let m := Nat.log2 (2 * N^2)
-    let n := Nat.log2 (2 * N)
-    probability_of_success a (ord a N) N m n (modmult_rev_anc n)
-        (f_modmult_circuit a (modinv a N) N n)
-      ≥ κ / (Nat.log2 N : ℝ)^4 := by
-  obtain ⟨h_a_pos, h_a_lt⟩ := h_aN
-  have h_N_gt_one : 1 < N := by omega
-  have h_Nsq_ne : N^2 ≠ 0 := by positivity
-  have h_2N_ne : (2 * N) ≠ 0 := by omega
-  have h_2Nsq_ne : (2 * N^2) ≠ 0 := by
-    have : 0 < 2 * N^2 := by positivity
-    omega
-  have h_N_ne : N ≠ 0 := by omega
-  have h_ord : Order a (ord a N) N := ord_Order a N h_a_pos h_a_lt h_coprime
-  have h_log2_m : Nat.log2 (2 * N^2) = Nat.log2 (N^2) + 1 :=
-    Nat.log2_two_mul h_Nsq_ne
-  have h_log2_n : Nat.log2 (2 * N) = Nat.log2 N + 1 :=
-    Nat.log2_two_mul h_N_ne
-  have h_m_lower : 2 ^ (Nat.log2 (2 * N^2)) ≤ 2 * N^2 :=
-    Nat.log2_self_le h_2Nsq_ne
-  have h_m_upper : N^2 < 2 ^ (Nat.log2 (2 * N^2)) := by
-    rw [h_log2_m, pow_succ]
-    have h1 : 2 ^ Nat.log2 (N^2) ≤ N^2 := Nat.log2_self_le h_Nsq_ne
-    have h2 : N^2 < 2 ^ (Nat.log2 (N^2) + 1) := by
-      rw [← Nat.log2_lt h_Nsq_ne]; omega
-    rw [pow_succ] at h2
-    omega
-  have h_n_lower : 2 ^ (Nat.log2 (2 * N)) ≤ 2 * N :=
-    Nat.log2_self_le h_2N_ne
-  have h_n_upper : N < 2 ^ (Nat.log2 (2 * N)) := by
-    rw [h_log2_n, pow_succ]
-    have h1 : 2 ^ Nat.log2 N ≤ N := Nat.log2_self_le h_N_ne
-    have h2 : N < 2 ^ (Nat.log2 N + 1) := by
-      rw [← Nat.log2_lt h_N_ne]; omega
-    rw [pow_succ] at h2
-    omega
-  have h_basic : BasicSetting a (ord a N) N
-      (Nat.log2 (2 * N^2)) (Nat.log2 (2 * N)) :=
-    ⟨⟨h_a_pos, h_a_lt⟩, h_ord, ⟨h_m_upper, h_m_lower⟩, ⟨h_n_upper, h_n_lower⟩⟩
-  have h_minv_lt : modinv a N < N := modinv_upper_bound a N h_N_gt_one
-  have h_minv_inv : a * modinv a N % N = 1 :=
-    Order_modinv_correct a N (ord a N) h_ord h_a_lt
-  exact Shor_correct_var a (ord a N) N
-    (Nat.log2 (2 * N^2)) (Nat.log2 (2 * N))
-    (modmult_rev_anc (Nat.log2 (2 * N)))
-    (f_modmult_circuit a (modinv a N) N (Nat.log2 (2 * N)))
-    h_basic
-    (f_modmult_circuit_MMI a (modinv a N) N (Nat.log2 (2 * N))
-      h_a_lt h_minv_lt h_minv_inv)
-    (fun i _ => f_modmult_circuit_uc_well_typed a (modinv a N) N
-      (Nat.log2 (2 * N)) h_N_gt_one h_a_lt h_minv_lt i)
+-- (removed 2026-06-09) Deprecated `theorem Shor_correct` deleted together with
+-- the placeholder axioms `f_modmult_circuit{,_MMI,_uc_well_typed}` it consumed.
+-- The verified, axiom-free headline is
+-- `FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms` (SQIR-faithful
+-- modular multiplier); the oracle-parametric statement is `Shor_correct_var`.
 
 end FormalRV.SQIRPort

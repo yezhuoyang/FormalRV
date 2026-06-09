@@ -20,18 +20,15 @@ import FormalRV.Shor.MainAlgorithm
 import FormalRV.Shor.SuccessSensitivity
 import FormalRV.Shor.TotientLowerBound
 import FormalRV.Shor.VerifiedShor
-import FormalRV.Shor.WindowedArith
+-- Windowed arithmetic gadgets relocated to FormalRV.Arithmetic.Windowed (2026-06-09);
+-- the Shor-specific windowed glue stays here.
 import FormalRV.Shor.WindowedCapstone
-import FormalRV.Shor.WindowedCircuit
 import FormalRV.Shor.WindowedComposed
 import FormalRV.Shor.WindowedComposedCost
-import FormalRV.Shor.WindowedCostModel
 import FormalRV.Shor.WindowedEndToEnd
-import FormalRV.Shor.WindowedLookupAdd
 import FormalRV.Shor.WindowedPPM
 import FormalRV.Shor.WindowedShorConnection
 import FormalRV.Shor.WindowedTimeCost
-import FormalRV.Shor.WindowedWidth
 import FormalRV.Shor.ShorEmit
 import FormalRV.Shor.ShorEmitDistance
 import FormalRV.Shor.ShorPPMEndToEnd

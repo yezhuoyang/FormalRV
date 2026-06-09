@@ -11,7 +11,7 @@
   The kernel-clean *parametric value-correctness* is `WindowedArith.windowed_modProductAdd`
   / `windowedLookupFold_modProductAdd`, and the resource count is
   `WindowedCircuit.windowedMulCircuit_toffoli`.) -/
-import FormalRV.Shor.WindowedCircuit
+import FormalRV.Arithmetic.Windowed.WindowedCircuit
 
 namespace FormalRV.Shor.WindowedCircuitExec
 

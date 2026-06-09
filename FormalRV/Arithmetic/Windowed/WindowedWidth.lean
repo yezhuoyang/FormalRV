@@ -10,7 +10,7 @@
   and in particular its `+ numWin*w` (data) and any padding contribution — is read off the
   verified circuit, not asserted as a formula.
 -/
-import FormalRV.Shor.WindowedCircuit
+import FormalRV.Arithmetic.Windowed.WindowedCircuit
 
 namespace FormalRV.Shor.WindowedWidth
 

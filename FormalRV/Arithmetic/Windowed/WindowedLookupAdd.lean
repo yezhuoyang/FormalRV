@@ -24,7 +24,7 @@
 -/
 import FormalRV.Arithmetic.UnaryLookup.UnaryLookupDefinitions
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
-import FormalRV.Shor.WindowedArith
+import FormalRV.Arithmetic.Windowed.WindowedArith
 
 namespace FormalRV.Shor.WindowedLookupAdd
 

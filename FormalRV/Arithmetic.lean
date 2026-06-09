@@ -18,6 +18,7 @@ import FormalRV.Arithmetic.RCIR
 import FormalRV.Arithmetic.RippleCarryAdder
 import FormalRV.Arithmetic.SQIRModMult
 import FormalRV.Arithmetic.UnaryLookup
+import FormalRV.Arithmetic.Windowed
 
 /-!
 # FormalRV.Arithmetic

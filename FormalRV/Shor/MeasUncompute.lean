@@ -15,7 +15,7 @@
   correctness is a named obligation, cited; it lives in the amplitude layer, not the
   Boolean `applyNat`.)
 -/
-import FormalRV.Shor.WindowedCircuit
+import FormalRV.Arithmetic.Windowed.WindowedCircuit
 import FormalRV.Arithmetic.UnaryLookup.UnaryLookupGateDerivations
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 

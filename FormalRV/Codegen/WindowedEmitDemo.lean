@@ -18,8 +18,8 @@
   PROVEN faithful by `GateQasm.emitOps_applyNat` and `EGateQasm.emitEOps_applyNat`.
 -/
 import FormalRV.Codegen.EGateQasm
-import FormalRV.Shor.WindowedCostModel
-import FormalRV.Shor.WindowedWidth
+import FormalRV.Arithmetic.Windowed.WindowedCostModel
+import FormalRV.Arithmetic.Windowed.WindowedWidth
 import FormalRV.Shor.WindowedComposed
 import FormalRV.Shor.WindowedComposedCost
 

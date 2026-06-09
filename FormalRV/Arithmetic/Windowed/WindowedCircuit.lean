@@ -18,7 +18,7 @@
   the comparison note).  Execution on encoded data is checked in
   `FormalRV.Shor.WindowedCircuitExec`.
 -/
-import FormalRV.Shor.WindowedLookupAdd
+import FormalRV.Arithmetic.Windowed.WindowedLookupAdd
 import FormalRV.Arithmetic.UnaryLookup.UnaryLookupGateDerivations
 
 namespace FormalRV.Shor.WindowedCircuit
