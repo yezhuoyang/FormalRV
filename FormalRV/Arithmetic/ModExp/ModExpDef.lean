@@ -4,7 +4,7 @@
   in-place modular multipliers (iterate i multiplies by a^(2^i) mod N). Relocated
   from MCPBridge so the modexp gadget lives in its own folder, built on ModMult.
 -/
-import FormalRV.Arithmetic.MCPBridge
+import FormalRV.Arithmetic.ModMult
 
 namespace FormalRV.BQAlgo
 

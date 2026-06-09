@@ -6,29 +6,38 @@ multipliers: iterate `i` multiplies by `a^(2ⁱ) mod N`, so the controlled-power
 composition over the exponent register computes `aˣ mod N`.
 
 > **TL;DR** — `our_modmult_family bits N a ainv multBits` is the verified modexp
-> oracle family (each iterate is a `modmult_MCP_gate` from `ModMult`). It is a
-> `ModMulImpl` (the semantic core), which yields the end-to-end Shor
+> oracle family: each iterate is `modMultInPlaceShor` (the Shor-layout modmult,
+> now a ModMult variant in [`ModMult/ShorOracle`](../ModMult/ShorOracle)). It is
+> a `ModMulImpl` (the semantic core), which yields the end-to-end Shor
 > success-probability bound `Shor_correct_with_verified_modexp`.
 
 ## Where everything lives (the spine)
 
 | Concern | File | Headline |
 |---|---|---|
-| **Definition** | [`ModExpDef.lean`](ModExpDef.lean) | `our_modmult_family` (chain of `modmult_MCP_gate`) |
+| **Definition** | [`ModExpDef.lean`](ModExpDef.lean) | `our_modmult_family` (chain of `modMultInPlaceShor`) |
 | **Correctness** | [`ModExpCorrectness.lean`](ModExpCorrectness.lean) | `our_modmult_family_ModMulImpl` (iterate `i` multiplies by `a^(2ⁱ) mod N`) + `Shor_correct_with_verified_modexp` |
 | **Resource** | [`ModExpResource.lean`](ModExpResource.lean) | `tcount_shorModExpVerified` = **224·bits³** |
 | **Example** | [`ModExpExample.lean`](ModExpExample.lean) | worked `our_modmult_family` instances |
 
 ## Built on ModMult (the modularized design)
 
-ModExp uses only the **sealed** public interface
-`import FormalRV.Arithmetic.ModMult` (giving `modmult_MCP_gate`, `modmult_tcount`)
-— it never reaches into `ModMult/Internal/`. Each modexp iterate *is* a verified
-modular multiplier; the `aˣ mod N` action is the QPE `controlled_powers`
-composition of the family (the order-finding proof consumes `ModMulImpl`).
+ModExp imports only the **sealed** public interface `import FormalRV.Arithmetic.ModMult`
+— never reaching into `ModMult/Internal/`. It reuses **two** ModMult gadgets, each
+already constructed and proven in the ModMult module:
+
+- **semantic side** — `modMultInPlaceShor` (in [`ModMult/ShorOracle`](../ModMult/ShorOracle)),
+  the Shor-layout modmult (Gidney adder, dim `4·bits+6`), carrying
+  `modMultInPlaceShor_MultiplyCircuitProperty`. ModExp does **not** redefine it.
+- **resource side** — `modmult_MCP_gate` (the SQIR-layout modmult, dim `3·bits+1`),
+  carrying `modmult_tcount = 112·bits²`, chained for `tcount_shorModExpVerified`.
+
+(There are two modmult variants because Shor's order-finding consumes the family at
+the Gidney-adder dimension `4·bits+6`, while the resource count is taken on the
+SQIR-faithful `modmult_MCP_gate` — both now live side-by-side under `ModMult/`.)
 
 So the layering is: **Cuccaro adder → ModularAdder → ModMult → ModExp → Shor**,
-each level using the sealed interface of the one below.
+each level reusing the sealed gadget of the one below.
 
 ## Two terms (honest status)
 
