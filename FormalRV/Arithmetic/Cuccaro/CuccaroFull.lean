@@ -26,6 +26,7 @@
   original SQIR placeholders.
 -/
 import FormalRV.Core.Gate
+import FormalRV.Arithmetic.Cuccaro.CuccaroAdderDef
 import FormalRV.Arithmetic.Cuccaro.Cuccaro
 import FormalRV.Arithmetic.Cuccaro.CuccaroCorrectness
 
@@ -34,35 +35,14 @@ namespace FormalRV.BQAlgo
 open FormalRV.Framework
 open FormalRV.Framework.Gate
 
-/-! ## Reverse UMA chain.
+/-! ## Reverse UMA chain & the full adder.
 
-The recursion: `cuccaro_uma_chain_reverse (n+1) q_start` first applies
-the reverse chain of length `n` on the suffix starting at `q_start + 2`
-(which by induction covers UMA_n, ..., UMA_1 in descending order), then
-applies `UMA_0` at `q_start`. Unrolling: UMA_{n-1}, ..., UMA_1, UMA_0
-in descending order. -/
+`cuccaro_uma_chain_reverse` and the adder `cuccaro_n_bit_adder_full` are
+defined in `CuccaroAdderDef.lean`; this file proves their resource (T-count)
+and the per-bit semantic-correctness lemmas. -/
 
-/-- Reverse UMA chain: `UMA_{n-1}, UMA_{n-2}, ..., UMA_0`, applied in
-descending order on consecutive triples starting at `q_start`. -/
-def cuccaro_uma_chain_reverse : Nat → Nat → Gate
-  | 0,     _       => I
-  | n + 1, q_start =>
-      seq (cuccaro_uma_chain_reverse n (q_start + 2))
-          (cuccaro_UMA q_start (q_start + 1) (q_start + 2))
-
-/-! ## The full Cuccaro adder. -/
-
-/-- **Boundary-corrected n-bit Cuccaro adder.**  Forward MAJ chain
-followed by **reverse** UMA chain.  Validated by exhaustive Boolean
-simulation for n = 1..4 (see `scripts/check_cuccaro_adder.py`).
-
-Layout: `2 * n + 1` qubits starting at `q_start`; matches
-`cuccaro_input_F`. -/
-def cuccaro_n_bit_adder_full (n q_start : Nat) : Gate :=
-  seq (cuccaro_maj_chain n q_start) (cuccaro_uma_chain_reverse n q_start)
-
-/-! ## T-count: same 14n as the skeleton (CXs are T-free; reordering
-doesn't change T-count). -/
+/-! ## T-count: 14n (CXs are T-free; the reverse ordering doesn't change
+T-count). -/
 
 /-- T-count of the reverse UMA chain is `7 * n`. -/
 theorem tcount_cuccaro_uma_chain_reverse (n q_start : Nat) :

@@ -1,4 +1,7 @@
 import FormalRV.Arithmetic.Correctness
+import FormalRV.Arithmetic.Cuccaro.CuccaroAdderDef
+import FormalRV.Arithmetic.Cuccaro.CuccaroAdderCorrectness
+import FormalRV.Arithmetic.Cuccaro.CuccaroAdderResource
 import FormalRV.Arithmetic.Cuccaro.Cuccaro
 import FormalRV.Arithmetic.Cuccaro.CuccaroAddConst
 import FormalRV.Arithmetic.Cuccaro.CuccaroCompare

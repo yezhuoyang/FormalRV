@@ -20,6 +20,7 @@
       Toffoli decomposition, T-count is 7 per MAJ.
 -/
 import FormalRV.Core.Gate
+import FormalRV.Arithmetic.Cuccaro.CuccaroAdderDef
 
 namespace FormalRV.BQAlgo
 
@@ -36,19 +37,11 @@ def paper_claim_MAJ_tcount : Nat := 7
 /-- Per-UMA T-count claim. Same derivation as MAJ. -/
 def paper_claim_UMA_tcount : Nat := 7
 
-/-! ## Cuccaro MAJ and UMA — concrete encoding
+/-! ## Cuccaro MAJ and UMA — concrete encoding (defined in `CuccaroAdderDef`).
 
     MAJ a b c  =  CX c b ; CX c a ; CCX a b c
     UMA a b c  =  CCX a b c ; CX c a ; CX a b
--/
-
-/-- Cuccaro MAJ gadget. -/
-def cuccaro_MAJ (a b c : Nat) : Gate :=
-  seq (CX c b) (seq (CX c a) (CCX a b c))
-
-/-- Cuccaro UMA gadget. -/
-def cuccaro_UMA (a b c : Nat) : Gate :=
-  seq (CCX a b c) (seq (CX c a) (CX a b))
+    The T-cost claims for these gadgets are verified below. -/
 
 /-! ## Verification: does our encoding meet the cost claim? -/
 
@@ -76,44 +69,19 @@ example : tcount (seq (cuccaro_MAJ 0 1 2) (cuccaro_UMA 0 1 2)) = 14 := by decide
     property the paper implicitly assumes when summing per-block costs
     over a register width. -/
 
-/-- The MAJ T-count is 7 for *every* qubit assignment, not just (0,1,2). -/
-theorem MAJ_tcount_label_invariant (a b c a' b' c' : Nat) :
-    tcount (cuccaro_MAJ a b c) = tcount (cuccaro_MAJ a' b' c') := by
-  rw [MAJ_meets_paper_claim a b c, MAJ_meets_paper_claim a' b' c']
-
-/-- The UMA T-count is 7 for *every* qubit assignment. -/
-theorem UMA_tcount_label_invariant (a b c a' b' c' : Nat) :
-    tcount (cuccaro_UMA a b c) = tcount (cuccaro_UMA a' b' c') := by
-  rw [UMA_meets_paper_claim a b c, UMA_meets_paper_claim a' b' c']
-
 /-- Parametric MAJ+UMA pair cost: 14 T for any qubit assignment. -/
 theorem MAJ_UMA_pair_tcount (a b c a' b' c' : Nat) :
     tcount (seq (cuccaro_MAJ a b c) (cuccaro_UMA a' b' c')) = 14 := by
   simp [tcount, MAJ_meets_paper_claim a b c, UMA_meets_paper_claim a' b' c',
         paper_claim_MAJ_tcount, paper_claim_UMA_tcount]
 
-/-! ## Phase A: n-block Cuccaro chains (scope expansion 2026-05-12)
+/-! ## Phase A: n-block MAJ-chain T-count.
 
-    The single-gadget verification above (`MAJ_meets_paper_claim`) is
-    sufficient at the per-Toffoli layer. Phase A deepens this by
-    chaining gadgets into an n-block adder skeleton, deriving the
-    multi-block T-count from first principles. -/
-
-/-- A chain of `n` MAJ gadgets, each operating on a triple of
-    consecutive qubits starting at `q_start`, then `q_start + 2`,
-    then `q_start + 4`, ... (the Cuccaro ripple structure). -/
-def cuccaro_maj_chain : Nat → Nat → Gate
-  | 0,     _       => I
-  | n + 1, q_start =>
-      seq (cuccaro_MAJ q_start (q_start + 1) (q_start + 2))
-          (cuccaro_maj_chain n (q_start + 2))
-
-/-- A chain of `n` UMA gadgets in the same ripple structure. -/
-def cuccaro_uma_chain : Nat → Nat → Gate
-  | 0,     _       => I
-  | n + 1, q_start =>
-      seq (cuccaro_UMA q_start (q_start + 1) (q_start + 2))
-          (cuccaro_uma_chain n (q_start + 2))
+    The chain/adder definitions (`cuccaro_maj_chain`,
+    `cuccaro_uma_chain_reverse`, `cuccaro_n_bit_adder_full`) live in
+    `CuccaroAdderDef.lean`. Here we derive the multi-block MAJ-chain
+    T-count from first principles; it feeds the adder's resource theorem
+    (`CuccaroAdderResource.lean`). -/
 
 /-- T-count of an n-block MAJ chain is exactly `7 * n` (no
     cross-block savings from gate-level optimization alone). -/
@@ -127,39 +95,6 @@ theorem tcount_cuccaro_maj_chain (n q_start : Nat) :
     simp [tcount, MAJ_meets_paper_claim, paper_claim_MAJ_tcount,
           ih (q_start + 2)]
     omega
-
-/-- T-count of an n-block UMA chain is exactly `7 * n`. -/
-theorem tcount_cuccaro_uma_chain (n q_start : Nat) :
-    tcount (cuccaro_uma_chain n q_start) = 7 * n := by
-  induction n generalizing q_start with
-  | zero => rfl
-  | succ k ih =>
-    show tcount (seq (cuccaro_UMA q_start (q_start + 1) (q_start + 2))
-                      (cuccaro_uma_chain k (q_start + 2))) = 7 * (k + 1)
-    simp [tcount, UMA_meets_paper_claim, paper_claim_UMA_tcount,
-          ih (q_start + 2)]
-    omega
-
-/-- A simplified n-bit Cuccaro adder skeleton: `n` MAJs forward,
-    then `n` UMAs back. Real Cuccaro has additional CX corrections
-    at the boundaries (paper p. 22-24); for the T-count this
-    skeleton is exact since CX is T-free. -/
-def cuccaro_n_bit_adder_skeleton (n q_start : Nat) : Gate :=
-  seq (cuccaro_maj_chain n q_start) (cuccaro_uma_chain n q_start)
-
-/-- **n-bit adder T-count is `14 * n`** — verified from gate-level
-    construction (not taken as a paper input). This re-derives the
-    "per-block" claim qianxu uses in Eq. E3 from the actual Cuccaro
-    gate sequence. -/
-theorem tcount_cuccaro_n_bit_adder_skeleton (n q_start : Nat) :
-    tcount (cuccaro_n_bit_adder_skeleton n q_start) = 14 * n := by
-  show tcount (seq (cuccaro_maj_chain n q_start)
-                    (cuccaro_uma_chain n q_start)) = 14 * n
-  simp [tcount, tcount_cuccaro_maj_chain, tcount_cuccaro_uma_chain]
-  omega
-
-/-- Smoke: 4-bit adder skeleton has 14 × 4 = 56 T-gates. -/
-example : tcount (cuccaro_n_bit_adder_skeleton 4 0) = 56 := by decide
 
 /-! ## CCX-pair-removal optimization
 
