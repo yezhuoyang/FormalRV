@@ -1,0 +1,6 @@
+{
+  "title": "Gidney 2-bit adder   target b <- (a + b) mod 4    [n = 2 bits per addend, 6 qubits]",
+  "wires": ["a0", "b0", "c0", "a1", "b1", "c1"],
+  "input":  ["(a1,a0) = a  (read reg)", "(b1,b0) = b  (target reg)", "(c1,c0) = 0  (carry chain)"],
+  "output": ["(a1,a0) = a  (read reg, restored)", "(b1,b0) = (a+b) mod 4  (sum)", "(c1,c0) = dirty  (base; cleared by _patched)"]
+}

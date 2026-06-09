@@ -97,12 +97,75 @@ project-wide `emitQASM` framework in
 and `GidneyAdder.tcount n` is *exactly* the proven closed form `14·n`. Every
 other arithmetic gadget defines its own `Gadget` and emits identically.
 
-## Circuit diagram (2-bit adder)
+## Worked example: the 2-bit adder computing `1 + 1 = 2`
 
-Reproduce from the verified native-basis QASM (`GidneyAdder.toQASMNative 2`):
-`lake env lean …/RippleCarryAdderExample.lean` (writes
-`diagrams/gidney_adder_2bit.qasm`), then
-`python scripts/draw_qasm.py diagrams/gidney_adder_2bit.qasm diagrams/gidney_adder_2bit.png`.
+The picture below is the **exact compiled circuit** of `gidney_adder 2`
+(`GidneyAdder.toQASMNative 2` → 6 qubits, 12 gates), with each wire named by the
+register port it encodes. The verified instance is `gidney_adder_correct 2 1 1`
+(and `gidney_adder_correct_full` for the carry-clean patched variant).
+
+![Gidney 2-bit adder](diagrams/gidney_adder_2bit.png)
+
+### 1. Input encoding (`a = 1`, `b = 1`)
+
+`a` is loaded into the **read** register, `b` into the **target** register, both
+LSB-first; the carry chain starts at 0. This is exactly `adder_input_F 2 1 1` —
+the `Gate.applyNat` input the theorems run on:
+
+| qubit | wire | port (role) | value for `a=1, b=1` |
+|---|---|---|---|
+| `q[0]` | `a0` | `read[0]`   = bit 0 of `a` | `1` |
+| `q[1]` | `b0` | `target[0]` = bit 0 of `b` | `1` |
+| `q[2]` | `c0` | `carry[0]` (ancilla) | `0` |
+| `q[3]` | `a1` | `read[1]`   = bit 1 of `a` | `0` |
+| `q[4]` | `b1` | `target[1]` = bit 1 of `b` | `0` |
+| `q[5]` | `c1` | `carry[1]` (ancilla) | `0` |
+
+### 2. How the circuit is compiled (12 gates in 3 phases)
+
+`gidney_adder 2 = forward ; final-CX ; reverse`. Each `CCX` is 1 Toffoli = 7 T;
+the `CX`s are T-free, so T-count = `14·2 = 28` (4 Toffolis).
+
+```text
+── forward faithful cascade ──────────────────────────────────
+ccx q[0],q[1],q[2]   // bit0: carry[0] ^= a0 ∧ b0            (generate carry)
+cx  q[2],q[3]        // bit0: read[1]   ^= carry[0]          (propagate into a1)
+cx  q[2],q[4]        // bit0: target[1] ^= carry[0]          (propagate into b1)
+ccx q[3],q[4],q[5]   // bit1: carry[1] ^= read[1] ∧ target[1]
+cx  q[2],q[5]        // bit1: carry[1] ^= carry[0]           (chain)
+── final-CX cascade (stamp read onto target) ─────────────────
+cx  q[0],q[1]        // target[0] ^= read[0]
+cx  q[3],q[4]        // target[1] ^= read[1]
+── reverse faithful cascade (uncompute; this is what completes the sum) ─
+cx  q[2],q[5]        // undo bit1 chain
+ccx q[3],q[4],q[5]   // undo bit1 carry
+cx  q[2],q[4]        // undo bit0 propagation into target[1]
+cx  q[2],q[3]        // undo bit0 propagation into read[1]
+ccx q[0],q[1],q[2]   // undo bit0 carry
+```
+
+### 3. Output ports
+
+The **target** register now holds `(a+b) mod 2ⁿ`, **read** is restored to `a`,
+and the carry chain is left **dirty** (the patched adder
+`gidney_adder_full_faithful_no_measurement_patched` clears it to 0):
+
+| qubit | wire | port (role) | value for `a=1, b=1` |
+|---|---|---|---|
+| `q[0]` | `a0` | `read[0]`   = `a₀`        (restored) | `1` |
+| `q[1]` | `b0` | `target[0]` = bit 0 of `a+b` | `0` |
+| `q[2]` | `c0` | `carry[0]`  (dirty; cleared by `…_patched`) | — |
+| `q[3]` | `a1` | `read[1]`   = `a₁`        (restored) | `0` |
+| `q[4]` | `b1` | `target[1]` = bit 1 of `a+b` | `1` |
+| `q[5]` | `c1` | `carry[1]`  (dirty; cleared by `…_patched`) | — |
+
+Decoded: `read = a = 1` (restored), `target = (1 + 1) mod 4 = 2` = `(0,1)`
+LSB-first. ∎
+
+Reproduce the diagram: `lake env lean …/RippleCarryAdderExample.lean` writes
+`diagrams/gidney_adder_2bit.qasm`, then
+`python scripts/draw_qasm.py diagrams/gidney_adder_2bit.qasm diagrams/gidney_adder_2bit.png diagrams/gidney_adder_2bit.io.json`
+(the `.io.json` supplies the wire names + INPUT/OUTPUT legend).
 
 ## ⚠️ Cost-only skeleton (`RippleCarryAdderCostSkeleton.lean`)
 
