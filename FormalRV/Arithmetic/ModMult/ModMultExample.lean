@@ -33,19 +33,27 @@ example (N a ainv : Nat) (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
   simpa [Gadget.tcount, ModMult] using
     modmult_tcount bits N a ainv hcop hcopinv hpos hlt hodd h1
 
-/-! ## Emit native-basis QASM (bits=3, N=3, ×2): the full circuit and its REAL
-    top-level sub-gadgets at full dimension, for a faithful modular diagram. -/
+/-! ## Emit native-basis QASM (bits=3, N=3, ×2) for a structure-revealing diagram.
+
+    Because `Gate.shift` distributes over `seq`, the full multiplier is exactly
+      encode ; shift(step₀) ; shift(step₁) ; shift(step₂) ; shift(swap) ; shift(uncompute) ; decode
+    so emitting each REAL sub-gadget (at natural size) and composing them as
+    Qiskit `to_gate` boxes reconstructs the circuit while exposing the
+    shift-and-add-of-modular-adders structure. -/
 
 #eval (do
   let dir := "FormalRV/Arithmetic/ModMult/diagrams"
   IO.FS.createDirAll dir
-  IO.FS.writeFile (dir ++ "/sqir_modmult_b3_N3.qasm") ((ModMult 3 2 2).toQASMNative 3)
-  -- the two real top-level sub-gadgets at NATURAL size (so each `to_gate` box
-  -- faithfully shows the qubits it actually touches):
-  IO.FS.writeFile (dir ++ "/blk_adapter.qasm")
-    (FormalRV.Codegen.toQasm (encode_to_mult_adapter 3) (cliffT := false))
-  IO.FS.writeFile (dir ++ "/blk_inplace.qasm")
-    (FormalRV.Codegen.toQasm (modmult_inplace_shifted 3 3 2 2) (cliffT := false))
-  IO.println s!"full SQIR budget modmult_total_dim 3 = {modmult_total_dim 3}; circuit uses q0..14" : IO Unit)
+  let emit := fun (name : String) (g : Gate) =>
+    IO.FS.writeFile (dir ++ "/" ++ name ++ ".qasm")
+      (FormalRV.Codegen.toQasm g (cliffT := false) (dim := 15))
+  emit "blk_full"      (modmult_MCP_gate 3 3 2 2)
+  emit "blk_encode"    (encode_to_mult_adapter 3)
+  emit "blk_step0"     (Gate.shift 3 (modmult_step_gate 3 3 2 0))   -- c-MODADD( 2·2^0 mod 3 = 2 )
+  emit "blk_step1"     (Gate.shift 3 (modmult_step_gate 3 3 2 1))   -- c-MODADD( 2·2^1 mod 3 = 1 )
+  emit "blk_step2"     (Gate.shift 3 (modmult_step_gate 3 3 2 2))   -- c-MODADD( 2·2^2 mod 3 = 2 )
+  emit "blk_swap"      (Gate.shift 3 (modmult_swap_acc_mult 3))     -- SWAP accumulator ↔ x register
+  emit "blk_uncompute" (Gate.shift 3 (modmult_const_gate 3 3 ((3 - 2) % 3)))  -- uncompute old x → 0
+  IO.println s!"full budget modmult_total_dim 3 = {modmult_total_dim 3}; circuit uses q0..14" : IO Unit)
 
 end FormalRV.BQAlgo

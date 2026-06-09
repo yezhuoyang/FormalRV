@@ -44,21 +44,35 @@ the gate satisfies `MultiplyCircuitProperty a N bits (sqir_modmult_rev_anc bits)
 - `modmult_verified` : the *same* gate is `MultiplyCircuitProperty`-correct
   **and** has T-count `112·bits²`.
 
-## Modular circuit diagram
+## How it's built (and why it's correct) — the modular diagram
 
-The fully-decomposed circuit is far too large to draw flat (567 native ops at
-`bits=3` → a useless 43k-px strip). Instead, a **faithful modular schematic**:
-the three real top-level stages as Qiskit `to_gate` boxes (decomposable), with
-the input/output encoding labelled.
+The fully-decomposed circuit is too large to draw flat (567 native ops at
+`bits=3`). Instead, a **structure-revealing schematic**: each box is a *real*
+sub-gadget (Qiskit `to_gate`, decomposable), and the sequence exposes the
+**shift-and-add of modular adders** that makes the multiplier work — without
+the gate-level noise. (Sound because `Gate.shift` distributes over `seq`, so
+these boxes composed in order *are* `modmult_MCP_gate`.)
 
-![SQIR modular multiplier — modular schematic](diagrams/sqir_modmult_modular.png)
+![ModMult — shift-and-add of modular adders](diagrams/modmult_modular.png)
 
-Stages (each emitted from Lean at natural size, so the boxes reflect the real
-sub-gadgets): **encode adapter** (swaps data `q0–2` ↔ shifted target `q12–14`)
-→ **in-place ×a mod N** (shifted multiplier on `q4–14`) → **decode adapter**.
-INPUT: `x` (`q0–2`) = input integer; OUTPUT: `x` = `(a·x) mod N`; workspace
-restored. (Full budget `total_dim 3 = 23`; `q15–22` unused.) Render:
-`python scripts/draw_modular.py diagrams/sqir_modmult_modular.json diagrams/sqir_modmult_modular.png`.
+Reading it left to right (`x` = `q0–2` = input; `w` = `q3–14` = workspace `|0>`):
+
+1. **encode** — move the input `x` into the internal (shifted) register.
+2. **three controlled modular-ADDERs** — step `j` adds `a·2ʲ mod N` to the
+   accumulator, *controlled by bit `xⱼ`* (q12, q13, q14). Together they compute
+   `Σⱼ xⱼ·(a·2ʲ) = a·x (mod N)` in the accumulator. **Each MODADD box is a
+   Cuccaro modular adder** — see [`Arithmetic/Cuccaro`](../Cuccaro/README.md)
+   for its gate-level diagram.
+3. **SWAP** — exchange the accumulator (now `a·x`) with the `x` register.
+4. **uncompute** — a second shift-and-add (by `N − a⁻¹`) drives the old `x`
+   back to `0`, freeing the workspace. This is the step that needs
+   `a·a⁻¹ ≡ 1 (mod N)` — the correctness hypothesis.
+5. **decode** — move the result back to `q0–2`.
+
+Net effect: `x ↦ (a·x) mod N` in place, workspace restored. (Full SQIR budget
+`modmult_total_dim 3 = 23`; `q15–22` are unused.) Reproduce: run
+`ModMultExample.lean` (emits `diagrams/blk_*.qasm`), then
+`python scripts/draw_modular.py diagrams/modmult_modular.json diagrams/modmult_modular.png`.
 
 ## Emit OpenQASM for any N (uniform framework)
 
