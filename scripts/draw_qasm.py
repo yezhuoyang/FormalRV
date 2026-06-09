@@ -37,7 +37,8 @@ def main() -> int:
         qc = named
 
     fs = spec.get("fontsize", 14)
-    fig = qc.draw(output="mpl", fold=-1, idle_wires=spec.get("idle_wires", True),
+    fig = qc.draw(output="mpl", fold=spec.get("fold", -1),
+                  idle_wires=spec.get("idle_wires", True),
                   style={"fontsize": fs, "subfontsize": max(8, fs - 2)})
     if spec.get("title"):
         fig.suptitle(spec["title"], fontsize=fs)
