@@ -1,0 +1,26 @@
+{
+  "title": "SQIR modular multiplier  x -> a*x mod N  (bits=3, N=3, a=2)  --  stages are REAL sub-gadgets (to_gate, decomposable)",
+  "registers": [
+    {"name": "x", "size": 3},
+    {"name": "w", "size": 12}
+  ],
+  "input": [
+    "x = q0..q2 = input integer (bits=3 = data-register width; needs 2N <= 2^bits)",
+    "w = q3..q14 = workspace |0>   (full SQIR budget = sqir_total_dim 3 = 23; q15..q22 unused)"
+  ],
+  "output": [
+    "x = q0..q2 = (a*x) mod N",
+    "w = q3..q14 = |0>  (workspace restored)"
+  ],
+  "blocks": [
+    {"label": "encode adapter  (swap data q0-2 <-> shifted target q12-14)",
+     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+     "qasm": "FormalRV/Arithmetic/SQIRModMult/diagrams/blk_adapter.qasm"},
+    {"label": "in-place  x a mod N  (shifted multiplier on q4-14)",
+     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+     "qasm": "FormalRV/Arithmetic/SQIRModMult/diagrams/blk_inplace.qasm"},
+    {"label": "decode adapter  (swap back q12-14 -> q0-2)",
+     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+     "qasm": "FormalRV/Arithmetic/SQIRModMult/diagrams/blk_adapter.qasm"}
+  ]
+}

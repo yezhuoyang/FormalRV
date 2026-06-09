@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
-"""Render an OpenQASM 2.0 file to a circuit-diagram PNG using standard Qiskit.
+"""Render an OpenQASM 2.0 file to a circuit-diagram PNG using standard Qiskit,
+with optional named wires and an INPUT/OUTPUT encoding legend.
 
 Usage:
-    python scripts/draw_qasm.py <input.qasm> <output.png> [title]
+    python scripts/draw_qasm.py <input.qasm> <output.png> [iospec.json]
 
-The QASM is produced by FormalRV's verified `Gadget.toQASMNative` emitter
-(native CX/CCX/X basis, which draws cleanly). This is the standard Qiskit
-matplotlib drawer (`QuantumCircuit.draw('mpl')`).
+iospec.json (all optional):
+{
+  "title":  "Cuccaro 2-bit adder (a+b mod 4)",
+  "wires":  ["c_in", "b0", "a0", "b1", "a1"],   # per-qubit names (input encoding)
+  "input":  ["c_in = 0", "b1b0 = b (target)", "a1a0 = a (read)"],
+  "output": ["c_in = 0 (restored)", "b1b0 = (a+b) mod 4", "a1a0 = a (restored)"]
+}
 """
 import sys
+import json
 
 
 def main() -> int:
@@ -16,17 +22,31 @@ def main() -> int:
         print(__doc__)
         return 2
     qasm_path, png_path = sys.argv[1], sys.argv[2]
-    title = sys.argv[3] if len(sys.argv) > 3 else None
+    spec = json.load(open(sys.argv[3], "r", encoding="utf-8")) if len(sys.argv) > 3 else {}
 
-    from qiskit import qasm2
+    from qiskit import qasm2, QuantumCircuit, QuantumRegister
 
-    with open(qasm_path, "r", encoding="utf-8") as f:
-        src = f.read()
-    qc = qasm2.loads(src, custom_instructions=qasm2.LEGACY_CUSTOM_INSTRUCTIONS)
+    qc = qasm2.loads(open(qasm_path, "r", encoding="utf-8").read(),
+                     custom_instructions=qasm2.LEGACY_CUSTOM_INSTRUCTIONS)
+
+    wires = spec.get("wires")
+    if wires:
+        # Re-label wires with their encoding role via single-qubit named registers.
+        named = QuantumCircuit(*[QuantumRegister(1, name=w) for w in wires])
+        named.compose(qc, qubits=list(range(qc.num_qubits)), inplace=True)
+        qc = named
 
     fig = qc.draw(output="mpl", fold=-1, idle_wires=True)
-    if title:
-        fig.suptitle(title)
+    if spec.get("title"):
+        fig.suptitle(spec["title"], fontsize=11)
+    legend = []
+    if spec.get("input"):
+        legend.append("INPUT:   " + "    ".join(spec["input"]))
+    if spec.get("output"):
+        legend.append("OUTPUT:  " + "    ".join(spec["output"]))
+    if legend:
+        fig.text(0.01, 0.01, "\n".join(legend), fontsize=9, family="monospace",
+                 va="bottom", ha="left")
     fig.savefig(png_path, dpi=150, bbox_inches="tight")
     print(f"wrote {png_path}  ({qc.num_qubits} qubits, {len(qc.data)} ops)")
     return 0

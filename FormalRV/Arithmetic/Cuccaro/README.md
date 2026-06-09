@@ -29,6 +29,15 @@ q_start + 2i + 1  : bit i of b  →  bit i of (a+b) mod 2ⁿ   (target register)
 q_start + 2i + 2  : bit i of a         (read register, preserved)
 ```
 
+## The size parameter `n` (= bits per addend)
+
+`n` (the first argument of `cuccaro_n_bit_adder_full n q_start`; written `bits`
+in the correctness/resource theorems) is **the number of bits of each addend
+`a` and `b`**. The adder acts on `2·n + 1` qubits and computes `(a+b) mod 2ⁿ`.
+**To change the size**, pass a different `n` everywhere it appears — e.g.
+`emitQASM CuccaroAdder 8` for an 8-bit adder, or `cuccaro_adder_tcount 8 0`
+for its T-count. `q_start` is just the base qubit offset (use `0`).
+
 ## Correctness (the one theorem to audit)
 
 `cuccaro_adder_correct (bits q_start a b) (ha : a < 2^bits) (hb : b < 2^bits)`:

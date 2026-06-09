@@ -23,7 +23,11 @@
 import FormalRV.Core.GateQASM
 import FormalRV.Core.UnitaryOps
 import FormalRV.Arithmetic.GateToUCom
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultDefinitions
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultEncoding
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSpec
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultQStart
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultFamily
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultSizing
 
 namespace FormalRV.Shor.ControlledModExpCount
 
