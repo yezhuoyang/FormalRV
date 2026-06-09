@@ -36,6 +36,22 @@ already constructed and proven in the ModMult module:
 the Gidney-adder dimension `4·bits+6`, while the resource count is taken on the
 SQIR-faithful `modmult_MCP_gate` — both now live side-by-side under `ModMult/`.)
 
+### Generic over the modmult (ancilla count doesn't matter)
+
+ModExp's oracle is **parametric over the modmult**: `modexpOracleFamily dim N a ainv gate`
+builds the squared-power family from *any* per-constant modmult `gate` at *any*
+dimension, and `modexpOracleFamily_ModMulImpl` proves it's a valid Shor oracle as
+long as each iterate satisfies `MultiplyCircuitProperty` — at **any** ancilla count
+(`ModMulImpl`/`Shor_correct_var` are `anc`-parametric). Two instances:
+
+- `our_modmult_family` = the `modMultInPlaceShor` instance (anc `adder_n_qubits(bits+1)+1`).
+- `modexpFamilyMCP` = the `modmult_MCP_gate` instance (anc `sqir_modmult_rev_anc bits`),
+  with `modexpFamilyMCP_ModMulImpl` and `Shor_correct_with_mcp_family` — i.e. ModExp
+  drives Shor with the SQIR-layout modmult too. Only the ancilla count differs.
+
+So differing ancilla counts are **not** an incompatibility: ModExp reuses whichever
+verified modmult you give it.
+
 So the layering is: **Cuccaro adder → ModularAdder → ModMult → ModExp → Shor**,
 each level reusing the sealed gadget of the one below.
 

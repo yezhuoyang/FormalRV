@@ -514,4 +514,54 @@ theorem sqir_axiom_closure_obstruction
   exact sqir_anc_ne_our_anc n h_n_pos
 
 
+/-! ## ModExp reuses ANY verified modmult (the modularized-design point).
+
+    The generic construction below is parametric over the modmult gate; both
+    `modMultInPlaceShor` (Gidney/Shor layout, via `our_modmult_family`) AND
+    `modmult_MCP_gate` (SQIR layout, via `modexpFamilyMCP`) instantiate it. The
+    ancilla counts differ (`adder_n_qubits (bits+1)+1` vs `sqir_modmult_rev_anc bits`)
+    but `ModMulImpl` / `Shor_correct_var` are parametric over `anc`, so — exactly as
+    you noted — the ancilla count does not matter, only the multiply correctness. -/
+
+/-- **Generic: any verified per-constant modmult yields a `ModMulImpl`.** If each
+iterate's gate satisfies `MultiplyCircuitProperty` for the reduced constant
+`a^(2^i) mod N`, the squared-power family is a valid Shor modexp oracle, at ANY
+ancilla count `anc`. -/
+theorem modexpOracleFamily_ModMulImpl (n anc N a ainv : Nat) (gate : Nat → Nat → Gate)
+    (h : ∀ i, FormalRV.SQIRPort.MultiplyCircuitProperty (a ^ (2 ^ i) % N) N n anc
+                (Gate.toUCom (n + anc) (gate (a ^ (2 ^ i) % N) (ainv ^ (2 ^ i) % N)))) :
+    FormalRV.SQIRPort.ModMulImpl a N n anc (modexpOracleFamily (n + anc) N a ainv gate) :=
+  fun i => MultiplyCircuitProperty_mod_invariance (a ^ (2 ^ i)) N n anc _ (h i)
+
+/-- **`modmult_MCP_gate` is a valid modexp oracle.** The SQIR-layout ModMult gadget
+plugs into the SAME generic modexp (ancilla `sqir_modmult_rev_anc bits`); its
+per-iterate `MultiplyCircuitProperty` comes straight from `modmult_correct`. -/
+theorem modexpFamilyMCP_ModMulImpl (bits N a ainv : Nat)
+    (hbits : 1 ≤ bits) (hN_pos : 0 < N) (hN : N ≤ 2 ^ bits) (hN2 : 2 * N ≤ 2 ^ bits)
+    (h_inv_pow : ∀ i, (a ^ (2 ^ i) % N) * (ainv ^ (2 ^ i) % N) % N = 1) :
+    FormalRV.SQIRPort.ModMulImpl a N bits (sqir_modmult_rev_anc bits)
+      (modexpFamilyMCP bits N a ainv) :=
+  modexpOracleFamily_ModMulImpl bits (sqir_modmult_rev_anc bits) N a ainv
+    (fun c cinv => modmult_MCP_gate bits N c cinv)
+    (fun i => modmult_correct bits N (a ^ (2 ^ i) % N) (ainv ^ (2 ^ i) % N)
+                hbits hN_pos hN hN2 (le_of_lt (Nat.mod_lt _ hN_pos)) (h_inv_pow i))
+
+/-- **Shor success with the SQIR-layout modmult.** ModExp's order-finding oracle
+works with `modmult_MCP_gate` exactly as with `modMultInPlaceShor`, only the
+ancilla count differs. (Uses the gadget's sizing `2N ≤ 2^bits`.) -/
+theorem Shor_correct_with_mcp_family (bits N a ainv m r : Nat)
+    (hbits : 1 ≤ bits) (hN_pos : 0 < N) (hN : N ≤ 2 ^ bits) (hN2 : 2 * N ≤ 2 ^ bits)
+    (h_basic : FormalRV.SQIRPort.BasicSetting a r N m bits)
+    (h_inv_pow : ∀ i, (a ^ (2 ^ i) % N) * (ainv ^ (2 ^ i) % N) % N = 1) :
+    FormalRV.SQIRPort.probability_of_success a r N m bits (sqir_modmult_rev_anc bits)
+        (modexpFamilyMCP bits N a ainv)
+      ≥ FormalRV.SQIRPort.κ / (Nat.log2 N : ℝ) ^ 4 :=
+  FormalRV.SQIRPort.Shor_correct_var a r N m bits (sqir_modmult_rev_anc bits)
+    (modexpFamilyMCP bits N a ainv) h_basic
+    (modexpFamilyMCP_ModMulImpl bits N a ainv hbits hN_pos hN hN2 h_inv_pow)
+    (fun i _ => uc_well_typed_toUCom_of_Gate_WellTyped _ _
+      (modmult_MCP_gate_wellTyped bits N (a ^ (2 ^ i) % N) (ainv ^ (2 ^ i) % N)
+        hbits hN_pos hN hN2))
+
+
 end FormalRV.BQAlgo

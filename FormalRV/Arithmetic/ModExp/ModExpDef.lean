@@ -40,4 +40,27 @@ theorem our_modmult_family_uc_well_typed
       multBits hbits h_multBits_le h_multBits_pos)
 
 
+/-! ## Generic modexp oracle — parametric over ANY verified modmult.
+
+    The point of the modularized design: ModExp does not care which modmult
+    implementation (or how many ancilla qubits it uses). Given any per-constant
+    modmult gate builder at some dimension `dim`, the squared-power family is the
+    modexp oracle. `our_modmult_family` above is the `modMultInPlaceShor` instance
+    (ancilla `adder_n_qubits (bits+1) + 1`); `modexpFamilyMCP` below is the
+    `modmult_MCP_gate` instance (ancilla `sqir_modmult_rev_anc bits`) — same
+    construction, different ancilla count. -/
+
+/-- Generic squared-power modexp oracle family: iterate `i` is `gate` applied to
+the reduced constant `a^(2^i) mod N` (with its inverse), at dimension `dim`. -/
+noncomputable def modexpOracleFamily (dim N a ainv : Nat) (gate : Nat → Nat → Gate) :
+    Nat → FormalRV.SQIRPort.BaseUCom dim :=
+  fun i => Gate.toUCom dim (gate (a ^ (2 ^ i) % N) (ainv ^ (2 ^ i) % N))
+
+/-- ModExp instantiated on the SQIR-layout ModMult gadget `modmult_MCP_gate`
+(dim `bits + sqir_modmult_rev_anc bits`). -/
+noncomputable def modexpFamilyMCP (bits N a ainv : Nat) :
+    Nat → FormalRV.SQIRPort.BaseUCom (bits + sqir_modmult_rev_anc bits) :=
+  modexpOracleFamily (bits + sqir_modmult_rev_anc bits) N a ainv
+    (fun c cinv => modmult_MCP_gate bits N c cinv)
+
 end FormalRV.BQAlgo
