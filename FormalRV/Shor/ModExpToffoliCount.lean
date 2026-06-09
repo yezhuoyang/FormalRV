@@ -13,7 +13,7 @@
 
       adder            = 2n      Toffolis   (PROVED: tcount_gidney_adder_full = 14n T, 7 T/Toffoli)
       ctrl-mod-add     = 4·adder = 8n       (4 sub-blocks of sqir_style_controlledModAddConst_candidate)
-      ctrl-mod-mult    = n·(ctrl-mod-add) = 8n²   (n multiplier bits, sqir_modmult_prefix_gate)
+      ctrl-mod-mult    = n·(ctrl-mod-add) = 8n²   (n multiplier bits, modmult_prefix_gate)
       mod-exp          = 2n·(ctrl-mod-mult) = 16n³ (2n exponent-register control qubits)
 
       n = 2048  ⇒  16·2048³ = 137 438 953 472 Toffolis
@@ -28,7 +28,7 @@
     (induction over the gate list, no `decide` on a 137-billion-element list).
   * SCAFFOLDED: the composition multiplicities (×4, ×n, ×2n) are read off the
     repo's circuit `def`s (`sqir_style_controlledModAddConst_candidate`,
-    `sqir_modmult_prefix_gate`, the 2n exponent register), whose FULL semantic
+    `modmult_prefix_gate`, the 2n exponent register), whose FULL semantic
     correctness is only partially established (flag-dirty disclosures in
     `CuccaroSQIRDirtyFlag`).  Treating compare/sub as adder-equivalent is a
     structural approximation, not a separately-proved per-block Toffoli count.
@@ -42,7 +42,7 @@
   UPDATE — the lower layers are now WELDED to verified circuit terms:
   `PPM/GateToPPMResource.verified_adder_end_to_end` (the adder computes a+b AND costs
   2(n+2) magic states, ONE term) and `PPM/ModMultPPMResource.verified_modmult_end_to_end`
-  (the modular multiplier `sqir_modmult_const_gate` computes (a·m) % N AND costs ≤ 8·bits²
+  (the modular multiplier `modmult_const_gate` computes (a·m) % N AND costs ≤ 8·bits²
   magic states, ONE term).  Since `16n³ = 2n · (8n²)`, the per-modmult factor of the
   figure below is now a PROVED bound on a circuit PROVED to multiply; only the `×2n`
   exponent-register multiplicity (iterating the verified modmult into a verified mod-exp)
@@ -51,7 +51,7 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.PPM.CircuitToPPMResource
-import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderQubitCounts
+import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderForwardAndCost
 
 namespace FormalRV.Shor.ModExpToffoliCount
 
@@ -81,7 +81,7 @@ theorem adderToff_eq (n : Nat) :
 def ctrlModAddToff (n : Nat) : Nat := 4 * adderToff n
 
 /-- Controlled modular multiplication: shift-and-accumulate, `n` controlled modular
-    additions (one per multiplier bit) — `sqir_modmult_prefix_gate`. -/
+    additions (one per multiplier bit) — `modmult_prefix_gate`. -/
 def ctrlModMultToff (n : Nat) : Nat := n * ctrlModAddToff n
 
 /-- Modular exponentiation: `2n` controlled modular multiplications (one per
