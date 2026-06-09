@@ -54,4 +54,27 @@ example :
   · decide  -- 2 * 11 % 21 = 1
 
 
+/-! ## Double-verification: BOTH ModMult variants give a valid modexp oracle.
+
+    Same generic modexp construction, N=3, a=2, a⁻¹=2 (since 2·2 ≡ 1 mod 3). Each
+    `ModMulImpl` proof closes — the semantic correctness goes through for both
+    modmults; they differ ONLY in the ancilla count. -/
+
+/-- ✔ Gidney/Shor-layout modmult (`modMultInPlaceShor`) → valid modexp oracle,
+ancilla `adder_n_qubits (3+1) + 1`. -/
+example : FormalRV.SQIRPort.ModMulImpl 2 3 3 (adder_n_qubits (3 + 1) + 1)
+            (our_modmult_family 3 3 2 2 3) := by
+  obtain ⟨h1, h2, h3, h4, h5⟩ :=
+    our_modmult_family_hypotheses_from_inverse 3 2 2 3 (by decide) (by decide) (by decide)
+  exact our_modmult_family_ModMulImpl 3 3 2 2 3 (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) h1 h2 h3 h4 h5
+
+/-- ✔ SQIR-layout modmult (`modmult_MCP_gate`) → valid modexp oracle, ancilla
+`sqir_modmult_rev_anc 3`. Same N, a — only the ancilla count differs. -/
+example : FormalRV.SQIRPort.ModMulImpl 2 3 3 (sqir_modmult_rev_anc 3)
+            (modexpFamilyMCP 3 3 2 2) :=
+  modexpFamilyMCP_ModMulImpl 3 3 2 2 (by decide) (by decide) (by decide) (by decide)
+    (our_modmult_family_hypotheses_from_inverse 3 2 2 3 (by decide) (by decide) (by decide)).1
+
+
 end FormalRV.BQAlgo

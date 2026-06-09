@@ -1,0 +1,13 @@
+{
+  "title": "ModExp via Gidney-layout modmult (modMultInPlaceShor):  x -> a^x mod N  =  exponent-controlled chain of modular multipliers   [bits=2, anc = adder_n_qubits-based, dim 4*bits+6 = 14]",
+  "fontsize": 16,
+  "registers": [{"name": "e", "size": 4}, {"name": "w", "size": 14}],
+  "input": ["e = q0..q3 = exponent x (control bits);   w = q4..q17 = |1> data + Gidney workspace (anc = adder_n_qubits(bits+1)+1)"],
+  "output": ["w data register = a^x mod N;  workspace restored.   each box = the verified modMultInPlaceShor (ModMult/ShorOracle), controlled by one exponent bit"],
+  "blocks": [
+    {"label": "x a^(2^0)\nmod N\nctrl e0", "kind": "compute", "qubits": [0,4,5,6,7,8,9,10,11,12,13,14,15,16,17]},
+    {"label": "x a^(2^1)\nmod N\nctrl e1", "kind": "compute", "qubits": [1,4,5,6,7,8,9,10,11,12,13,14,15,16,17]},
+    {"label": "x a^(2^2)\nmod N\nctrl e2", "kind": "compute", "qubits": [2,4,5,6,7,8,9,10,11,12,13,14,15,16,17]},
+    {"label": "x a^(2^3)\nmod N\nctrl e3", "kind": "compute", "qubits": [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]}
+  ]
+}
