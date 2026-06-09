@@ -1,6 +1,6 @@
 import FormalRV.Arithmetic.RippleCarryAdder
 import Mathlib.Data.Nat.Bitwise
-import FormalRV.Arithmetic.ModularAdder.Gidney.Definitions
+import FormalRV.Arithmetic.ModularAdder.Gidney.Def
 import FormalRV.Arithmetic.ModularAdder.Gidney.ForwardFaithfulness
 
 namespace FormalRV.BQAlgo

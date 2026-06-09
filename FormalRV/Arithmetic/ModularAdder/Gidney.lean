@@ -1,30 +1,27 @@
 /-
   FormalRV.Arithmetic.ModularAdder.Gidney
   ───────────────────────────────────────
-  THE Gidney-based modular adder, `(x + c) mod N`, and its controlled version —
-  built on the patched Gidney ripple-carry adder
-  (`gidney_adder_full_faithful_no_measurement_patched`, from
-  `FormalRV.Arithmetic.RippleCarryAdder`) by the textbook construction:
-  add `c` (widened by one bit) → subtract `N` → read the high/borrow bit as a
-  comparison flag → conditionally add `N` back → uncompute the flag. Fully
-  proven (sorry/axiom-free).
+  THE Gidney-based modular adder `(x + c) mod N`, built on the patched Gidney
+  ripple-carry adder. Follows the Def / Correctness / Resource spine convention:
 
-  ⚠️ This is a COMPLETE, verified, but currently STANDALONE implementation: the
-  verified modular multiplier and Shor instead use the Cuccaro/SQIR family
-  (`FormalRV.Arithmetic.ModularAdder.Cuccaro`). See `ModularAdder/README.md`.
+    • `Gidney/Def.lean`         — THE definitions (`modAddConstGate`,
+                                  `controlledModAddConstGate`, and the standalone
+                                  modular-multiplier tower). No proofs.
+    • `Gidney/Correctness.lean` — `modAddConst_correct`, `controlledModAddConst_correct`.
+    • `Gidney/Resource.lean`    — qubit budget (`controlledModAddConst_wellTyped`).
 
-  Headlines:
-    • `modAddConstGate bits N c`            — clean `(x + c) mod N`
-    • `controlledModAddConstGate …`         — controlled `(x + c) mod N`
-    • `modMultConstGate` / `modMultInPlace` — the (also-standalone) Gidney
-      modular multiplier built by repeating the controlled modular adder.
+  Supporting proofs (read only if auditing): `Gidney/PowerOfTwoCase.lean`,
+  `Gidney/ForwardFaithfulness.lean`, `Gidney/ControlledPipeline.lean`,
+  `Gidney/SwapSemantics.lean`.
 
-  Files: `Gidney/Definitions` (the Gate-IR defs), `Gidney/PowerOfTwoCase`,
-  `Gidney/ForwardFaithfulness`, `Gidney/ControlledPipeline`,
-  `Gidney/SwapSemantics` (the supporting proofs).
+  ⚠️ Fully verified, but STANDALONE — the verified Shor multiplier uses the
+  Cuccaro/SQIR family (`FormalRV.Arithmetic.ModularAdder.Cuccaro`). See
+  `ModularAdder/README.md`.
 -/
-import FormalRV.Arithmetic.ModularAdder.Gidney.Definitions
+import FormalRV.Arithmetic.ModularAdder.Gidney.Def
 import FormalRV.Arithmetic.ModularAdder.Gidney.PowerOfTwoCase
 import FormalRV.Arithmetic.ModularAdder.Gidney.ForwardFaithfulness
 import FormalRV.Arithmetic.ModularAdder.Gidney.ControlledPipeline
 import FormalRV.Arithmetic.ModularAdder.Gidney.SwapSemantics
+import FormalRV.Arithmetic.ModularAdder.Gidney.Correctness
+import FormalRV.Arithmetic.ModularAdder.Gidney.Resource

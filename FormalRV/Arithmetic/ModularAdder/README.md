@@ -5,7 +5,7 @@ different base ripple-carry adders. They compute the same value by the same
 **textbook algorithm** and differ only in the base adder and in what consumes
 them.
 
-| | **Gidney** (`ModularAdder/Gidney/`) | **Cuccaro / SQIR** (re-exported by `ModularAdder/Cuccaro.lean`) |
+| | **Gidney** (`ModularAdder/Gidney/`) | **Cuccaro / SQIR** (spine in `ModularAdder/Cuccaro/`) |
 |---|---|---|
 | **Base adder** | `gidney_adder_full_faithful_no_measurement_patched` (`Arithmetic/RippleCarryAdder`) | `cuccaro_n_bit_adder_full` (`Arithmetic/Cuccaro`) |
 | **Headline def** | `modAddConstGate`, `controlledModAddConstGate` | `sqir_style_modAddConst_clean_gate`, `sqir_style_controlledModAddConst_gate` |
@@ -29,30 +29,41 @@ modAddConst N c   : addConst c (width bits+1) ; subConst N ; copy high bit → f
 controlled…       : every add/sub is gated by an external control qubit         →  if control then (x+c) mod N else x
 ```
 
+Both folders follow the **Def / Correctness / Resource spine** convention used by
+`RippleCarryAdder/` and `Cuccaro/`:
+
+| Concern | Gidney (`ModularAdder/Gidney/`) | Cuccaro (`ModularAdder/Cuccaro/`) |
+|---|---|---|
+| **Definition** | [`Gidney/Def.lean`](Gidney/Def.lean) | [`Cuccaro/Def.lean`](Cuccaro/Def.lean) |
+| **Correctness** | [`Gidney/Correctness.lean`](Gidney/Correctness.lean) — `modAddConst_correct`, `controlledModAddConst_correct` | [`Cuccaro/Correctness.lean`](Cuccaro/Correctness.lean) — `cuccaroModAddConst_correct`, `cuccaroControlledModAddConst_correct` |
+| **Resource** | [`Gidney/Resource.lean`](Gidney/Resource.lean) — qubit budget | [`Cuccaro/Resource.lean`](Cuccaro/Resource.lean) — qubit budget |
+
 ## Gidney implementation (`ModularAdder/Gidney/`)
 
-Built on **your patched Gidney adder**. Files:
-
-- `Gidney/Definitions.lean` — all the Gate-IR defs (`prepareConstRead`,
-  `addConstGate`, `subConstGate`, `prepareMaskedConstRead`,
-  `conditionalAddConstGate`, `copyTargetHighBitToFlag`, `modAddConstGate`,
-  `controlledModAddConstGate`, and a full `modMultConstGate`/`modMultInPlace`
-  tower) + Boolean specs.
-- `Gidney/PowerOfTwoCase.lean`, `Gidney/ForwardFaithfulness.lean`,
-  `Gidney/ControlledPipeline.lean`, `Gidney/SwapSemantics.lean` — the supporting
-  proofs (frame lemmas, clean bundles, `controlledModAddConstGate_correct`,
-  multiplier correctness, swap semantics).
+Built on **your patched Gidney adder**. Spine: `Gidney/Def.lean` (all the
+Gate-IR defs: `prepareConstRead`, `addConstGate`, `subConstGate`,
+`prepareMaskedConstRead`, `conditionalAddConstGate`, `copyTargetHighBitToFlag`,
+`modAddConstGate`, `controlledModAddConstGate`, and a full
+`modMultConstGate`/`modMultInPlace` tower, + Boolean specs),
+`Gidney/Correctness.lean`, `Gidney/Resource.lean`. The supporting proofs (read
+only if auditing) live in `Gidney/PowerOfTwoCase.lean`,
+`Gidney/ForwardFaithfulness.lean`, `Gidney/ControlledPipeline.lean`,
+`Gidney/SwapSemantics.lean` (frame lemmas, clean bundles,
+`controlledModAddConstGate_correct`, multiplier correctness, swap semantics).
 
 It is **complete and verified** but currently **unused by Shor**: its only
 out-of-folder reach is `MCPBridge.lean` (`modMultInPlaceShor_…`), which nothing
 in `Shor/` consumes. `ModMult/` imports this folder only to borrow the
 SWAP/layout primitives, not the Gidney modular adder.
 
-## Cuccaro / SQIR implementation (`ModularAdder/Cuccaro.lean` → `Cuccaro/CuccaroSQIRDirtyFlag/`)
+## Cuccaro / SQIR implementation (`ModularAdder/Cuccaro/` → `Cuccaro/CuccaroSQIRDirtyFlag/`)
 
 Built on the **Cuccaro** adder; "SQIR-style" means it matches SQIR `ModMult.v`'s
 qubit layout (`q_start = 2`, `flagPos = 1`), not that it uses a SQIR base adder.
-This is the **live** one:
+The `ModularAdder/Cuccaro/` spine (`Def`/`Correctness`/`Resource`) only
+**surfaces** the family — the definitions and proofs stay under
+`Cuccaro/CuccaroSQIRDirtyFlag/` (they belong with the Cuccaro adder and are
+imported by `ModMult/`). This is the **live** one:
 
 ```
 ModMult.modmult_step_gate  →  sqir_style_controlledModAddConst_gate
@@ -60,10 +71,10 @@ ModMult.modmult_step_gate  →  sqir_style_controlledModAddConst_gate
                            →  MCPBridge  →  VerifiedShor
 ```
 
-The definitions/proofs are kept physically under
-`Arithmetic/Cuccaro/CuccaroSQIRDirtyFlag/` (they belong with the Cuccaro adder
-and are consumed by `ModMult/`); `ModularAdder/Cuccaro.lean` is a thin
-re-export so both modular adders are discoverable from `ModularAdder/`.
+The `ModularAdder/Cuccaro/` spine adds **no** definitions or proofs — it
+re-exports the family (kept under `Arithmetic/Cuccaro/CuccaroSQIRDirtyFlag/`,
+where it belongs with the Cuccaro adder and is consumed by `ModMult/`) so both
+modular adders are discoverable from `ModularAdder/` under the same spine shape.
 
 ## Note on `Arithmetic/README.md`
 

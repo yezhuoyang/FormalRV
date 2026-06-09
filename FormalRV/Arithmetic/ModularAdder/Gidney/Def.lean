@@ -1,3 +1,32 @@
+/-
+  FormalRV.Arithmetic.ModularAdder.Gidney.Def
+  ───────────────────────────────────────────
+  THE definitions of the Gidney-based modular adder `(x + c) mod N`, as concrete
+  `Gate`-IR data built on the patched Gidney ripple-carry adder
+  (`gidney_adder_full_faithful_no_measurement_patched`). **Definitions only —
+  no proofs.**
+
+  THE adder is `modAddConstGate bits N c` (and its controlled form
+  `controlledModAddConstGate`), assembled from the patched Gidney adder by the
+  textbook modular-reduction pipeline:
+    addConstGate c        := load c into read reg ; patched adder ; unload  (target += c)
+    subConstGate N        := addConstGate (2^bits − N)                       (two's-complement)
+    conditionalAddConstGate := same, masked by a flag                       (no CCCX)
+    modAddConstGate N c   := add c ; sub N ; copy high bit → flag ;
+                             conditional add-back N ; uncompute flag         (target = (x+c) mod N)
+
+  A standalone modular MULTIPLIER (`modMultConstGate`, `modMultInPlace`) is also
+  defined here by repeating the controlled modular adder over multiplier bits.
+
+  Where to look next:
+    • Correctness : `Gidney/Correctness.lean`
+    • Resource    : `Gidney/Resource.lean`
+    • Supporting proofs : `Gidney/PowerOfTwoCase.lean`, `Gidney/ForwardFaithfulness.lean`,
+      `Gidney/ControlledPipeline.lean`, `Gidney/SwapSemantics.lean`.
+
+  NOTE: this Gidney modular adder is fully verified but STANDALONE; the verified
+  Shor multiplier uses the Cuccaro/SQIR family (`ModularAdder.Cuccaro`).
+-/
 import FormalRV.Arithmetic.RippleCarryAdder
 import Mathlib.Data.Nat.Bitwise
 
