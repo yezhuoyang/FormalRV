@@ -53,7 +53,10 @@ example (N a ainv : Nat) (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
   emit "blk_step1"     (Gate.shift 3 (modmult_step_gate 3 3 2 1))   -- c-MODADD( 2·2^1 mod 3 = 1 )
   emit "blk_step2"     (Gate.shift 3 (modmult_step_gate 3 3 2 2))   -- c-MODADD( 2·2^2 mod 3 = 2 )
   emit "blk_swap"      (Gate.shift 3 (modmult_swap_acc_mult 3))     -- SWAP accumulator ↔ x register
-  emit "blk_uncompute" (Gate.shift 3 (modmult_const_gate 3 3 ((3 - 2) % 3)))  -- uncompute old x → 0
+  -- uncompute = const-multiply by (N - a⁻¹) mod N = 1, exposed per-bit:
+  emit "blk_unstep0"   (Gate.shift 3 (modmult_step_gate 3 3 ((3 - 2) % 3) 0))  -- c-MODADD( 1·2^0 mod 3 = 1 )
+  emit "blk_unstep1"   (Gate.shift 3 (modmult_step_gate 3 3 ((3 - 2) % 3) 1))  -- c-MODADD( 1·2^1 mod 3 = 2 )
+  emit "blk_unstep2"   (Gate.shift 3 (modmult_step_gate 3 3 ((3 - 2) % 3) 2))  -- c-MODADD( 1·2^2 mod 3 = 1 )
   IO.println s!"full budget modmult_total_dim 3 = {modmult_total_dim 3}; circuit uses q0..14" : IO Unit)
 
 end FormalRV.BQAlgo

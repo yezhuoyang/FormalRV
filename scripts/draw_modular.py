@@ -10,18 +10,26 @@ Usage:
 Spec format:
 {
   "title": "...",
+  "fontsize": 20,                       # optional, default 20
   "registers": [{"name": "x", "size": 3}, {"name": "anc", "size": 9}],
-  "blocks":    [{"label": "encode", "qubits": [0,1,2]},
-                {"label": "c-(+a mod N)", "qubits": [0,3,4,5]},
-                {"label": "mod-add", "qubits": [3,4,5,6,7,8,9], "qasm": "adder.qasm"}],
-  "init":      ["x = multiplier", "anc = |0>"]   # optional encoding notes
+  "palette":  {"compute": "#82B366", ...},   # optional kind -> hex fill
+  "blocks":   [{"label": "encode", "kind": "encode", "qubits": [0,1,2],
+                "qasm": "adder.qasm"}],       # qasm => real to_gate box (decomposable)
+  "input":  ["x = multiplier", ...],
+  "output": ["x = a*x mod N", ...]
 }
-A block is either a label-only box, or (with "qasm") a REAL sub-circuit loaded
-from emitted QASM and shown as a Qiskit `to_gate` box (decomposable). Qubit
-indices are global, into the concatenated registers (top to bottom).
+Each block's "kind" picks its color (so different block types look different).
 """
 import sys
 import json
+
+DEFAULT_PALETTE = {
+    "encode": "#6C8EBF", "decode": "#6C8EBF",   # blue: data movement
+    "compute": "#82B366",                         # green: build a*x
+    "swap": "#D79B00",                            # orange: swap
+    "uncompute": "#B85450",                       # red: clear old x
+    "other": "#9673A6",                           # purple
+}
 
 
 def main() -> int:
@@ -38,26 +46,39 @@ def main() -> int:
     qc = QuantumCircuit(*regs)
     qubits = [q for reg in regs for q in reg]
 
-    for blk in spec["blocks"]:
-        qs = [qubits[i] for i in blk["qubits"]]
+    palette = dict(DEFAULT_PALETTE)
+    palette.update(spec.get("palette", {}))
+    displaycolor = {}
+
+    for i, blk in enumerate(spec["blocks"]):
+        qs = [qubits[j] for j in blk["qubits"]]
+        kind = blk.get("kind", "other")
+        # unique gate name per block (so each label shows) but colored by kind
+        name = f"{kind}__{i}"
         if blk.get("qasm"):
             sub = qasm2.load(blk["qasm"],
                              custom_instructions=qasm2.LEGACY_CUSTOM_INSTRUCTIONS)
-            qc.append(sub.to_gate(label=blk["label"]), qs)
+            g = sub.to_gate(label=blk["label"])
+            g.name = name
+            qc.append(g, qs)
         else:
-            qc.append(QGate(name=blk["label"], num_qubits=len(qs), params=[]), qs)
+            qc.append(QGate(name=name, num_qubits=len(qs), params=[], label=blk["label"]), qs)
+        displaycolor[name] = (palette.get(kind, palette["other"]), "#ffffff")
 
-    fig = qc.draw(output="mpl", fold=-1, idle_wires=True)
+    fs = spec.get("fontsize", 20)
+    style = {"displaycolor": displaycolor, "fontsize": fs, "subfontsize": max(10, fs - 4)}
+    fig = qc.draw(output="mpl", fold=-1, idle_wires=True, style=style)
+
     if spec.get("title"):
-        fig.suptitle(spec["title"], fontsize=11)
+        fig.suptitle(spec["title"], fontsize=fs - 2)
     legend = []
     if spec.get("input") or spec.get("init"):
         legend.append("INPUT:   " + "    ".join(spec.get("input") or spec.get("init")))
     if spec.get("output"):
         legend.append("OUTPUT:  " + "    ".join(spec["output"]))
     if legend:
-        fig.text(0.01, 0.005, "\n".join(legend), fontsize=9, family="monospace",
-                 va="bottom", ha="left")
+        fig.text(0.01, 0.005, "\n".join(legend), fontsize=max(11, fs - 6),
+                 family="monospace", va="bottom", ha="left")
     fig.savefig(png, dpi=150, bbox_inches="tight")
     print(f"wrote {png}  ({qc.num_qubits} qubits, {len(spec['blocks'])} blocks)")
     return 0

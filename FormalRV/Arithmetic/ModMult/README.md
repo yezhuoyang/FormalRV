@@ -55,24 +55,38 @@ these boxes composed in order *are* `modmult_MCP_gate`.)
 
 ![ModMult — shift-and-add of modular adders](diagrams/modmult_modular.png)
 
-Reading it left to right (`x` = `q0–2` = input; `w` = `q3–14` = workspace `|0>`):
+Colour-coded by role: **blue** = data movement (encode/decode), **green** =
+*compute* `a·x`, **orange** = swap, **red** = *uncompute*. Left to right
+(`x` = `q0–2` = input; `w` = `q3–14` = workspace `|0>`):
 
-1. **encode** — move the input `x` into the internal (shifted) register.
-2. **three controlled modular-ADDERs** — step `j` adds `a·2ʲ mod N` to the
-   accumulator, *controlled by bit `xⱼ`* (q12, q13, q14). Together they compute
-   `Σⱼ xⱼ·(a·2ʲ) = a·x (mod N)` in the accumulator. **Each MODADD box is a
-   Cuccaro modular adder** — see [`Arithmetic/Cuccaro`](../Cuccaro/README.md)
-   for its gate-level diagram.
-3. **SWAP** — exchange the accumulator (now `a·x`) with the `x` register.
-4. **uncompute** — a second shift-and-add (by `N − a⁻¹`) drives the old `x`
-   back to `0`, freeing the workspace. This is the step that needs
-   `a·a⁻¹ ≡ 1 (mod N)` — the correctness hypothesis.
-5. **decode** — move the result back to `q0–2`.
+1. **encode** (blue) — move the input `x` into the internal (shifted) register.
+2. **three green MODADDs** — step `j` adds `a·2ʲ mod N` to the accumulator,
+   *controlled by bit `xⱼ`* (q12, q13, q14). Together they compute
+   `Σⱼ xⱼ·(a·2ʲ) = a·x (mod N)`. **Each MODADD box is a Cuccaro modular adder.**
+3. **SWAP** (orange) — exchange the accumulator (now `a·x`) with the `x` register.
+4. **three red MODADDs** (uncompute) — a second shift-and-add (by `N − a⁻¹`)
+   drives the old `x` back to `0`, freeing the workspace. This is the step that
+   needs `a·a⁻¹ ≡ 1 (mod N)` — the correctness hypothesis.
+5. **decode** (blue) — move the result back to `q0–2`.
 
 Net effect: `x ↦ (a·x) mod N` in place, workspace restored. (Full SQIR budget
-`modmult_total_dim 3 = 23`; `q15–22` are unused.) Reproduce: run
-`ModMultExample.lean` (emits `diagrams/blk_*.qasm`), then
-`python scripts/draw_modular.py diagrams/modmult_modular.json diagrams/modmult_modular.png`.
+`modmult_total_dim 3 = 23`; `q15–22` are unused.)
+
+### Zoom: one MODADD box at the gate level
+
+Each green/red box decomposes to a real **controlled modular adder** (Cuccaro
+add + mod-`N` reduction). Here is one of them fully expanded — `acc += 2 mod 3`,
+controlled by `x0 = q12`:
+
+![One MODADD — gate level](diagrams/modmult_step_zoom.png)
+
+`CX` = ripple/carry, `CCX` = majority/AND; the cascade then its reverse is the
+Cuccaro adder, with the extra compare-and-conditional-subtract doing the mod-`N`
+reduction. See [`Arithmetic/Cuccaro`](../Cuccaro/README.md) for the plain adder.
+
+Reproduce: run `ModMultExample.lean` (emits `diagrams/blk_*.qasm`), then
+`python scripts/draw_modular.py diagrams/modmult_modular.json diagrams/modmult_modular.png`
+and `python scripts/draw_qasm.py diagrams/blk_step0.qasm diagrams/modmult_step_zoom.png diagrams/modmult_step_zoom.io.json`.
 
 ## Emit OpenQASM for any N (uniform framework)
 

@@ -1,36 +1,34 @@
 {
-  "title": "ModMult   x  ->  (a*x) mod N    (bits=3, N=3, a=2)    --    construction = shift-and-add of controlled modular ADDERS (each MODADD box is a Cuccaro modular adder; see Arithmetic/Cuccaro)",
+  "title": "ModMult:  x -> (a*x) mod N   (bits=3, N=3, a=2)   --   shift-and-add of controlled modular ADDERS  (green = build a*x, orange = swap, red = uncompute old x)",
+  "fontsize": 18,
   "registers": [
     {"name": "x", "size": 3},
     {"name": "w", "size": 12}
   ],
   "input": [
-    "x = q0..q2 = input integer (multiplicand);   w = q3..q14 = workspace |0> (accumulator + a copy of x).   full budget dim = 23, q15..q22 unused"
+    "x = q0..q2 = input integer;  w = q3..q14 = workspace |0> (accumulator + copy of x).  budget dim=23, q15..q22 unused"
   ],
   "output": [
-    "x = q0..q2 = (a*x) mod N;   w = |0> (workspace restored).    WHY: the 3 MODADDs build a*x = sum_j x_j*(a*2^j) in the accumulator; SWAP moves it into x; uncompute clears the old x."
+    "x = q0..q2 = (a*x) mod N;  w = |0> restored.   WHY: green MODADDs build a*x = sum_j x_j*(a*2^j); SWAP moves it into x; red MODADDs uncompute the old x to 0 (needs a*a^-1 = 1 mod N)"
   ],
   "blocks": [
-    {"label": "encode  (swap x into shifted register)",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    {"label": "encode\nx → reg", "kind": "encode", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
      "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_encode.qasm"},
-    {"label": "ctrl-MODADD  acc += a*2^0 mod N = 2   (control x0 = q12)",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    {"label": "MODADD\n+2 mod 3\nctrl x0", "kind": "compute", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
      "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_step0.qasm"},
-    {"label": "ctrl-MODADD  acc += a*2^1 mod N = 1   (control x1 = q13)",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    {"label": "MODADD\n+1 mod 3\nctrl x1", "kind": "compute", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
      "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_step1.qasm"},
-    {"label": "ctrl-MODADD  acc += a*2^2 mod N = 2   (control x2 = q14)",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    {"label": "MODADD\n+2 mod 3\nctrl x2", "kind": "compute", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
      "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_step2.qasm"},
-    {"label": "SWAP   accumulator  <->  x register",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    {"label": "SWAP\nacc ↔ x", "kind": "swap", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
      "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_swap.qasm"},
-    {"label": "uncompute  (shift-add of (N - a^-1) ) :  old x  ->  0",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
-     "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_uncompute.qasm"},
-    {"label": "decode  (swap back)",
-     "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+    {"label": "uncompute\nMODADD\n+1", "kind": "uncompute", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+     "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_unstep0.qasm"},
+    {"label": "uncompute\nMODADD\n+2", "kind": "uncompute", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+     "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_unstep1.qasm"},
+    {"label": "uncompute\nMODADD\n+1", "kind": "uncompute", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+     "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_unstep2.qasm"},
+    {"label": "decode\nreg → x", "kind": "decode", "qubits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
      "qasm": "FormalRV/Arithmetic/ModMult/diagrams/blk_encode.qasm"}
   ]
 }

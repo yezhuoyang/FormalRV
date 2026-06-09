@@ -36,17 +36,19 @@ def main() -> int:
         named.compose(qc, qubits=list(range(qc.num_qubits)), inplace=True)
         qc = named
 
-    fig = qc.draw(output="mpl", fold=-1, idle_wires=True)
+    fs = spec.get("fontsize", 14)
+    fig = qc.draw(output="mpl", fold=-1, idle_wires=spec.get("idle_wires", True),
+                  style={"fontsize": fs, "subfontsize": max(8, fs - 2)})
     if spec.get("title"):
-        fig.suptitle(spec["title"], fontsize=11)
+        fig.suptitle(spec["title"], fontsize=fs)
     legend = []
     if spec.get("input"):
         legend.append("INPUT:   " + "    ".join(spec["input"]))
     if spec.get("output"):
         legend.append("OUTPUT:  " + "    ".join(spec["output"]))
     if legend:
-        fig.text(0.01, 0.01, "\n".join(legend), fontsize=9, family="monospace",
-                 va="bottom", ha="left")
+        fig.text(0.01, 0.01, "\n".join(legend), fontsize=max(9, fs - 3),
+                 family="monospace", va="bottom", ha="left")
     fig.savefig(png_path, dpi=150, bbox_inches="tight")
     print(f"wrote {png_path}  ({qc.num_qubits} qubits, {len(qc.data)} ops)")
     return 0
