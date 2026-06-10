@@ -1,5 +1,5 @@
 import FormalRV.Arithmetic.ModMult
-import FormalRV.Shor.VerifiedShor.WindowedLookupArithmetic
+import FormalRV.Shor.VerifiedShor.ReservedExtensionSlot
 
 namespace VerifiedShor
 namespace Windowed

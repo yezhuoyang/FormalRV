@@ -1,5 +1,5 @@
 import FormalRV.Arithmetic.ModMult
-import FormalRV.Shor.VerifiedShor.McpAdapterInterface
+import FormalRV.Shor.VerifiedShor.McpAdapterLayerIntro
 
 namespace VerifiedShor
 namespace MCPAdapter
