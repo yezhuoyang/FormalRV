@@ -56,19 +56,38 @@
                                                                         [STAGE 5]
 
   ════════════════════════════════════════════════════════════════════════════
-  HONESTY LEDGER
+  HONESTY LEDGER  (CORRECTED 2026-06-11 after adversarial review — the original
+  framing OVERSTATED; this file is a STRUCTURAL SKELETON, not a functional
+  oblivious-carry-runway adder)
   ════════════════════════════════════════════════════════════════════════════
-  PROVEN, unconditional (no `sorry`/`native_decide`/axioms):
-    • the `Gate` and its `WellTyped`;
-    • the advance bound `Δ ≤ n/gSep` (segment-carry algebra) — discharges the
-      `WindowedCosetDeviation` advance hypothesis as a real circuit property;
-    • the Toffoli count closed form + its match to `cosetPadding_toffoli`;
-    • per-piece exact-mod-2^gSep correctness.
-  NAMED OBLIGATION (structure, no `sorry`): `RunwayFoldCorrect` — the exact
-    cross-piece carry-fold re-assembly of the full sum.  Stated precisely; the
-    deterministic per-piece content it consumes is proven here.
+  GENUINELY PROVEN (no `sorry`/`native_decide`/axioms), about the real `Gate`:
+    • the `Gate` `runwayAdder` and its `WellTyped`;
+    • the Toffoli count closed form `tcount = pieces · tcount(segment)` and its
+      arithmetic match to `cosetPadding_toffoli`'s `2·pad` adder term;
+    • per-SEGMENT exact-mod-2^gSep correctness (`runwayPiece_correct_cuccaro`,
+      genuinely about `applyNat` of each piece).
 
-  Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude.
+  DOES NOT MEAN WHAT THE NAMES SUGGEST (the gaps this file does NOT close):
+    • `runwayAdder_advance_le : totalAdvance gSep pieces aDig bDig ≤ pieces` is a
+      COMBINATORIAL fact about the `totalAdvance` carry-sum function applied to
+      ARBITRARY digit functions `aDig/bDig` — it has NO `applyNat (runwayAdder …)`
+      in it, so it is NOT wired to the circuit's register action and does NOT
+      discharge `WindowedCosetDeviation`'s `Δ = n/g_sep` hypothesis as a circuit
+      property.  Δ = n/g_sep remains a CARRIED HYPOTHESIS (as the GE2021 audit
+      already states).
+    • `RunwayFoldCorrect` has FREE fields `monolithic`, `decodeFull`, `cleanAll`,
+      so it is a VACUOUS structure: instantiable trivially (e.g.
+      `monolithic := runwayAdder` makes `foldEquiv` literally `rfl`).  Discharging
+      it proves NOTHING about the runway adder computing the true sum.
+    • The `pieces` Cuccaro segments are INDEPENDENT (each carry-out stays in its
+      own span); there is NO inter-segment carry propagation.  So this is NOT the
+      oblivious-carry-runway scheme (which chains each segment's carry into the
+      next runway).  A FUNCTIONAL runway adder — carries chaining between
+      segments, the full-register coset-rep correctness, and the advance wired to
+      `applyNat` — remains UNBUILT.
+
+  Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude —
+  but kernel-clean is NOT the same as meaningful; see the gaps above.
 -/
 import FormalRV.Arithmetic.Windowed.WindowedCoset
 import FormalRV.Arithmetic.Adder.Gidney
