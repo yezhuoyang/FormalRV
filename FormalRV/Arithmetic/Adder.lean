@@ -60,6 +60,21 @@ structure Adder where
       Gate.applyNat (circuit n q) f p = f p
   /-- The circuit is well-typed at dimension `q + span n`. -/
   wellTyped : ∀ n q, Gate.WellTyped (q + span n) (circuit n q)
+  /-- Augend positions lie inside the block. -/
+  augendIdx_inBlock : ∀ n q i, i < n → inBlock q (span n) (augendIdx q i)
+  /-- Addend positions lie inside the block. -/
+  addendIdx_inBlock : ∀ n q i, i < n → inBlock q (span n) (addendIdx q i)
+  /-- Addend positions are pairwise distinct (so a bit-string written there
+      decodes faithfully). -/
+  addendIdx_inj : ∀ q i j, addendIdx q i = addendIdx q j → i = j
+  /-- Augend and addend positions never collide (writing the addend never
+      disturbs the running sum). -/
+  augend_addend_disjoint : ∀ q i j, augendIdx q i ≠ addendIdx q j
+  /-- `ancClean` looks only at non-data positions: two states that agree
+      everywhere off the augend/addend registers agree on cleanliness. -/
+  ancClean_ext : ∀ n q f g,
+      (∀ p, (∀ i, i < n → p ≠ augendIdx q i ∧ p ≠ addendIdx q i) → f p = g p) →
+      ancClean f n q → ancClean g n q
 
 /-- `decodeReg` depends only on the values of `f` at the index positions. -/
 theorem decodeReg_ext (idx : Nat → Nat) (n : Nat) (f g : Nat → Bool)

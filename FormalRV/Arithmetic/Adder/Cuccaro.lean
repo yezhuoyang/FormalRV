@@ -196,5 +196,18 @@ def cuccaroAdder : Adder where
   wellTyped := by
     intro n q
     exact cuccaro_n_bit_adder_full_wellTyped n q (q + (2 * n + 1)) (by omega)
+  augendIdx_inBlock := by
+    intro n q i hi; unfold inBlock; omega
+  addendIdx_inBlock := by
+    intro n q i hi; unfold inBlock; omega
+  addendIdx_inj := by
+    intro q i j h; omega
+  augend_addend_disjoint := by
+    intro q i j; omega
+  ancClean_ext := by
+    intro n q f g hagree hclean
+    show g q = false
+    rw [← hagree q (by intro i hi; constructor <;> omega)]
+    exact hclean
 
 end FormalRV.BQAlgo

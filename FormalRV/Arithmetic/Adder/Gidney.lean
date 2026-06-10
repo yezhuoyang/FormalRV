@@ -688,5 +688,17 @@ def gidneyAdder : Adder where
         have hwt := Gate.shiftBy_wellTyped q (3 * bits) G (gidney_patched_wt_tight bits hb2)
         -- hwt : WellTyped (q + 3*bits) (shiftBy q G) ; weaken to q + (3*bits+2).
         exact Gate.wellTyped_le hwt (by omega)
+  augendIdx_inBlock := by
+    intro n q i hi; unfold inBlock; omega
+  addendIdx_inBlock := by
+    intro n q i hi; unfold inBlock; omega
+  addendIdx_inj := by
+    intro q i j h; omega
+  augend_addend_disjoint := by
+    intro q i j; omega
+  ancClean_ext := by
+    intro n q f g hagree hclean i hi
+    rw [← hagree (q + 3 * i + 2) (by intro j hj; constructor <;> omega)]
+    exact hclean i hi
 
 end FormalRV.BQAlgo
