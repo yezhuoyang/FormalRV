@@ -111,6 +111,102 @@ Reproduce: `lake env lean …/Windowed/Example.lean` writes the `.qasm` files,
 then `python scripts/draw_qasm.py diagrams/windowed_mul_cuccaro_w2.qasm
 diagrams/windowed_mul_cuccaro_w2.png diagrams/windowed_mul_cuccaro_w2.io.json`.
 
+## Try it 1 — the window size is a free knob
+
+Everything below is **real, executed code** (put it in any scratch `.lean` at the
+repo root; prebuild once with
+`lake build FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect FormalRV.Codegen.QASMEmit`,
+then `lake env lean <file>`):
+
+```lean
+import FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect
+
+open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
+open FormalRV.Shor.WindowedCircuit
+
+/-- A 4-bit multiply-add `acc += 3·y` over the Cuccaro adder; the window size
+    `w` is a free knob — `4/w` windows of `w` bits each cover the 4-bit `y`. -/
+def myMul (w : Nat) : Gate :=
+  windowedMulCircuitOf cuccaroAdder w 4 3 (4 / w)
+
+#eval toffoliCount (myMul 1)   -- 64    (4 windows × (4·1·2¹ + 2·4))
+#eval toffoliCount (myMul 2)   -- 80    (2 windows × (4·2·2² + 2·4))
+#eval toffoliCount (myMul 4)   -- 264   (1 window  × (4·4·2⁴ + 2·4))
+
+-- The closed-form count follows the knob: `numWin · (4·w·2^w + 2·bits)`.
+example : toffoliCount (myMul 2) = 2 * (4 * 2 * 2 ^ 2 + 2 * 4) :=
+  windowedMulCircuit_toffoli 2 4 3 2
+
+-- The CORRECTNESS theorem follows the knob too — here at w = 3
+-- (bits = 8, a = 5, numWin = 2, y = 45 < 2^(3·2)):
+#check (windowedMulCircuit_correct_cuccaro 3 8 5 2 45 (by decide) (by decide) :
+    decodeAccOf cuccaroAdder
+        (Gate.applyNat (windowedMulCircuitOf cuccaroAdder 3 8 5 2)
+          (mulInputOf cuccaroAdder 3 8 2 45)) (1 + 2 * 3) 8
+      = (5 * 45) % 2 ^ 8)
+```
+
+Output (verbatim): `64`, `80`, `264`, and the `#check` displays the
+fully-instantiated correctness proposition at `w = 3`. Swap `cuccaroAdder` for
+`gidneyAdder` and everything still goes through (`windowedMulCircuit_correct_gidney`).
+
+## Try it 2 — emit concrete OpenQASM via the uniform `emitQASM` framework
+
+The windowed multiplier plugs into the project-wide `Gadget`/`emitQASM`
+framework (`Codegen/QASMEmit.lean`) like every other arithmetic gadget — with
+the **adder and the window size as parameters**:
+
+```lean
+import FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect
+import FormalRV.Codegen.QASMEmit
+
+open FormalRV.Framework FormalRV.BQAlgo
+open FormalRV.Shor.WindowedCircuit
+open FormalRV.Codegen (Gadget emitQASM)
+
+/-- The windowed multiplier (`acc += a·y`) over ANY `Adder`, as a uniform,
+    emittable `Gadget`: `circuit bits` is the multiplier at accumulator
+    width `bits`. -/
+def WindowedMul (A : Adder) (tag : String) (w a numWin : Nat) : Gadget :=
+  { name    := s!"windowed_mul_{tag}_w{w}"
+    circuit := fun bits => windowedMulCircuitOf A w bits a numWin }
+
+-- Emit OpenQASM 2.0 for `acc += 3·y` (w = 2, one window) over BOTH adders:
+#eval IO.println (emitQASM (WindowedMul cuccaroAdder "cuccaro" 2 3 1) 2)
+#eval IO.println (emitQASM (WindowedMul gidneyAdder  "gidney"  2 3 1) 2)
+
+-- Exact structural resource readout (same counters as the resource theorems):
+#eval IO.println ((WindowedMul cuccaroAdder "cuccaro" 2 3 1).resourceReport 2)
+#eval IO.println ((WindowedMul gidneyAdder  "gidney"  2 3 1).resourceReport 2)
+```
+
+Verbatim output — the first lines of the Cuccaro emission (full program is 580
+lines; the two leading `cx`s are the window copy `y → address`):
+
+```qasm
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[12];
+cx q[10],q[1];
+cx q[11],q[3];
+h q[2];
+cx q[1],q[2];
+tdg q[2];
+cx q[0],q[2];
+...
+```
+
+the Gidney emission differs only in layout (`qreg q[15];` — span `3n+2` — with
+the y-copies `cx q[13],q[1]; cx q[14],q[3];`), and the resource reports read:
+
+```
+windowed_mul_cuccaro_w2 (n=2): gates=72, T=252
+windowed_mul_gidney_w2  (n=2): gates=74, T=252
+```
+
+(`T = 252 = 7 × 36` Toffolis `= 7 · numWin·(4·w·2^w + 2·bits)` — identical
+across adders, as the head-to-head table predicts.)
+
 ## Honest scope notes
 
 - The windowed multiplier here is the **product-adder** `acc += a·y mod 2^bits`

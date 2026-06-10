@@ -908,4 +908,28 @@ theorem expWindowPass_correct_cuccaro (wE wM bits g_k numWin numExpWin y e k : N
   exact expMulInputOf_low cuccaroAdder wE wM bits numWin numExpWin y e _
     (by unfold ulookup_ctrl_idx; omega) (by omega)
 
+/-- **Gidney instance.**  `gidneyAdder.ancClean` is
+    `∀ i < bits, f ((1+2(wE+wM)) + 3i + 2) = false` — every carry qubit lies
+    inside the adder block, below the y-register, so the input state reads it
+    `false`. -/
+theorem expWindowPass_correct_gidney (wE wM bits g_k numWin numExpWin y e k : Nat)
+    (hwE : 0 < wE) (hwM : 0 < wM) (hk : k < numExpWin)
+    (hy : y < 2 ^ (wM * numWin)) (he : e < 2 ^ (wE * numExpWin)) :
+    decodeAccOf gidneyAdder (Gate.applyNat
+        (expWindowPassOf gidneyAdder wE wM (expTable g_k wM) bits
+          (1 + 2 * (wE + wM)) (1 + 2 * (wE + wM) + gidneyAdder.span bits)
+          (1 + 2 * (wE + wM) + gidneyAdder.span bits + numWin * wM) k numWin)
+        (expMulInputOf gidneyAdder wE wM bits numWin numExpWin y e))
+        (1 + 2 * (wE + wM)) bits
+      = (g_k ^ WindowedArith.window wE e k * y) % 2 ^ bits := by
+  refine expWindowPassOf_correct gidneyAdder wE wM bits g_k numWin numExpWin
+    y e k hwE hwM hk hy he ?_
+  show ∀ i, i < bits →
+    expMulInputOf gidneyAdder wE wM bits numWin numExpWin y e
+      (1 + 2 * (wE + wM) + 3 * i + 2) = false
+  intro i hi
+  have hspan : gidneyAdder.span bits = 3 * bits + 2 := rfl
+  exact expMulInputOf_low gidneyAdder wE wM bits numWin numExpWin y e _
+    (by unfold ulookup_ctrl_idx; omega) (by omega)
+
 end FormalRV.Shor.WindowedCircuit

@@ -19,9 +19,10 @@ axiom-free (check with `#print axioms`):
   `ModMulImpl`, order finding succeeds with probability `≥ κ / (log₂ N)⁴`
   where `κ = 4·e⁻²/π²`.
 * `FormalRV.Shor_correct_verified_no_modmult_axioms`
-  (`Arithmetic/ModMult.lean`) — the same statement instantiated with a
-  constructively-defined, SQIR-faithful modular multiplier, so there is no
-  oracle placeholder at all.
+  (`Shor/VerifiedShor/VerifiedShorTheorem.lean`) — the same statement
+  instantiated with a constructively-defined, SQIR-faithful modular multiplier
+  (`Arithmetic/ModMult`'s `modmult_MCP_gate`), so there is no oracle
+  placeholder at all.
 * `FormalRV.QPE_MMI_correct`
   (`Shor/PostQFT.lean`) — the quantum-phase-estimation peak bound
   `≥ 4/(π²·r)` at the heart of the argument.

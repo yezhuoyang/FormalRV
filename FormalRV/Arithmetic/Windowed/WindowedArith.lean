@@ -183,10 +183,12 @@ def modPow (g e N : Nat) : Nat := g ^ e % N
 /-- **Named obligation — Gidney 1905.07682 l.502** ("we have tested that the above code
     returns the correct result in randomly chosen cases").  A value map `windowedExp`
     realizes windowed modular EXPONENTIATION when, on input `x` and exponent `e`, it
-    yields `(x · g^e) mod N`.  Each single exponent-window step (forward product-add via
-    `windowedLookupFold_modProductAdd`, inverse-clear, swap) is provable; the global
-    composition over all `n_e/c_exp` windows is the empirically-validated fact named
-    here, exactly as `WindowedCompletion`/`h_tw` name the last-mile circuit obligations. -/
+    yields `(x · g^e) mod N`.  The single exponent-window multiply-add is now
+    PROVEN at the Gate level (`expWindowPassOf_correct`, `WindowedExpStep.lean` —
+    adder-generic, via the concatenated exp‖mul lookup address); what this named
+    obligation still tracks is the GLOBAL composition over all `n_e/c_exp`
+    windows (per-pass accumulator hand-off + inverse-clear + swap), the
+    empirically-validated fact of Gidney l.502. -/
 def WindowedExpCorrect (windowedExp : Nat → Nat → Nat) (g N : Nat) : Prop :=
   ∀ e x, windowedExp e x = (x * modPow g e N) % N
 
