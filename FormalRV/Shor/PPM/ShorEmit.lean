@@ -23,7 +23,7 @@
 
 import FormalRV.LatticeSurgery.ScheduleEmit
 import FormalRV.LatticeSurgery.SurgeryDemoSurface
-import FormalRV.Shor.ModExpToffoliCount
+import FormalRV.Shor.Resource.ModExpToffoliCount
 
 namespace FormalRV.Shor.ShorEmit
 

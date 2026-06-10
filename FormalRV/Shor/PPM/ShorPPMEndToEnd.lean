@@ -49,7 +49,7 @@
   So: the headline is honest about scope — Shor's *guarantee* is proved,
   and its *arithmetic oracle* is a verified, provisioned PPM program.
 -/
-import FormalRV.Shor.ShorModMulPPMFactoryE2E
+import FormalRV.Shor.PPM.ShorModMulPPMFactoryE2E
 
 namespace FormalRV.Shor.ShorPPMEndToEnd
 

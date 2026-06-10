@@ -27,7 +27,7 @@ LEARNING PATH — the four steps of "standard Shor on a surface code":
 A reader can verify the whole baseline with:  `lake build FormalRV.StandardShor`.
 See FormalRV/StandardShor/README.md for the narrative guide.
 -/
-import FormalRV.Shor.SuccessSensitivity
+import FormalRV.Shor.OrderFinding.SuccessSensitivity
 import FormalRV.Shor.PostQFT.PostQFTCompletion
 import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull

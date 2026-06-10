@@ -4,5 +4,5 @@
   Pauli-product measurement is the SHARED verified surface-code surgery
   (✅, FormalRV.StandardShor.surfaceShorEndToEnd / Audit.Common.SurfaceShorPPMEndToEnd).
 -/
-import FormalRV.StandardShor
+import FormalRV.Shor.StandardShor
 #check @FormalRV.StandardShor.surfaceShorEndToEnd     -- ✅ shared: Shor PPM realized as surface surgery

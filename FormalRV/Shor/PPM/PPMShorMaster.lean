@@ -25,7 +25,7 @@
   combines them — and degrades the verified bound by the approximation — is here.
   No `sorry`, no new `axiom`.
 -/
-import FormalRV.Shor.ProbabilityTransfer
+import FormalRV.Shor.OrderFinding.ProbabilityTransfer
 import FormalRV.Shor.ApproxTransfer
 import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 

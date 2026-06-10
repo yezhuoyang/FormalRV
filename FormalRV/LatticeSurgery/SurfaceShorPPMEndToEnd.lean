@@ -51,7 +51,7 @@
   over ℝ).  No `sorry`; no NEW axioms beyond those of conjunct (I).
 -/
 
-import FormalRV.Shor.ShorPPMEndToEnd
+import FormalRV.Shor.PPM.ShorPPMEndToEnd
 import FormalRV.LatticeSurgery.SurgeryDemoSurface
 
 namespace FormalRV.LatticeSurgery.SurfaceShorPPMEndToEnd

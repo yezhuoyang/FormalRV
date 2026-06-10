@@ -15,10 +15,10 @@
   No `sorry`, no `axiom`.
 -/
 import FormalRV.Audit.CainXu2026.Verifier
-import FormalRV.StandardShor
-import FormalRV.Shor.ShorPPMEndToEnd
-import FormalRV.Shor.ShorPPMUnitaryReduction
-import FormalRV.Shor.TeleportCCXGrounded
+import FormalRV.Shor.StandardShor
+import FormalRV.Shor.PPM.ShorPPMEndToEnd
+import FormalRV.Shor.PPM.ShorPPMUnitaryReduction
+import FormalRV.Shor.PPM.TeleportCCXGrounded
 import FormalRV.QEC.LogicalMeasurementGeneral
 
 namespace FormalRV.Audit.CainXu2026

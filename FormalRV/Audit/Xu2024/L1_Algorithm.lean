@@ -6,7 +6,7 @@
   success is SHARED and N-parametric (order finding; FormalRV.StandardShor).
 -/
 import FormalRV.Framework.L1_Algorithm
-import FormalRV.StandardShor
+import FormalRV.Shor.StandardShor
 
 namespace FormalRV.Audit.Xu2024
 

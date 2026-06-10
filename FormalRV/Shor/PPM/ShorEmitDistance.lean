@@ -17,7 +17,7 @@
   boundary stitching + decoder, the CCX magic injection (teleportCCXRel), and Z-type
   merges remain cited / scaffolded.  No `sorry`, no `axiom`.
 -/
-import FormalRV.Shor.ShorEmit
+import FormalRV.Shor.PPM.ShorEmit
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.LogicalFinder
 import FormalRV.LatticeSurgery.SurgeryCorrect
