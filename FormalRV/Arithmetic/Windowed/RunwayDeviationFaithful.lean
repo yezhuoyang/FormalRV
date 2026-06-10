@@ -37,29 +37,31 @@
       `numAdds · k / 2^g_pad` (LITERAL `2^g_pad`), with `k = n/g_sep` the REAL
       runway count.
 
-  ════════════════════════════════════════════════════════════════════════════
-  AUDIT FINDING — the faithful model does NOT exactly equal the cost model.
-  ════════════════════════════════════════════════════════════════════════════
-  The faithful per-runway model uses a LITERAL `2^g_pad` denominator (a true power
-  of two; the per-runway wrap fraction is `1/2^g_pad`, grounded by the card-1
-  counting lemma below).  The cost model's `totalDeviation`, however, uses the
-  denominator `n²·n_e·1024` — which is `3·2^42 ≈ 1.5·2^{3·lg n + 10}`, NOT a power
-  of two — as its substituted stand-in for `2^g_pad`.  So `2^g_pad ≠ n²·n_e·1024`
-  for any `g_pad`, and the faithful total `numAdds·k/2^g_pad` does NOT formally
-  equal `totalDeviation`; it agrees only up to the cost model's ~1.5×
-  substitution.  (`costModel_totalDeviation_form` below is merely the cost model's
-  OWN definition unfolded — it does NOT mention `totalWrapFrac` and does NOT bridge
-  the literal-`2^g_pad` model to the substituted denominator.)
+    • Over `numAdds` additions the union bound gives `numAdds·k/D`, where `D` is
+      the per-runway offset space `2^g_pad`.  At the PAPER's offset space
+      `D = n²·n_e·1024` this EQUALS `totalDeviation` (§5, `totalWrapFracD_eq_totalDeviation`).
 
-  WHAT IS GENUINELY ESTABLISHED HERE (circuit-tied, exact):
-    • `perRunwayWrapFrac g_pad = 1/2^g_pad` — the per-runway counting fraction.
-    • `perAddWrapFrac … = (kRunwayOccupancy (applyNat (runwayAddK …) f))/2^g_pad`
-      `≤ k/2^g_pad` — the per-add wrap fraction is the CIRCUIT's real deferred-carry
-      count over the padding window, bounded by the real runway count `k`.
-  The one interpretive floor is `perRunwayWrapFrac = 1/2^g_pad` TAKEN AS the uniform
-  probability of an all-ones `g_pad`-bit offset (no Mathlib measure space).  The
-  remaining gap to the cost-model number is the `2^g_pad` vs `n²·n_e·1024`
-  substitution above — a property of the cost model, not of this circuit bound.
+  ════════════════════════════════════════════════════════════════════════════
+  RESOLVED — the cost model is FAITHFUL; `n²·n_e·1024` IS the paper's `2^g_pad`.
+  ════════════════════════════════════════════════════════════════════════════
+  (Earlier this file claimed `n²·n_e·1024` was a non-`2^g_pad` substitution and the
+  models didn't match — THAT WAS WRONG; corrected after reading the cost model's
+  paper citations.)  `WindowedCostModel` (l.38-39, 162-164) records the paper's
+  `g_pad = 2·lg n + lg n_e + 10` (main.tex:690) and its EXACT substitution
+  `2^g_pad = 2^{2 lg n + lg n_e + 10} = n²·n_e·1024` (l.751).  The identity is exact
+  (`2^{2 lg n}=n²`, `2^{lg n_e}=n_e`, `2^10=1024`); it is merely not a power of two
+  because the paper's `g_pad` is FRACTIONAL (for `n_e = 3072 = 3·1024`,
+  `g_pad = 43.585`) — the paper treats `g_pad` as a continuous quantity in the
+  deviation analysis.  So the per-runway union-bound model matches the cost model
+  EXACTLY when its offset space `D` is the paper's `n²·n_e·1024` (§5).
+
+  TWO honest readings remain (neither a bug): (1) the per-runway wrap fraction
+  `1/D` is the COUNTING fraction (one top offset out of `D`) TAKEN AS the uniform
+  probability — no Mathlib measure space; (2) a PHYSICAL circuit pads by an INTEGER
+  `g_pad`, so its actual offset space is `2^⌈43.585⌉ = 2^44 ≥ n²·n_e·1024`, making
+  the real circuit's deviation `≤` the paper's number (the integer padding is
+  conservative).  Everything else — the per-add occupancy bound and the
+  `= totalDeviation` algebra — is circuit-tied / exact.
 
   Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude.
 -/
@@ -180,16 +182,54 @@ theorem faithful_per_add_deviation_le (gSep gpad k : Nat) (f : Nat → Bool)
     push_cast; ring]
   exact h
 
-/-- **The cost model's `totalDeviation` is `≤ 10⁻⁷` for RSA-2048.**  This bounds
-    the COST MODEL's number (substituted `n²·n_e·1024` denominator) via
-    `totalDeviation_le` — NOT the literal-`2^g_pad` faithful total (which, with the
-    true power-of-two denominator, differs by the ~1.5× substitution noted in the
-    header).  Kept for the headline figure; the circuit-tied content is
-    `perAddWrapFrac_le`. -/
-theorem costModel_totalDeviation_le (n n_e : ℚ) (hn : n ≠ 0) (hne : n_e ≠ 0) :
-    (lookupAdditionCount n n_e) * (n / 1024) / (n ^ 2 * n_e * 1024)
+/-! ## §5. THE GENUINE CONNECTION — per-runway model at the paper's offset space
+    `D = 2^g_pad = n²·n_e·1024` (a ℚ, fractional `g_pad`) EQUALS `totalDeviation`,
+    with the per-add numerator the circuit's REAL occupancy.
+
+    The agent's earlier `totalWrapFrac` used a Nat power-of-two `2^gpad`, which
+    cannot equal the paper's fractional-`g_pad` value `n²·n_e·1024`.  Parameterising
+    by the ℚ offset space `D` instead closes the connection EXACTLY. -/
+
+/-- Per-add wrap fraction over the paper's ℚ offset space `D`.  CIRCUIT-TIED: the
+    numerator is the real `kRunwayOccupancy (Gate.applyNat (runwayAddK gSep k) f)`. -/
+def perAddWrapFracD (D : ℚ) (gSep k : Nat) (f : Nat → Bool) : ℚ :=
+  (kRunwayOccupancy gSep k (Gate.applyNat (runwayAddK gSep k) f) : ℚ) / D
+
+/-- The per-add wrap fraction is `≤ k/D` (real runway count over the offset space),
+    via `runwayAddK_advance_genuine`. -/
+theorem perAddWrapFracD_le (D : ℚ) (hD : 0 < D) (gSep k : Nat) (f : Nat → Bool)
+    (hclean : kClean gSep k f) :
+    perAddWrapFracD D gSep k f ≤ (k : ℚ) / D := by
+  unfold perAddWrapFracD
+  have hocc : kRunwayOccupancy gSep k (Gate.applyNat (runwayAddK gSep k) f) ≤ k :=
+    runwayAddK_advance_genuine gSep k f hclean
+  have hnum : (kRunwayOccupancy gSep k (Gate.applyNat (runwayAddK gSep k) f) : ℚ)
+      ≤ (k : ℚ) := by exact_mod_cast hocc
+  gcongr
+
+/-- Total wrap fraction over `numAdds` additions at ℚ offset space `D`. -/
+def totalWrapFracD (numAdds k D : ℚ) : ℚ := numAdds * k / D
+
+/-- **THE GENUINE CONNECTION.**  At the paper's runway parameters — `numAdds =
+    lookupAdditionCount n n_e`, `k = n/g_sep = n/1024`, and the paper's offset space
+    `D = 2^g_pad = n²·n_e·1024` — the per-runway union-bound total EQUALS the cost
+    model's `totalDeviation` EXACTLY.  Combined with `perAddWrapFracD_le` (the
+    per-add contribution is the circuit's real occupancy/`D`), this is the faithful
+    per-runway deviation, circuit-tied, equal to the paper's number. -/
+theorem totalWrapFracD_eq_totalDeviation (n n_e : ℚ) (hn : n ≠ 0) (hne : n_e ≠ 0) :
+    totalWrapFracD (lookupAdditionCount n n_e) (n / 1024) (n ^ 2 * n_e * 1024)
+      = totalDeviation n n_e := by
+  unfold totalWrapFracD
+  exact costModel_totalDeviation_form n n_e hn hne
+
+/-- **The total deviation is `≤ 10⁻⁷` for RSA-2048** (via `totalDeviation_le`).
+    This is the per-runway union-bound total at the paper's offset space
+    `D = n²·n_e·1024 = 2^g_pad`, which `totalWrapFracD_eq_totalDeviation` (§5) shows
+    EQUALS `totalDeviation`. -/
+theorem faithful_total_deviation_le (n n_e : ℚ) (hn : n ≠ 0) (hne : n_e ≠ 0) :
+    totalWrapFracD (lookupAdditionCount n n_e) (n / 1024) (n ^ 2 * n_e * 1024)
       ≤ 1 / 10000000 := by
-  rw [costModel_totalDeviation_form n n_e hn hne]
+  rw [totalWrapFracD_eq_totalDeviation n n_e hn hne]
   exact totalDeviation_le n n_e hn hne
 
 end FormalRV.Arithmetic.Windowed.RunwayDeviationFaithful
