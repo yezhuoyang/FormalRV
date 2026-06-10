@@ -226,6 +226,23 @@ file structure** and import it directly:
 | **Per-window mod-N multiply** (exactly-modular windowed multiplication, `(a·y) mod N`) | `FormalRV.Arithmetic.Windowed.WindowedModN` | `windowedModNMulCircuit_correct`; new primitives `regCompareXor` (first register-register comparator), `modNReduceFlag` |
 | **In-place multiply + windowed modexp (classical exponent)** | `FormalRV.Arithmetic.Windowed.WindowedInPlace` | `windowedMulInPlace_correct` (`y ← a·y`, full state restoration), `windowedExpInPlace_correct` (`y ← g^e·y mod 2^bits`) |
 | Paper's exact ℚ cost-accounting formulas (GE2021 §cost) | `FormalRV.Arithmetic.Windowed.WindowedCostModel` | `toffoliCount_rsa2048`, `toffoliCount_le_paper` |
+| **The paper's reported TOTAL (circuit-total ↔ paper-total bridge)** | `FormalRV.Shor.WindowedComposedCost`; structural counts in `FormalRV.Shor.WindowedComposed` | `total_gap`, `rsa2048_head_to_head`, `rsa2048_circuit_matches_model` |
+
+**The total-count bridge** (`FormalRV/Shor/WindowedComposedCost.lean`):
+`Shor/WindowedComposed.lean` builds the FULL modular exponentiation as one
+`EGate` nested exactly as the paper decomposes it (`numMults` multiplications ×
+2 multiply-adds × `numWin` lookup-additions, each lookup-addition =
+`babbushLookupAdd`), and reads off the single structural count
+`toffoli_modExp = numMults·2·numWin·((2^w−1) + 2·bits)` (counts only; each
+primitive's semantics is verified separately). `WindowedComposedCost.lean` then
+relates that structural total to the paper-accounting
+`WindowedCostModel.toffoliCount` with the gap **exactly named**, per
+lookup-addition: `+1` (the paper rounds the Babbush `2^w−1` up to `2^w`) plus
+`n·g_pad/g_sep` (the runway-folding additions, which are formula-only — the
+composed circuit honestly omits them). At RSA-2048 (`rsa2048_head_to_head`,
+`rsa2048_circuit_matches_model`): circuit `503808·5119 = 2 578 993 152` vs paper
+`503808·5206 = 2 622 824 448` — total gap `43 831 296` = **1.67%**, decomposing
+as `503808` (rounding) + `43 327 488` (runway folding).
 
 The Gray-code and faithful reads are **contract-identical** (same selection +
 frame lemmas, same qubit layout), so circuits and proofs swap between them
