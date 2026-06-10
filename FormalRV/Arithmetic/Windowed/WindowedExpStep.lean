@@ -843,7 +843,6 @@ theorem expStepInv_fold (A : Adder) (wE wM bits g_k numWin numExpWin y e k : Nat
     exact expStepInv_step A wE wM bits g_k numWin numExpWin y e k hwM hk
       n (by omega) _ _ (ih (by omega))
 
-set_option linter.unusedVariables false in
 /-- **HEADLINE — the windowed-EXPONENT multiply-add pass VALUE theorem.**
     For ANY adder `A`, the two-level pass (Gidney 1905.07682 l.694–697:
     concatenated address = exponent-window ++ multiplier-window), run on the
@@ -856,13 +855,12 @@ set_option linter.unusedVariables false in
     One pass = one exponent-window step of the windowed modular
     exponentiation, adder-generic.
 
-    (`hwE`/`he` are part of the well-formedness contract — the exponent
-    register genuinely holds `numExpWin` nonempty windows — though the proof
+    (No `0 < wE` or `e < 2^(wE·numExpWin)` hypotheses are needed: the proof
     only consumes the per-window bounds, which hold definitionally.) -/
 theorem expWindowPassOf_correct (A : Adder)
     (wE wM bits g_k numWin numExpWin y e k : Nat)
-    (hwE : 0 < wE) (hwM : 0 < wM) (hk : k < numExpWin)
-    (hy : y < 2 ^ (wM * numWin)) (he : e < 2 ^ (wE * numExpWin))
+    (hwM : 0 < wM) (hk : k < numExpWin)
+    (hy : y < 2 ^ (wM * numWin))
     (hclean : A.ancClean (expMulInputOf A wE wM bits numWin numExpWin y e)
       bits (1 + 2 * (wE + wM))) :
     decodeAccOf A (Gate.applyNat
@@ -891,8 +889,8 @@ theorem expWindowPassOf_correct (A : Adder)
     block base reading `false` — below the y-register, so the input state
     provides it. -/
 theorem expWindowPass_correct_cuccaro (wE wM bits g_k numWin numExpWin y e k : Nat)
-    (hwE : 0 < wE) (hwM : 0 < wM) (hk : k < numExpWin)
-    (hy : y < 2 ^ (wM * numWin)) (he : e < 2 ^ (wE * numExpWin)) :
+    (hwM : 0 < wM) (hk : k < numExpWin)
+    (hy : y < 2 ^ (wM * numWin)) :
     decodeAccOf cuccaroAdder (Gate.applyNat
         (expWindowPassOf cuccaroAdder wE wM (expTable g_k wM) bits
           (1 + 2 * (wE + wM)) (1 + 2 * (wE + wM) + cuccaroAdder.span bits)
@@ -901,7 +899,7 @@ theorem expWindowPass_correct_cuccaro (wE wM bits g_k numWin numExpWin y e k : N
         (1 + 2 * (wE + wM)) bits
       = (g_k ^ WindowedArith.window wE e k * y) % 2 ^ bits := by
   refine expWindowPassOf_correct cuccaroAdder wE wM bits g_k numWin numExpWin
-    y e k hwE hwM hk hy he ?_
+    y e k hwM hk hy ?_
   show expMulInputOf cuccaroAdder wE wM bits numWin numExpWin y e
     (1 + 2 * (wE + wM)) = false
   have hspan : cuccaroAdder.span bits = 2 * bits + 1 := rfl
@@ -913,8 +911,8 @@ theorem expWindowPass_correct_cuccaro (wE wM bits g_k numWin numExpWin y e k : N
     inside the adder block, below the y-register, so the input state reads it
     `false`. -/
 theorem expWindowPass_correct_gidney (wE wM bits g_k numWin numExpWin y e k : Nat)
-    (hwE : 0 < wE) (hwM : 0 < wM) (hk : k < numExpWin)
-    (hy : y < 2 ^ (wM * numWin)) (he : e < 2 ^ (wE * numExpWin)) :
+    (hwM : 0 < wM) (hk : k < numExpWin)
+    (hy : y < 2 ^ (wM * numWin)) :
     decodeAccOf gidneyAdder (Gate.applyNat
         (expWindowPassOf gidneyAdder wE wM (expTable g_k wM) bits
           (1 + 2 * (wE + wM)) (1 + 2 * (wE + wM) + gidneyAdder.span bits)
@@ -923,7 +921,7 @@ theorem expWindowPass_correct_gidney (wE wM bits g_k numWin numExpWin y e k : Na
         (1 + 2 * (wE + wM)) bits
       = (g_k ^ WindowedArith.window wE e k * y) % 2 ^ bits := by
   refine expWindowPassOf_correct gidneyAdder wE wM bits g_k numWin numExpWin
-    y e k hwE hwM hk hy he ?_
+    y e k hwM hk hy ?_
   show ∀ i, i < bits →
     expMulInputOf gidneyAdder wE wM bits numWin numExpWin y e
       (1 + 2 * (wE + wM) + 3 * i + 2) = false

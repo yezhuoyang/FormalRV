@@ -14,6 +14,20 @@
   the net COMPUTATIONAL effect of measure-in-X + phase-fixup + reset.  (The PHASE-fixup
   correctness is a named obligation, cited; it lives in the amplitude layer, not the
   Boolean `applyNat`.)
+
+  CROSS-REFERENCES (status updates to the model above):
+
+  * The `mz`-as-reset Boolean model is now JUSTIFIED at the density layer: see
+    `FormalRV.Shor.MeasuredANDUncompute`, `FormalRV.Shor.MeasuredLookupUncompute`, and
+    `FormalRV.Shor.PhaseLookupFixup`, where the X-measure + classically-controlled-fixup
+    channel is PROVEN to be the perfect uncompute.  The "named obligation" caveat above
+    is therefore discharged — `mz` is no longer an unproven amplitude-layer assumption.
+
+  * `babbushLookupAdd` (below) has a PROVEN value-level layout defect for `W ≥ 2`
+    (`babbushLookupAddValueSpec_unsatisfiable` / `babbushLookupAdd_misses_table` in
+    `FormalRV.Shor.MeasUncomputeValue`).  Its Toffoli-count theorems in this file remain
+    valid; for value-correct semantics use `babbushLookupAddAt` from
+    `FormalRV.Shor.MeasUncomputeAt`.
 -/
 import FormalRV.Arithmetic.Windowed.WindowedCircuit
 import FormalRV.Arithmetic.UnaryLookup.UnaryLookupGateDerivations
@@ -203,7 +217,14 @@ theorem toffoli_unaryQROM (W : Nat) (T : Nat → Nat) (addrBase ancBase outBase 
 /-- **The fully-optimized lookup-add reaches the paper's `2^w − 1 + 2·bits` Toffolis**, with
     NO black box: babbush unary read (`2^w − 1`) · Cuccaro add (`2·bits`) · measure-clear.
     This closes the Gray-code/amortization factor structurally — the lookup cost is now
-    `≈ 2^w + 2·bits`, matching Gidney–Ekerå's `2^{c_mul+c_exp}` lookup. -/
+    `≈ 2^w + 2·bits`, matching Gidney–Ekerå's `2^{c_mul+c_exp}` lookup.
+
+    WARNING (value semantics): this circuit has a PROVEN value-level LAYOUT defect for
+    `W ≥ 2` — `babbushLookupAddValueSpec_unsatisfiable` and `babbushLookupAdd_misses_table`
+    in `FormalRV.Shor.MeasUncomputeValue` show no decoder pair can make it implement the
+    table lookup-add.  The Toffoli-count theorems below remain valid (counts are
+    layout-independent).  For the layout-corrected, value-CORRECT variant import
+    `FormalRV.Shor.MeasUncomputeAt` and use `babbushLookupAddAt`. -/
 def babbushLookupAdd (w W : Nat) (T : Nat → Nat) (bits addrBase ancBase outBase q_start : Nat) : EGate :=
   EGate.seq (EGate.seq
     (unaryQROM W T addrBase ancBase outBase w 0 0)
