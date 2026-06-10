@@ -186,7 +186,11 @@ theorem maxIdx_lookupReadAt_le (w q_start W : Nat) (T : Nat → Nat)
 theorem maxIdx_lookupAddAt_le (w q_start W bits : Nat) (T : Nat → Nat)
     (hw1 : 1 ≤ w) (hq : 2 * w ≤ q_start) (hWb : W ≤ bits) :
     maxIdx (lookupAddAt w W T bits q_start) ≤ q_start + 2 * bits := by
-  unfold lookupAddAt
+  -- `lookupAddAt = lookupAddAtOf cuccaroAdder`, which unfolds (defeq) to the
+  -- read·add·read with addend `addendIdx q_start` and adder `cuccaro_n_bit_adder_full`.
+  show maxIdx (Gate.seq (Gate.seq (lookupReadAt w (addendIdx q_start) W T)
+        (cuccaro_n_bit_adder_full bits q_start)) (lookupReadAt w (addendIdx q_start) W T))
+      ≤ q_start + 2 * bits
   simp only [maxIdx_seq]
   refine max_le (max_le ?_ (maxIdx_cuccaro_full bits q_start)) ?_
   · exact le_trans (maxIdx_lookupReadAt_le w q_start W T hw1 hq) (by omega)
@@ -223,13 +227,18 @@ theorem width_windowedMulCircuit (w bits a numWin : Nat)
     (hw1 : 1 ≤ w) (hb : 1 ≤ bits) (hN : 1 ≤ numWin) :
     width (windowedMulCircuit w bits a numWin) = 2 * w + 2 * bits + numWin * w + 2 := by
   have hmax : maxIdx (windowedMulCircuit w bits a numWin) = 2 * w + 2 * bits + numWin * w + 1 := by
-    unfold windowedMulCircuit windowedMul
+    -- `windowedMulCircuit = windowedMulCircuitOf cuccaroAdder`, whose `yBase` is
+    -- `1+2w + cuccaroAdder.span bits = 1+2w+2·bits+1` and whose fold step is
+    -- `windowStepOf cuccaroAdder = windowStep` — both defeq, so re-expose the surface fold.
+    show maxIdx ((List.range numWin).foldl
+        (fun g j => Gate.seq g (windowStep w bits a bits (1 + 2 * w) (1 + 2 * w + 2 * bits + 1) j))
+        Gate.I) = 2 * w + 2 * bits + numWin * w + 1
     apply le_antisymm
     · -- UPPER bound: every window step's indices ≤ the y-register top
       apply maxIdx_foldl_seq_le _ _ _ _ (by simp [maxIdx])
       intro j hj
       rw [List.mem_range] at hj
-      unfold windowStep
+      unfold windowStep windowStepOf
       simp only [maxIdx_seq]
       have hcopy : maxIdx (copyWindow w (1 + 2 * w + 2 * bits + 1) j)
           ≤ 2 * w + 2 * bits + numWin * w + 1 := by
@@ -247,7 +256,7 @@ theorem width_windowedMulCircuit (w bits a numWin : Nat)
       exact max_le (max_le hcopy hadd) hcopy
     · -- LOWER bound: the last window's copy reaches the y-register top
       refine le_trans ?_ (le_maxIdx_foldl_seq _ _ Gate.I (numWin - 1) (List.mem_range.mpr (by omega)))
-      unfold windowStep
+      unfold windowStep windowStepOf
       simp only [maxIdx_seq]
       refine le_trans ?_ (le_max_left _ _)
       refine le_trans ?_ (le_max_left _ _)

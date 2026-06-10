@@ -20,6 +20,7 @@
 -/
 import FormalRV.Arithmetic.Windowed.WindowedLookupAdd
 import FormalRV.Arithmetic.UnaryLookup.UnaryLookupGateDerivations
+import FormalRV.Arithmetic.Adder.Cuccaro
 
 namespace FormalRV.Shor.WindowedCircuit
 
@@ -33,12 +34,11 @@ open FormalRV.Shor.WindowedLookupAdd
 def encodeReg (base bits x : Nat) : Nat → Bool := fun p =>
   if base ≤ p ∧ p < base + bits then x.testBit (p - base) else false
 
-/-- Decode the accumulator register: Cuccaro's running-sum bit `i` lives at
-    `q_start + 2i + 1`. -/
-def decodeAcc (f : Nat → Bool) (q_start bits : Nat) : Nat :=
-  (List.range bits).foldl (fun acc i => acc + if f (q_start + 2 * i + 1) then 2 ^ i else 0) 0
+/-! ### Layout-neutral building blocks (shared by the generic engine and the surface). -/
 
-/-- Cuccaro full-adder addend bit `j` sits at `q_start + 2j + 2`. -/
+/-- Cuccaro full-adder addend bit `j` sits at `q_start + 2j + 2`.
+    (= `cuccaroAdder.addendIdx q_start j`, kept as a standalone def so the concrete
+    `q_start + 2j + 2` shape is available definitionally to consumers.) -/
 def addendIdx (q_start j : Nat) : Nat := q_start + 2 * j + 2
 
 /-- Word-CNOT targets for entry value `Tv`, placed at arbitrary positions `pos j`
@@ -52,38 +52,95 @@ def lookupReadAt (w : Nat) (pos : Nat → Nat) (W : Nat) (T : Nat → Nat) : Gat
   unary_lookup_multi_iteration w
     ((List.range (2 ^ w)).map (fun v => (addrFlips w v, wordCnotsAt pos W (T v))))
 
-/-- One lookup-ADDITION targeting the adder at `q_start` (Gidney l.276,
-    read·add·unread), with the word register = the addend register. -/
-def lookupAddAt (w W : Nat) (T : Nat → Nat) (bits q_start : Nat) : Gate :=
-  Gate.seq (Gate.seq (lookupReadAt w (addendIdx q_start) W T)
-                     (cuccaro_n_bit_adder_full bits q_start))
-           (lookupReadAt w (addendIdx q_start) W T)
-
 /-- CX-copy window `j` of the `y`-register (`yBase`-based) into the lookup address
     register `ulookup_address_idx 0 .. w-1`.  Self-inverse, so re-applying uncopies. -/
 def copyWindow (w yBase j : Nat) : Gate :=
   (List.range w).foldl
     (fun g i => Gate.seq g (Gate.CX (yBase + j * w + i) (ulookup_address_idx i))) Gate.I
 
-/-- One window step: copy the window into the address, lookup-add the entry
-    `T_j[v] = a·(2^w)^j·v`, then uncopy. -/
-def windowStep (w W a : Nat) (bits q_start yBase j : Nat) : Gate :=
+/-! ### Generic engine: the windowed multiplier over an arbitrary `Adder` interface.
+
+The defs below take `(A : Adder)` as their first argument and parameterize the
+three Cuccaro-specific choices — where the augend (accumulator) bits live
+(`A.augendIdx`), where the addend (lookup word) bits live (`A.addendIdx`), and
+which adder circuit runs (`A.circuit`).  The Cuccaro-specialized names that the
+rest of the file and downstream consumers use are recovered below by
+instantiating `A := cuccaroAdder`. -/
+
+/-- **Generic accumulator decode.**  Read the augend register of adder `A` at base
+    `q_start`, `bits` qubits wide, LSB-first.  (`A.augendIdx q_start i` holds bit `i`.) -/
+def decodeAccOf (A : Adder) (f : Nat → Bool) (q_start bits : Nat) : Nat :=
+  decodeReg (A.augendIdx q_start) bits f
+
+/-- **Generic lookup-ADDITION.**  Gidney l.276 read·add·unread, with the lookup
+    word register laid out AS adder `A`'s addend register (`A.addendIdx q_start`)
+    so the read·add·unread composes. -/
+def lookupAddAtOf (A : Adder) (w W : Nat) (T : Nat → Nat) (bits q_start : Nat) : Gate :=
+  Gate.seq (Gate.seq (lookupReadAt w (A.addendIdx q_start) W T)
+                     (A.circuit bits q_start))
+           (lookupReadAt w (A.addendIdx q_start) W T)
+
+/-- **Generic window step.**  Copy window `j` into the lookup address, lookup-add
+    the entry `T_j[v] = a·(2^w)^j·v` into adder `A`, then uncopy. -/
+def windowStepOf (A : Adder) (w W a : Nat) (bits q_start yBase j : Nat) : Gate :=
   Gate.seq (Gate.seq (copyWindow w yBase j)
-                     (lookupAddAt w W (fun v => a * (2 ^ w) ^ j * v) bits q_start))
+                     (lookupAddAtOf A w W (fun v => a * (2 ^ w) ^ j * v) bits q_start))
            (copyWindow w yBase j)
 
-/-- The windowed multiplier as a fold of window-steps (parametric in `w`, `numWin`). -/
-def windowedMul (w W a : Nat) (bits q_start yBase numWin : Nat) : Gate :=
+/-- **Generic windowed multiplier**, a fold of window-steps over adder `A`. -/
+def windowedMulOf (A : Adder) (w W a : Nat) (bits q_start yBase numWin : Nat) : Gate :=
   (List.range numWin).foldl
-    (fun g j => Gate.seq g (windowStep w W a bits q_start yBase j)) Gate.I
+    (fun g j => Gate.seq g (windowStepOf A w W a bits q_start yBase j)) Gate.I
+
+/-- **The full windowed-multiplier circuit over an arbitrary adder `A`.**
+    Layout: `ctrl=0`; address bits `1,3,…,2w−1`; AND-ancillas `2,4,…,2w`; the adder
+    region at `q_start = 1+2w` (spanning `A.span bits` qubits); the `y`-register at
+    `yBase = q_start + A.span bits`.  On `acc=0` it leaves `a·y mod 2^bits` in the
+    accumulator (when `A.span bits` is the adder's true span). -/
+def windowedMulCircuitOf (A : Adder) (w bits a numWin : Nat) : Gate :=
+  windowedMulOf A w bits a bits (1 + 2 * w) (1 + 2 * w + A.span bits) numWin
+
+/-! ### Cuccaro surface: the existing API, recovered as the `cuccaroAdder` specialization.
+
+The original names are now the `A := cuccaroAdder` instances of the generic engine.
+Because `cuccaroAdder.augendIdx q i = q+2i+1`, `cuccaroAdder.addendIdx q i = q+2i+2`,
+`cuccaroAdder.span n = 2n+1`, and `cuccaroAdder.circuit n q = cuccaro_n_bit_adder_full n q`
+all hold *definitionally*, every Cuccaro-specialized def below is DEFEQ to its old
+hard-wired definition, so all existing proofs and downstream consumers keep working
+unchanged (no defeq-bridge lemma is needed). -/
+
+/-- Decode the accumulator register: Cuccaro's running-sum bit `i` lives at
+    `q_start + 2i + 1`.  (= `decodeAccOf cuccaroAdder`, defeq to the old fold.) -/
+def decodeAcc (f : Nat → Bool) (q_start bits : Nat) : Nat :=
+  decodeAccOf cuccaroAdder f q_start bits
+
+/-- One lookup-ADDITION targeting the Cuccaro adder at `q_start` (Gidney l.276,
+    read·add·unread), with the word register = the addend register.
+    (= `lookupAddAtOf cuccaroAdder`, defeq to the old hard-wired version.) -/
+def lookupAddAt (w W : Nat) (T : Nat → Nat) (bits q_start : Nat) : Gate :=
+  lookupAddAtOf cuccaroAdder w W T bits q_start
+
+/-- One window step: copy the window into the address, lookup-add the entry
+    `T_j[v] = a·(2^w)^j·v`, then uncopy.  (= `windowStepOf cuccaroAdder`.) -/
+def windowStep (w W a : Nat) (bits q_start yBase j : Nat) : Gate :=
+  windowStepOf cuccaroAdder w W a bits q_start yBase j
+
+/-- The windowed multiplier as a fold of window-steps (parametric in `w`, `numWin`).
+    (= `windowedMulOf cuccaroAdder`.) -/
+def windowedMul (w W a : Nat) (bits q_start yBase numWin : Nat) : Gate :=
+  windowedMulOf cuccaroAdder w W a bits q_start yBase numWin
 
 /-- **The full windowed-multiplier circuit, standard layout, arbitrary `w`.**
     Layout: `ctrl=0`; address bits `1,3,…,2w−1`; AND-ancillas `2,4,…,2w`; the Cuccaro
     region at `q_start = 1+2w` (carry, then interleaved acc/addend up to `q_start+2·bits`);
     the `y`-register at `yBase = q_start + 2·bits + 1`.  On `acc=0` it leaves
-    `a·y mod 2^bits` in the accumulator. -/
+    `a·y mod 2^bits` in the accumulator.
+
+    (= `windowedMulCircuitOf cuccaroAdder`; since `cuccaroAdder.span bits = 2·bits+1`,
+    the `yBase = 1+2w + A.span bits` of the generic engine is defeq to the old
+    `1+2w+2·bits+1`.) -/
 def windowedMulCircuit (w bits a numWin : Nat) : Gate :=
-  windowedMul w bits a bits (1 + 2 * w) (1 + 2 * w + 2 * bits + 1) numWin
+  windowedMulCircuitOf cuccaroAdder w bits a numWin
 
 /-- The input store: control qubit set, integer `y` encoded in the `y`-register. -/
 def mulInput (w bits numWin y : Nat) : Nat → Bool := fun p =>
@@ -131,32 +188,71 @@ theorem tcount_lookupReadAt (w : Nat) (pos : Nat → Nat) (W : Nat) (T : Nat →
     tcount (lookupReadAt w pos W T) = 14 * w * 2 ^ w := by
   rw [lookupReadAt, tcount_unary_lookup_multi_iteration, List.length_map, List.length_range]
 
-theorem tcount_lookupAddAt (w W : Nat) (T : Nat → Nat) (bits q_start : Nat) :
-    tcount (lookupAddAt w W T bits q_start) = 2 * (14 * w * 2 ^ w) + 14 * bits := by
-  simp only [lookupAddAt, tcount, tcount_lookupReadAt, tcount_cuccaro_n_bit_adder_full]
-  ring
-
 theorem tcount_copyWindow (w yBase j : Nat) : tcount (copyWindow w yBase j) = 0 := by
   rw [copyWindow, tcount_foldl_seq_const
         (fun i => Gate.CX (yBase + j * w + i) (ulookup_address_idx i)) 0 (fun _ => rfl)]
   simp [tcount]
 
+/-! ### Generic resource counts (in terms of `tcount (A.circuit …)`). -/
+
+/-- **Generic lookup-add T-count.**  Two table reads plus one adder application:
+    `2·(14·w·2^w) + tcount (A.circuit bits q_start)`. -/
+theorem tcount_lookupAddAtOf (A : Adder) (w W : Nat) (T : Nat → Nat) (bits q_start : Nat) :
+    tcount (lookupAddAtOf A w W T bits q_start)
+      = 2 * (14 * w * 2 ^ w) + tcount (A.circuit bits q_start) := by
+  simp only [lookupAddAtOf, tcount, tcount_lookupReadAt]
+  ring
+
+/-- **Generic window-step T-count.**  The window copy/uncopy are Toffoli-free, so the
+    cost is exactly the per-step lookup-add cost. -/
+theorem tcount_windowStepOf (A : Adder) (w W a bits q_start yBase j : Nat) :
+    tcount (windowStepOf A w W a bits q_start yBase j)
+      = 2 * (14 * w * 2 ^ w) + tcount (A.circuit bits q_start) := by
+  simp only [windowStepOf, tcount, tcount_copyWindow, tcount_lookupAddAtOf]
+  ring
+
+/-- **Generic windowed-multiplier T-count.**  `numWin` identical window steps. -/
+theorem tcount_windowedMulOf (A : Adder) (w W a bits q_start yBase numWin : Nat) :
+    tcount (windowedMulOf A w W a bits q_start yBase numWin)
+      = numWin * (2 * (14 * w * 2 ^ w) + tcount (A.circuit bits q_start)) := by
+  rw [windowedMulOf, tcount_foldl_seq_const (fun j => windowStepOf A w W a bits q_start yBase j) _
+        (fun j => tcount_windowStepOf A w W a bits q_start yBase j)]
+  simp [tcount, List.length_range]
+
+/-- **Generic closed-form T-count of the full windowed multiplier over adder `A`.**
+    The adder is run at base `q_start = 1+2·w` in each of the `numWin` windows. -/
+theorem tcount_windowedMulCircuitOf (A : Adder) (w bits a numWin : Nat) :
+    tcount (windowedMulCircuitOf A w bits a numWin)
+      = numWin * (28 * w * 2 ^ w + tcount (A.circuit bits (1 + 2 * w))) := by
+  rw [windowedMulCircuitOf, tcount_windowedMulOf]; ring
+
+/-! ### Cuccaro corollaries (closed-form, since `tcount (cuccaro_n_bit_adder_full bits q) = 14·bits`). -/
+
+theorem tcount_lookupAddAt (w W : Nat) (T : Nat → Nat) (bits q_start : Nat) :
+    tcount (lookupAddAt w W T bits q_start) = 2 * (14 * w * 2 ^ w) + 14 * bits := by
+  rw [lookupAddAt, tcount_lookupAddAtOf]
+  show 2 * (14 * w * 2 ^ w) + tcount (cuccaro_n_bit_adder_full bits q_start) = _
+  rw [tcount_cuccaro_n_bit_adder_full]
+
 theorem tcount_windowStep (w W a bits q_start yBase j : Nat) :
     tcount (windowStep w W a bits q_start yBase j) = 2 * (14 * w * 2 ^ w) + 14 * bits := by
-  simp only [windowStep, tcount, tcount_copyWindow, tcount_lookupAddAt]
-  ring
+  rw [windowStep, tcount_windowStepOf]
+  show 2 * (14 * w * 2 ^ w) + tcount (cuccaro_n_bit_adder_full bits q_start) = _
+  rw [tcount_cuccaro_n_bit_adder_full]
 
 theorem tcount_windowedMul (w W a bits q_start yBase numWin : Nat) :
     tcount (windowedMul w W a bits q_start yBase numWin)
       = numWin * (2 * (14 * w * 2 ^ w) + 14 * bits) := by
-  rw [windowedMul, tcount_foldl_seq_const (fun j => windowStep w W a bits q_start yBase j) _
-        (fun j => tcount_windowStep w W a bits q_start yBase j)]
-  simp [tcount, List.length_range]
+  rw [windowedMul, tcount_windowedMulOf]
+  show numWin * (2 * (14 * w * 2 ^ w) + tcount (cuccaro_n_bit_adder_full bits q_start)) = _
+  rw [tcount_cuccaro_n_bit_adder_full]
 
 /-- **Closed-form T-count of the full windowed multiplier (arbitrary `w`).** -/
 theorem tcount_windowedMulCircuit (w bits a numWin : Nat) :
     tcount (windowedMulCircuit w bits a numWin) = numWin * (28 * w * 2 ^ w + 14 * bits) := by
-  rw [windowedMulCircuit, tcount_windowedMul]; ring
+  rw [windowedMulCircuit, tcount_windowedMulCircuitOf]
+  show numWin * (28 * w * 2 ^ w + tcount (cuccaro_n_bit_adder_full bits (1 + 2 * w))) = _
+  rw [tcount_cuccaro_n_bit_adder_full]
 
 /-- Toffoli count = number of `CCX` gates = `tcount / 7` (only `CCX` has nonzero T-count,
     `7` each; this is precisely the count the PPM layer turns into magic-state requests). -/
