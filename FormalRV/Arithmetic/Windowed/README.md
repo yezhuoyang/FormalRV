@@ -222,6 +222,9 @@ file structure** and import it directly:
 | **The residual ×2: measurement-based uncompute** (Gidney 1905.07682 App. C) — **now PROVEN at the logical density layer** (`Com.meas`/`c_eval`, no PPM) | `FormalRV.Shor.MeasuredANDUncompute` (AND case), `FormalRV.Shor.MeasuredLookupUncompute` (W-bit channel), `FormalRV.Shor.PhaseLookupFixup` (concrete fixup circuit, end-to-end) | `measANDUncompute_perfect`, `measWordUncompute_perfect`, `measWordUncompute_phaseLookup` |
 | **Measured lookup-add value semantics** (EGate level; counts + `acc += T[addr]`) | `FormalRV.Shor.MeasUncomputeAt` (layout-correct, any `W`); defect proofs + W=1 discharge in `FormalRV.Shor.MeasUncomputeValue` (the original `babbushLookupAdd` is proven value-broken for `W ≥ 2`) | `babbushLookupAddAtValueSpecOn_holds`, `measUncomputeAt_saves_a_read` |
 | **Windowed exponent** (two-level lookup, per-pass) | `FormalRV.Arithmetic.Windowed.WindowedExpStep` | `expWindowPassOf_correct` (+ both adder corollaries) |
+| **The cheap `2^{w/2}` fixup** (Gidney's measured-uncompute cost figure) | `FormalRV.Shor.SplitPhaseFixup` | `splitPhaseLookup_diagonal`, `measWordUncompute_splitPhaseLookup`, `toffoliCount_splitPhaseLookupSkeleton = 4·2^{w1} + 2·2^{w2} − 6` |
+| **Per-window mod-N multiply** (exactly-modular windowed multiplication, `(a·y) mod N`) | `FormalRV.Arithmetic.Windowed.WindowedModN` | `windowedModNMulCircuit_correct`; new primitives `regCompareXor` (first register-register comparator), `modNReduceFlag` |
+| **In-place multiply + windowed modexp (classical exponent)** | `FormalRV.Arithmetic.Windowed.WindowedInPlace` | `windowedMulInPlace_correct` (`y ← a·y`, full state restoration), `windowedExpInPlace_correct` (`y ← g^e·y mod 2^bits`) |
 | Paper's exact ℚ cost-accounting formulas (GE2021 §cost) | `FormalRV.Arithmetic.Windowed.WindowedCostModel` | `toffoliCount_rsa2048`, `toffoliCount_le_paper` |
 
 The Gray-code and faithful reads are **contract-identical** (same selection +
@@ -230,23 +233,22 @@ mechanically — the value theorems hold for both.
 
 ## Honest scope notes
 
-- The windowed multiplier here is the **product-adder** `acc += a·y mod 2^bits`
-  (Gidney's coset/deferred-modular-reduction design); it is NOT a per-window
-  mod-`N` reducer. The exactly-modular in-place multiplier feeding the verified
-  Shor pipeline is the separate `windowedInplaceModMulGate` /
-  `modmult_MCP_gate` lineage (see `Shor/WindowedShorConnection.lean` and
-  `Arithmetic/ModMult/`).
-- The **Gray-code factor is closed at the gate level**
-  (`UnaryLookupGrayCode` / `WindowedGrayLookup`) AND the **×2 measurement-based
-  uncompute is now proven at the logical density layer** (no PPM): the
-  X-measure + classically-controlled phase-fixup channel is the *perfect*
-  uncompute on lookup-computed superpositions
-  (`Shor/MeasuredANDUncompute` → `MeasuredLookupUncompute` →
-  `PhaseLookupFixup`, end-to-end with a concrete fixup circuit), and the
-  layout-correct measured lookup-add carries the value semantics + the exact
-  ×2-saving ledger at any `W` (`Shor/MeasUncomputeAt`). Remaining refinement:
-  the *split* `2^{w/2}` fixup circuit (design + exact count spec'd in
-  `PhaseLookupFixup` §7; the unsplit fixup costs one Gray-code read).
-- `expWindowPassOf_correct` is the per-pass theorem; composing passes over all
-  exponent windows into the full windowed modexp (and into QPE) remains the
-  known-open composition flagged at `WindowedExpCorrect`/`BabbushLookupAddValueSpec`.
+- The default windowed multiplier is the **product-adder** `acc += a·y mod
+  2^bits` (Gidney's coset/deferred-reduction design). The **exactly-modular
+  per-window variant now exists too**: `WindowedModN`
+  (`windowedModNMulCircuit_correct`, `(a·y) mod N`, Cuccaro reduction; its
+  honest price is `56·w·2^w + 56·bits` T per window vs `28·w·2^w + 14·bits`).
+  A `ModAdder` interface generalization (the Gidney pipeline has the same
+  compare/cond-subtract shape) is the documented next pass.
+- **Every factor of the paper's `2^w`-lookup claim is now gate-level kernel
+  mathematics**: faithful baseline (`2·w·2^w`) → Gray-code (`2·(2^w−1)`,
+  exact-gap identity) → measured uncompute (density-layer channel proofs, no
+  PPM) → **cheap split fixup (`4·2^{w1} + 2·2^{w2} − 6` Toffolis =
+  `O(2^{w/2})`, `SplitPhaseFixup`)** — plus the layout-correct measured
+  lookup-add value semantics at any `W` (`MeasUncomputeAt`).
+- **Windowed modexp**: the in-place multiply chain and the CLASSICAL-exponent
+  windowed modexp are proven (`WindowedInPlace`:
+  `windowedExpInPlace_correct`, `y ← g^e·y mod 2^bits`). The single remaining
+  named piece of `WindowedExpCorrect` is the QUANTUM-selected exponent window
+  (the `expWindowPassOf`-style selection layered on the `MulReady`
+  composition — documented in `WindowedInPlace`), and its QPE integration.
