@@ -698,7 +698,8 @@ def gidneyAdder : Adder where
     intro q i j; omega
   ancClean_ext := by
     intro n q f g hagree hclean i hi
-    rw [← hagree (q + 3 * i + 2) (by intro j hj; constructor <;> omega)]
+    rw [← hagree (q + 3 * i + 2) (by unfold inBlock; omega)
+          (by intro j hj; constructor <;> omega)]
     exact hclean i hi
 
 end FormalRV.BQAlgo

@@ -70,10 +70,12 @@ structure Adder where
   /-- Augend and addend positions never collide (writing the addend never
       disturbs the running sum). -/
   augend_addend_disjoint : ∀ q i j, augendIdx q i ≠ addendIdx q j
-  /-- `ancClean` looks only at non-data positions: two states that agree
-      everywhere off the augend/addend registers agree on cleanliness. -/
+  /-- `ancClean` looks only at IN-BLOCK non-data positions: two states that
+      agree on every block position off the augend/addend registers agree on
+      cleanliness (out-of-block positions are irrelevant to it). -/
   ancClean_ext : ∀ n q f g,
-      (∀ p, (∀ i, i < n → p ≠ augendIdx q i ∧ p ≠ addendIdx q i) → f p = g p) →
+      (∀ p, inBlock q (span n) p →
+        (∀ i, i < n → p ≠ augendIdx q i ∧ p ≠ addendIdx q i) → f p = g p) →
       ancClean f n q → ancClean g n q
 
 /-- `decodeReg` depends only on the values of `f` at the index positions. -/

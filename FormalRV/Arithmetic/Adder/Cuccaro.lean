@@ -207,7 +207,7 @@ def cuccaroAdder : Adder where
   ancClean_ext := by
     intro n q f g hagree hclean
     show g q = false
-    rw [← hagree q (by intro i hi; constructor <;> omega)]
+    rw [← hagree q (by unfold inBlock; omega) (by intro i hi; constructor <;> omega)]
     exact hclean
 
 end FormalRV.BQAlgo
