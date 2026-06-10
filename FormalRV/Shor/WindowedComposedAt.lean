@@ -34,8 +34,11 @@
     lemma (`babbushLookupAddAt_modStep`) folded over the windows (mirroring the `StepInv`
     technique of `WindowedCircuitCorrect`), bridged to `(a·y)` by
     `WindowedArith.windowedLookupFold_eq_modmul`.
-  * **WIDTH** (`maxIdx_modExpAt_le`, `width_modExpAt_le`): a closed-form qubit-count upper
-    bound `2·bits + 1 + 2·w·numWin` the shared layout yields — the original has none.
+  WIDTH NOTE: `modExpAt` STACKS a fresh `2·w`-wide address region per window, so its width
+  grows by `numWin·2·w` — it is NOT the qubit-count audit object. The verified
+  qubit count matching the paper's `3n` is the REUSED-register in-place multiplier, in
+  `FormalRV/Shor/WindowedWidthAudit.lean` (`width_windowedMulInPlace_cuccaro = 2w+3·bits+2`,
+  `verified_width_rsa2048 = 6162`).
 
   No `sorry`, no `native_decide`, no axioms beyond the prelude.
 -/
