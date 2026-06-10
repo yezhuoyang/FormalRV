@@ -21,6 +21,7 @@ demonstrated as **feasible ceilings** under the paper's own parameters — not a
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ✅ shared verified surface-code surgery (one logical PPM) |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded rotated surface code d=27 (parity matrices not constructed) |
 | Verifier | [`Verifier.lean`](Verifier.lean) | ✅ CAPSTONE (axiom-free): 19.44 M ≤ 20 M; 8 h sits 2–3× UNDER the verified time ceiling |
+| Workload assembly | [`WorkloadAssembly.lean`](WorkloadAssembly.lean) | ✅ literal = paper formula = realized circuit, BY THEOREM (axiom-free): `2,622,824,448` = `WindowedCostModel.toffoliCount 2048 3072 11`; circuit `modExpAt` realizes `2,578,993,152` with the gap exactly `43,831,296` = +1 rounding + runway folding; `n_toff = 2.7×10⁹` is a sound ceiling on all three; per-lookup row `5205 + 1 = 5206`; value-semantics witness; honest-gap ledger |
 | Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; GE2021 params noted in comments) |
 
 ## Our approach
@@ -39,9 +40,19 @@ qubits 19.44 M = 6200 · 2·1568 ≤ 20 M, time ceiling ~20.25 h (naive sequenti
 | **6200 logical qubits** | `ge2021_work.n_logical` (`System/NaiveUpperBound.lean`) | paper LITERAL (Tab. 1, Ekerå–Håstad windowed) |
 | **d = 27, tile 2(d+1)² = 1568** | `ge2021_code` ([`L4_Code.lean`](L4_Code.lean)) | paper formula RECORDED; the distance-27 code itself is a real verified construction `[[1405, 1, 27]]` (`ge2021_distance_is_verified_code`, [`Verifier.lean`](Verifier.lean)), but the rotated-patch parity matrices are not constructed (L4 GAP) |
 
-> **Forthcoming:** `WorkloadAssembly.lean` (in progress, separate work stream)
-> will equate literal = formula = circuit count **by theorem**, replacing the
-> by-hand cross-referencing in the Toffoli row above.
+> **Landed:** [`WorkloadAssembly.lean`](WorkloadAssembly.lean) equates literal =
+> formula = circuit count **by theorem** (all `#verify_clean`-gated):
+> `audit_toffoli_literal_eq_cost_model` (Verifier literal = `WindowedCostModel`
+> formula), `audit_magic_budget_eq` + `audit_data_qubit_literal_eq_derived`
+> (system literals reconcile), `audit_toffoli_realized_by_circuit` (the
+> value-correct `modExpAt` realizes `2,578,993,152`; gap exactly `43,831,296 =
+> 503808·1 + 503808·86` = lookup rounding + runway folding),
+> `audit_n_toff_upper_bounds_circuit` (`2.7×10⁹` dominates circuit, literal, and
+> formula), `audit_per_lookup_add` (circuit `5205 + 1 =` paper `5206`),
+> `audit_value_semantics_witness` (the counted lookup-add computes
+> `acc += T[addr] mod 2^bits`), plus an HONEST-GAP LEDGER for what still has no
+> verified circuit (runway additions, Ekerå–Håstad PE, pipelining ≈2.5×,
+> whole-circuit width, the modexp-in-QPE weld).
 
 ## Import map for auditors — paper claim → which module to import
 
