@@ -17,6 +17,29 @@
 - `runwayAddK gSep k` = the sequential composition of the `k` segment adds (`cuccaroAdder.circuit (gSep+1) (segBase m)`).
 - Two readings: SPREAD place value `2^(m·(gSep+1))` keeps each carry parked (deferred); CONTIGUOUS place value `2^(m·gSep)` folds each runway carry into the next segment by place value alone → the true `a + b`.
 
+## Circuit diagram
+
+Rendered straight from the emitted OpenQASM for `runwayAddK 2 2` (gSep = 2, k = 2; an `n = 4`-bit add over 14 qubits):
+
+![oblivious carry runway adder — gSep=2, k=2](diagrams/oblivious_runway_adder_g2_k2.png)
+
+The tell is the **two disjoint width-`(gSep+1)` Cuccaro blocks** (`q0–q6` and `q7–q13`): **no gate crosses between them**, so each segment's carry-out stays **parked in its runway bit** instead of rippling into the next segment — that is the oblivious-carry depth win. Conceptually, for general `k`:
+
+```
+   segment 0                     segment 1                          segment k-1
+ ┌───────────────────┐         ┌───────────────────┐             ┌───────────────────┐
+ │ data a0 b0 a1 b1… │         │ data a_g b_g …    │     · · ·    │ data …            │
+ │ runway bit  c0    │         │ runway bit  c1    │             │ runway bit  c_{k-1}│
+ └───────────────────┘         └───────────────────┘             └───────────────────┘
+   c0 deferred  ──╳──►            c1 deferred  ──╳──►               (no carry crosses
+   (kept in runway,                                                  a segment boundary)
+    not propagated)
+```
+
+Each block is `cuccaroAdder.circuit (gSep+1) (segBase m)`: it adds the `gSep`-bit data chunk and deposits the carry-out into the `(gSep+1)`-th augend bit (the runway). Read at **contiguous** place value `2^(m·gSep)`, each runway carry `c_m` lands exactly on segment `m+1`'s low place, folding the carries for free → the exact `a + b` (`runwayAddK_contiguous`).
+
+Reproduce: `lake env lean FormalRV/Arithmetic/ObliviousRunwayAdder/Example.lean` (emits the `.qasm`), then `python scripts/draw_qasm.py FormalRV/Arithmetic/ObliviousRunwayAdder/diagrams/oblivious_runway_adder_g2_k2.qasm FormalRV/Arithmetic/ObliviousRunwayAdder/diagrams/oblivious_runway_adder_g2_k2.png`.
+
 ## Correctness (the theorems to audit)
 - Single add: `runwayAddK_exact` (spread), `runwayAddK_contiguous` (= `a + b`).
 - Multi-add: `runwayAddK_iter_contiguous` (= `a + t·b`) under per-segment no-overflow `segReg_m + t·b_m < 2^(gSep+1)`.
@@ -30,7 +53,7 @@
 - This is the single-addition segmented adder + its `t`-fold (same-addend) accumulation. With a 1-bit runway per segment, ~one deferred add fits before overflow; the per-segment no-overflow hypothesis is exactly the deterministic condition the deviation bounds probabilistically.
 - Distinct-addend sequences (the windowed-lookup loop) compose identically but need the lookup modeled separately (`Arithmetic/Windowed`).
 - The deviation's per-runway `1/D` is the counting fraction taken as the uniform probability of an all-ones offset (no Mathlib measure space constructed). A physical circuit pads by an integer `g_pad ≥ 44`, so its real deviation is `≤` the paper's number.
-- Supersedes the earlier `Windowed/ObliviousRunwayAdder.lean` skeleton (which had a vacuous fold structure; see its corrected in-file ledger).
+- This folder is the **single source of truth** for the adder. An earlier `Windowed/ObliviousRunwayAdder.lean` skeleton (a non-functional structure with a vacuous fold obligation and a state-agnostic "advance" bound) has been **removed** — import this folder instead of duplicating the construction.
 
 ## For auditors
 `import FormalRV.Arithmetic.ObliviousRunwayAdder` — the umbrella pulls the whole verified adder. Cite the spine theorems for any paper using oblivious carry runways; counts/QASM come straight off `runwayAddK gSep k`.
