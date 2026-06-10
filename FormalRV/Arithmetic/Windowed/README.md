@@ -44,6 +44,8 @@ windowed EXPONENT      ──>  expWindowPassOf A wE wM …          two-level c
 | `expWindowPassOf_correct` | one exponent-window pass multiply-accumulates by the **exponent-window-selected** constant: `acc = (g_k^{window wE e k} · y) mod 2^bits` | `WindowedExpStep.lean` |
 | `tcount_windowedMulCircuitOf` | T-count `= numWin · (28·w·2^w + tcount(A.circuit))`, generic over `A` | `WindowedCircuit.lean` |
 | `lookupReadAt_selects` | the QROM reads exactly the addressed table row | `WindowedLookupSelect.lean` |
+| `grayLookupReadAt_selects_word` | the **Gray-code/sawtooth** QROM reads the same row at `2·(2^w−1)` Toffolis (vs `2·w·2^w`); exact gap `faithful = w·(gray+14)` | `UnaryLookup/UnaryLookupGrayCode.lean` |
+| `grayWindowedMulCircuitOf_correct` | the windowed multiplier on the **Gray-code read** — same value theorem, Toffoli `numWin·(4·(2^w−1) + 2·bits)` (the `w` factor gone) | `WindowedGrayLookup.lean` |
 
 Supporting: `WindowedCopySemantics.lean` (window-copy CX-cascade semantics),
 `WindowedArith.lean` (the pure number theory), `WindowedCostModel.lean` (the
@@ -207,6 +209,24 @@ windowed_mul_gidney_w2  (n=2): gates=74, T=252
 (`T = 252 = 7 × 36` Toffolis `= 7 · numWin·(4·w·2^w + 2·bits)` — identical
 across adders, as the head-to-head table predicts.)
 
+## Auditor's routing table — which file to import for which paper claim
+
+When auditing a windowed-arithmetic resource claim, pick the variant **from the
+file structure** and import it directly:
+
+| Paper claim being audited | Import | Headline |
+|---|---|---|
+| **No-optimization baseline** (faithful unary-iteration QROM, `2·w·2^w` Toffolis/read; windowed multiply `numWin·(4·w·2^w + 2·bits)`) | `FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect` | `windowedMulCircuitOf_correct`, `tcount_windowedMulCircuitOf` |
+| **Gray-code-optimized lookup** (Babbush sawtooth, `2·(2^w−1)` Toffolis/read — the GE2021 `0.3n³` lookup term up to ×2) | `FormalRV.Arithmetic.UnaryLookup.UnaryLookupGrayCode` | `grayLookupReadAt_selects_word`, `tcount_grayLookupReadAt`, exact gap `tcount_lookupReadAt_eq_w_mul_gray` |
+| **Gray-code windowed multiply** (`numWin·(4·(2^w−1) + 2·bits)` Toffolis, value-verified on both adders) | `FormalRV.Arithmetic.Windowed.WindowedGrayLookup` | `grayWindowedMulCircuitOf_correct`, `grayWindowedMulCircuit_toffoli_cuccaro` |
+| **The residual ×2** (measurement-based uncompute of the second read — Gidney 1905.07682 App. C) | NOT expressible in the X/CX/CCX Gate IR; EGate-level scaffold in `FormalRV.Shor.MeasUncompute`; constants in `Framework/PaperClaims` | named obligation, tracked in `System/ResourceAuditGaps` |
+| **Windowed exponent** (two-level lookup, per-pass) | `FormalRV.Arithmetic.Windowed.WindowedExpStep` | `expWindowPassOf_correct` (+ both adder corollaries) |
+| Paper's exact ℚ cost-accounting formulas (GE2021 §cost) | `FormalRV.Arithmetic.Windowed.WindowedCostModel` | `toffoliCount_rsa2048`, `toffoliCount_le_paper` |
+
+The Gray-code and faithful reads are **contract-identical** (same selection +
+frame lemmas, same qubit layout), so circuits and proofs swap between them
+mechanically — the value theorems hold for both.
+
 ## Honest scope notes
 
 - The windowed multiplier here is the **product-adder** `acc += a·y mod 2^bits`
@@ -215,11 +235,13 @@ across adders, as the head-to-head table predicts.)
   Shor pipeline is the separate `windowedInplaceModMulGate` /
   `modmult_MCP_gate` lineage (see `Shor/WindowedShorConnection.lean` and
   `Arithmetic/ModMult/`).
-- The QROM here is the faithful no-measurement unary iteration
-  (`2·w·2^w` Toffolis per read). The paper's `2^w`-Toffoli lookup additionally
-  needs Gray-code amortization + measurement-based uncompute — costed in
-  `WindowedCostModel.lean`/`UnaryLookup`, deliberately not gate-level here; the
-  gap is tracked in `System/ResourceAuditGaps`.
+- The **Gray-code factor is now closed at the gate level**
+  (`UnaryLookupGrayCode` / `WindowedGrayLookup`, value + count both
+  kernel-proven). What remains of the paper's `2^w` lookup claim is exactly the
+  **×2 measurement-based uncompute**, which a unitary X/CX/CCX IR cannot
+  express — costed in `WindowedCostModel.lean`/`PaperClaims`, scaffolded at the
+  EGate level in `Shor/MeasUncompute.lean`, tracked in
+  `System/ResourceAuditGaps`.
 - `expWindowPassOf_correct` is the per-pass theorem; composing passes over all
   exponent windows into the full windowed modexp (and into QPE) remains the
   known-open composition flagged at `WindowedExpCorrect`/`BabbushLookupAddValueSpec`.
