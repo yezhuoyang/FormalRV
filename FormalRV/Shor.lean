@@ -9,6 +9,9 @@ import FormalRV.Shor.OrderFinding.Eigenstate
 import FormalRV.Shor.OrderFinding.EncodingAgnostic
 import FormalRV.Shor.Main
 import FormalRV.Shor.MeasUncompute
+-- The two ripple-adder-lineage modular multipliers as instances of the
+-- canonical `EncodeRoundTripModMul` multiplier interface.
+import FormalRV.Shor.MultiplierInstances
 import FormalRV.Shor.Resource.ModExpToffoliCount
 import FormalRV.Shor.PPM.PPMShorMaster
 import FormalRV.QPE.PhaseKickback
