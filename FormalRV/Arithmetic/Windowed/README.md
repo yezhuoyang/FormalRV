@@ -219,7 +219,8 @@ file structure** and import it directly:
 | **No-optimization baseline** (faithful unary-iteration QROM, `2·w·2^w` Toffolis/read; windowed multiply `numWin·(4·w·2^w + 2·bits)`) | `FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect` | `windowedMulCircuitOf_correct`, `tcount_windowedMulCircuitOf` |
 | **Gray-code-optimized lookup** (Babbush sawtooth, `2·(2^w−1)` Toffolis/read — the GE2021 `0.3n³` lookup term up to ×2) | `FormalRV.Arithmetic.UnaryLookup.UnaryLookupGrayCode` | `grayLookupReadAt_selects_word`, `tcount_grayLookupReadAt`, exact gap `tcount_lookupReadAt_eq_w_mul_gray` |
 | **Gray-code windowed multiply** (`numWin·(4·(2^w−1) + 2·bits)` Toffolis, value-verified on both adders) | `FormalRV.Arithmetic.Windowed.WindowedGrayLookup` | `grayWindowedMulCircuitOf_correct`, `grayWindowedMulCircuit_toffoli_cuccaro` |
-| **The residual ×2** (measurement-based uncompute of the second read — Gidney 1905.07682 App. C) | NOT expressible in the X/CX/CCX Gate IR; EGate-level scaffold in `FormalRV.Shor.MeasUncompute`; constants in `Framework/PaperClaims` | named obligation, tracked in `System/ResourceAuditGaps` |
+| **The residual ×2: measurement-based uncompute** (Gidney 1905.07682 App. C) — **now PROVEN at the logical density layer** (`Com.meas`/`c_eval`, no PPM) | `FormalRV.Shor.MeasuredANDUncompute` (AND case), `FormalRV.Shor.MeasuredLookupUncompute` (W-bit channel), `FormalRV.Shor.PhaseLookupFixup` (concrete fixup circuit, end-to-end) | `measANDUncompute_perfect`, `measWordUncompute_perfect`, `measWordUncompute_phaseLookup` |
+| **Measured lookup-add value semantics** (EGate level; counts + `acc += T[addr]`) | `FormalRV.Shor.MeasUncomputeAt` (layout-correct, any `W`); defect proofs + W=1 discharge in `FormalRV.Shor.MeasUncomputeValue` (the original `babbushLookupAdd` is proven value-broken for `W ≥ 2`) | `babbushLookupAddAtValueSpecOn_holds`, `measUncomputeAt_saves_a_read` |
 | **Windowed exponent** (two-level lookup, per-pass) | `FormalRV.Arithmetic.Windowed.WindowedExpStep` | `expWindowPassOf_correct` (+ both adder corollaries) |
 | Paper's exact ℚ cost-accounting formulas (GE2021 §cost) | `FormalRV.Arithmetic.Windowed.WindowedCostModel` | `toffoliCount_rsa2048`, `toffoliCount_le_paper` |
 
@@ -235,13 +236,17 @@ mechanically — the value theorems hold for both.
   Shor pipeline is the separate `windowedInplaceModMulGate` /
   `modmult_MCP_gate` lineage (see `Shor/WindowedShorConnection.lean` and
   `Arithmetic/ModMult/`).
-- The **Gray-code factor is now closed at the gate level**
-  (`UnaryLookupGrayCode` / `WindowedGrayLookup`, value + count both
-  kernel-proven). What remains of the paper's `2^w` lookup claim is exactly the
-  **×2 measurement-based uncompute**, which a unitary X/CX/CCX IR cannot
-  express — costed in `WindowedCostModel.lean`/`PaperClaims`, scaffolded at the
-  EGate level in `Shor/MeasUncompute.lean`, tracked in
-  `System/ResourceAuditGaps`.
+- The **Gray-code factor is closed at the gate level**
+  (`UnaryLookupGrayCode` / `WindowedGrayLookup`) AND the **×2 measurement-based
+  uncompute is now proven at the logical density layer** (no PPM): the
+  X-measure + classically-controlled phase-fixup channel is the *perfect*
+  uncompute on lookup-computed superpositions
+  (`Shor/MeasuredANDUncompute` → `MeasuredLookupUncompute` →
+  `PhaseLookupFixup`, end-to-end with a concrete fixup circuit), and the
+  layout-correct measured lookup-add carries the value semantics + the exact
+  ×2-saving ledger at any `W` (`Shor/MeasUncomputeAt`). Remaining refinement:
+  the *split* `2^{w/2}` fixup circuit (design + exact count spec'd in
+  `PhaseLookupFixup` §7; the unsplit fixup costs one Gray-code read).
 - `expWindowPassOf_correct` is the per-pass theorem; composing passes over all
   exponent windows into the full windowed modexp (and into QPE) remains the
   known-open composition flagged at `WindowedExpCorrect`/`BabbushLookupAddValueSpec`.
