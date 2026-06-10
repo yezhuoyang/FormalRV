@@ -180,8 +180,10 @@ theorem Gate.applyNat_congr {dim : Nat} {g : Gate}
 /-! ## Bridge: `decodeReg` over the shifted Gidney layout = the base decoders. -/
 
 /-- `decodeReg (fun i => q + 3i + 1)` agrees with the base-0 `gidney_target_val`
-decoder applied to the down-shifted stream `fun j => f (q + j)`. -/
-theorem decodeReg_augend_eq_target (n q : Nat) (f : Nat → Bool) :
+decoder applied to the down-shifted stream `fun j => f (q + j)`.
+(Named `gidney_…` to avoid clashing with the Cuccaro bridge of the same shape
+in `Adder/Cuccaro.lean` when both adder instances are imported together.) -/
+theorem gidney_decodeReg_augend_eq_target (n q : Nat) (f : Nat → Bool) :
     decodeReg (fun i => q + 3 * i + 1) n f
       = gidney_target_val n (fun j => f (q + j)) := by
   unfold decodeReg
@@ -202,8 +204,10 @@ theorem decodeReg_augend_eq_target (n q : Nat) (f : Nat → Bool) :
   simpa using this
 
 /-- `decodeReg (fun i => q + 3i)` agrees with the base-0 `gidney_read_val`
-decoder applied to the down-shifted stream `fun j => f (q + j)`. -/
-theorem decodeReg_addend_eq_read (n q : Nat) (f : Nat → Bool) :
+decoder applied to the down-shifted stream `fun j => f (q + j)`.
+(Named `gidney_…` to avoid clashing with the Cuccaro bridge of the same shape
+in `Adder/Cuccaro.lean` when both adder instances are imported together.) -/
+theorem gidney_decodeReg_addend_eq_read (n q : Nat) (f : Nat → Bool) :
     decodeReg (fun i => q + 3 * i) n f
       = gidney_read_val n (fun j => f (q + j)) := by
   unfold decodeReg
@@ -601,8 +605,8 @@ def gidneyAdder : Adder where
             = Gate.applyNat G (fun i => f (q + i)) := by
           funext j
           exact shiftBy_applyNat_base q G f j
-        rw [decodeReg_augend_eq_target, hout,
-            decodeReg_augend_eq_target, decodeReg_addend_eq_read,
+        rw [gidney_decodeReg_augend_eq_target, hout,
+            gidney_decodeReg_augend_eq_target, gidney_decodeReg_addend_eq_read,
             gidney_target_arbitrary bits hb2 (fun i => f (q + i))
               (downshift_carry_clean bits q f hcl),
             Nat.add_comm (gidney_read_val bits (fun i => f (q + i)))

@@ -2,6 +2,9 @@ import FormalRV.Arithmetic.Windowed.WindowedArith
 import FormalRV.Arithmetic.Windowed.WindowedCostModel
 import FormalRV.Arithmetic.Windowed.WindowedLookupAdd
 import FormalRV.Arithmetic.Windowed.WindowedCircuit
+import FormalRV.Arithmetic.Windowed.WindowedLookupSelect
+import FormalRV.Arithmetic.Windowed.WindowedCopySemantics
+import FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect
 import FormalRV.Arithmetic.Windowed.WindowedWidth
 -- NOTE: `WindowedCircuitExec` (executable `native_decide` smoke tests) is a
 -- standalone test file and is intentionally NOT imported here — it is slow to
