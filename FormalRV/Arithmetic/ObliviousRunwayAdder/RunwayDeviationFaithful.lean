@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.Windowed.RunwayDeviationFaithful
+  FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayDeviationFaithful
   ────────────────────────────────────────────────────
   THE FAITHFUL PER-RUNWAY DEVIATION BOUND for the oblivious-carry-runway scheme.
 
@@ -65,14 +65,14 @@
 
   Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude.
 -/
-import FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
 import FormalRV.Arithmetic.Windowed.WindowedCostModel
 
-namespace FormalRV.Arithmetic.Windowed.RunwayDeviationFaithful
+namespace FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayDeviationFaithful
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
-open FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
 open FormalRV.Shor.WindowedCostModel
 
 /-! ## §1. Per-runway counting fraction — grounds `1/2^g_pad`.
@@ -232,4 +232,4 @@ theorem faithful_total_deviation_le (n n_e : ℚ) (hn : n ≠ 0) (hne : n_e ≠ 
   rw [totalWrapFracD_eq_totalDeviation n n_e hn hne]
   exact totalDeviation_le n n_e hn hne
 
-end FormalRV.Arithmetic.Windowed.RunwayDeviationFaithful
+end FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayDeviationFaithful

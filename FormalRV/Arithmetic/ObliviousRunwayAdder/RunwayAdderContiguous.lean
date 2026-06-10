@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.Windowed.RunwayAdderContiguous
+  FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
   ──────────────────────────────────────────────────
   CLOSING THE "runway-interspersed encoding ↔ contiguous integer value" GAP.
 
@@ -42,13 +42,13 @@
   spacing the runway register decodes to exactly `contiguous(a) + contiguous(b)`,
   the inter-segment carry-fold performed implicitly by place value.
 -/
-import FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
 
-namespace FormalRV.Arithmetic.Windowed.RunwayAdderContiguous
+namespace FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
-open FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
 
 /-! ## §1. Frame — a higher segment fixes a lower segment's FULL register read. -/
 
@@ -257,4 +257,4 @@ theorem runwayAddK_contiguous (gSep : Nat) :
       rw [htop, hlow, hlowIH]
       ring
 
-end FormalRV.Arithmetic.Windowed.RunwayAdderContiguous
+end FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous

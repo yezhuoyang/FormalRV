@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+  FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
   ───────────────────────────────────────────────
   The k-segment oblivious-runway adder's RUNWAY OCCUPANCY EQUALS THE ACTUAL
   DEFERRED CARRIES — a genuine circuit property, wired to `applyNat`.
@@ -37,12 +37,12 @@
   the contiguous coset value.  This file establishes the single-add per-segment
   carry-occupancy equality only.
 -/
-import FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
+import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
 
-namespace FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+namespace FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
 
 /-! ## §1. Split a segment's `(gSep+1)`-bit register into data + runway.
 
@@ -273,4 +273,4 @@ theorem runwayAddK_advance_genuine (gSep k : Nat) (f : Nat → Bool)
   rw [runwayAddK_occupancy_eq_carries gSep k f hclean]
   exact kCarrySum_le gSep k f
 
-end FormalRV.Arithmetic.Windowed.RunwayAdderAdvance
+end FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance

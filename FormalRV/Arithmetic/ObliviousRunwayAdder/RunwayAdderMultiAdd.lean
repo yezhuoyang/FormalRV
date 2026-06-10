@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.Windowed.RunwayAdderMultiAdd
+  FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
   ────────────────────────────────────────────────
   CLOSING THE MULTI-ADD GAP for the oblivious-carry-runway adder.
 
@@ -51,13 +51,13 @@
   `Gate.applyNat (iterGate (runwayAddK gSep k) t) f` read through concrete `def`s,
   with a concrete `+ t·b` RHS.
 -/
-import FormalRV.Arithmetic.Windowed.RunwayAdderContiguous
+import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
 
-namespace FormalRV.Arithmetic.Windowed.RunwayAdderMultiAdd
+namespace FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
-open FormalRV.Arithmetic.Windowed.RunwayAdderContiguous
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
 
 /-! ## §1. Iterating a gate. -/
 
@@ -596,4 +596,4 @@ theorem runwayAddK_iter_contiguous_clean (gSep k t : Nat) (f : Nat → Bool)
   rw [runwayAddK_iter_contiguous gSep k t f (IterReady_of_kClean gSep k f hclean) hno',
       contiguousDecode_eq_augend_of_kClean gSep k f hclean]
 
-end FormalRV.Arithmetic.Windowed.RunwayAdderMultiAdd
+end FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd

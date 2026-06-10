@@ -1,5 +1,5 @@
 /-
-  FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
+  FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
   ──────────────────────────────────────────────────
   A GENUINELY FUNCTIONAL oblivious-carry-runway adder, built as a verified
   `Gate` over the Cuccaro adder, with a CONCRETE full-register place-value
@@ -61,7 +61,7 @@
 -/
 import FormalRV.Arithmetic.Adder.Cuccaro
 
-namespace FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
+namespace FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 
@@ -751,4 +751,4 @@ theorem runwayAddK_wellTyped (gSep : Nat) :
         have : m * (2 * gSep + 3) + (2 * gSep + 3) = (m + 1) * (2 * gSep + 3) := by ring
         omega
 
-end FormalRV.Arithmetic.Windowed.RunwayAdderFunctional
+end FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
