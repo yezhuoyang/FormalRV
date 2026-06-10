@@ -7,6 +7,7 @@ import FormalRV.Arithmetic.Windowed.WindowedCopySemantics
 import FormalRV.Arithmetic.Windowed.WindowedCircuitCorrect
 import FormalRV.Arithmetic.Windowed.WindowedWidth
 import FormalRV.Arithmetic.Windowed.WindowedExpStep
+import FormalRV.Arithmetic.Windowed.WindowedGrayLookup
 -- NOTE: `WindowedCircuitExec` (executable `native_decide` smoke tests) is a
 -- standalone test file and is intentionally NOT imported here — it is slow to
 -- compile and is kept off the default build path. Build it on demand with
