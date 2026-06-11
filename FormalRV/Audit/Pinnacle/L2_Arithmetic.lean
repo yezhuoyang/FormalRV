@@ -23,16 +23,16 @@
   gate-level `Arithmetic/Windowed/WindowedModN.windowedModNMulCircuit_correct` +
   `Arithmetic/UnaryLookup/UnaryLookupGrayCode`.
 
-  PINNACLE-SPECIFIC ARITHMETIC DELTA (the only new arithmetic obligation):
+  PINNACLE-SPECIFIC ARITHMETIC DELTA (the only new arithmetic obligation) — NOW CLOSED:
   the paper parallelises the outer loop across ρ ≤ |P| working registers and
   combines the ρ truncated accumulators by a BINARY TREE (parallel reduction,
   main.tex L812-813), proving (Eq.20) this is a REORDERING of Gidney's serial
-  truncated sum so the final accumulator value is unchanged.  We have the per-step
-  truncated accumulator (`CFS.modDev_truncAcc_normalized`) but NOT yet a lemma that
-  tree-reordering the ρ partial sums preserves the value/deviation.  This is a SHORT
-  commutativity/associativity reordering of the existing `apprAcc`/`exactAcc` — no
-  new primitive — flagged as the one remaining Pinnacle arithmetic gap (would go in
-  `Audit/Pinnacle/ParallelReduction.lean`).
+  truncated sum so the final accumulator value is unchanged.  PROVEN in
+  `Audit/Pinnacle/ParallelReduction.lean`: `parallelReduction_eq_serial`
+  (`parAcc s c ρ = exactAcc s (ρ·c)` — the ρ-way chunked accumulation equals the
+  serial `exactAcc`) and `parallelReduction_modDev` (the verified deviation bound
+  covers the parallel-reduced value).  A pure reordering of the existing `exactAcc`,
+  exactly as predicted — no new primitive.
 
   ABOVE the arithmetic (OUT OF SCOPE here): the headline <100k-physical-qubit figure
   rests on the generalised-bicycle qLDPC code-layer obligations (separate roadmap).
@@ -42,6 +42,7 @@ import FormalRV.Audit.Gidney2025.CFS.ResidueArith
 import FormalRV.Audit.Gidney2025.CFS.ResidueCircuit
 import FormalRV.Audit.Gidney2025.CFS.CRTBasis
 import FormalRV.Audit.Gidney2025.CFS.TruncatedAccumulation
+import FormalRV.Audit.Pinnacle.ParallelReduction
 
 namespace FormalRV.Audit.Pinnacle.L2_Arithmetic
 
@@ -60,5 +61,8 @@ namespace FormalRV.Audit.Pinnacle.L2_Arithmetic
 #check @FormalRV.CFS.reconstruction_explicit
 -- Truncated accumulator with the bounded modular deviation Δ_N/N ≤ |P|·ℓ·2^{-f}.
 #check @FormalRV.CFS.modDev_truncAcc_normalized
+-- PINNACLE-SPECIFIC: the parallel binary-tree reduction = the serial sum (Eq.20).
+#check @FormalRV.Audit.Pinnacle.ParallelReduction.parallelReduction_eq_serial
+#check @FormalRV.Audit.Pinnacle.ParallelReduction.parallelReduction_modDev
 
 end FormalRV.Audit.Pinnacle.L2_Arithmetic
