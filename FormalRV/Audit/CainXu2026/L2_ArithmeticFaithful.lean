@@ -23,8 +23,7 @@
    • E3→E4 factor 2            →  `gidneyAdderMeasuredControlled_doubles`         (the Toffoli count exactly doubles; the paper's 25→30 τ_s TIME ratio differs only because τ includes surgery I/O, not the gadget Toffoli count)
    • E9 lookup read  2^q_a Toff →  `toffoli_unaryQROMAt = 2^q_a − 1`              (merged-AND measured QROM; paper rounds the root AND up by 1)
 -/
-import FormalRV.Arithmetic.MeasuredAdder.GidneyMeasured
-import FormalRV.Arithmetic.MeasuredAdder.GidneyMeasuredControlled
+import FormalRV.Arithmetic.MeasuredAdder
 import FormalRV.Shor.MeasUncomputeAt
 
 namespace FormalRV.Audit.CainXu2026.Faithful
