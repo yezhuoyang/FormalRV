@@ -15,7 +15,9 @@ import FormalRV.Audit.GidneyEkera2021.L1_Algorithm
 import FormalRV.Audit.GidneyEkera2021.L2_Arithmetic
 import FormalRV.Audit.GidneyEkera2021.L3_PPM
 import FormalRV.Audit.GidneyEkera2021.L4_Code
+import FormalRV.Audit.GidneyEkera2021.PhysicalSyndrome
 import FormalRV.Audit.GidneyEkera2021.SystemZones
 import FormalRV.Audit.GidneyEkera2021.Verifier
 import FormalRV.Audit.GidneyEkera2021.WorkloadAssembly
 import FormalRV.Audit.GidneyEkera2021.Codegen
+import FormalRV.Audit.GidneyEkera2021.ShorComposed
