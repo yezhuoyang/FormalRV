@@ -163,28 +163,25 @@ def ge2021_measuredEqRev
     (windowedModNMultiplier w bits numWin N hw hbits hb1 hN1 hN2)
     a (by omega) ainv0 hN1 h_inv0
 
-/-! ## §3. ★ THE HEADLINE — the Shor success bound, UNCONDITIONAL on the
-       constrained family. -/
+/-! ## §3. The Shor bound on the EXACT multiplier — a bridge sanity-check, NOT the
+       count-optimal gate.  (Renamed from the misleading `*_full_shor_succeeds`.) -/
 
-/-- **★ `ge2021_full_shor_succeeds` — the Shor success bound on the constrained
-    family, with NO bridge hypothesis ★.**
+/-- **`ge2021_exactMultiplier_shor_bound` — the Shor bound on the EXACT reversible
+    windowed mod-N multiplier; it does NOT ride the count-optimal `modExpAt`.**
 
-    The verified windowed mod-N multiplier family — pinned by a PROVEN
-    `MeasuredEqualsReversibleOnEncoded` witness (`ge2021_measuredEqRev`) to
-    reproduce, on every encoded basis state, the SAME action as the corresponding
-    measured `EGate` family — attains the canonical Shor success-probability bound
-
-        probability_of_success a r N m bits (2·w+2·bits+3) (Wit.rev.family)
-          ≥ κ / (log₂ N)⁴
-
-    UNCONDITIONALLY in the measurement-uncompute amplitude bridge: that bridge is
-    now BUILT (not assumed) from the witness, whose `egate_matches_rev` field is
-    proven.  The only standing assumptions are the standard `ShorSetting` and the
-    windowed multiplier's structural sizing hypotheses — exactly the regime under
-    which `windowedModNMul_shor_correct` already holds, here re-derived THROUGH the
-    constrained measured = reversible bridge so that the family carrying the bound
-    is provably the one the measured EGate family acts as. -/
-theorem ge2021_full_shor_succeeds
+    HONEST SCOPE (no overclaim): the family carrying the bound is
+    `(ge2021_measuredEqRev …).rev.family = windowedModNMultiplier_verifiedModMulFamily`
+    — the EXACT in-place QROM mod-N multiplier.  The `eg` it is "matched" to is
+    `EGate.base (windowedModNMultiplier.gate …)` — the SAME exact gate wrapped as a
+    base `EGate` (NO measurement), so `egate_matches_rev` is the trivial
+    `Gate.applyNat = uc_eval` identity: the measurement-uncompute bridge is exercised
+    on a REVERSIBLE instance only.  Hence this is `windowedModNMul_shor_correct`
+    re-expressed; it does NOT put the bound on the count-optimal MEASURED `modExpAt`
+    (the 2.58e9-Toffoli gate).  Doing that needs the named residual
+    `ModExpAtEncodedMatchesResidue.block_matches_residue` (§5) PLUS the runway,
+    Ekerå–Håstad order-finding, encoding, and wrap-probability links — none discharged
+    here.  See `ShorComposedFinal`'s header for the full open-link audit. -/
+theorem ge2021_exactMultiplier_shor_bound
     (w bits numWin N a ainv0 r m : Nat)
     (hw : 0 < w) (hbits : numWin * w = bits) (hb1 : 1 ≤ bits)
     (hN1 : 1 < N) (hN2 : 2 * N ≤ 2 ^ bits)
@@ -222,7 +219,7 @@ reversible family above.  We record BOTH in one theorem, with the HONEST caveat
     family of (ii) is the base-`EGate` wrapping of the verified reversible gate,
     NOT `modExpAt` itself — identifying them on the nose is the named residual
     `ModExpAtEncodedMatchesResidue`. -/
-theorem ge2021_shor_bound_and_toffoli_count
+theorem ge2021_count_on_modExpAt_AND_bound_on_DIFFERENT_exact_multiplier
     (W : Nat) (Tfam : Nat → Nat → Nat → Nat) (q_start : Nat)
     (numWin N a ainv0 r m : Nat)
     (hbits : numWin * 10 = 2048)
@@ -236,13 +233,14 @@ theorem ge2021_shor_bound_and_toffoli_count
           (by norm_num) hbits (by norm_num) hN1 hN2 h_inv0).rev.family
       ≥ κ / (Nat.log2 N : ℝ) ^ 4 :=
   ⟨FormalRV.Shor.WindowedComposedAt.rsa2048_modExpAt_toffoli_derived W Tfam q_start,
-   ge2021_full_shor_succeeds 10 2048 numWin N a ainv0 r m
+   ge2021_exactMultiplier_shor_bound 10 2048 numWin N a ainv0 r m
      (by norm_num) hbits (by norm_num) hN1 hN2 h_inv0 h_setting⟩
 
 /-! ## §5. THE NAMED RESIDUAL — identifying the constrained family's gate with
        `modExpAt`'s per-iterate measured block (value-layer, NOT amplitude).
 
-`ge2021_full_shor_succeeds` rides the verified reversible windowed family.  To
+`ge2021_exactMultiplier_shor_bound` rides the verified reversible windowed family (the
+EXACT multiplier, NOT the count-optimal `modExpAt`).  To
 ride the LITERAL `modExpAt` per-iterate measured block, one needs the value
 identity below: on the encoded subspace, `modExpAt`'s i-th multiplication block
 produces the canonical `encodeDataZeroAnc` encoding of `(a^(2^i)·x) mod N`.  This
