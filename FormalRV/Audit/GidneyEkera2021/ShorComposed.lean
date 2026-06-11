@@ -90,6 +90,7 @@
 import FormalRV.Shor.WindowedComposedAt
 import FormalRV.Shor.WindowedShorConnection
 import FormalRV.Arithmetic.Windowed.WindowedCoset
+import FormalRV.Shor.EGateToUnitaryBridge
 
 namespace FormalRV.Audit.GidneyEkera2021.ShorComposed
 
@@ -101,6 +102,7 @@ open FormalRV.Shor.WindowedComposed FormalRV.Shor.WindowedComposedAt
 open FormalRV.Shor.WindowedCircuit (decodeReg_eq_zero)
 open FormalRV.Shor.WindowedArith (window windowedLookupFold tableValue windowedLookupFold_eq_modmul)
 open FormalRV.Shor.WindowedCoset
+open FormalRV.Shor.EGateToUnitaryBridge (MeasuredEqualsReversibleOnEncoded)
 
 /-! ## §1. The layout-correct lookup-add value spec is DISCHARGED (unconditionally).
 
@@ -373,5 +375,61 @@ theorem countOptimal_shor_succeeds
     probability_of_success a r N m bits anc B.eGate_to_family.family
       ≥ κ / (Nat.log2 N : ℝ) ^ 4 :=
   B.eGate_to_family.shorCorrect r m h_setting
+
+/-! ## §6. CONSTRAINING `eGate_to_family` — the measurement-uncompute lift wired
+       in (no longer free).
+
+The `eGate_to_family` field above is, on its own, a FREE `VerifiedModMulFamily`
+(any verified family discharges it).  The new bridge
+`Shor.EGateToUnitaryBridge.MeasuredEqualsReversibleOnEncoded` removes that
+freedom: it pairs a verified reversible family `rev` with the PROVEN constraint
+that `rev` reproduces, on every encoded basis state, the SAME output as the
+measured count-optimal EGate family — the measurement-uncompute lift's BASIS-level
+content (`eGate_toCom_basis`, the whole-circuit lift of `measANDUncompute_perfect`
+/ `measWordUncompute_perfect`).  Feeding such a witness's `rev` into
+`CountGateShorBridge.eGate_to_family` makes the field CONSTRAINED — pinned to the
+measured exponentiation — and yields the Shor success bound on the very family the
+measured gate acts as. -/
+
+/-- **`CountGateShorBridge` from a constrained measurement-uncompute witness.**
+    Given a `MeasuredEqualsReversibleOnEncoded` witness — whose `rev` is PROVEN
+    (field `egate_matches_rev`) to reproduce the measured EGate family's basis
+    action on the encoded subspace, NOT a free family — together with the
+    standing modular hypotheses, build a `CountGateShorBridge` whose
+    `eGate_to_family` is that constrained `rev`.  The `coset_value` field is the
+    §3 discharge `countOptimal_multiplyAdd_coset`.  Unlike a bare
+    `CountGateShorBridge`, the `eGate_to_family` here is the measurement-uncompute
+    lift's reversible target, tied to `modExpAt` by the witness's constraint. -/
+def countGateShorBridge_of_measuredEqRev
+    {w bits a numWin N anc q_start : Nat} {Tfam : Nat → Nat → Nat → Nat}
+    {eg : Nat → EGate} {encode : Nat → Nat → (Nat → Bool)}
+    (hw : 0 < w) (hq : 0 < q_start)
+    (Wit : MeasuredEqualsReversibleOnEncoded a N bits anc eg encode) :
+    CountGateShorBridge w bits a numWin N anc q_start Tfam where
+  coset_value := fun m y g0 hg0 hT hy hnowrap =>
+    countOptimal_multiplyAdd_coset w bits a numWin N y m q_start Tfam
+      hw hq hT hy g0 hg0 hnowrap
+  eGate_to_family := Wit.rev
+
+/-- **★ THE HEADLINE, CONSTRAINED — the count-optimal gate carries the Shor bound,
+    on the family the measured gate ACTS AS ★.**  From a constrained
+    `MeasuredEqualsReversibleOnEncoded` witness (whose reversible family is PROVEN
+    to reproduce the measured EGate family's encoded basis action — the
+    measurement-uncompute lift's basis content), the count-optimal modular
+    exponentiation attains the canonical Shor success bound `≥ κ / (log₂ N)⁴` —
+    UNCONDITIONALLY in the bridge hypothesis, since the bridge is now built (not
+    assumed) from the witness, and the `eGate_to_family` is no longer free but
+    pinned to `modExpAt` by `Wit.egate_matches_rev`. -/
+theorem countOptimal_shor_succeeds_constrained
+    {w bits a numWin N anc q_start : Nat} {Tfam : Nat → Nat → Nat → Nat}
+    {eg : Nat → EGate} {encode : Nat → Nat → (Nat → Bool)}
+    (hw : 0 < w) (hq : 0 < q_start)
+    (Wit : MeasuredEqualsReversibleOnEncoded a N bits anc eg encode)
+    (r m : Nat) (h_setting : ShorSetting a r N m bits) :
+    probability_of_success a r N m bits anc Wit.rev.family
+      ≥ κ / (Nat.log2 N : ℝ) ^ 4 :=
+  countOptimal_shor_succeeds
+    (countGateShorBridge_of_measuredEqRev (w := w) (numWin := numWin) (q_start := q_start)
+      (Tfam := Tfam) hw hq Wit) r m h_setting
 
 end FormalRV.Audit.GidneyEkera2021.ShorComposed
