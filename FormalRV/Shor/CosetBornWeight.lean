@@ -237,6 +237,20 @@ theorem uniformBornWeight_le_totalDeviationR {dim : Nat} (s : QState dim)
 /-! ## §3. THE NAMED RESIDUAL — the agree-off-wrap + bounded-Born structure for
        the two FULL QPE final states (the lone honest frontier).
 
+⚠️  SOUNDNESS WARNING (2026-06-13, no-cheating audit).  `agree_off_wrap` below
+asserts the coset and CANONICAL final states agree ENTRYWISE off a finite set `B`.
+This is FALSE for a genuine GE2021 coset family: the coset gadget keeps the data
+register UNREDUCED (`a·x`, generally `≥ N` — `WindowedCoset.cosetRep_of_modProduct`),
+so the coset and canonical final states differ on ESSENTIALLY EVERY data-register
+index, not just a small wrap band.  Hence no inhabitant of `CosetAgreesOffWrap`
+(against the canonical family) exists; §1/§4 below are valid implications from a
+witness that cannot be supplied.  The error is comparing FULL STATES against the
+CANONICAL family.  The honest replacement compares PHASE-REGISTER MARGINALS via
+the injective DATA-register relabeling `ι : {a^j mod N} ↪ {cosetrep(a^j)}` (off
+wrap the coset state is `(I_phase ⊗ ι)` of the canonical state, and
+`prob_partial_meas` is ι-invariant) — see `Shor.CosetMarginalShorBound` (in
+progress).  Retained ONLY as the record of the discredited full-state route.
+
 `CosetAgreesOffWrap` bundles the SINGLE remaining structural fact: the coset and
 ideal post-QPE final states agree entrywise off a finite wrap-index set `B`, and
 each carries Born weight `≤ totalDeviationR` on `B`.  Field `agree_off_wrap` is

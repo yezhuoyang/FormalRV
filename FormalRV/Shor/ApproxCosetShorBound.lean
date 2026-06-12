@@ -126,6 +126,30 @@ theorem prob_success_stable
 
 /-! ## §2. STEP 2 — the coset-vs-ideal L1 obligation (PRECISE NAMED FRONTIER).
 
+⚠️  SOUNDNESS WARNING (2026-06-13, no-cheating audit).  As stated below, the
+`coset_l1_le` field compares `f_coset` against the CANONICAL-residue family
+`f_ideal` via the FULL-STATE `normSqDist`.  This obligation is UNSATISFIABLE for a
+genuine GE2021 coset family: the coset gadget leaves the data register holding the
+UNREDUCED value `a·x` (`WindowedCoset.cosetRep_of_modProduct`: `(a·x)%2^bits =
+a·x`, generally `≥ N`), so `Shor_final_state f_coset` and `Shor_final_state
+f_canonical` sit on DIFFERENT data-register supports — their `normSqDist` is Ω(1),
+NOT `≤ 2·7.64·10⁻⁸`.  STEP 1/STEP 3 are still valid implications, but no honest
+inhabitant of `CosetIdealL1Bound a r N m n anc f_coset f_canonical` exists.  This
+is the WRONG COMPARISON (full-state distance to canonical), not merely an open
+one.
+
+THE CORRECT COMPARISON is at the PHASE-REGISTER MARGINAL: `probability_of_success`
+only reads the phase register, and `prob_partial_meas` is invariant under any
+injective DATA-register relabeling.  Off wrap the coset final state is `(I_phase ⊗
+ι)` of the canonical final state for the injective orbit relabel `ι : {a^j mod N}
+↪ {cosetrep(a^j)}` (coset arithmetic is EXACT off wrap — `cosetAdd_correct`), so
+the phase marginals — hence `probability_of_success` — are EQUAL off wrap, and the
+wrap set contributes `≤ totalDeviation`.  Building that marginal/eigenvalue-
+preservation bound on the real QPE circuit is the live work (see
+`Shor.CosetMarginalShorBound`, in progress).  The structure below is retained ONLY
+as the record of the discredited full-state route; do NOT treat its inhabitation
+as the GE2021 frontier.
+
 `CosetIdealL1Bound` bundles the EXACT analytic input STEP 3 needs and STEP 1
 consumes: the coset final state and the ideal (canonical-residue) final state
 are within L1-distance `2·totalDeviation`.  Its single field `coset_l1_le` is a
