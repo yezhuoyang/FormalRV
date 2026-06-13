@@ -25,7 +25,7 @@ import FormalRV.Shor.RunwayWindowed.RunwayLayout
 namespace FormalRV.Shor.RunwayWindowed.RunwayShift
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Shor.RunwayWindowed.GateShift (shiftBy)
+open FormalRV.Shor.RunwayWindowed.GateShift (shiftBy applyNat_shiftBy)
 open FormalRV.Shor.RunwayWindowed.RunwayLayout (segAddAt runwayAddKAt)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
   (segBase segAdd runwayAddK)
@@ -104,5 +104,25 @@ theorem runwayAddKAt_eq_shiftBy (gSep base : Nat) :
     show cuccaro_n_bit_adder_full (gSep + 1) (base + segBase gSep m)
       = shiftBy base (cuccaro_n_bit_adder_full (gSep + 1) (segBase gSep m))
     rw [shiftBy_cuccaro_n_bit_adder_full, Nat.add_comm base (segBase gSep m)]
+
+/-! ## §3. The correctness-transport bridge (M1.7).
+
+The DOWN-SHIFT (by `base`) of the re-based adder's output equals the base-0
+adder's output on the down-shifted input.  So every base-0 runway theorem
+(`runwayAddK_iter_contiguous_clean`, the `contiguousDecode`/`segReg`/`kClean`
+facts) applies verbatim to the down-shifted picture, and reading the re-based
+accumulator at `base + segBase + offset` IS reading the base-0 decode of the
+down-shifted state — no decode functions re-stated at `base`. -/
+
+/-- **The down-shift bridge.**  `(λ q, applyNat (runwayAddKAt gSep base k) f
+    (q + base))  =  applyNat (runwayAddK gSep k) (λ q, f (q + base))`.  Combines
+    the runway equivariance with `applyNat_shiftBy` (the shifted gate acts on
+    `[base, ∞)` exactly as the base-0 one reading the state at offset `base`). -/
+theorem runwayAddKAt_downshift (gSep base k : Nat) (f : Nat → Bool) :
+    (fun q => Gate.applyNat (runwayAddKAt gSep base k) f (q + base))
+      = Gate.applyNat (runwayAddK gSep k) (fun q => f (q + base)) := by
+  funext q
+  rw [runwayAddKAt_eq_shiftBy, applyNat_shiftBy]
+  simp only [if_neg (by omega : ¬ q + base < base), Nat.add_sub_cancel]
 
 end FormalRV.Shor.RunwayWindowed.RunwayShift
