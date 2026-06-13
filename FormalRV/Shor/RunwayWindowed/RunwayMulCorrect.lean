@@ -17,6 +17,7 @@
 -/
 import FormalRV.Shor.RunwayWindowed.RunwayShift
 import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
+import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
 
 namespace FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
 
@@ -24,9 +25,11 @@ open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 open FormalRV.Shor.RunwayWindowed.RunwayLayout (runwayAddKAt runwayAddendIdx)
 open FormalRV.Shor.RunwayWindowed.RunwayShift (runwayAddKAt_downshift)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
-  (runwayAddK kClean segStride segBase)
+  (runwayAddK kClean segStride segBase segReg)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
   (contiguousDecode contiguousAugend contiguousAddend runwayAddK_contiguous)
+open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
+  (IterReady iterGate runwayAddK_iter_contiguous)
 open FormalRV.Shor.WindowedCircuit
   (copyWindow lookupReadAt encodeReg copyWindow_loads_window copyWindow_frame
    lookupReadAt_selects_word lookupReadAt_frame decodeReg_eq_mod_of_testBit)
@@ -44,6 +47,27 @@ theorem runwayAddKAt_contiguous_at_base (gSep base k : Nat) (f : Nat → Bool)
         + contiguousAddend gSep k (fun q => f (q + base)) := by
   rw [runwayAddKAt_downshift]
   exact runwayAddK_contiguous gSep k (fun q => f (q + base)) hclean
+
+/-- **The runway add at base, from an `IterReady` state (the fold's add).**  This
+    is the version the windowed FOLD needs: between windows the runways CARRY the
+    deferred carries (`IterReady`, not clean), and each window adds a fresh word
+    (single add, `t = 1`).  Transports `runwayAddK_iter_contiguous` (`t = 1`)
+    through `runwayAddKAt_downshift`; needs the per-segment no-overflow `hno`
+    (the M2/R4 hypothesis, discharged from the padding by the fold). -/
+theorem runwayAddKAt_iter_at_base (gSep base k : Nat) (f : Nat → Bool)
+    (hready : IterReady gSep k (fun q => f (q + base)))
+    (hno : ∀ m, m < k →
+      segReg gSep m (fun q => f (q + base))
+        + 1 * decodeReg (cuccaroAdder.addendIdx (segBase gSep m)) gSep
+            (fun q => f (q + base))
+        < 2 ^ (gSep + 1)) :
+    contiguousDecode gSep k
+        (fun q => Gate.applyNat (runwayAddKAt gSep base k) f (q + base))
+      = contiguousDecode gSep k (fun q => f (q + base))
+        + contiguousAddend gSep k (fun q => f (q + base)) := by
+  rw [runwayAddKAt_downshift]
+  have h := runwayAddK_iter_contiguous gSep k 1 (fun q => f (q + base)) hready hno
+  simpa using h
 
 /-! ## M3 window-step prerequisites — the segment-major addend index facts. -/
 
