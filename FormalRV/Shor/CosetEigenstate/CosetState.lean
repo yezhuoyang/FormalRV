@@ -58,4 +58,18 @@ theorem cosetState_topWrap_bornWeight (dim N m r : Nat) (hN : 0 < N)
   push_cast
   ring
 
+/-- **The wrap Born-weight bound — the form `CosetAgreesOffWrap` consumes.**  If a
+    wrap set `B` contains at most `t` representatives, the coset state's Born weight
+    on `B` is at most `t/2^m`.  (Each rep carries mass `1/2^m`; `B` hits at most `t`
+    of the window's `2^m`.)  With `t` = (the number of additions, by subadditivity)
+    this is the per-window contribution to `totalDeviation`. -/
+theorem cosetState_wrap_bornWeight_le (dim N m r t : Nat) (B : Finset (Fin dim))
+    (hN : 0 < N) (hfit : r + (2 ^ m - 1) * N < dim) (hB : B.card ≤ t) :
+    bornWeightOn (cosetState dim N m r) B ≤ (t : ℝ) / 2 ^ m := by
+  unfold cosetState
+  rw [uniformSuperposition_bornWeightOn, cosetWindow_card dim N m r hN hfit]
+  push_cast
+  gcongr
+  exact_mod_cast le_trans (Finset.card_le_card Finset.inter_subset_left) hB
+
 end FormalRV.Shor.CosetEigenstate.CosetState
