@@ -89,7 +89,7 @@ private theorem wellTyped_foldl_seq_init (G : Nat → Gate) (dim : Nat) :
       ⟨hinit, h a (List.mem_cons.mpr (Or.inl rfl))⟩
       (fun k hk => h k (List.mem_cons.mpr (Or.inr hk)))
 
-private theorem wellTyped_foldl_seq_range (G : Nat → Gate) (n dim : Nat)
+theorem wellTyped_foldl_seq_range (G : Nat → Gate) (n dim : Nat)
     (h0 : 0 < dim) (h : ∀ k, k < n → Gate.WellTyped dim (G k)) :
     Gate.WellTyped dim
       ((List.range n).foldl (fun g k => Gate.seq g (G k)) Gate.I) :=
@@ -206,7 +206,7 @@ private theorem mem_wordCnotsAt {pos : Nat → Nat} {W Tv t : Nat}
   · rw [if_neg hb] at heq
     simp at heq
 
-private theorem lookupReadAt_wellTyped (w W : Nat) (pos : Nat → Nat)
+theorem lookupReadAt_wellTyped (w W : Nat) (pos : Nat → Nat)
     (T : Nat → Nat) (dim : Nat) (hw : 0 < w) (hdim : 2 * w + 1 ≤ dim)
     (hpos : ∀ j, j < W → pos j < dim ∧ ulookup_and_idx (w - 1) ≠ pos j) :
     Gate.WellTyped dim (lookupReadAt w pos W T) := by
@@ -268,7 +268,7 @@ private theorem modNLookupAddStep_wellTyped (w bits N : Nat) (T : Nat → Nat)
     h_look, regCompareXor_wellTyped bits q_start flagPos dim h_ws h_flag h_ne,
     h_look⟩
 
-private theorem copyWindow_wellTyped (w yBase j dim : Nat) (h0 : 0 < dim)
+theorem copyWindow_wellTyped (w yBase j dim : Nat) (h0 : 0 < dim)
     (hctrl : ∀ i, i < w → yBase + j * w + i < dim)
     (haddr : ∀ i, i < w → 1 + 2 * i < yBase) :
     Gate.WellTyped dim (copyWindow w yBase j) := by
@@ -311,7 +311,7 @@ private theorem windowedModNMulCircuit_wellTyped (w bits a N numWin dim : Nat)
   intro j hj
   exact windowedModNStep_wellTyped w bits a N numWin j dim hw hj hdim
 
-private theorem accYSwap_cuccaro_wellTyped (w bits dim : Nat)
+theorem accYSwap_cuccaro_wellTyped (w bits dim : Nat)
     (hdim : 1 + 2 * w + (2 * bits + 1) + bits ≤ dim) :
     Gate.WellTyped dim (accYSwap cuccaroAdder w bits) := by
   have hc : ∀ i, i < bits →
