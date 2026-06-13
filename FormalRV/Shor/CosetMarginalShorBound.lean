@@ -261,4 +261,47 @@ theorem coset_shor_succeeds_marginal
   have hsub := abs_le.mp hbound
   linarith [hsub.1]
 
+/-! ## §5. The exact (ε=0) endpoint — deterministic no-wrap padding.
+
+With enough padding that the coset arithmetic NEVER wraps, the coset and ideal
+final states are related EVERYWHERE by the data permutation `σ` (empty wrap set).
+Then `CosetMarginalRelabel` holds with `ε = 0` and the coset gate succeeds with
+EXACTLY the ideal probability — the honest statement that, given the qubits, the
+coset trick costs nothing in success probability. -/
+
+/-- **The ε=0 reduction.**  If the coset and ideal final states agree everywhere
+    under the data permutation `σ` (deterministic no-wrap padding ⇒ empty wrap
+    set), `CosetMarginalRelabel` holds with `ε = 0`.  Reduces the entire exact
+    discharge to the single entry-level data-permutation equality — the natural
+    target of the orbit engine. -/
+def cosetMarginalRelabel_exact
+    (a r N m n anc : Nat) (f_coset f_ideal : Nat → BaseUCom (n + anc))
+    (σ : Equiv.Perm (Fin ((2 ^ m * 2 ^ n * 2 ^ anc) / 2 ^ m)))
+    (hagree : ∀ (x : Fin (2 ^ m)) (y),
+        Shor_final_state m n anc f_coset (jointIdx (shorDvd m n anc) x y) 0
+          = Shor_final_state m n anc f_ideal (jointIdx (shorDvd m n anc) x (σ y)) 0) :
+    CosetMarginalRelabel a r N m n anc f_coset f_ideal 0 where
+  σ := σ
+  badY := fun _ => ∅
+  agree := fun x y _ => hagree x y
+  coset_wrap_le := by simp
+  ideal_wrap_le := by simp
+
+/-- **The exact coset Shor bound (ε=0).**  Given the ideal family's verified
+    bound and an everywhere-data-permutation relation of the final states (the
+    deterministically-padded coset family), the coset gate succeeds with at least
+    the FULL ideal probability — no deviation.  `P_success(coset) ≥ P_ideal`. -/
+theorem coset_shor_succeeds_exact
+    (a r N m n anc : Nat) (f_coset f_ideal : Nat → BaseUCom (n + anc))
+    (P_ideal : ℝ)
+    (h_ideal : probability_of_success a r N m n anc f_ideal ≥ P_ideal)
+    (σ : Equiv.Perm (Fin ((2 ^ m * 2 ^ n * 2 ^ anc) / 2 ^ m)))
+    (hagree : ∀ (x : Fin (2 ^ m)) (y),
+        Shor_final_state m n anc f_coset (jointIdx (shorDvd m n anc) x y) 0
+          = Shor_final_state m n anc f_ideal (jointIdx (shorDvd m n anc) x (σ y)) 0) :
+    probability_of_success a r N m n anc f_coset ≥ P_ideal := by
+  have h := coset_shor_succeeds_marginal a r N m n anc f_coset f_ideal 0 P_ideal
+    h_ideal (cosetMarginalRelabel_exact a r N m n anc f_coset f_ideal σ hagree)
+  simpa using h
+
 end FormalRV.Shor.CosetMarginalShorBound
