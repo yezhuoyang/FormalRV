@@ -23,14 +23,16 @@ namespace FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 open FormalRV.Shor.RunwayWindowed.RunwayLayout
-  (runwayAddKAt runwayAddendIdx runwayWindowStep runwayLookupAdd)
-open FormalRV.Shor.RunwayWindowed.RunwayShift (runwayAddKAt_downshift)
+  (runwayAddKAt runwayAddendIdx runwayWindowStep runwayLookupAdd runwayAddKAt_wellTyped)
+open FormalRV.Shor.RunwayWindowed.RunwayShift (runwayAddKAt_downshift runwayAddKAt_eq_shiftBy)
+open FormalRV.Shor.RunwayWindowed.GateShift (applyNat_shiftBy)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
-  (runwayAddK kClean segStride segBase segReg)
+  (runwayAddK kClean segStride segBase segReg segAdd)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
   (contiguousDecode contiguousAugend contiguousAddend runwayAddK_contiguous)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
-  (IterReady iterGate runwayAddK_iter_contiguous)
+  (IterReady iterGate runwayAddK_iter_contiguous segAdd_fixes_addend
+   runwayAddK_prefix_preserves_IterReady runwayAddK_preserves_IterReady)
 open FormalRV.Shor.WindowedCircuit
   (copyWindow lookupReadAt encodeReg copyWindow_loads_window copyWindow_frame
    lookupReadAt_selects_word lookupReadAt_frame decodeReg_eq_mod_of_testBit)
@@ -472,5 +474,87 @@ theorem runwayWindowStep_value (w gSep a N k numWin y j : Nat) (g : Nat → Bool
       = word.testBit (m * gSep + i')
     exact hbits m i' hm hi'
   rw [hA, hB, hC, hD, hE]
+
+/-! ## M3 — THE WINDOW-STEP CLEANLINESS THEOREM (the fold invariant).
+
+For the window FOLD (M4) to chain steps, each window step must RESTORE its
+borrowed registers: control stays set, the address/AND ancillas come back clean
+(`copyWindow`/`lookupReadAt` are involutions, given fixed controls), the
+segment-major addend comes back clean (write ⊕ unwrite, the add preserving the
+addend bit-for-bit), and the runway stays `IterReady`.  This complements
+`runwayWindowStep_value` (which fixes the accumulator value). -/
+
+/-- **Bit-level addend invariance of the base-0 runway adder** (under `IterReady`):
+    every addend-register bit `addendIdx (segBase m) i'` (`i' < gSep`) is left
+    UNCHANGED.  Bit-level companion to `runwayAddK_addend_eq` (decode-level),
+    folding the bit-level `segAdd_fixes_addend` over the `k` segment adds — needed
+    because the lookup-unwrite XORs the SAME word bits back only if the add left
+    them untouched. -/
+theorem runwayAddK_fixes_addend_bit (gSep : Nat) :
+    ∀ (k : Nat) (f : Nat → Bool), IterReady gSep k f →
+      ∀ (m : Nat), m < k → ∀ (i' : Nat), i' < gSep →
+        Gate.applyNat (runwayAddK gSep k) f (cuccaroAdder.addendIdx (segBase gSep m) i')
+          = f (cuccaroAdder.addendIdx (segBase gSep m) i') := by
+  intro k
+  suffices h : ∀ (j : Nat), j ≤ k → ∀ (f : Nat → Bool), IterReady gSep k f →
+      ∀ (m : Nat), m < k → ∀ (i' : Nat), i' < gSep →
+        Gate.applyNat (runwayAddK gSep j) f (cuccaroAdder.addendIdx (segBase gSep m) i')
+          = f (cuccaroAdder.addendIdx (segBase gSep m) i') by
+    intro f hready m hm i' hi'; exact h k (le_refl _) f hready m hm i' hi'
+  intro j
+  induction j with
+  | zero => intro _ f _ m _ i' _; rfl
+  | succ n ih =>
+      intro hjk f hready m hm i' hi'
+      show Gate.applyNat (segAdd gSep n) (Gate.applyNat (runwayAddK gSep n) f)
+            (cuccaroAdder.addendIdx (segBase gSep m) i')
+        = f (cuccaroAdder.addendIdx (segBase gSep m) i')
+      have hreadyg : IterReady gSep k (Gate.applyNat (runwayAddK gSep n) f) :=
+        runwayAddK_prefix_preserves_IterReady gSep k n (by omega) f hready
+      rw [segAdd_fixes_addend gSep k n (Gate.applyNat (runwayAddK gSep n) f)
+            (by omega) hreadyg m hm i' hi']
+      exact ih (by omega) f hready m hm i' hi'
+
+/-- The re-based runway adder fixes every position strictly BELOW its base (the
+    control wire, the lookup address/AND zone): it is `shiftBy base (runwayAddK …)`,
+    which acts only on `[base, ∞)`. -/
+theorem runwayAddKAt_fixes_below (gSep base k : Nat) (f : Nat → Bool) (p : Nat)
+    (hp : p < base) :
+    Gate.applyNat (runwayAddKAt gSep base k) f p = f p := by
+  rw [runwayAddKAt_eq_shiftBy, applyNat_shiftBy]
+  simp only [if_pos hp]
+
+/-- The re-based runway adder fixes every position at or ABOVE the top of its
+    runway block `base + k·segStride` (the y-register lives there): out of bounds
+    of its well-typed dimension. -/
+theorem runwayAddKAt_fixes_above (gSep base k : Nat) (hk : 0 < k) (f : Nat → Bool)
+    (p : Nat) (hp : base + k * segStride gSep ≤ p) :
+    Gate.applyNat (runwayAddKAt gSep base k) f p = f p :=
+  Gate.applyNat_oob (runwayAddKAt_wellTyped gSep base k hk) f hp
+
+/-- **A position UNTOUCHED by the whole window step.**  Anything that is not an
+    address wire, not a segment-major addend wire, and lies outside the runway
+    block (below `base` or at/above its top) is fixed by all five stages —
+    `copyWindow`/`lookupReadAt` frame their targets; the runway add frames outside
+    its block.  Covers the control wire, the AND ancillas, and the y-register. -/
+theorem windowStep_fixes (w gSep a N k yBase j : Nat) (g : Nat → Bool) (p : Nat)
+    (hk : 0 < k)
+    (h_ne_addr : ∀ i, i < w → p ≠ ulookup_address_idx i)
+    (h_ne_addend : ∀ i, i < k * gSep → p ≠ runwayAddendIdx gSep (1 + 2 * w) i)
+    (h_runway : p < 1 + 2 * w ∨ (1 + 2 * w) + k * segStride gSep ≤ p) :
+    Gate.applyNat (runwayWindowStep w gSep a N k (1 + 2 * w) yBase j) g p = g p := by
+  simp only [runwayWindowStep, runwayLookupAdd, Gate.applyNat_seq]
+  rw [copyWindow_frame w yBase j _ p h_ne_addr,
+      lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
+        (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend]
+  rcases h_runway with hlow | hhigh
+  · rw [runwayAddKAt_fixes_below gSep (1 + 2 * w) k _ p hlow,
+        lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
+          (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend,
+        copyWindow_frame w yBase j _ p h_ne_addr]
+  · rw [runwayAddKAt_fixes_above gSep (1 + 2 * w) k hk _ p hhigh,
+        lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
+          (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend,
+        copyWindow_frame w yBase j _ p h_ne_addr]
 
 end FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
