@@ -70,4 +70,68 @@ theorem applyNat_swapPair (a b : Nat) (h : a ≠ b) (f : Nat → Bool) (p : Nat)
     · cases hfa : f a <;> cases hfb : f b <;> simp_all
     · simp_all
 
+/-- **The register swap**: swap registers `idxA` and `idxB` qubit-by-qubit over the
+    first `n` indices.  (The two registers must be disjoint and each index-injective;
+    these are passed as hypotheses to the correctness lemmas.) -/
+def swapReg (idxA idxB : Nat → Nat) : Nat → Gate
+  | 0 => Gate.I
+  | n + 1 => Gate.seq (swapReg idxA idxB n) (swapPair (idxA n) (idxB n))
+
+/-- `swapReg` fixes every position outside the swapped index set. -/
+theorem swapReg_frame (idxA idxB : Nat → Nat) (hAB : ∀ i i', idxA i ≠ idxB i') :
+    ∀ (n : Nat) (f : Nat → Bool) (p : Nat),
+      (∀ i, i < n → p ≠ idxA i ∧ p ≠ idxB i) →
+      Gate.applyNat (swapReg idxA idxB n) f p = f p := by
+  intro n
+  induction n with
+  | zero => intro f p _; rfl
+  | succ m ih =>
+      intro f p hp
+      show Gate.applyNat (swapPair (idxA m) (idxB m))
+        (Gate.applyNat (swapReg idxA idxB m) f) p = f p
+      rw [applyNat_swapPair (idxA m) (idxB m) (hAB m m) _ p]
+      obtain ⟨hpa, hpb⟩ := hp m (Nat.lt_succ_self m)
+      rw [if_neg hpa, if_neg hpb]
+      exact ih f p (fun i hi => hp i (Nat.lt_succ_of_lt hi))
+
+/-- **`swapReg` carries `idxA j` to the old `idxB j` value.** -/
+theorem swapReg_idxA (idxA idxB : Nat → Nat) (hAB : ∀ i i', idxA i ≠ idxB i')
+    (hAinj : ∀ i i', idxA i = idxA i' → i = i') (hBinj : ∀ i i', idxB i = idxB i' → i = i') :
+    ∀ (n : Nat) (f : Nat → Bool) (j : Nat), j < n →
+      Gate.applyNat (swapReg idxA idxB n) f (idxA j) = f (idxB j) := by
+  intro n
+  induction n with
+  | zero => intro f j hj; omega
+  | succ m ih =>
+      intro f j hj
+      show Gate.applyNat (swapPair (idxA m) (idxB m))
+        (Gate.applyNat (swapReg idxA idxB m) f) (idxA j) = f (idxB j)
+      rw [applyNat_swapPair (idxA m) (idxB m) (hAB m m) _ (idxA j)]
+      by_cases hjm : j = m
+      · rw [hjm, if_pos rfl]
+        exact swapReg_frame idxA idxB hAB m f (idxB m)
+          (fun i hi => ⟨(hAB i m).symm, fun he => absurd (hBinj i m he.symm) (by omega)⟩)
+      · rw [if_neg (fun he => hjm (hAinj j m he)), if_neg (hAB j m)]
+        exact ih f j (by omega)
+
+/-- **`swapReg` carries `idxB j` to the old `idxA j` value.** -/
+theorem swapReg_idxB (idxA idxB : Nat → Nat) (hAB : ∀ i i', idxA i ≠ idxB i')
+    (hAinj : ∀ i i', idxA i = idxA i' → i = i') (hBinj : ∀ i i', idxB i = idxB i' → i = i') :
+    ∀ (n : Nat) (f : Nat → Bool) (j : Nat), j < n →
+      Gate.applyNat (swapReg idxA idxB n) f (idxB j) = f (idxA j) := by
+  intro n
+  induction n with
+  | zero => intro f j hj; omega
+  | succ m ih =>
+      intro f j hj
+      show Gate.applyNat (swapPair (idxA m) (idxB m))
+        (Gate.applyNat (swapReg idxA idxB m) f) (idxB j) = f (idxA j)
+      rw [applyNat_swapPair (idxA m) (idxB m) (hAB m m) _ (idxB j)]
+      by_cases hjm : j = m
+      · rw [hjm, if_neg (fun he => (hAB m m) he.symm), if_pos rfl]
+        exact swapReg_frame idxA idxB hAB m f (idxA m)
+          (fun i hi => ⟨fun he => absurd (hAinj i m he.symm) (by omega), hAB m i⟩)
+      · rw [if_neg (fun he => (hAB m j) he.symm), if_neg (fun he => hjm (hBinj j m he))]
+        exact ih f j (by omega)
+
 end FormalRV.Shor.CosetEigenstate.InPlace
