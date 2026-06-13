@@ -28,7 +28,7 @@ open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
   (contiguousDecode contiguousAugend contiguousAddend runwayAddK_contiguous)
 open FormalRV.Shor.WindowedCircuit
-  (copyWindow lookupReadAt copyWindow_loads_window copyWindow_frame
+  (copyWindow lookupReadAt encodeReg copyWindow_loads_window copyWindow_frame
    lookupReadAt_selects_word lookupReadAt_frame)
 
 /-- **The runway add at base.**  Reading the re-based runway adder's output via
@@ -92,5 +92,74 @@ theorem runwayAddendIdx_inj (gSep base : Nat) (hgSep : 0 < gSep) (i i' : Nat)
   calc i = gSep * (i / gSep) + i % gSep := (Nat.div_add_mod i gSep).symm
     _ = gSep * (i' / gSep) + i' % gSep := by rw [hq, hrmod]
     _ = i' := Nat.div_add_mod i' gSep
+
+/-! ## M3 window-step — the lookup-write half.
+
+`yBaseR w gSep k = 1 + 2w + k·segStride` is the runway multiplier's y-register
+base (above the runway accumulator).  The lookup-write half (`copyWindow ;
+lookupReadAt`) loads window `j` of `y` into the address and writes the residue
+word `(a·(2^w)^j·window) mod N` into the segment-major addend register. -/
+
+/-- The runway multiplier's y-register base: above ctrl(0), lookup `[1,2w]`, and
+    the `k`-segment runway accumulator at `[1+2w, 1+2w+k·segStride)`. -/
+def yBaseR (w gSep k : Nat) : Nat := 1 + 2 * w + k * segStride gSep
+
+/-- **The lookup-write writes the residue word into the segment-major addend.**
+    After `copyWindow` loads window `j` of `y` into the address (reusing
+    `copyWindow_loads_window`), `lookupReadAt` writes `(a·(2^w)^j·window_j) mod N`
+    into the addend (reusing `lookupReadAt_selects_word` with the segment-major
+    `pos = runwayAddendIdx`, discharged by `runwayAddendIdx_gt_two_w`/`_inj`). -/
+theorem runway_lookup_writes_word (w gSep a N k numWin y j : Nat) (g : Nat → Bool)
+    (hw : 0 < w) (hgSep : 0 < gSep) (hj : j < numWin)
+    (hctrl : g ulookup_ctrl_idx = true)
+    (haddr_clean : ∀ i, i < w → g (ulookup_address_idx i) = false)
+    (hand_clean : ∀ i, i < w → g (ulookup_and_idx i) = false)
+    (haddend_clean : ∀ i, i < k * gSep → g (runwayAddendIdx gSep (1 + 2 * w) i) = false)
+    (hy : ∀ i, i < w →
+      g (yBaseR w gSep k + j * w + i)
+        = encodeReg (yBaseR w gSep k) (numWin * w) y (yBaseR w gSep k + j * w + i)) :
+    ∀ i, i < k * gSep →
+      Gate.applyNat
+          (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep)
+            (fun v => (a * (2 ^ w) ^ j * v) % N))
+          (Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g)
+          (runwayAddendIdx gSep (1 + 2 * w) i)
+        = ((a * (2 ^ w) ^ j * WindowedArith.window w y j) % N).testBit i := by
+  intro i hi
+  set g1 : Nat → Bool := Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g with hg1
+  -- copyWindow controls (y-wires) are never address wires (y-base > 2w).
+  have hctrl_addr : ∀ i k', i < w → k' < w →
+      yBaseR w gSep k + j * w + i ≠ ulookup_address_idx k' := by
+    intro i k' hi hk'
+    unfold yBaseR ulookup_address_idx; omega
+  -- g1 facts (copyWindow loads the window; frames the rest).
+  have hg1_addr : ∀ i, i < w →
+      g1 (ulookup_address_idx i) = (WindowedArith.window w y j).testBit i :=
+    fun i hi => copyWindow_loads_window w (yBaseR w gSep k) numWin y j g
+      hctrl_addr haddr_clean hy hj i hi
+  have hg1_ctrl : g1 ulookup_ctrl_idx = true := by
+    rw [hg1, copyWindow_frame w (yBaseR w gSep k) j g _
+      (fun i hi => by unfold ulookup_ctrl_idx ulookup_address_idx; omega)]
+    exact hctrl
+  have hg1_and : ∀ i, i < w → g1 (ulookup_and_idx i) = false := by
+    intro i hi
+    rw [hg1, copyWindow_frame w (yBaseR w gSep k) j g _
+      (fun k' hk' => by unfold ulookup_and_idx ulookup_address_idx; omega)]
+    exact hand_clean i hi
+  have hg1_addend : ∀ i, i < k * gSep →
+      g1 (runwayAddendIdx gSep (1 + 2 * w) i) = false := by
+    intro i hi
+    rw [hg1, copyWindow_frame w (yBaseR w gSep k) j g _
+      (fun k' hk' => by
+        have := runwayAddendIdx_gt_two_w gSep w i
+        unfold ulookup_address_idx; omega)]
+    exact haddend_clean i hi
+  -- the lookup writes the word into the addend (selects T at the window address).
+  rw [lookupReadAt_selects_word w (k * gSep) (fun v => (a * (2 ^ w) ^ j * v) % N)
+        (runwayAddendIdx gSep (1 + 2 * w)) g1 (WindowedArith.window w y j)
+        hw (WindowedArith.window_lt w y j) hg1_ctrl hg1_addr hg1_and
+        (fun i _ => runwayAddendIdx_gt_two_w gSep w i)
+        (fun a' b' _ _ h => runwayAddendIdx_inj gSep (1 + 2 * w) hgSep a' b' h) i hi,
+      hg1_addend i hi, Bool.false_xor]
 
 end FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
