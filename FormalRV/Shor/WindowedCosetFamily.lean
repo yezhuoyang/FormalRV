@@ -273,4 +273,80 @@ theorem cosetMulGate_yvalue_residue (w bits N numWin a cinv i v : Nat)
   rw [cosetMulGate_yvalue w bits N numWin a cinv i v hw hbits hv hcinv hinv]
   exact cosetMulGate_residue bits N a i v hnowrap
 
+/-! ## §8. The clean basis-PERMUTATION — the structural keystone of the eigenstate.
+
+A `MulReady` state with y-value `v'` IS the clean encoded input `mulInputOf v'`
+(off-block it is `mulInputOf` by definition; in-block — the cuccaro carry/augend/
+addend — `MulReady` forces it to `false`, and `mulInputOf` is `false` there too).
+Hence the coset oracle acts as the genuine PERMUTATION `v ↦ (c_i·v) mod 2^bits`
+on the `mulInputOf`-encoded basis states: it sends `|encode v⟩` to
+`|encode((c_i·v) mod 2^bits)⟩`.  This is the structure the eigenstate is built on. -/
+
+/-- **`MulReady` ⇒ `mulInputOf`** (cuccaro).  A clean-shaped state with y-value
+    `v'` equals the canonical encoded input — by a parity case-split over the
+    in-block carry / augend / addend positions, all forced `false`. -/
+theorem mulReady_eq_mulInputOf_cuccaro (w bits numWin v' : Nat) (g : Nat → Bool)
+    (h : MulReady cuccaroAdder w bits numWin v' g) :
+    g = mulInputOf cuccaroAdder w bits numWin v' := by
+  obtain ⟨hoff, hadd, hanc, haug⟩ := h
+  have hspan : cuccaroAdder.span bits = 2 * bits + 1 := rfl
+  funext p
+  by_cases hb : inBlock (1 + 2 * w) (cuccaroAdder.span bits) p
+  · -- In-block ⇒ both sides are `false`.
+    obtain ⟨hlo, hhi⟩ := hb
+    rw [hspan] at hhi
+    have hmip : mulInputOf cuccaroAdder w bits numWin v' p = false :=
+      mulInputOf_low cuccaroAdder w bits numWin v' p
+        (by unfold ulookup_ctrl_idx; omega) (by rw [hspan]; omega)
+    rw [hmip]
+    rcases Nat.even_or_odd (p - (1 + 2 * w)) with ⟨k, hk⟩ | ⟨k, hk⟩
+    · rcases Nat.eq_zero_or_pos k with hk0 | hkpos
+      · -- carry position `p = 1 + 2w`
+        have hpc : p = 1 + 2 * w := by omega
+        rw [hpc]; exact hanc
+      · -- addend position `p = 1 + 2w + 2(k-1) + 2`
+        have hp : p = cuccaroAdder.addendIdx (1 + 2 * w) (k - 1) := by
+          show p = 1 + 2 * w + 2 * (k - 1) + 2; omega
+        rw [hp]; exact hadd (k - 1) (by omega)
+    · -- augend position `p = 1 + 2w + 2k + 1`
+      have hp : p = cuccaroAdder.augendIdx (1 + 2 * w) k := by
+        show p = 1 + 2 * w + 2 * k + 1; omega
+      rw [hp]; exact haug k (by omega)
+  · exact hoff p hb
+
+/-- **The coset gate is the permutation `v ↦ (c_i·v) mod 2^bits`** on encoded
+    inputs: `applyNat(gate)(mulInputOf v) = mulInputOf((c_i·v) mod 2^bits)`. -/
+theorem cosetMulGate_perm (w bits N numWin a cinv i v : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits) (hv : v < 2 ^ bits)
+    (hcinv : cinv < 2 ^ bits)
+    (hinv : oddLift (a ^ (2 ^ i) % N) N * cinv % 2 ^ bits = 1) :
+    Gate.applyNat (cosetMulGate w bits N numWin a cinv i)
+        (mulInputOf cuccaroAdder w bits numWin v)
+      = mulInputOf cuccaroAdder w bits numWin
+          (oddLift (a ^ (2 ^ i) % N) N * v % 2 ^ bits) := by
+  have hclean : cuccaroAdder.ancClean (mulInputOf cuccaroAdder w bits numWin v)
+      bits (1 + 2 * w) := by
+    show mulInputOf cuccaroAdder w bits numWin v (1 + 2 * w) = false
+    exact mulInputOf_low cuccaroAdder w bits numWin v _
+      (by unfold ulookup_ctrl_idx; omega)
+      (by rw [show cuccaroAdder.span bits = 2 * bits + 1 from rfl]; omega)
+  exact mulReady_eq_mulInputOf_cuccaro w bits numWin _ _
+    (cosetMulGate_value w bits N numWin a cinv i v hw hbits hv hcinv hinv _
+      (mulReady_mulInputOf cuccaroAdder w bits numWin v hclean))
+
+/-- **The QPE oracle as a basis permutation (matrix level).**  `uc_eval` of the
+    coset family sends the encoded basis state `|v⟩` to `|(c_i·v) mod 2^bits⟩` —
+    the genuine permutation the uniform-superposition coset eigenstate is built
+    from.  Composes the matrix action (§7) with the clean permutation (§8). -/
+theorem cosetMulFamily_perm (w bits N numWin a : Nat) (cinv : Nat → Nat)
+    (i v : Nat) (hw : 0 < w) (hbits : numWin * w = bits) (hv : v < 2 ^ bits)
+    (hcinv : cinv i < 2 ^ bits)
+    (hinv : oddLift (a ^ (2 ^ i) % N) N * cinv i % 2 ^ bits = 1) :
+    uc_eval (cosetMulFamily w bits N numWin a cinv i)
+        * f_to_vec (cosetDim w bits) (mulInputOf cuccaroAdder w bits numWin v)
+      = f_to_vec (cosetDim w bits) (mulInputOf cuccaroAdder w bits numWin
+          (oddLift (a ^ (2 ^ i) % N) N * v % 2 ^ bits)) := by
+  rw [cosetMulFamily_acts_on_mulInput w bits N numWin a cinv i v hw hbits,
+    cosetMulGate_perm w bits N numWin a (cinv i) i v hw hbits hv hcinv hinv]
+
 end FormalRV.Shor.WindowedCosetFamily
