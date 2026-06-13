@@ -214,4 +214,63 @@ theorem cosetMulFamily_uc_well_typed (w bits N numWin a : Nat) (cinv : Nat → N
     (cosetMulGate_wellTyped w bits N numWin a (cinv i) i (cosetDim w bits) hw hbits
       (by unfold cosetDim; omega))
 
+/-! ## §7. The matrix-level (`uc_eval`) action — the bridge into QPE.
+
+`uc_eval_toUCom_acts_on_basis` lifts the gate's Boolean `applyNat` action to the
+`uc_eval` matrix acting on basis vectors.  Combined with the verified value
+(`windowedMulInPlace_value_cuccaro`) and residue (`cosetMulGate_residue`) facts,
+this is precisely the per-iterate basis-permutation the uniform-superposition
+coset eigenstate argument consumes: on the clean encoded input the QPE oracle
+sends the y-register value `v` to `(c_i·v) mod 2^bits`, a coset rep of
+`(a^(2^i)·v) mod N` off wrap. -/
+
+/-- **Matrix action on the clean encoded input.**  The QPE oracle `uc_eval` acts
+    on the encoded basis state exactly as the gate's `applyNat` (the Gate→matrix
+    bridge `uc_eval_toUCom_acts_on_basis` at the verified well-typedness). -/
+theorem cosetMulFamily_acts_on_mulInput (w bits N numWin a : Nat) (cinv : Nat → Nat)
+    (i v : Nat) (hw : 0 < w) (hbits : numWin * w = bits) :
+    uc_eval (cosetMulFamily w bits N numWin a cinv i)
+        * f_to_vec (cosetDim w bits) (mulInputOf cuccaroAdder w bits numWin v)
+      = f_to_vec (cosetDim w bits)
+          (Gate.applyNat (cosetMulGate w bits N numWin a (cinv i) i)
+            (mulInputOf cuccaroAdder w bits numWin v)) := by
+  unfold cosetMulFamily
+  exact uc_eval_toUCom_acts_on_basis (cosetDim w bits)
+    (cosetMulGate w bits N numWin a (cinv i) i)
+    (cosetMulGate_wellTyped w bits N numWin a (cinv i) i (cosetDim w bits) hw hbits
+      (by unfold cosetDim; omega))
+    (mulInputOf cuccaroAdder w bits numWin v)
+
+/-- **The output y-register value** of the concrete coset gate on the clean
+    encoded input is `(c_i·v) mod 2^bits` — the decode form of the verified
+    in-place multiply (`windowedMulInPlace_value_cuccaro`). -/
+theorem cosetMulGate_yvalue (w bits N numWin a cinv i v : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits) (hv : v < 2 ^ bits)
+    (hcinv : cinv < 2 ^ bits)
+    (hinv : oddLift (a ^ (2 ^ i) % N) N * cinv % 2 ^ bits = 1) :
+    decodeReg (fun k => 1 + 2 * w + cuccaroAdder.span bits + k) bits
+        (Gate.applyNat (cosetMulGate w bits N numWin a cinv i)
+          (mulInputOf cuccaroAdder w bits numWin v))
+      = oddLift (a ^ (2 ^ i) % N) N * v % 2 ^ bits := by
+  unfold cosetMulGate
+  exact windowedMulInPlace_value_cuccaro w bits (oddLift (a ^ (2 ^ i) % N) N) cinv
+    numWin v hw hbits hv hcinv hinv
+
+/-- **The output y-register residue** — off wrap, the coset gate's output value
+    reads off mod `N` as `(a^(2^i)·v) mod N` AT THE MATRIX LEVEL: the y-register
+    of the post-`uc_eval` state decodes to a coset rep of the correct residue.
+    Composes `cosetMulGate_yvalue` (the matrix-level value) with
+    `cosetMulGate_residue` (the off-wrap residue). -/
+theorem cosetMulGate_yvalue_residue (w bits N numWin a cinv i v : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits) (hv : v < 2 ^ bits)
+    (hcinv : cinv < 2 ^ bits)
+    (hinv : oddLift (a ^ (2 ^ i) % N) N * cinv % 2 ^ bits = 1)
+    (hnowrap : oddLift (a ^ (2 ^ i) % N) N * v < 2 ^ bits) :
+    (decodeReg (fun k => 1 + 2 * w + cuccaroAdder.span bits + k) bits
+        (Gate.applyNat (cosetMulGate w bits N numWin a cinv i)
+          (mulInputOf cuccaroAdder w bits numWin v))) % N
+      = (a ^ (2 ^ i) * v) % N := by
+  rw [cosetMulGate_yvalue w bits N numWin a cinv i v hw hbits hv hcinv hinv]
+  exact cosetMulGate_residue bits N a i v hnowrap
+
 end FormalRV.Shor.WindowedCosetFamily
