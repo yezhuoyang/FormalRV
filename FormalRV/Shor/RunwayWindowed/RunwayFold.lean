@@ -138,4 +138,52 @@ theorem runwayWindowedMul_value_ready (w gSep a N k numWin y : Nat) (g0 : Nat �
   rw [runwayWindowedMul_eq_foldGate]
   exact runwayFold_value_ready w gSep a N k numWin y g0 hw hgSep hk hr0 hacc0 hno numWin (le_refl _)
 
+/-! ## M5 — the decode bridge (R2): the coset accumulator's RESIDUE is `(a·y) mod N`.
+
+The runway accumulates the UNREDUCED coset-word sum (no per-step mod-N — that is
+the coset saving).  But its RESIDUE mod `N` is exactly `(a·y) mod N`: each word's
+chunk is a no-op when the runway is wide enough (`N ≤ 2^(k·gSep)`), and the
+reduced sum reuses the verified value-layer identity `windowed_modProductAdd_acc`
+(`Σ tableValue % N = a·y mod N`).  This is what the coset eigenstate (M8/M9) needs:
+the gadget realizes the residue map `y ↦ (a·y) mod N` on the quotient. -/
+
+/-- The chunked coset-word sum is `≡ a·y (mod N)`: the runway holds an unreduced
+    coset representative of `(a·y) mod N`. -/
+theorem cosetWordSum_residue (w gSep a N k numWin y : Nat) (hN : 0 < N)
+    (hNsize : N ≤ 2 ^ (k * gSep)) (hy : y < (2 ^ w) ^ numWin) :
+    ((Finset.range numWin).sum
+        (fun i => ((a * (2 ^ w) ^ i * WindowedArith.window w y i) % N) % 2 ^ (k * gSep))) % N
+      = (a * y) % N := by
+  have hchunk : (fun i => ((a * (2 ^ w) ^ i * WindowedArith.window w y i) % N) % 2 ^ (k * gSep))
+      = (fun i => WindowedArith.tableValue a N w i (WindowedArith.window w y i)) := by
+    funext i
+    show ((a * (2 ^ w) ^ i * WindowedArith.window w y i) % N) % 2 ^ (k * gSep)
+      = WindowedArith.tableValue a N w i (WindowedArith.window w y i)
+    rw [WindowedArith.tableValue]
+    exact Nat.mod_eq_of_lt (lt_of_lt_of_le (Nat.mod_lt _ hN) hNsize)
+  rw [hchunk]
+  have h := WindowedArith.windowed_modProductAdd_acc w numWin a N y 0 hy
+  rwa [Nat.zero_add, Nat.zero_add] at h
+
+/-- **M5 corollary — on the ACTUAL `runwayWindowedMul` circuit.**  The contiguous
+    accumulator's residue mod `N` is `(a·y) mod N` — the gadget computes the coset
+    multiplication `y ↦ (a·y) mod N`.  Combines the fold value (`Σ word_i`) with
+    the residue identity. -/
+theorem runwayWindowedMul_residue (w gSep a N k numWin y : Nat) (g0 : Nat → Bool)
+    (hw : 0 < w) (hgSep : 0 < gSep) (hk : 0 < k) (hN : 0 < N)
+    (hNsize : N ≤ 2 ^ (k * gSep)) (hybnd : y < (2 ^ w) ^ numWin)
+    (hr0 : RunwayReady w gSep k numWin y g0)
+    (hacc0 : contiguousDecode gSep k (fun q => g0 (q + (1 + 2 * w))) = 0)
+    (hno : ∀ t, t < numWin → ∀ m, m < k →
+      segReg gSep m (fun q => Gate.applyNat (runwayFoldGate w gSep a N k t) g0 (q + (1 + 2 * w)))
+        + ((a * (2 ^ w) ^ t * WindowedArith.window w y t) % N / 2 ^ (m * gSep)) % 2 ^ gSep
+        < 2 ^ (gSep + 1)) :
+    contiguousDecode gSep k
+        (fun q => Gate.applyNat
+          (runwayWindowedMul w gSep a N k (1 + 2 * w) (yBaseR w gSep k) numWin) g0 (q + (1 + 2 * w)))
+        % N
+      = (a * y) % N := by
+  rw [(runwayWindowedMul_value_ready w gSep a N k numWin y g0 hw hgSep hk hr0 hacc0 hno).2]
+  exact cosetWordSum_residue w gSep a N k numWin y hN hNsize hybnd
+
 end FormalRV.Shor.RunwayWindowed.RunwayFold
