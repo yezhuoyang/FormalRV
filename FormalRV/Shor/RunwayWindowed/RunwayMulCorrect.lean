@@ -22,7 +22,8 @@ import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
 namespace FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Shor.RunwayWindowed.RunwayLayout (runwayAddKAt runwayAddendIdx)
+open FormalRV.Shor.RunwayWindowed.RunwayLayout
+  (runwayAddKAt runwayAddendIdx runwayWindowStep runwayLookupAdd)
 open FormalRV.Shor.RunwayWindowed.RunwayShift (runwayAddKAt_downshift)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
   (runwayAddK kClean segStride segBase segReg)
@@ -217,5 +218,259 @@ theorem contiguousAddend_reassembly (gSep word : Nat) :
                 Nat.add_comm i' (m * gSep)]),
         show (m + 1) * gSep = m * gSep + gSep from by ring, pow_add, Nat.mod_mul]
     ring
+
+/-! ## M3 window-step — the augend-only congruence.
+
+`contiguousDecode` reads ONLY the segments' augend registers (`segReg =
+decodeReg (augendIdx (segBase m)) (gSep+1)`).  So two states agreeing on every
+augend position have equal contiguous decode — even if they differ on the
+ADDEND (which the lookup-write/unwrite changes, and which sits BELOW `segBase`,
+so the all-positions-below `contiguousDecode_congr` cannot bridge it). -/
+theorem contiguousDecode_augend_congr (gSep : Nat) :
+    ∀ (k : Nat) (f g : Nat → Bool),
+      (∀ m i', m < k → i' < gSep + 1 →
+        f (cuccaroAdder.augendIdx (segBase gSep m) i')
+          = g (cuccaroAdder.augendIdx (segBase gSep m) i')) →
+      contiguousDecode gSep k f = contiguousDecode gSep k g := by
+  intro k
+  induction k with
+  | zero => intro f g _; rfl
+  | succ m ih =>
+      intro f g hagree
+      show contiguousDecode gSep m f + segReg gSep m f * 2 ^ (m * gSep)
+        = contiguousDecode gSep m g + segReg gSep m g * 2 ^ (m * gSep)
+      have h1 : contiguousDecode gSep m f = contiguousDecode gSep m g :=
+        ih f g (fun m' i' hm' hi' => hagree m' i' (Nat.lt_succ_of_lt hm') hi')
+      have h2 : segReg gSep m f = segReg gSep m g :=
+        decodeReg_ext (cuccaroAdder.augendIdx (segBase gSep m)) (gSep + 1) f g
+          (fun i' hi' => hagree m i' (Nat.lt_succ_self m) hi')
+      rw [h1, h2]
+
+/-! ## M3 window-step — full-state frames (the lookup-I/O touches neither the
+accumulator's augend/carry/addend-top nor anything `≥ base` except the addend
+data).  These let `contiguousDecode`/`IterReady` (read at augend/carry/addend-top
+positions) pass UNCHANGED through `copyWindow` and the lookup-write/unwrite. -/
+
+/-- `copyWindow` (address register in the lookup zone `[1,2w]`) fixes every
+    position at or above the accumulator base `1+2w`. -/
+theorem copyWindow_fixes_above (w yBase j : Nat) (f : Nat → Bool) (p : Nat)
+    (hp : 1 + 2 * w ≤ p) :
+    Gate.applyNat (copyWindow w yBase j) f p = f p :=
+  copyWindow_frame w yBase j f p (fun i hi => by unfold ulookup_address_idx; omega)
+
+/-- **The runway segment-offset disjointness.**  A position `base + segBase m + o`
+    whose within-segment offset `o` is below `segStride` but is NOT an even number
+    in `[2, 2gSep]` — i.e. the carry-in (`o=0`), an augend bit (`o` odd), or the
+    addend-top (`o = 2gSep+2`) — is NEVER a segment-major addend position
+    `runwayAddendIdx`.  (The addend-DATA bits are exactly the even offsets
+    `2,4,…,2gSep`.)  Segment-uniqueness by the div/mod bound + parity. -/
+theorem segOffset_ne_runwayAddendIdx (gSep base m o pos i : Nat) (hgSep : 0 < gSep)
+    (ho_lt : o < 2 * gSep + 3) (ho_not : ∀ t, t < gSep → o ≠ 2 * t + 2)
+    (hpos : pos = base + segBase gSep m + o) :
+    pos ≠ runwayAddendIdx gSep base i := by
+  subst hpos
+  intro hEq
+  have hr : i % gSep < gSep := Nat.mod_lt _ hgSep
+  have hlin : base + segBase gSep m + o
+      = base + segBase gSep (i / gSep) + 2 * (i % gSep) + 2 := hEq
+  rcases Nat.lt_trichotomy m (i / gSep) with hlt | heq | hgt
+  · have hstep : segBase gSep (m + 1) ≤ segBase gSep (i / gSep) := by
+      unfold segBase segStride; exact Nat.mul_le_mul_right _ (by omega)
+    have hexp : segBase gSep (m + 1) = segBase gSep m + (2 * gSep + 3) := by
+      unfold segBase segStride; ring
+    omega
+  · rw [heq] at hlin
+    exact ho_not (i % gSep) hr (by omega)
+  · have hstep : segBase gSep (i / gSep + 1) ≤ segBase gSep m := by
+      unfold segBase segStride; exact Nat.mul_le_mul_right _ (by omega)
+    have hexp : segBase gSep (i / gSep + 1) = segBase gSep (i / gSep) + (2 * gSep + 3) := by
+      unfold segBase segStride; ring
+    omega
+
+/-- **The lookup-I/O frame.**  Through `lookupReadAt ∘ copyWindow` (the lookup-write
+    half of a window step), every position `≥ base` that is NOT a segment-major
+    addend position is left UNCHANGED: `copyWindow` only touches the address zone
+    (`< base`); `lookupReadAt` only touches its `pos` targets (`runwayAddendIdx`). -/
+theorem windowIO_frame (w gSep k yBase j : Nat) (T : Nat → Nat) (g : Nat → Bool)
+    (p : Nat) (hp_base : 1 + 2 * w ≤ p)
+    (hp_addend : ∀ i, i < k * gSep → p ≠ runwayAddendIdx gSep (1 + 2 * w) i) :
+    Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T)
+        (Gate.applyNat (copyWindow w yBase j) g) p
+      = g p := by
+  rw [lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w))
+        (Gate.applyNat (copyWindow w yBase j) g)
+        (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p hp_addend]
+  exact copyWindow_fixes_above w yBase j g p hp_base
+
+/-! ## M3 — THE WINDOW-STEP VALUE THEOREM (the composition).
+
+One full window step (`copyWindow ; lookupReadAt-write ; runwayAddKAt ;
+lookupReadAt-unwrite ; copyWindow-uncopy`) ADDS the residue word
+`word_j = (a·(2^w)^j·window_j) mod N` (chunked to `2^(k·gSep)`) to the contiguous
+accumulator value, threading the five stages on the down-shifted state:
+
+  g  --copy-->  g₁ --write-->  g₂ --runwayAdd-->  g₃ --unwrite-->  g₄ --uncopy-->  g₅
+
+The cleanup stages (`g₄, g₅`) leave the AUGEND untouched, so the value is fixed
+once the add lands (`g₃`); the add lands the word via `runwayAddKAt_iter_at_base`
+fed by the lookup-write (`runway_lookup_writes_word` + `contiguousAddend_reassembly`).
+`IterReady`/the no-overflow bound for the add are imported through the
+full-state frames (`windowIO_frame`, `segOffset_ne_runwayAddendIdx`). -/
+theorem runwayWindowStep_value (w gSep a N k numWin y j : Nat) (g : Nat → Bool)
+    (hw : 0 < w) (hgSep : 0 < gSep) (hj : j < numWin)
+    (hctrl : g ulookup_ctrl_idx = true)
+    (haddr_clean : ∀ i, i < w → g (ulookup_address_idx i) = false)
+    (hand_clean : ∀ i, i < w → g (ulookup_and_idx i) = false)
+    (haddend_clean : ∀ i, i < k * gSep → g (runwayAddendIdx gSep (1 + 2 * w) i) = false)
+    (hy : ∀ i, i < w → g (yBaseR w gSep k + j * w + i)
+        = encodeReg (yBaseR w gSep k) (numWin * w) y (yBaseR w gSep k + j * w + i))
+    (hready : IterReady gSep k (fun q => g (q + (1 + 2 * w))))
+    (hno : ∀ m, m < k →
+      segReg gSep m (fun q => g (q + (1 + 2 * w)))
+        + ((a * (2 ^ w) ^ j * WindowedArith.window w y j) % N / 2 ^ (m * gSep)) % 2 ^ gSep
+        < 2 ^ (gSep + 1)) :
+    contiguousDecode gSep k
+        (fun q => Gate.applyNat
+          (runwayWindowStep w gSep a N k (1 + 2 * w) (yBaseR w gSep k) j) g (q + (1 + 2 * w)))
+      = contiguousDecode gSep k (fun q => g (q + (1 + 2 * w)))
+        + (a * (2 ^ w) ^ j * WindowedArith.window w y j) % N % 2 ^ (k * gSep) := by
+  simp only [runwayWindowStep, runwayLookupAdd, Gate.applyNat_seq]
+  set T : Nat → Nat := fun v => (a * (2 ^ w) ^ j * v) % N with hT
+  set word : Nat := (a * (2 ^ w) ^ j * WindowedArith.window w y j) % N with hword
+  set g1 := Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g with hg1
+  set g2 := Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T) g1
+    with hg2
+  set g3 := Gate.applyNat (runwayAddKAt gSep (1 + 2 * w) k) g2 with hg3
+  set g4 := Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T) g3
+    with hg4
+  set g5 := Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g4 with hg5
+  -- (1) the augend register is UNTOUCHED by the lookup-write∘copyWindow (g₂ vs g).
+  have haugend_g2 : ∀ m i', m < k → i' < gSep + 1 →
+      g2 (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+        = g (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w)) := by
+    intro m i' hm hi'
+    rw [hg2, hg1]
+    exact windowIO_frame w gSep k (yBaseR w gSep k) j T g
+      (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w)) (by omega)
+      (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m (2 * i' + 1) _ i hgSep
+        (by omega) (fun t ht => by omega)
+        (by show segBase gSep m + 2 * i' + 1 + (1 + 2 * w)
+              = 1 + 2 * w + segBase gSep m + (2 * i' + 1); omega))
+  -- (2) the lookup-write lands the residue word's bits into the segment-major addend.
+  have hbits : ∀ m i', m < k → i' < gSep →
+      g2 (cuccaroAdder.addendIdx (segBase gSep m) i' + (1 + 2 * w))
+        = word.testBit (m * gSep + i') := by
+    intro m i' hm hi'
+    have hlt : m * gSep + i' < k * gSep := by
+      have h1 : (m + 1) * gSep ≤ k * gSep := Nat.mul_le_mul_right _ (by omega)
+      have h2 : (m + 1) * gSep = m * gSep + gSep := by ring
+      omega
+    have hd : (m * gSep + i') / gSep = m := by
+      rw [Nat.add_comm (m * gSep) i', Nat.add_mul_div_right i' m hgSep,
+          Nat.div_eq_of_lt hi', Nat.zero_add]
+    have hmod : (m * gSep + i') % gSep = i' := by
+      rw [Nat.add_comm (m * gSep) i', Nat.add_mul_mod_self_right, Nat.mod_eq_of_lt hi']
+    have hidx : cuccaroAdder.addendIdx (segBase gSep m) i' + (1 + 2 * w)
+        = runwayAddendIdx gSep (1 + 2 * w) (m * gSep + i') := by
+      unfold runwayAddendIdx
+      rw [hd, hmod]
+      show segBase gSep m + 2 * i' + 2 + (1 + 2 * w)
+        = 1 + 2 * w + segBase gSep m + 2 * i' + 2
+      omega
+    rw [hidx, hg2, hg1]
+    exact runway_lookup_writes_word w gSep a N k numWin y j g hw hgSep hj hctrl
+      haddr_clean hand_clean haddend_clean hy (m * gSep + i') hlt
+  -- (3) the runway is still `IterReady` at g₂ (carry-in / addend-top are framed).
+  have hready_g2 : IterReady gSep k (fun q => g2 (q + (1 + 2 * w))) := by
+    intro m hm
+    obtain ⟨hcarry, htop⟩ := hready m hm
+    refine ⟨?_, ?_⟩
+    · show g2 (segBase gSep m + (1 + 2 * w)) = false
+      rw [hg2, hg1, windowIO_frame w gSep k (yBaseR w gSep k) j T g
+            (segBase gSep m + (1 + 2 * w)) (by omega)
+            (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m 0 _ i hgSep
+              (by omega) (fun t ht => by omega) (by omega))]
+      exact hcarry
+    · show g2 (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w)) = false
+      rw [hg2, hg1, windowIO_frame w gSep k (yBaseR w gSep k) j T g
+            (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w)) (by omega)
+            (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m (2 * gSep + 2) _ i hgSep
+              (by omega) (fun t ht => by omega)
+              (by show segBase gSep m + 2 * gSep + 2 + (1 + 2 * w)
+                    = 1 + 2 * w + segBase gSep m + (2 * gSep + 2); omega))]
+      exact htop
+  -- (4) segReg is preserved (augend untouched), and the addend chunk = the word chunk.
+  have hsegReg_g2 : ∀ m, m < k →
+      segReg gSep m (fun q => g2 (q + (1 + 2 * w)))
+        = segReg gSep m (fun q => g (q + (1 + 2 * w))) := by
+    intro m hm
+    exact decodeReg_ext (cuccaroAdder.augendIdx (segBase gSep m)) (gSep + 1) _ _
+      (fun i' hi' => haugend_g2 m i' hm hi')
+  have haddend_chunk : ∀ m, m < k →
+      decodeReg (cuccaroAdder.addendIdx (segBase gSep m)) gSep (fun q => g2 (q + (1 + 2 * w)))
+        = (word / 2 ^ (m * gSep)) % 2 ^ gSep := by
+    intro m hm
+    refine decodeReg_eq_mod_of_testBit (cuccaroAdder.addendIdx (segBase gSep m)) gSep
+      (word / 2 ^ (m * gSep)) (fun q => g2 (q + (1 + 2 * w))) (fun i' hi' => ?_)
+    show g2 (cuccaroAdder.addendIdx (segBase gSep m) i' + (1 + 2 * w))
+      = (word / 2 ^ (m * gSep)).testBit i'
+    rw [hbits m i' hm hi', Nat.testBit_div_two_pow, Nat.add_comm i' (m * gSep)]
+  -- (5) the add's no-overflow precondition, transported from `hno` via (4).
+  have hno_g2 : ∀ m, m < k →
+      segReg gSep m (fun q => g2 (q + (1 + 2 * w)))
+        + 1 * decodeReg (cuccaroAdder.addendIdx (segBase gSep m)) gSep
+            (fun q => g2 (q + (1 + 2 * w)))
+        < 2 ^ (gSep + 1) := by
+    intro m hm
+    rw [hsegReg_g2 m hm, haddend_chunk m hm, Nat.one_mul]
+    exact hno m hm
+  -- ── the five-stage value chain ──
+  -- (A) g₅ vs g₄: copyWindow-uncopy frames the augend (all `≥ base`).
+  have hA : contiguousDecode gSep k (fun q => g5 (q + (1 + 2 * w)))
+      = contiguousDecode gSep k (fun q => g4 (q + (1 + 2 * w))) := by
+    apply contiguousDecode_augend_congr
+    intro m i' hm hi'
+    show g5 (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+      = g4 (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+    rw [hg5]
+    exact copyWindow_fixes_above w (yBaseR w gSep k) j g4 _ (by omega)
+  -- (B) g₄ vs g₃: lookupReadAt-unwrite frames the augend (augend ≠ addend).
+  have hB : contiguousDecode gSep k (fun q => g4 (q + (1 + 2 * w)))
+      = contiguousDecode gSep k (fun q => g3 (q + (1 + 2 * w))) := by
+    apply contiguousDecode_augend_congr
+    intro m i' hm hi'
+    show g4 (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+      = g3 (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+    rw [hg4]
+    refine lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g3
+      (fun i _ => runwayAddendIdx_gt_two_w gSep w i)
+      (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w)) (fun i _ => ?_)
+    exact segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m (2 * i' + 1) _ i hgSep
+      (by omega) (fun t ht => by omega)
+      (by show segBase gSep m + 2 * i' + 1 + (1 + 2 * w)
+            = 1 + 2 * w + segBase gSep m + (2 * i' + 1); omega)
+  -- (C) g₃ vs g₂: the runway add lands `+ contiguousAddend`.
+  have hC : contiguousDecode gSep k (fun q => g3 (q + (1 + 2 * w)))
+      = contiguousDecode gSep k (fun q => g2 (q + (1 + 2 * w)))
+        + contiguousAddend gSep k (fun q => g2 (q + (1 + 2 * w))) := by
+    rw [hg3]
+    exact runwayAddKAt_iter_at_base gSep (1 + 2 * w) k g2 hready_g2 hno_g2
+  -- (D) g₂ vs g: the augend register is unchanged (so the prior accumulator value).
+  have hD : contiguousDecode gSep k (fun q => g2 (q + (1 + 2 * w)))
+      = contiguousDecode gSep k (fun q => g (q + (1 + 2 * w))) := by
+    apply contiguousDecode_augend_congr
+    intro m i' hm hi'
+    show g2 (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+      = g (cuccaroAdder.augendIdx (segBase gSep m) i' + (1 + 2 * w))
+    exact haugend_g2 m i' hm hi'
+  -- (E) the addend register reassembles the residue word (chunked).
+  have hE : contiguousAddend gSep k (fun q => g2 (q + (1 + 2 * w)))
+      = word % 2 ^ (k * gSep) := by
+    refine contiguousAddend_reassembly gSep word k (fun q => g2 (q + (1 + 2 * w)))
+      (fun m i' hm hi' => ?_)
+    show g2 (cuccaroAdder.addendIdx (segBase gSep m) i' + (1 + 2 * w))
+      = word.testBit (m * gSep + i')
+    exact hbits m i' hm hi'
+  rw [hA, hB, hC, hD, hE]
 
 end FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
