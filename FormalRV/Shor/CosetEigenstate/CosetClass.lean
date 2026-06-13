@@ -1,24 +1,20 @@
 /-
-  FormalRV.Shor.CosetEigenstate.CosetClass — the coset C_j = residue class mod N.
+  FormalRV.Shor.CosetEigenstate.CosetClass — the coset WINDOW (Zalka/Gidney).
   ════════════════════════════════════════════════════════════════════════════
 
-  The orbit basis of the faithful coset eigenstate is the uniform superposition
-  over a COSET: the set of register values `< 2^bits` congruent to `aʲ mod N`,
+  CORRECTED after reading Gidney, "Approximate encoded permutations and piecewise
+  quantum adders" (arXiv:1905.08488).  The coset representation of `r mod N` is the
+  uniform superposition over a FIXED window of `2^m` representatives:
 
-      cosetClass bits N c  =  { v < 2^bits : v ≡ c  (mod N) }.
+      |Coset_m(r)⟩  =  (1/√2^m) · ∑_{j=0}^{2^m−1} |r + j·N⟩      (paper Def. 3.1)
 
-  This is the index set `S` fed to `uniformSuperposition`.  Here we build the
-  object and its two foundational facts — membership and nonemptiness (a residue
-  always has the representative `c % N < 2^bits` when `N ≤ 2^bits`).
-
-  THE DEVIATION, MADE CONCRETE (the honest frontier, named not hidden).  These
-  classes do NOT all have the same size: `|cosetClass bits N c| ∈ {⌊2^bits/N⌋,
-  ⌈2^bits/N⌉}`, the value depending on `c % N`.  So the orbit shift
-  `cosetClass(aʲ) → cosetClass(aʲ⁺¹)` is a bijection EXACTLY when the two classes
-  have equal size, and is off by one representative otherwise — and that O(1)
-  per-step mismatch, accumulated over the orbit, IS the source of the wrap
-  deviation `W`.  This file pins the object; the size-mismatch analysis and the
-  gadget-driven shift are the next (genuinely mathematical) steps.
+  — NOT the variable-size residue class `{v < 2^bits : v ≡ r}`.  Every window has
+  EXACTLY `2^m` elements, so there is NO size mismatch.  The deviation comes from a
+  different place: when you add `k` (non-modularly) to the window, exactly ONE
+  representative — the top one, `j = 2^m−1` — can wrap past the register, so the
+  per-addition deviation is `1/2^m` (paper Thm 3.2), and deviations are subadditive
+  (Thms 2.11–2.12).  (My earlier "size mismatch = deviation" claim here was WRONG;
+  the index set fed to `uniformSuperposition` is this fixed window.)
 
   Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude.
 -/
@@ -27,32 +23,66 @@ import Mathlib.Data.Fintype.BigOperators
 
 namespace FormalRV.Shor.CosetEigenstate.CosetClass
 
-/-- The coset of register values `< 2^bits` congruent to `c` modulo `N`. -/
-def cosetClass (bits N c : Nat) : Finset (Fin (2 ^ bits)) :=
-  Finset.univ.filter (fun v => v.val % N = c % N)
+/-- The coset window: the `2^m` representatives `{r, r+N, …, r+(2^m−1)·N}` of the
+    residue `r` that live in the register `Fin dim`.  Characterized by a DECIDABLE,
+    division-free predicate (`r ≤ v`, `N ∣ (v−r)`, and `v−r < 2^m·N`). -/
+def cosetWindow (dim N m r : Nat) : Finset (Fin dim) :=
+  Finset.univ.filter
+    (fun v => r ≤ (v : Nat) ∧ ((v : Nat) - r) % N = 0 ∧ (v : Nat) - r < 2 ^ m * N)
 
-/-- Membership: `v ∈ cosetClass bits N c ↔ v ≡ c (mod N)`. -/
-@[simp] theorem mem_cosetClass (bits N c : Nat) (v : Fin (2 ^ bits)) :
-    v ∈ cosetClass bits N c ↔ v.val % N = c % N := by
-  simp [cosetClass]
+/-- Membership in terms of the `2^m` representatives (`N > 0`). -/
+theorem mem_cosetWindow (dim N m r : Nat) (hN : 0 < N) (v : Fin dim) :
+    v ∈ cosetWindow dim N m r ↔ ∃ j, j < 2 ^ m ∧ (v : Nat) = r + j * N := by
+  rw [cosetWindow, Finset.mem_filter]
+  constructor
+  · rintro ⟨_, hge, hmod, hlt⟩
+    have hmul : ((v : Nat) - r) / N * N = (v : Nat) - r :=
+      Nat.div_mul_cancel (Nat.dvd_of_mod_eq_zero hmod)
+    refine ⟨((v : Nat) - r) / N, ?_, ?_⟩
+    · have : ((v : Nat) - r) / N * N < 2 ^ m * N := by rw [hmul]; exact hlt
+      exact Nat.lt_of_mul_lt_mul_right this
+    · omega
+  · rintro ⟨j, hj, hvj⟩
+    have hsub : (v : Nat) - r = j * N := by omega
+    refine ⟨Finset.mem_univ v, by omega, ?_, ?_⟩
+    · rw [hsub]; exact Nat.mul_mod_left j N
+    · rw [hsub]; exact (Nat.mul_lt_mul_right hN).mpr hj
 
-/-- The canonical representative `c % N` lives in the class (`< 2^bits` when
-    `N ≤ 2^bits`). -/
-theorem cosetRep_mem (bits N c : Nat) (hN : 0 < N) (hNle : N ≤ 2 ^ bits) :
-    (⟨c % N, lt_of_lt_of_le (Nat.mod_lt c hN) hNle⟩ : Fin (2 ^ bits)) ∈ cosetClass bits N c := by
-  rw [mem_cosetClass]
-  exact Nat.mod_eq_of_lt (Nat.mod_lt c hN)
+/-- The base representative `r` (i.e. `j = 0`) is in the window (`r < dim`, `N > 0`). -/
+theorem cosetRep_mem_window (dim N m r : Nat) (hN : 0 < N) (hr : r < dim) :
+    (⟨r, hr⟩ : Fin dim) ∈ cosetWindow dim N m r := by
+  rw [mem_cosetWindow dim N m r hN]
+  exact ⟨0, Nat.two_pow_pos m, by simp⟩
 
-/-- The class is NONEMPTY (so `uniformSuperposition` over it is a genuine state)
-    whenever `N ≤ 2^bits`. -/
-theorem cosetClass_nonempty (bits N c : Nat) (hN : 0 < N) (hNle : N ≤ 2 ^ bits) :
-    (cosetClass bits N c).Nonempty :=
-  ⟨_, cosetRep_mem bits N c hN hNle⟩
+/-- The window is NONEMPTY when its base representative fits. -/
+theorem cosetWindow_nonempty (dim N m r : Nat) (hN : 0 < N) (hr : r < dim) :
+    (cosetWindow dim N m r).Nonempty :=
+  ⟨_, cosetRep_mem_window dim N m r hN hr⟩
 
-/-- Hence the class has positive cardinality — `uniformSuperposition` is normalized
-    (`uniformSuperposition_total`). -/
-theorem cosetClass_card_pos (bits N c : Nat) (hN : 0 < N) (hNle : N ≤ 2 ^ bits) :
-    0 < (cosetClass bits N c).card :=
-  Finset.card_pos.mpr (cosetClass_nonempty bits N c hN hNle)
+/-- **Constant size — the heart of the correction.**  When all `2^m` representatives
+    fit in the register (`r + (2^m−1)·N < dim`) and `N > 0`, the window has EXACTLY
+    `2^m` elements — independent of `r`.  So the orbit shift between two windows is a
+    genuine `2^m → 2^m` bijection; the deviation is NOT a size mismatch but the
+    top-representative wrap (Gidney Thm 3.2). -/
+theorem cosetWindow_card (dim N m r : Nat) (hN : 0 < N)
+    (hfit : r + (2 ^ m - 1) * N < dim) :
+    (cosetWindow dim N m r).card = 2 ^ m := by
+  have hbound : ∀ j, j < 2 ^ m → r + j * N < dim := by
+    intro j hj
+    have : j * N ≤ (2 ^ m - 1) * N := Nat.mul_le_mul_right N (by omega)
+    omega
+  rw [← Finset.card_range (2 ^ m)]
+  refine (Finset.card_bij
+    (fun j hj => (⟨r + j * N, hbound j (Finset.mem_range.mp hj)⟩ : Fin dim)) ?_ ?_ ?_).symm
+  · intro j hj
+    rw [mem_cosetWindow dim N m r hN]
+    exact ⟨j, Finset.mem_range.mp hj, rfl⟩
+  · intro j₁ hj₁ j₂ hj₂ heq
+    have hval : r + j₁ * N = r + j₂ * N := congrArg Fin.val heq
+    exact Nat.eq_of_mul_eq_mul_right hN (by omega)
+  · intro v hv
+    rw [mem_cosetWindow dim N m r hN] at hv
+    obtain ⟨j, hj, hvj⟩ := hv
+    exact ⟨j, Finset.mem_range.mpr hj, Fin.ext hvj.symm⟩
 
 end FormalRV.Shor.CosetEigenstate.CosetClass
