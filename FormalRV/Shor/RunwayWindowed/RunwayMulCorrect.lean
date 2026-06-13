@@ -23,7 +23,8 @@ namespace FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 open FormalRV.Shor.RunwayWindowed.RunwayLayout
-  (runwayAddKAt runwayAddendIdx runwayWindowStep runwayLookupAdd runwayAddKAt_wellTyped)
+  (runwayAddKAt runwayAddendIdx runwayWindowStep runwayLookupAdd runwayAddKAt_wellTyped
+   runwayAddendIdx_lt)
 open FormalRV.Shor.RunwayWindowed.RunwayShift (runwayAddKAt_downshift runwayAddKAt_eq_shiftBy)
 open FormalRV.Shor.RunwayWindowed.GateShift (applyNat_shiftBy)
 open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
@@ -34,7 +35,7 @@ open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd
   (IterReady iterGate runwayAddK_iter_contiguous segAdd_fixes_addend
    runwayAddK_prefix_preserves_IterReady runwayAddK_preserves_IterReady)
 open FormalRV.Shor.WindowedCircuit
-  (copyWindow lookupReadAt encodeReg copyWindow_loads_window copyWindow_frame
+  (copyWindow lookupReadAt encodeReg copyWindow_loads_window copyWindow_frame copyWindow_at_addr
    lookupReadAt_selects_word lookupReadAt_frame decodeReg_eq_mod_of_testBit)
 
 /-- **The runway add at base.**  Reading the re-based runway adder's output via
@@ -556,5 +557,237 @@ theorem windowStep_fixes (w gSep a N k yBase j : Nat) (g : Nat → Bool) (p : Na
         lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
           (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend,
         copyWindow_frame w yBase j _ p h_ne_addr]
+
+/-- The middle three stages (`lookupReadAt-write ; runwayAddKAt ; lookupReadAt-unwrite`)
+    fix every position that is not a segment-major addend wire and lies outside the
+    runway block — used to carry address/AND/y-register facts across the add. -/
+theorem runwayLookupAdd_fixes (w gSep k : Nat) (T : Nat → Nat) (g : Nat → Bool) (p : Nat)
+    (hk : 0 < k)
+    (h_ne_addend : ∀ i, i < k * gSep → p ≠ runwayAddendIdx gSep (1 + 2 * w) i)
+    (h_runway : p < 1 + 2 * w ∨ (1 + 2 * w) + k * segStride gSep ≤ p) :
+    Gate.applyNat (runwayLookupAdd w gSep T k (1 + 2 * w)) g p = g p := by
+  simp only [runwayLookupAdd, Gate.applyNat_seq]
+  rw [lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
+        (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend]
+  rcases h_runway with hlow | hhigh
+  · rw [runwayAddKAt_fixes_below gSep (1 + 2 * w) k _ p hlow,
+        lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
+          (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend]
+  · rw [runwayAddKAt_fixes_above gSep (1 + 2 * w) k hk _ p hhigh,
+        lookupReadAt_frame w (k * gSep) _ (runwayAddendIdx gSep (1 + 2 * w)) _
+          (fun i _ => runwayAddendIdx_gt_two_w gSep w i) p h_ne_addend]
+
+/-- The lookup-write∘copyWindow stage preserves `IterReady` (the carry-in and
+    addend-top are framed — they are neither address nor addend-data wires). -/
+theorem windowWrite_IterReady (w gSep a N k numWin y j : Nat) (g : Nat → Bool)
+    (hgSep : 0 < gSep) (hready : IterReady gSep k (fun q => g (q + (1 + 2 * w)))) :
+    IterReady gSep k (fun q =>
+      Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep)
+          (fun v => (a * (2 ^ w) ^ j * v) % N))
+        (Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g) (q + (1 + 2 * w))) := by
+  intro m hm
+  obtain ⟨hcarry, htop⟩ := hready m hm
+  refine ⟨?_, ?_⟩
+  · show Gate.applyNat _ (Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g)
+          (segBase gSep m + (1 + 2 * w)) = false
+    rw [windowIO_frame w gSep k (yBaseR w gSep k) j _ g (segBase gSep m + (1 + 2 * w)) (by omega)
+          (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m 0 _ i hgSep
+            (by omega) (fun t ht => by omega) (by omega))]
+    exact hcarry
+  · show Gate.applyNat _ (Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g)
+          (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w)) = false
+    rw [windowIO_frame w gSep k (yBaseR w gSep k) j _ g
+          (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w)) (by omega)
+          (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m (2 * gSep + 2) _ i hgSep
+            (by omega) (fun t ht => by omega)
+            (by show segBase gSep m + 2 * gSep + 2 + (1 + 2 * w)
+                  = 1 + 2 * w + segBase gSep m + (2 * gSep + 2); omega))]
+    exact htop
+
+/-- **The runway-windowed multiplier's structural invariant** (window-agnostic):
+    the lookup zone is clean (control set, address/AND ancillas zero), the
+    segment-major addend register is clear, the multiplicand register holds `y`,
+    and the runway is `IterReady`.  Preserved by every window step — the
+    accumulator value is tracked SEPARATELY by `runwayWindowStep_value`. -/
+def RunwayReady (w gSep k numWin y : Nat) (g : Nat → Bool) : Prop :=
+  g ulookup_ctrl_idx = true
+  ∧ (∀ i, i < w → g (ulookup_address_idx i) = false)
+  ∧ (∀ i, i < w → g (ulookup_and_idx i) = false)
+  ∧ (∀ i, i < k * gSep → g (runwayAddendIdx gSep (1 + 2 * w) i) = false)
+  ∧ (∀ i, i < numWin * w →
+      g (yBaseR w gSep k + i) = encodeReg (yBaseR w gSep k) (numWin * w) y (yBaseR w gSep k + i))
+  ∧ IterReady gSep k (fun q => g (q + (1 + 2 * w)))
+
+/-- **THE WINDOW-STEP CLEANLINESS THEOREM.**  One full window step preserves
+    `RunwayReady`: control/address/AND/y are restored by frames + the `copyWindow`
+    address involution; the addend is restored (write ⊕ unwrite, with the add
+    leaving the addend bit-for-bit via `runwayAddK_fixes_addend_bit`); `IterReady`
+    survives the add (`runwayAddK_preserves_IterReady`).  No no-overflow needed —
+    this is purely structural.  With `runwayWindowStep_value`, this is the full
+    induction step for the M4 fold. -/
+theorem runwayWindowStep_preserves_ready (w gSep a N k numWin y j : Nat) (g : Nat → Bool)
+    (hw : 0 < w) (hgSep : 0 < gSep) (hk : 0 < k) (hj : j < numWin)
+    (hr : RunwayReady w gSep k numWin y g) :
+    RunwayReady w gSep k numWin y
+      (Gate.applyNat (runwayWindowStep w gSep a N k (1 + 2 * w) (yBaseR w gSep k) j) g) := by
+  obtain ⟨hctrl, haddr_clean, hand_clean, haddend_clean, hyfull, hready⟩ := hr
+  have hy : ∀ i, i < w → g (yBaseR w gSep k + j * w + i)
+      = encodeReg (yBaseR w gSep k) (numWin * w) y (yBaseR w gSep k + j * w + i) := by
+    intro i hi
+    have hjw : j * w + i < numWin * w := by
+      calc j * w + i < j * w + w := by omega
+        _ = (j + 1) * w := by ring
+        _ ≤ numWin * w := Nat.mul_le_mul_right w hj
+    have h := hyfull (j * w + i) hjw
+    rwa [show yBaseR w gSep k + (j * w + i) = yBaseR w gSep k + j * w + i from by omega] at h
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- control wire: untouched by all five stages
+    rw [windowStep_fixes w gSep a N k (yBaseR w gSep k) j g ulookup_ctrl_idx hk
+        (fun i _ => by unfold ulookup_ctrl_idx ulookup_address_idx; omega)
+        (fun i _ => by have := runwayAddendIdx_gt_two_w gSep w i; unfold ulookup_ctrl_idx; omega)
+        (Or.inl (by unfold ulookup_ctrl_idx; omega))]
+    exact hctrl
+  · -- address wire: the two copyWindows cancel (involution); the middle frames it
+    intro i hi
+    have hctrl_addr : ∀ a b, a < w → b < w →
+        yBaseR w gSep k + j * w + a ≠ ulookup_address_idx b :=
+      fun a b _ _ => by unfold yBaseR ulookup_address_idx; omega
+    simp only [runwayWindowStep, Gate.applyNat_seq]
+    rw [copyWindow_at_addr w (yBaseR w gSep k) j _ hctrl_addr i hi,
+        runwayLookupAdd_fixes w gSep k _ (Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g)
+          (ulookup_address_idx i) hk
+          (fun I _ => by have := runwayAddendIdx_gt_two_w gSep w I; unfold ulookup_address_idx; omega)
+          (Or.inl (by unfold ulookup_address_idx; omega)),
+        runwayLookupAdd_fixes w gSep k _ (Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g)
+          (yBaseR w gSep k + j * w + i) hk
+          (fun I hI => by have := runwayAddendIdx_lt gSep (1 + 2 * w) k I hgSep hI; unfold yBaseR; omega)
+          (Or.inr (by unfold yBaseR; omega)),
+        copyWindow_at_addr w (yBaseR w gSep k) j g hctrl_addr i hi,
+        copyWindow_frame w (yBaseR w gSep k) j g (yBaseR w gSep k + j * w + i)
+          (fun b _ => by unfold yBaseR ulookup_address_idx; omega),
+        haddr_clean i hi]
+    simp
+  · -- AND ancilla: untouched by all five stages
+    intro i hi
+    rw [windowStep_fixes w gSep a N k (yBaseR w gSep k) j g (ulookup_and_idx i) hk
+        (fun i' _ => by unfold ulookup_and_idx ulookup_address_idx; omega)
+        (fun i' _ => by have := runwayAddendIdx_gt_two_w gSep w i'; unfold ulookup_and_idx; omega)
+        (Or.inl (by unfold ulookup_and_idx; omega))]
+    exact hand_clean i hi
+  · -- addend wire: write ⊕ unwrite, the add preserving the bits
+    intro I hI
+    simp only [runwayWindowStep, runwayLookupAdd, Gate.applyNat_seq]
+    set T : Nat → Nat := fun v => (a * (2 ^ w) ^ j * v) % N with hT
+    set word : Nat := (a * (2 ^ w) ^ j * WindowedArith.window w y j) % N with hword
+    set g1 := Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g with hg1
+    set g2 := Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T) g1
+      with hg2
+    set g3 := Gate.applyNat (runwayAddKAt gSep (1 + 2 * w) k) g2 with hg3
+    rw [copyWindow_frame w (yBaseR w gSep k) j _ (runwayAddendIdx gSep (1 + 2 * w) I)
+          (fun b _ => by have := runwayAddendIdx_gt_two_w gSep w I; unfold ulookup_address_idx; omega)]
+    have hg3_ctrl : g3 ulookup_ctrl_idx = true := by
+      rw [hg3, runwayAddKAt_fixes_below gSep (1 + 2 * w) k g2 ulookup_ctrl_idx
+            (by unfold ulookup_ctrl_idx; omega),
+          hg2, lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g1
+            (fun i _ => runwayAddendIdx_gt_two_w gSep w i) ulookup_ctrl_idx
+            (fun i _ => by have := runwayAddendIdx_gt_two_w gSep w i; unfold ulookup_ctrl_idx; omega),
+          hg1, copyWindow_frame w (yBaseR w gSep k) j g ulookup_ctrl_idx
+            (fun i _ => by unfold ulookup_ctrl_idx ulookup_address_idx; omega)]
+      exact hctrl
+    have hg3_addr : ∀ i, i < w →
+        g3 (ulookup_address_idx i) = (WindowedArith.window w y j).testBit i := by
+      intro i hi
+      rw [hg3, runwayAddKAt_fixes_below gSep (1 + 2 * w) k g2 (ulookup_address_idx i)
+            (by unfold ulookup_address_idx; omega),
+          hg2, lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g1
+            (fun i' _ => runwayAddendIdx_gt_two_w gSep w i') (ulookup_address_idx i)
+            (fun i' _ => by have := runwayAddendIdx_gt_two_w gSep w i'; unfold ulookup_address_idx; omega),
+          hg1]
+      exact copyWindow_loads_window w (yBaseR w gSep k) numWin y j g
+        (fun i' k' _ _ => by unfold yBaseR ulookup_address_idx; omega) haddr_clean hy hj i hi
+    have hg3_and : ∀ i, i < w → g3 (ulookup_and_idx i) = false := by
+      intro i hi
+      rw [hg3, runwayAddKAt_fixes_below gSep (1 + 2 * w) k g2 (ulookup_and_idx i)
+            (by unfold ulookup_and_idx; omega),
+          hg2, lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g1
+            (fun i' _ => runwayAddendIdx_gt_two_w gSep w i') (ulookup_and_idx i)
+            (fun i' _ => by have := runwayAddendIdx_gt_two_w gSep w i'; unfold ulookup_and_idx; omega),
+          hg1, copyWindow_frame w (yBaseR w gSep k) j g (ulookup_and_idx i)
+            (fun i' _ => by unfold ulookup_and_idx ulookup_address_idx; omega)]
+      exact hand_clean i hi
+    have hg3_addend : g3 (runwayAddendIdx gSep (1 + 2 * w) I) = word.testBit I := by
+      have hi' : I % gSep < gSep := Nat.mod_lt _ hgSep
+      have hm : I / gSep < k := Nat.div_lt_of_lt_mul (by rwa [Nat.mul_comm] at hI)
+      have hbridge : g3 (runwayAddendIdx gSep (1 + 2 * w) I)
+          = Gate.applyNat (runwayAddK gSep k) (fun q => g2 (q + (1 + 2 * w)))
+              (cuccaroAdder.addendIdx (segBase gSep (I / gSep)) (I % gSep)) := by
+        rw [hg3, show runwayAddendIdx gSep (1 + 2 * w) I
+              = cuccaroAdder.addendIdx (segBase gSep (I / gSep)) (I % gSep) + (1 + 2 * w) from by
+              show (1 + 2 * w) + segBase gSep (I / gSep) + 2 * (I % gSep) + 2
+                = segBase gSep (I / gSep) + 2 * (I % gSep) + 2 + (1 + 2 * w); omega]
+        exact congrFun (runwayAddKAt_downshift gSep (1 + 2 * w) k g2)
+          (cuccaroAdder.addendIdx (segBase gSep (I / gSep)) (I % gSep))
+      rw [hbridge, runwayAddK_fixes_addend_bit gSep k (fun q => g2 (q + (1 + 2 * w)))
+            (windowWrite_IterReady w gSep a N k numWin y j g hgSep hready) (I / gSep) hm (I % gSep) hi']
+      show g2 (cuccaroAdder.addendIdx (segBase gSep (I / gSep)) (I % gSep) + (1 + 2 * w))
+        = word.testBit I
+      rw [show cuccaroAdder.addendIdx (segBase gSep (I / gSep)) (I % gSep) + (1 + 2 * w)
+            = runwayAddendIdx gSep (1 + 2 * w) I from by
+            show segBase gSep (I / gSep) + 2 * (I % gSep) + 2 + (1 + 2 * w)
+              = (1 + 2 * w) + segBase gSep (I / gSep) + 2 * (I % gSep) + 2; omega,
+          hg2, hg1]
+      exact runway_lookup_writes_word w gSep a N k numWin y j g hw hgSep hj hctrl
+        haddr_clean hand_clean haddend_clean hy I hI
+    rw [lookupReadAt_selects_word w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g3
+          (WindowedArith.window w y j) hw (WindowedArith.window_lt w y j) hg3_ctrl hg3_addr hg3_and
+          (fun i _ => runwayAddendIdx_gt_two_w gSep w i)
+          (fun a' b' _ _ h => runwayAddendIdx_inj gSep (1 + 2 * w) hgSep a' b' h) I hI,
+        hg3_addend]
+    exact Bool.xor_self _
+  · -- y-register: untouched by all five stages
+    intro i hi
+    rw [windowStep_fixes w gSep a N k (yBaseR w gSep k) j g (yBaseR w gSep k + i) hk
+        (fun i' _ => by unfold ulookup_address_idx yBaseR; omega)
+        (fun i' hi' => by have := runwayAddendIdx_lt gSep (1 + 2 * w) k i' hgSep hi'; unfold yBaseR; omega)
+        (Or.inr (by unfold yBaseR; omega))]
+    exact hyfull i hi
+  · -- IterReady: the add preserves it; g₄/g₅ frame the carry-in and addend-top
+    simp only [runwayWindowStep, runwayLookupAdd, Gate.applyNat_seq]
+    set T : Nat → Nat := fun v => (a * (2 ^ w) ^ j * v) % N with hT
+    set g1 := Gate.applyNat (copyWindow w (yBaseR w gSep k) j) g with hg1
+    set g2 := Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T) g1
+      with hg2
+    set g3 := Gate.applyNat (runwayAddKAt gSep (1 + 2 * w) k) g2 with hg3
+    have hready_g3 : IterReady gSep k (fun q => g3 (q + (1 + 2 * w))) := by
+      rw [hg3, runwayAddKAt_downshift gSep (1 + 2 * w) k g2]
+      exact runwayAddK_preserves_IterReady gSep k (fun q => g2 (q + (1 + 2 * w)))
+        (windowWrite_IterReady w gSep a N k numWin y j g hgSep hready)
+    intro m hm
+    obtain ⟨hc3, ht3⟩ := hready_g3 m hm
+    refine ⟨?_, ?_⟩
+    · show Gate.applyNat (copyWindow w (yBaseR w gSep k) j)
+            (Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T) g3)
+            (segBase gSep m + (1 + 2 * w)) = false
+      rw [copyWindow_frame w (yBaseR w gSep k) j _ (segBase gSep m + (1 + 2 * w))
+            (fun b hb => by unfold ulookup_address_idx; omega),
+          lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g3
+            (fun i _ => runwayAddendIdx_gt_two_w gSep w i) (segBase gSep m + (1 + 2 * w))
+            (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m 0 _ i hgSep
+              (by omega) (fun t ht => by omega) (by omega))]
+      exact hc3
+    · show Gate.applyNat (copyWindow w (yBaseR w gSep k) j)
+            (Gate.applyNat (lookupReadAt w (runwayAddendIdx gSep (1 + 2 * w)) (k * gSep) T) g3)
+            (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w)) = false
+      rw [copyWindow_frame w (yBaseR w gSep k) j _
+            (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w))
+            (fun b hb => by have h : cuccaroAdder.addendIdx (segBase gSep m) gSep = segBase gSep m + 2 * gSep + 2 := rfl; unfold ulookup_address_idx; omega),
+          lookupReadAt_frame w (k * gSep) T (runwayAddendIdx gSep (1 + 2 * w)) g3
+            (fun i _ => runwayAddendIdx_gt_two_w gSep w i)
+            (cuccaroAdder.addendIdx (segBase gSep m) gSep + (1 + 2 * w))
+            (fun i _ => segOffset_ne_runwayAddendIdx gSep (1 + 2 * w) m (2 * gSep + 2) _ i hgSep
+              (by omega) (fun t ht => by omega)
+              (by show segBase gSep m + 2 * gSep + 2 + (1 + 2 * w)
+                    = 1 + 2 * w + segBase gSep m + (2 * gSep + 2); omega))]
+      exact ht3
 
 end FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
