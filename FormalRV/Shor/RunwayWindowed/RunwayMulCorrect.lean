@@ -29,7 +29,7 @@ open FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
   (contiguousDecode contiguousAugend contiguousAddend runwayAddK_contiguous)
 open FormalRV.Shor.WindowedCircuit
   (copyWindow lookupReadAt encodeReg copyWindow_loads_window copyWindow_frame
-   lookupReadAt_selects_word lookupReadAt_frame)
+   lookupReadAt_selects_word lookupReadAt_frame decodeReg_eq_mod_of_testBit)
 
 /-- **The runway add at base.**  Reading the re-based runway adder's output via
     the base-shifted contiguous decode (= the base-0 contiguous decode of the
@@ -161,5 +161,37 @@ theorem runway_lookup_writes_word (w gSep a N k numWin y j : Nat) (g : Nat → B
         (fun i _ => runwayAddendIdx_gt_two_w gSep w i)
         (fun a' b' _ _ h => runwayAddendIdx_inj gSep (1 + 2 * w) hgSep a' b' h) i hi,
       hg1_addend i hi, Bool.false_xor]
+
+/-! ## M3 window-step — the addend-reassembly connection.
+
+`contiguousAddend` of a state whose segment-major addend data bits encode `word`
+(segment `m`'s data bit `i'` = `word.testBit (m·gSep + i')`) reassembles to
+`word % 2^(k·gSep)`.  This is the base-`2^gSep` digit-reconstruction connecting
+the lookup-write (which writes `word`'s bits at `runwayAddendIdx = base +
+addendIdx(segBase m) i'`, so the DOWN-SHIFT reads them at `addendIdx(segBase m)
+i'`) to the down-shifted `contiguousAddend` consumed by the add-at-base.
+Mirrors `decodeReg_eq_mod_of_testBit`'s own induction (`Nat.mod_mul` +
+`Nat.testBit_div_two_pow`). -/
+theorem contiguousAddend_reassembly (gSep word : Nat) :
+    ∀ (k : Nat) (h : Nat → Bool),
+      (∀ m i', m < k → i' < gSep →
+        h (cuccaroAdder.addendIdx (segBase gSep m) i') = word.testBit (m * gSep + i')) →
+      contiguousAddend gSep k h = word % 2 ^ (k * gSep) := by
+  intro k
+  induction k with
+  | zero => intro h _; simp [contiguousAddend, Nat.mod_one]
+  | succ m ih =>
+    intro h hbits
+    show contiguousAddend gSep m h
+        + decodeReg (cuccaroAdder.addendIdx (segBase gSep m)) gSep h * 2 ^ (m * gSep)
+      = word % 2 ^ ((m + 1) * gSep)
+    rw [ih h (fun m' i' hm' hi' => hbits m' i' (Nat.lt_succ_of_lt hm') hi'),
+        decodeReg_eq_mod_of_testBit (cuccaroAdder.addendIdx (segBase gSep m)) gSep
+          (word / 2 ^ (m * gSep)) h
+          (fun i' hi' => by
+            rw [hbits m i' (Nat.lt_succ_self m) hi', Nat.testBit_div_two_pow,
+                Nat.add_comm i' (m * gSep)]),
+        show (m + 1) * gSep = m * gSep + gSep from by ring, pow_add, Nat.mod_mul]
+    ring
 
 end FormalRV.Shor.RunwayWindowed.RunwayMulCorrect
