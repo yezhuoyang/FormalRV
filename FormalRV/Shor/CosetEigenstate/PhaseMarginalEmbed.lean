@@ -98,4 +98,39 @@ theorem dataLocal_marginal_transfer {m_dim full_dim : Nat} (h : m_dim ∣ full_d
         Finset.sum_congr rfl (fun y _ => by rw [hem x y])
     _ = ∑ y, Complex.normSq (ideal (jointIdx h x y) 0) := DL.isom ideal x
 
+/-- **THE OFF-BAD READOUT-MARGINAL TRANSFER.**  If `actual = D · ideal` only off a
+    data wrap bad set `badY`, the phase marginals differ by at most the Born mass each
+    of `actual` and `D·ideal` carries on `badY` — the wrap deviation the approximate
+    bound pays.  (Combined with the union accumulation `PhaseMarginalOracle.dataBornMass_union_le`
+    over steps/branches, this is the total wrap weight feeding `ge2021_coset_shor_succeeds_marginal`.) -/
+theorem dataLocal_marginal_transfer_offBad {m_dim full_dim : Nat} (h : m_dim ∣ full_dim)
+    {D : QState full_dim → QState full_dim} (DL : DataLocal h D)
+    {actual ideal : QState full_dim} (x : Fin m_dim)
+    (badY : Finset (Fin (full_dim / m_dim)))
+    (hem : ∀ y, y ∉ badY → actual (jointIdx h x y) 0 = (D ideal) (jointIdx h x y) 0) :
+    |phaseMarginal h actual x - phaseMarginal h ideal x|
+      ≤ (∑ y ∈ badY, Complex.normSq (actual (jointIdx h x y) 0))
+        + (∑ y ∈ badY, Complex.normSq ((D ideal) (jointIdx h x y) 0)) := by
+  have hidl : phaseMarginal h ideal x = ∑ y, Complex.normSq ((D ideal) (jointIdx h x y) 0) :=
+    (DL.isom ideal x).symm
+  rw [hidl]
+  unfold phaseMarginal
+  rw [← Finset.sum_sub_distrib]
+  have hvanish : ∀ y ∈ Finset.univ, y ∉ badY →
+      Complex.normSq (actual (jointIdx h x y) 0)
+        - Complex.normSq ((D ideal) (jointIdx h x y) 0) = 0 :=
+    fun y _ hy => by rw [hem y hy, sub_self]
+  rw [← Finset.sum_subset (Finset.subset_univ badY) hvanish]
+  calc |∑ y ∈ badY, (Complex.normSq (actual (jointIdx h x y) 0)
+          - Complex.normSq ((D ideal) (jointIdx h x y) 0))|
+      ≤ ∑ y ∈ badY, |Complex.normSq (actual (jointIdx h x y) 0)
+          - Complex.normSq ((D ideal) (jointIdx h x y) 0)| := Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ y ∈ badY, (Complex.normSq (actual (jointIdx h x y) 0)
+          + Complex.normSq ((D ideal) (jointIdx h x y) 0)) :=
+        Finset.sum_le_sum (fun y _ => by
+          have ha := Complex.normSq_nonneg (actual (jointIdx h x y) 0)
+          have hb := Complex.normSq_nonneg ((D ideal) (jointIdx h x y) 0)
+          rw [abs_le]; constructor <;> linarith)
+    _ = _ := Finset.sum_add_distrib
+
 end FormalRV.Shor.CosetEigenstate.PhaseMarginalEmbed
