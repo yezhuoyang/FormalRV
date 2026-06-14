@@ -260,6 +260,62 @@ theorem mulInputAccOf_correct (A : Adder) (w bits a numWin acc₀ y : Nat)
   windowedMulCircuitOf_correct_acc A w bits a numWin y acc₀ hw hy _
     (stepInv_init_acc A w bits numWin acc₀ y hinj hclean)
 
+/-! ## §3½. Table-generic generalized pass (the substrate for the coset lift).
+
+The acc₀ machinery above is the start-accumulator-agnostic Boolean characterization of
+the windowed multiplier — exactly what a QState coset lift needs (the gate acting on an
+ARBITRARY accumulator value, so it can be summed over a coset's runway).  Like the
+from-0 fold, it generalizes to an arbitrary per-window table `Tfam` for free: the INIT
+(`stepInv_init_acc`) is table-INDEPENDENT and `stepInv_stepT` is start-value-agnostic, so
+the only change is folding `stepInv_stepT` (table `Tfam n`) instead of `stepInv_step`.
+The reduced coset multiplier (`Tfam := tableValue a N w`) consumes this. -/
+
+/-- **Table-generic generalized fold.**  From ANY state `f` with partial sum `acc₀`,
+    running `n ≤ numWin` table-generic window-steps yields the invariant with partial
+    sum `acc₀ + Σ_{k<n} Tfam k (windowₖ(y))`.  (Reuses the table-INDEPENDENT init and the
+    start-value-agnostic `stepInv_stepT`; `stepInv_fold_acc` is the standard-table instance.) -/
+theorem stepInv_foldT_acc (A : Adder) (w bits : Nat) (Tfam : Nat → Nat → Nat)
+    (numWin y acc₀ : Nat) (hw : 0 < w)
+    (f : Nat → Bool) (hf : StepInv A w bits numWin y acc₀ f) :
+    ∀ n, n ≤ numWin →
+      StepInv A w bits numWin y
+        (acc₀ + ∑ k ∈ Finset.range n, Tfam k (WindowedArith.window w y k))
+        (Gate.applyNat
+          (windowedMulTOf A w bits Tfam bits (1 + 2 * w) (1 + 2 * w + A.span bits) n)
+          f) := by
+  intro n
+  induction n with
+  | zero =>
+    intro _
+    rw [Finset.sum_range_zero, Nat.add_zero]
+    show StepInv A w bits numWin y acc₀ (Gate.applyNat Gate.I f)
+    rw [Gate.applyNat_I]
+    exact hf
+  | succ n ih =>
+    intro hn
+    have hsplit : windowedMulTOf A w bits Tfam bits (1 + 2 * w)
+          (1 + 2 * w + A.span bits) (n + 1)
+        = Gate.seq
+            (windowedMulTOf A w bits Tfam bits (1 + 2 * w)
+              (1 + 2 * w + A.span bits) n)
+            (windowStepTOf A w bits (Tfam n) bits (1 + 2 * w)
+              (1 + 2 * w + A.span bits) n) := by
+      unfold windowedMulTOf
+      rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil]
+    rw [hsplit, Gate.applyNat_seq, Finset.sum_range_succ, ← Nat.add_assoc]
+    exact stepInv_stepT A w bits (Tfam n) numWin y hw n (by omega) _ _ (ih (by omega))
+
+/-- **Table-generic generalized pass, value form.**  One full table-generic windowed pass
+    from an invariant state with partial sum `acc₀` leaves
+    `(acc₀ + Σₖ Tfam k (windowₖ(y))) mod 2^bits` in the accumulator. -/
+theorem windowedMulCircuitTOf_correct_acc (A : Adder) (w bits : Nat) (Tfam : Nat → Nat → Nat)
+    (numWin y acc₀ : Nat) (hw : 0 < w) (f : Nat → Bool)
+    (hf : StepInv A w bits numWin y acc₀ f) :
+    decodeAccOf A (Gate.applyNat (windowedMulCircuitTOf A w bits Tfam numWin) f)
+        (1 + 2 * w) bits
+      = (acc₀ + ∑ k ∈ Finset.range numWin, Tfam k (WindowedArith.window w y k)) % 2 ^ bits :=
+  (stepInv_foldT_acc A w bits Tfam numWin y acc₀ hw f hf numWin le_rfl).2.2.2
+
 /-! ## §4. Stage 2 — the accumulator ↔ y-register swap.
 
 Three interleaved full-register CX cascades (the register-level 3-CX SWAP):
