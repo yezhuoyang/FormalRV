@@ -256,6 +256,58 @@ theorem shiftState_normSqDist_nonexpansive {dim : Nat} (c : Nat) (s₁ s₂ : QS
     _ ≤ ∑ j, G j :=
         Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _) (fun j _ _ => abs_nonneg _)
 
+/-- The genuine WRAPPING add-constant — the REAL reversible adder's basis
+    permutation on a `2^bits`-register of size `dim`: `|v⟩ ↦ |(v+c) mod dim⟩`,
+    norm-PRESERVING (a permutation, unlike the truncating `shiftState`).  In
+    amplitude form the value at `i` comes from `(i−c) mod dim = (i+dim−c) mod dim`. -/
+noncomputable def wrapShiftState (dim c : Nat) (s : QState dim) : QState dim :=
+  fun i _ => s ⟨((i : Nat) + (dim - c)) % dim,
+    Nat.mod_lt _ (Nat.lt_of_le_of_lt (Nat.zero_le _) i.isLt)⟩ 0
+
+/-- **THE OVERFLOW-FAITHFULNESS CERTIFICATE (audit #3 — truncation hides nothing).**
+    Under the per-window fit `k + c + (2^m−1)·N < dim`, the TRUNCATING `shiftState`
+    coincides EXACTLY with the genuine WRAPPING reversible-adder gate `wrapShiftState`
+    on the coset state.  In this regime `shiftState` drops NOTHING the real gate keeps,
+    AND the real gate wraps nothing to a wrong place — there is simply no overflow to
+    hide.  Off the fit the two genuinely differ (drop vs wrap-around), which is exactly
+    why the FOLD needs the running-sum fit (every partial window `< dim`) to stay
+    faithful to the physical gate: non-expansiveness alone would silently absorb the
+    dropped mass that the real gate would instead have wrapped. -/
+theorem shiftState_eq_wrapState_on_coset (dim N m k c : Nat) (hN : 0 < N)
+    (hfit : k + c + (2 ^ m - 1) * N < dim) :
+    shiftState dim c (cosetState dim N m k) = wrapShiftState dim c (cosetState dim N m k) := by
+  funext i z
+  have hz : z = 0 := Subsingleton.elim z 0
+  subst hz
+  simp only [shiftState, wrapShiftState]
+  by_cases hci : c ≤ (i : Nat)
+  · rw [if_pos hci]
+    congr 2
+    have h1 : (i : Nat) + (dim - c) = ((i : Nat) - c) + dim := by omega
+    rw [h1, Nat.add_mod_right, Nat.mod_eq_of_lt (by omega)]
+  · rw [if_neg hci]
+    set j : Fin dim := ⟨((i : Nat) + (dim - c)) % dim,
+      Nat.mod_lt _ (Nat.lt_of_le_of_lt (Nat.zero_le _) i.isLt)⟩ with hj
+    have hjval : (j : Nat) = (i : Nat) + (dim - c) := by
+      rw [hj]; exact Nat.mod_eq_of_lt (by omega)
+    have hjnot : j ∉ cosetWindow dim N m k := by
+      rw [mem_cosetWindow dim N m k hN]
+      rintro ⟨a, ha, heq⟩
+      rw [hjval] at heq
+      have : a * N ≤ (2 ^ m - 1) * N := Nat.mul_le_mul_right N (by omega)
+      omega
+    show (0 : ℂ) = cosetState dim N m k j 0
+    rw [cosetState, if_neg hjnot]
+
+/-- The real wrapping gate also realizes the coset shift, under the fit: combining
+    `shiftState_cosetState` with the coincidence certificate, the GENUINE reversible
+    adder carries `cosetState N m k` to `cosetState N m (k+c)` exactly when the window
+    fits — and only then (off the fit the wrap lands the top rep wrong). -/
+theorem wrapShiftState_cosetState (dim N m k c : Nat) (hN : 0 < N)
+    (hfit : k + c + (2 ^ m - 1) * N < dim) :
+    wrapShiftState dim c (cosetState dim N m k) = cosetState dim N m (k + c) := by
+  rw [← shiftState_eq_wrapState_on_coset dim N m k c hN hfit, shiftState_cosetState dim N m k c hN]
+
 /-- **THE SINGLE-ADDITION DEVIATION THEOREM (Gidney arXiv:1905.08488).**  Ordinary
     NON-modular `addConst c` (for canonical `c < N`) carries `cosetState N m k` to
     within `2/2^m` (in `normSqDist`) of the reduced target `cosetState N m ((k+c)%N)`.

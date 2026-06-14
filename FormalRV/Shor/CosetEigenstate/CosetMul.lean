@@ -19,9 +19,11 @@
   The accumulation runs the ACTUAL (non-modular `shiftState`) chain against the
   IDEAL (reduced, mod-`N`) chain.  Because `shiftState` is non-expansive
   (`shiftState_normSqDist_nonexpansive`), overflow in the actual chain is absorbed,
-  so the bound needs ONLY the per-step fit `N + 2^m·N ≤ dim` — never a running-sum
-  fit.  This is exactly the Gidney subadditivity (arXiv:1905.08488, Thms 2.11–2.12)
-  realized on the real coset states.
+  so the bound for the TRUNCATING model needs ONLY the per-step fit `N + 2^m·N ≤ dim`.
+  This is Gidney subadditivity (arXiv:1905.08488, Thms 2.11–2.12) for the truncating
+  shift model.  §2b then transfers it to the GENUINE wrapping reversible adder under
+  an explicit running-sum fit (`cosetMulOutOfPlace_deviation_wrap`) — so the bound is
+  faithful to the physical gate, with truncation provably hiding no overflow.
 
   This is the per-control-branch deviation; lifting it across a superposition over
   the control register is `ControlledLift.normSqDist_controlled_lift*`.
@@ -72,8 +74,10 @@ def idealAcc (N k₀ : Nat) (cs : Nat → Nat) : Nat → Nat
   | 0 => k₀
   | t + 1 => (idealAcc N k₀ cs t + cs t) % N
 
-/-- The ACTUAL (non-modular) accumulator state: fold `shiftState (cs t)` over the
-    initial coset state.  (The real reversible adder, in the no-overflow regime.) -/
+/-- The ACTUAL accumulator state: fold the TRUNCATING `shiftState (cs t)` over the
+    initial coset state.  (This is the truncating MODEL; it coincides with the real
+    WRAPPING reversible adder `wrapActualAcc` only under the running-sum fit — see
+    `actualAcc_eq_wrapActualAcc` / `cosetMulOutOfPlace_deviation_wrap`.) -/
 noncomputable def actualAcc (dim N m k₀ : Nat) (cs : Nat → Nat) : Nat → QState dim
   | 0 => cosetState dim N m k₀
   | t + 1 => shiftState dim (cs t) (actualAcc dim N m k₀ cs t)
@@ -105,6 +109,74 @@ theorem cosetMulOutOfPlace_deviation (dim N m k₀ : Nat) (cs : Nat → Nat)
     rfl T
   exact cosetState_addConst_deviation dim N m (idealAcc N k₀ cs t) (cs t) hN
     (idealAcc_lt N k₀ cs hN hk₀ t) (hcs t) hfit
+
+/-! ## §2b. Faithfulness to the REAL wrapping gate (audit #3).
+
+    `cosetMulOutOfPlace_deviation` above is a true bound for the TRUNCATING
+    `shiftState` fold.  To certify it also governs the physical reversible adder
+    (which WRAPS mod `2^bits`, not truncates), we show that under a RUNNING-SUM fit
+    the truncating fold `actualAcc` coincides EXACTLY with the wrapping fold
+    `wrapActualAcc`, and transfer the bound.  This is what stops truncation /
+    non-expansiveness from silently hiding overflow. -/
+
+/-- The literal running sum of the addends (the un-reduced drift of the actual
+    window: `actualAcc` sits at `cosetState (k₀ + runningSum cs t)`). -/
+def runningSum (cs : Nat → Nat) : Nat → Nat
+  | 0 => 0
+  | t + 1 => runningSum cs t + cs t
+
+/-- The actual (truncating) accumulator literally sits at the UN-reduced running
+    sum — it never reduces mod `N`; the reduction is only approximate (the coset). -/
+theorem actualAcc_eq_cosetState_runningSum (dim N m k₀ : Nat) (cs : Nat → Nat) (hN : 0 < N) :
+    ∀ T, actualAcc dim N m k₀ cs T = cosetState dim N m (k₀ + runningSum cs T) := by
+  intro T
+  induction T with
+  | zero => simp [actualAcc, runningSum]
+  | succ t ih =>
+      show shiftState dim (cs t) (actualAcc dim N m k₀ cs t) = _
+      rw [ih, shiftState_cosetState dim N m _ _ hN]
+      congr 1
+      simp only [runningSum]
+      omega
+
+/-- The REAL reversible-adder fold: each step is the WRAPPING (norm-preserving)
+    add-constant `wrapShiftState`, not the truncating `shiftState`. -/
+noncomputable def wrapActualAcc (dim N m k₀ : Nat) (cs : Nat → Nat) : Nat → QState dim
+  | 0 => cosetState dim N m k₀
+  | t + 1 => wrapShiftState dim (cs t) (wrapActualAcc dim N m k₀ cs t)
+
+/-- **THE FOLD-LEVEL OVERFLOW-FAITHFULNESS CERTIFICATE.**  Under the RUNNING-SUM fit
+    (every partial window `k₀ + runningSum cs t + cs t + (2^m−1)·N < dim`), the
+    truncating fold and the genuine WRAPPING-gate fold coincide step-for-step — so
+    no representative ever overflows and truncation drops nothing the real gate keeps. -/
+theorem actualAcc_eq_wrapActualAcc (dim N m k₀ : Nat) (cs : Nat → Nat) (hN : 0 < N) :
+    ∀ T, (∀ t, t < T → k₀ + runningSum cs t + cs t + (2 ^ m - 1) * N < dim) →
+      actualAcc dim N m k₀ cs T = wrapActualAcc dim N m k₀ cs T := by
+  intro T
+  induction T with
+  | zero => intro _; rfl
+  | succ t ih =>
+      intro hrun
+      show shiftState dim (cs t) (actualAcc dim N m k₀ cs t)
+        = wrapShiftState dim (cs t) (wrapActualAcc dim N m k₀ cs t)
+      rw [← ih (fun s hs => hrun s (Nat.lt_succ_of_lt hs)),
+          actualAcc_eq_cosetState_runningSum dim N m k₀ cs hN t]
+      exact shiftState_eq_wrapState_on_coset dim N m (k₀ + runningSum cs t) (cs t) hN
+        (by have := hrun t (Nat.lt_succ_self t); omega)
+
+/-- **THE REAL-GATE DEVIATION BOUND (faithful).**  The deviation bound of
+    `cosetMulOutOfPlace_deviation`, transferred to the GENUINE WRAPPING reversible
+    adder `wrapActualAcc`, under the running-sum fit.  This is the honest statement:
+    the physical Gidney coset multiplier's accumulator is within `T·(2/2^m)` of the
+    ideal reduced coset state — no truncation artifact, the wrap is exact on the
+    reachable support. -/
+theorem cosetMulOutOfPlace_deviation_wrap (dim N m k₀ : Nat) (cs : Nat → Nat)
+    (hN : 0 < N) (hk₀ : k₀ < N) (hcs : ∀ t, cs t < N) (hfit : N + 2 ^ m * N ≤ dim)
+    (T : Nat) (hrun : ∀ t, t < T → k₀ + runningSum cs t + cs t + (2 ^ m - 1) * N < dim) :
+    normSqDist (wrapActualAcc dim N m k₀ cs T) (cosetState dim N m (idealAcc N k₀ cs T))
+      ≤ (T : ℝ) * (2 / 2 ^ m) := by
+  rw [← actualAcc_eq_wrapActualAcc dim N m k₀ cs hN T hrun]
+  exact cosetMulOutOfPlace_deviation dim N m k₀ cs hN hk₀ hcs hfit T
 
 /-! ## §3. The superposition capstone (lift over the control register). -/
 
