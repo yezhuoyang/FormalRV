@@ -65,6 +65,37 @@ theorem cosetState_normalized (dim N m k : Nat) (hN : 0 < N)
   push_cast
   exact div_self (by positivity)
 
+/-- **`normSqDist` triangle inequality** — the foundation of deviation
+    SUBADDITIVITY (Gidney Thms 2.11–2.12): composing `t` approximate steps costs at
+    most the sum of the per-step deviations. -/
+theorem normSqDist_triangle {dim : Nat} (s₁ s₂ s₃ : QState dim) :
+    normSqDist s₁ s₃ ≤ normSqDist s₁ s₂ + normSqDist s₂ s₃ := by
+  unfold normSqDist
+  rw [← Finset.sum_add_distrib]
+  exact Finset.sum_le_sum (fun i _ => abs_sub_le _ _ _)
+
+/-- **Deviation SUBADDITIVITY (the chain bound).**  If a chain of `t` states has
+    each consecutive pair within `d`, the endpoints are within `t·d`.  This is how
+    `t` approximate additions accumulate to total deviation `t·(2/2^m)`. -/
+theorem normSqDist_chain {dim : Nat} (s : Nat → QState dim) (d : ℝ) :
+    ∀ t, (∀ i, i < t → normSqDist (s i) (s (i + 1)) ≤ d) →
+      normSqDist (s 0) (s t) ≤ (t : ℝ) * d := by
+  intro t
+  induction t with
+  | zero =>
+      intro _
+      have h0 : normSqDist (s 0) (s 0) = 0 := by unfold normSqDist; simp
+      simp [h0]
+  | succ n ih =>
+      intro hstep
+      calc normSqDist (s 0) (s (n + 1))
+          ≤ normSqDist (s 0) (s n) + normSqDist (s n) (s (n + 1)) := normSqDist_triangle _ _ _
+        _ ≤ (n : ℝ) * d + d := by
+            have h1 := ih (fun i hi => hstep i (by omega))
+            have h2 := hstep n (by omega)
+            linarith
+        _ = ((n + 1 : Nat) : ℝ) * d := by push_cast; ring
+
 /-! ## §2. The single-addition deviation (the combinatorial support-overlap, lifted). -/
 
 /-- **Adjacent-window deviation (the combinatorial core).**  The window at `s+N`
