@@ -115,14 +115,63 @@ noncomputable def gateClassicalPerm (g : Gate) (dim : Nat) (hwt : Gate.WellTyped
 @[simp] theorem gateClassicalPerm_apply (g : Gate) (dim : Nat) (hwt : Gate.WellTyped dim g)
     (φ : Fin dim → Bool) : gateClassicalPerm g dim hwt φ = applyFin g dim φ := rfl
 
-/-- A coordinatization of the basis-index type as `Fin (2^dim)`. -/
-noncomputable def boolFin (dim : Nat) : (Fin dim → Bool) ≃ Fin (2 ^ dim) :=
-  Fintype.equivFinOfCardEq (by rw [Fintype.card_fun, Fintype.card_bool, Fintype.card_fin])
+/-! ### The funbool ENCODING coordinatization (matches `uc_eval`'s `funbool_to_nat`).
 
-/-- **The classical gate's basis permutation on the register `Fin (2^dim)`.** -/
+    To agree with the literal SQIR semantics (`uc_eval_toUCom_acts_on_basis`, which
+    encodes basis states via `funbool_to_nat`), the `Fin (2^dim)` coordinatization
+    MUST be the funbool encoding — NOT an arbitrary card-bijection.  The Nat *value*
+    `funbool_to_nat dim φ` is exactly the basis-state index used everywhere (and the
+    `cosetState` indices `k+j·N` are likewise Nat values), so the endian convention
+    is internal to `funbool_to_nat` and the value-based indexing is consistent. -/
+
+/-- Two bit-functions with equal `funbool_to_nat dim` value agree on `[0,dim)`.
+    (Uniqueness of binary digits, by induction: `2a+b = 2c+d` with `b,d < 2`.) -/
+theorem funbool_to_nat_agree : ∀ (dim : Nat) (f g : Nat → Bool),
+    funbool_to_nat dim f = funbool_to_nat dim g → ∀ k, k < dim → f k = g k := by
+  intro dim
+  induction dim with
+  | zero => intro f g _ k hk; omega
+  | succ n ih =>
+      intro f g h k hk
+      rw [funbool_to_nat_succ, funbool_to_nat_succ] at h
+      have h1 : (if f n then (1 : Nat) else 0) < 2 := by split <;> omega
+      have h2 : (if g n then (1 : Nat) else 0) < 2 := by split <;> omega
+      have hAn : funbool_to_nat n f = funbool_to_nat n g := by omega
+      have hbit : f n = g n := by
+        have hb : (if f n then (1 : Nat) else 0) = (if g n then (1 : Nat) else 0) := by omega
+        by_cases hfn : f n <;> by_cases hgn : g n <;> simp_all
+      rcases Nat.lt_or_ge k n with hkn | hkn
+      · exact ih f g hAn k hkn
+      · rw [show k = n by omega]; exact hbit
+
+/-- The funbool encoding of a `dim`-bit function as an index in `Fin (2^dim)`. -/
+def funboolNat (dim : Nat) (φ : Fin dim → Bool) : Fin (2 ^ dim) :=
+  ⟨funbool_to_nat dim (extendBool dim φ), funbool_to_nat_lt dim _⟩
+
+theorem funboolNat_injective (dim : Nat) : Function.Injective (funboolNat dim) := by
+  intro φ ψ h
+  have hval : funbool_to_nat dim (extendBool dim φ) = funbool_to_nat dim (extendBool dim ψ) :=
+    congrArg Fin.val h
+  funext i
+  have hi := funbool_to_nat_agree dim _ _ hval i.val i.isLt
+  simpa [extendBool, i.isLt] using hi
+
+/-- **The funbool coordinatization** `(Fin dim → Bool) ≃ Fin (2^dim)`: `φ ↦
+    funbool_to_nat dim φ` — the SAME encoding `uc_eval` uses on basis states. -/
+noncomputable def funboolEquiv (dim : Nat) : (Fin dim → Bool) ≃ Fin (2 ^ dim) :=
+  Equiv.ofBijective (funboolNat dim)
+    ((Fintype.bijective_iff_injective_and_card (funboolNat dim)).mpr
+      ⟨funboolNat_injective dim, by
+        simp [Fintype.card_bool, Fintype.card_fin]⟩)
+
+@[simp] theorem funboolEquiv_val (dim : Nat) (φ : Fin dim → Bool) :
+    ((funboolEquiv dim) φ : Nat) = funbool_to_nat dim (extendBool dim φ) := rfl
+
+/-- **The classical gate's basis permutation on the register `Fin (2^dim)`**, in the
+    funbool coordinatization (so it matches the SQIR semantics — see `UCEvalBridge`). -/
 noncomputable def gateToPerm (g : Gate) (dim : Nat) (hwt : Gate.WellTyped dim g) :
     Equiv.Perm (Fin (2 ^ dim)) :=
-  (boolFin dim).permCongr (gateClassicalPerm g dim hwt)
+  (funboolEquiv dim).permCongr (gateClassicalPerm g dim hwt)
 
 /-- **GATE ACTION IS A `normSqDist`-ISOMETRY (classical fragment).**  The QState
     action of a `WellTyped` classical `Gate` — a basis permutation `permState
