@@ -29,12 +29,14 @@
   Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude.
 -/
 import FormalRV.Shor.CosetEigenstate.ApproxOp
+import FormalRV.Shor.CosetEigenstate.ControlledLift
 
 namespace FormalRV.Shor.CosetEigenstate.CosetMul
 
 open FormalRV.SQIRPort
 open FormalRV.SQIRPort.ApproxTransfer
 open FormalRV.Shor.CosetEigenstate.ApproxOp
+open FormalRV.Shor.CosetEigenstate.ControlledLift (branchOf normSqDist_controlled_lift_subnormalized)
 
 /-- **The general fold-accumulation engine (Gidney subadditivity).**  Given an
     ACTUAL chain `act` (each step `op t`), an IDEAL chain `idl`, where every `op t`
@@ -103,5 +105,40 @@ theorem cosetMulOutOfPlace_deviation (dim N m k₀ : Nat) (cs : Nat → Nat)
     rfl T
   exact cosetState_addConst_deviation dim N m (idealAcc N k₀ cs t) (cs t) hN
     (idealAcc_lt N k₀ cs hN hk₀ t) (hcs t) hfit
+
+/-! ## §3. The superposition capstone (lift over the control register). -/
+
+/-- **THE OUT-OF-PLACE COSET MULTIPLIER ON A SUPERPOSITION (the capstone).**  The
+    full multiplier acts on an arbitrary (sub-normalized) superposition over the
+    control register: in each control branch `x`, the data register runs the coset
+    fold with addend sequence `cs x` (a control=0 step is the no-op addend `0`:
+    `shiftState 0 = id`, `(acc+0)%N = acc`), so every branch runs `numAdds` steps
+    with per-branch deviation `≤ numAdds·(2/2^m)` by `cosetMulOutOfPlace_deviation`.
+    The control register is preserved, so the sub-normalized controlled lift keeps
+    the WHOLE-REGISTER Born-L1 deviation at `≤ numAdds·(2/2^m)` — the per-branch
+    bound, UNAMPLIFIED by superposing over the control.  This is the windowed coset
+    multiplier's total deviation, valid on quantum superpositions, not just classical
+    basis controls. -/
+theorem cosetMul_superposition_deviation
+    {m_dim full_dim : Nat} (h : m_dim ∣ full_dim)
+    (s_act s_idl : QState full_dim) (active : Finset (Fin m_dim)) (β : Fin m_dim → ℂ)
+    (N m k₀ numAdds : Nat) (cs : Fin m_dim → Nat → Nat)
+    (hN : 0 < N) (hk₀ : k₀ < N) (hcs : ∀ x t, cs x t < N)
+    (hfit : N + 2 ^ m * N ≤ full_dim / m_dim)
+    (hzero : ∀ x, x ∉ active → branchOf h s_act x = branchOf h s_idl x)
+    (hfac_act : ∀ x, x ∈ active →
+        branchOf h s_act x
+          = fun i z => β x * actualAcc (full_dim / m_dim) N m k₀ (cs x) numAdds i z)
+    (hfac_idl : ∀ x, x ∈ active →
+        branchOf h s_idl x
+          = fun i z => β x * cosetState (full_dim / m_dim) N m (idealAcc N k₀ (cs x) numAdds) i z)
+    (hweight : ∑ x ∈ active, Complex.normSq (β x) ≤ 1) :
+    normSqDist s_act s_idl ≤ (numAdds : ℝ) * (2 / 2 ^ m) := by
+  refine normSqDist_controlled_lift_subnormalized h s_act s_idl active β
+    ((numAdds : ℝ) * (2 / 2 ^ m)) (by positivity)
+    (fun x => actualAcc (full_dim / m_dim) N m k₀ (cs x) numAdds)
+    (fun x => cosetState (full_dim / m_dim) N m (idealAcc N k₀ (cs x) numAdds))
+    hzero hfac_act hfac_idl (fun x _ => ?_) hweight
+  exact cosetMulOutOfPlace_deviation (full_dim / m_dim) N m k₀ (cs x) hN hk₀ (hcs x) hfit numAdds
 
 end FormalRV.Shor.CosetEigenstate.CosetMul
