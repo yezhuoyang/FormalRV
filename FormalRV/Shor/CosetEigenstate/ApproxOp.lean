@@ -137,4 +137,61 @@ theorem cosetState_adjacent_deviation (dim N m s : Nat) (hN : 0 < N)
         normSqDist_le_of_agree_off _ _ B (1 / 2 ^ m) hagree hw_sN hw_s
     _ = 2 / 2 ^ m := by ring
 
+/-- The NON-modular add-constant on a register state: `|v⟩ ↦ |v+c⟩`. -/
+noncomputable def shiftState (dim c : Nat) (s : QState dim) : QState dim :=
+  fun i _ => if c ≤ (i : Nat) then s ⟨(i : Nat) - c, lt_of_le_of_lt (Nat.sub_le _ _) i.isLt⟩ 0 else 0
+
+/-- **Adding `c` (non-modularly) shifts the coset WINDOW** by `c`: `addConst c`
+    carries `cosetState N m k` to `cosetState N m (k+c)` exactly (the amplitude
+    `1/√2^m` is constant, so the shift just relocates the support). -/
+theorem shiftState_cosetState (dim N m k c : Nat) (hN : 0 < N) :
+    shiftState dim c (cosetState dim N m k) = cosetState dim N m (k + c) := by
+  funext i z
+  have hz : z = 0 := Subsingleton.elim z 0
+  subst hz
+  have hiff : (c ≤ (i : Nat) ∧
+      (⟨(i : Nat) - c, lt_of_le_of_lt (Nat.sub_le _ _) i.isLt⟩ : Fin dim)
+        ∈ cosetWindow dim N m k) ↔ i ∈ cosetWindow dim N m (k + c) := by
+    rw [mem_cosetWindow dim N m k hN, mem_cosetWindow dim N m (k + c) hN]
+    constructor
+    · rintro ⟨hc, j, hj, he⟩
+      have he' : (i : Nat) - c = k + j * N := he
+      exact ⟨j, hj, by omega⟩
+    · rintro ⟨j, hj, he⟩
+      refine ⟨by omega, j, hj, ?_⟩
+      show (i : Nat) - c = k + j * N
+      omega
+  simp only [shiftState, cosetState]
+  by_cases h : i ∈ cosetWindow dim N m (k + c)
+  · obtain ⟨hc, hmem⟩ := hiff.mpr h
+    rw [if_pos hc, if_pos hmem, if_pos h]
+  · rw [if_neg h]
+    by_cases hc : c ≤ (i : Nat)
+    · rw [if_pos hc, if_neg (fun hmem => h (hiff.mp ⟨hc, hmem⟩))]
+    · rw [if_neg hc]
+
+/-- **THE SINGLE-ADDITION DEVIATION THEOREM (Gidney arXiv:1905.08488).**  Ordinary
+    NON-modular `addConst c` (for canonical `c < N`) carries `cosetState N m k` to
+    within `2/2^m` (in `normSqDist`) of the reduced target `cosetState N m ((k+c)%N)`.
+    No wrap (`k+c < N`) ⇒ exact; wrap (`k+c ≥ N`) ⇒ one boundary representative
+    crosses, giving the `≤ 2/2^m` via `cosetState_adjacent_deviation`. -/
+theorem cosetState_addConst_deviation (dim N m k c : Nat) (hN : 0 < N) (hk : k < N) (hc : c < N)
+    (hfit : N + 2 ^ m * N ≤ dim) :
+    normSqDist (shiftState dim c (cosetState dim N m k)) (cosetState dim N m ((k + c) % N))
+      ≤ 2 / 2 ^ m := by
+  rw [shiftState_cosetState dim N m k c hN]
+  rcases Nat.lt_or_ge (k + c) N with h | h
+  · rw [Nat.mod_eq_of_lt h]
+    have h0 : normSqDist (cosetState dim N m (k + c)) (cosetState dim N m (k + c)) = 0 := by
+      unfold normSqDist; simp
+    rw [h0]; positivity
+  · set s := (k + c) % N with hs
+    have hsN : s < N := by rw [hs]; exact Nat.mod_lt _ hN
+    have hmod : (k + c) % N = k + c - N := by
+      rw [Nat.mod_eq_sub_mod h, Nat.mod_eq_of_lt (by omega)]
+    have hkc : k + c = s + N := by rw [hs, hmod]; omega
+    have hfit' : s + 2 ^ m * N < dim := by omega
+    rw [hkc]
+    exact cosetState_adjacent_deviation dim N m s hN hfit'
+
 end FormalRV.Shor.CosetEigenstate.ApproxOp
