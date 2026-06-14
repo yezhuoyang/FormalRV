@@ -38,12 +38,16 @@
 -/
 import FormalRV.Shor.CosetEigenstate.CosetMul
 import FormalRV.Shor.CosetEigenstate.CosetModArith
+import FormalRV.Shor.CosetEigenstate.GatePerm
 
 namespace FormalRV.Shor.CosetEigenstate.InPlaceCoset
 
 open FormalRV.SQIRPort
 open FormalRV.SQIRPort.ApproxTransfer
+open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 open FormalRV.Shor.CosetEigenstate.ApproxOp (permState normSqDist_triangle normSqDist_perm_invariant)
+open FormalRV.Shor.CosetEigenstate.GateReversible (Gate.reverse)
+open FormalRV.Shor.CosetEigenstate.GatePerm (gateToPerm gate_normSqDist_perm reverse_wellTyped)
 
 /-- **THE IN-PLACE DEVIATION COMPOSITION (the three legs).**  Forward operator
     `U_fwd` (deviation `≤ δf` from the ideal `I_fwd`), then the swap as an explicit
@@ -85,5 +89,41 @@ theorem inPlaceMul_coset_deviation {dim : Nat}
       = (numAdds : ℝ) * (2 / 2 ^ m) + (numAdds : ℝ) * (2 / 2 ^ m) := by ring
   rw [heq]
   exact inPlaceMul_deviation_compose U_fwd U_rev σ_swap s_in I_fwd s_out _ _ hrev_isom hfwd hrev
+
+/-- **DISCHARGED FOR THE CONCRETE CIRCUITS.**  Instantiating `inPlaceMul_coset_deviation`
+    with the ACTUAL classical reversible gates on the physical register `Fin (2^bits)`:
+    the swap leg is the basis permutation `gateToPerm swapG` and the uncompute leg is
+    the basis permutation `gateToPerm (reverse mulInv)` — both `X/CX/CCX/seq` circuits,
+    so the **`U_rev` isometry and swap-`=0` hypotheses are discharged automatically by
+    `gate_normSqDist_perm`** (the classical Gate IR denotes basis permutations).  The
+    total deviation is `2·numAdds·(2/2^m)` given the two per-leg coset bounds.
+
+    DIMENSION: stated on `Fin (2^bits)` — the physical register — so `wrapShiftState`
+    mod `dim = 2^bits` matches the real adder.  Remaining flagged bridge: identifying
+    `permState (gateToPerm g)` with the literal `uc_eval (toUCom g)` matrix action
+    (the funbool coordinatization), and the forward-leg deviation `hfwd` via the
+    two-register factorization. -/
+theorem inPlaceMul_coset_deviation_gates {bits : Nat}
+    (U_fwd : QState (2 ^ bits) → QState (2 ^ bits)) (mulInv swapG : Gate)
+    (hwt_inv : Gate.WellTyped bits mulInv) (hwt_swap : Gate.WellTyped bits swapG)
+    (s_in I_fwd s_out : QState (2 ^ bits)) (numAdds m : Nat)
+    (hfwd : normSqDist (U_fwd s_in) I_fwd ≤ (numAdds : ℝ) * (2 / 2 ^ m))
+    (hrev : normSqDist
+        (permState (gateToPerm (Gate.reverse mulInv) bits
+            (reverse_wellTyped mulInv bits hwt_inv))
+          (permState (gateToPerm swapG bits hwt_swap) I_fwd)) s_out
+        ≤ (numAdds : ℝ) * (2 / 2 ^ m)) :
+    normSqDist
+        (permState (gateToPerm (Gate.reverse mulInv) bits
+            (reverse_wellTyped mulInv bits hwt_inv))
+          (permState (gateToPerm swapG bits hwt_swap) (U_fwd s_in))) s_out
+      ≤ 2 * (numAdds : ℝ) * (2 / 2 ^ m) :=
+  inPlaceMul_coset_deviation U_fwd
+    (permState (gateToPerm (Gate.reverse mulInv) bits
+      (reverse_wellTyped mulInv bits hwt_inv)))
+    (gateToPerm swapG bits hwt_swap) s_in I_fwd s_out numAdds m
+    (gate_normSqDist_perm (Gate.reverse mulInv) bits
+      (reverse_wellTyped mulInv bits hwt_inv))
+    hfwd hrev
 
 end FormalRV.Shor.CosetEigenstate.InPlaceCoset
