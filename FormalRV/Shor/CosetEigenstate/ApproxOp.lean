@@ -217,6 +217,45 @@ theorem shiftState_cosetState (dim N m k c : Nat) (hN : 0 < N) :
     · rw [if_pos hc, if_neg (fun hmem => h (hiff.mp ⟨hc, hmem⟩))]
     · rw [if_neg hc]
 
+/-- **`shiftState` is NON-EXPANSIVE in `normSqDist`.**  The non-modular add-constant
+    `|v⟩ ↦ |v+c⟩` is an INJECTION on register indices (values that fall off the top
+    are simply dropped), so applying it to both states can only SHRINK the Born-L1
+    distance.  This is the surrounding-op step that lets the per-addition deviation
+    accumulate ADDITIVELY in the fold (against the ideal reduced chain) — and it is
+    UNCONDITIONAL: overflow in the actual chain is absorbed here, so the fold needs
+    only the per-step fit, never a running-sum fit. -/
+theorem shiftState_normSqDist_nonexpansive {dim : Nat} (c : Nat) (s₁ s₂ : QState dim) :
+    normSqDist (shiftState dim c s₁) (shiftState dim c s₂) ≤ normSqDist s₁ s₂ := by
+  classical
+  unfold normSqDist
+  set F : Fin dim → ℝ := fun i =>
+    |Complex.normSq (shiftState dim c s₁ i 0) - Complex.normSq (shiftState dim c s₂ i 0)| with hF
+  set G : Fin dim → ℝ := fun j =>
+    |Complex.normSq (s₁ j 0) - Complex.normSq (s₂ j 0)| with hG
+  set S : Finset (Fin dim) := Finset.univ.filter (fun i => c ≤ (i : Nat)) with hS
+  set φ : Fin dim → Fin dim :=
+    fun i => ⟨(i : Nat) - c, lt_of_le_of_lt (Nat.sub_le _ _) i.isLt⟩ with hφ
+  have hF0 : ∀ i ∉ S, F i = 0 := by
+    intro i hi
+    simp only [hS, Finset.mem_filter, Finset.mem_univ, true_and, not_le] at hi
+    simp only [hF, shiftState, if_neg (by omega : ¬ c ≤ (i : Nat))]
+    simp
+  have hFG : ∀ i ∈ S, F i = G (φ i) := by
+    intro i hi
+    simp only [hS, Finset.mem_filter, Finset.mem_univ, true_and] at hi
+    simp only [hF, hG, hφ, shiftState, if_pos hi]
+  have hφinj : ∀ i ∈ S, ∀ i' ∈ S, φ i = φ i' → i = i' := by
+    intro i hi i' hi' he
+    simp only [hS, Finset.mem_filter, Finset.mem_univ, true_and] at hi hi'
+    have hv : (i : Nat) - c = (i' : Nat) - c := congrArg Fin.val he
+    exact Fin.ext (by omega)
+  calc ∑ i, F i
+      = ∑ i ∈ S, F i := (Finset.sum_subset (Finset.subset_univ S) (fun i _ hi => hF0 i hi)).symm
+    _ = ∑ i ∈ S, G (φ i) := Finset.sum_congr rfl hFG
+    _ = ∑ j ∈ S.image φ, G j := (Finset.sum_image hφinj).symm
+    _ ≤ ∑ j, G j :=
+        Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _) (fun j _ _ => abs_nonneg _)
+
 /-- **THE SINGLE-ADDITION DEVIATION THEOREM (Gidney arXiv:1905.08488).**  Ordinary
     NON-modular `addConst c` (for canonical `c < N`) carries `cosetState N m k` to
     within `2/2^m` (in `normSqDist`) of the reduced target `cosetState N m ((k+c)%N)`.
