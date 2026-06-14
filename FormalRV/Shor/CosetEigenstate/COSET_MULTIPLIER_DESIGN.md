@@ -140,3 +140,55 @@ unreduced ⇒ scaling) is solid and matches the proven `CosetScalingAudit` / `Co
 The "refresh vs preserve" runway detail and the exact GE2021 windowing layout are reconstructed
 from coset-rep principles; the circuit build should re-confirm them against the concrete
 `WindowedCircuit` register layout.
+
+---
+
+## 6. The reduced-lookup gate — built; what is proven and the remaining QState lift
+
+The reduced-lookup coset gate `cosetModMulCircuitOf` is **built** (`ReducedLookupCosetGate.lean`),
+as a variant of the windowed multiplier with the mod-`N`-reduced table `tableValue a N w`.
+The windowed value proof was made **table-generic** to support it:
+
+- `ReducedLookupCosetGate.lean` — `reducedWindowStepOf`/`reducedWindowedMulOf`/`cosetModMulCircuitOf`
+  (+ WellTyped). `cosetModMulCircuitOf` is DEFINITIONALLY `windowedMulTOf … (tableValue a N w) …`.
+- `WindowedCircuit.lean` — `windowStepTOf`/`windowedMulTOf`/`windowedMulCircuitTOf` (table free).
+- `WindowedCircuitCorrect.lean` — `stepInv_stepT`/`stepInv_foldT` (advance by `Tfam j (windowⱼ y)`);
+  the hard-wired `stepInv_step`/`stepInv_fold` are byte-identical DEFEQ wrappers.
+- `WindowedInPlace.lean` — `stepInv_foldT_acc`/`windowedMulCircuitTOf_correct_acc` (start-
+  ACCUMULATOR-agnostic, table-generic). **This is the Boolean substrate for the QState lift.**
+- `ReducedLookupCosetValue.lean` — **Boolean value PROVEN**: `reducedCosetMul_decodeAcc_cuccaro`
+  (`decodeAcc = (∑ₖ tableValue a N w k (windowₖ y)) mod 2^bits`); `reducedCosetMul_residue`
+  (`… mod N = (a·y) mod N`, input runway forgotten); `idealAcc_eq_sum_mod`; combined
+  `reducedCosetMul_decodeAcc_residue_cuccaro` under the runway-fit `fold < 2^bits`.
+
+**The remaining piece (the QState lift, LARGE):** discharge `CosetTableSum.cosetOutOfPlace_hfwd`'s
+`hfac_act` for this concrete gate — i.e. the gate's per-control-branch **QState data substate**
+(`branchOf h s_act b`, `ControlledLift.lean:51`) equals `β b · actualAcc (full/m) N m 0
+(cosetWindowConst a N w (xval b)) numWin` (`CosetMul.actualAcc`, the `shiftState` coset fold).
+Feeding `hfac_act` + the easy `hfac_idl` (ideal `cosetState((a·x) mod N)`) into
+`cosetOutOfPlace_hfwd` yields the deviation `normSqDist ≤ numWin·(2/2^m)` — the
+`cosetState(k) → cosetState((a·k) mod N)` shift off the wrap.  This is the FIRST lookup-controlled
+`uc_eval` coset theorem in the repo (existing coset `uc_eval` results — `uc_eval_cuccaro_physCoset`,
+`physCoset_windowed_fold` — are for FIXED constants, not lookup-controlled adds, so they do not
+transfer mechanically).  Precise lemma chain (substrate now ready):
+
+1. **Per-pass QState coset action** (the core).  Lift the Boolean post-state to the column vector:
+   `uc_eval(toUCom (cosetModMulCircuitOf …)) · |mulInputAccOf(acc₀=z, y=x)⟩ =
+    |mulInputAccOf(acc₀=(z + ∑ₖ tableValue a N w k (windowₖ x)) mod 2^bits, y=x)⟩`, via
+   (1a) `StepInv`-output = `mulInputAccOf(new acc)` (Boolean extensionality from `stepInv_foldT_acc`'s
+   F/D/C/V conjuncts), (1b) `UCEvalBridge.uc_eval_basis_agree` (gate on basis = basis permutation,
+   `gateToPerm` from `applyNat`) + `cosetModMulCircuitOf_cuccaro_wellTyped`.
+2. **Coset superposition / shiftState** (MEDIUM).  Sum (1) over the accumulator runway `{z₀+jN}`;
+   under the runway-fit (no `2^bits` wrap) this is `shiftState (∑ tableValue)`, hence by
+   `actualAcc_eq_cosetState_runningSum` equals `actualAcc … (cosetWindowConst a N w x) numWin`.
+3. **`branchOf` factorization** (MEDIUM — the crux design).  Relate the flat gate layout
+   (`mulInputAccOf`: ctrl@0, addr@1.., accumulator@augendIdx, y@yBase, interleaved) to the
+   `jointIdx h x y` control×data tensor: the `y`/multiplier register is the preserved control factor
+   `Fin m_dim` (read by `copyWindow`, restored), the accumulator is the data factor `Fin (full/m)=2^bits`.
+   This is the `phaseMarginal_relabel_invariant`/E_phys layout-bridge applied to the accumulator.
+4. **`hfac_act` assembly** (SMALL): combine 2+3 → `hfac_act` → `cosetOutOfPlace_hfwd` → deviation.
+
+The gate is OUT-OF-PLACE (fresh accumulator at `augendIdx`, `y` restored); no in-place SWAP is in
+`cosetModMulCircuitOf`, so `actualAcc` acts on the accumulator factor and `y` is a classical control.
+The runway-fit `hfit` (Boolean `fold < 2^bits`, already a hypothesis in
+`reducedCosetMul_decodeAcc_residue_cuccaro`) is the shadow of the bounded runway growth.
