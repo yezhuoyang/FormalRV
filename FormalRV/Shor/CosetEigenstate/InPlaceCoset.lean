@@ -39,6 +39,7 @@
 import FormalRV.Shor.CosetEigenstate.CosetMul
 import FormalRV.Shor.CosetEigenstate.CosetModArith
 import FormalRV.Shor.CosetEigenstate.GatePerm
+import FormalRV.Shor.CosetEigenstate.UCEvalBridge
 
 namespace FormalRV.Shor.CosetEigenstate.InPlaceCoset
 
@@ -48,6 +49,7 @@ open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 open FormalRV.Shor.CosetEigenstate.ApproxOp (permState normSqDist_triangle normSqDist_perm_invariant)
 open FormalRV.Shor.CosetEigenstate.GateReversible (Gate.reverse)
 open FormalRV.Shor.CosetEigenstate.GatePerm (gateToPerm gate_normSqDist_perm reverse_wellTyped)
+open FormalRV.Shor.CosetEigenstate.UCEvalBridge (uc_eval_eq_permState gate_uc_eval_normSqDist_perm)
 
 /-- **THE IN-PLACE DEVIATION COMPOSITION (the three legs).**  Forward operator
     `U_fwd` (deviation `≤ δf` from the ideal `I_fwd`), then the swap as an explicit
@@ -124,6 +126,36 @@ theorem inPlaceMul_coset_deviation_gates {bits : Nat}
     (gateToPerm swapG bits hwt_swap) s_in I_fwd s_out numAdds m
     (gate_normSqDist_perm (Gate.reverse mulInv) bits
       (reverse_wellTyped mulInv bits hwt_inv))
+    hfwd hrev
+
+/-- **DISCHARGED FOR THE LITERAL SQIR SEMANTICS.**  The strongest form: the swap and
+    uncompute legs are the genuine SQIR unitary actions `uc_eval (toUCom ·) * ·` (not
+    abstract permutations).  `UCEvalBridge.uc_eval_eq_permState` rewrites the swap leg
+    to `permState (gateToPerm swapG).symm`, and `gate_uc_eval_normSqDist_perm`
+    discharges the uncompute leg's isometry — so the bound `2·numAdds·(2/2^m)` holds
+    for the actual `uc_eval` matrix semantics of the classical reversible circuits. -/
+theorem inPlaceMul_coset_deviation_sqir {bits : Nat}
+    (U_fwd : Matrix (Fin (2 ^ bits)) (Fin 1) ℂ → Matrix (Fin (2 ^ bits)) (Fin 1) ℂ)
+    (mulInv swapG : Gate)
+    (hwt_inv : Gate.WellTyped bits mulInv) (hwt_swap : Gate.WellTyped bits swapG)
+    (s_in I_fwd s_out : Matrix (Fin (2 ^ bits)) (Fin 1) ℂ) (numAdds m : Nat)
+    (hfwd : normSqDist (U_fwd s_in) I_fwd ≤ (numAdds : ℝ) * (2 / 2 ^ m))
+    (hrev : normSqDist
+        (Framework.uc_eval (Gate.toUCom bits (Gate.reverse mulInv)) *
+          (Framework.uc_eval (Gate.toUCom bits swapG) * I_fwd)) s_out
+        ≤ (numAdds : ℝ) * (2 / 2 ^ m)) :
+    normSqDist
+        (Framework.uc_eval (Gate.toUCom bits (Gate.reverse mulInv)) *
+          (Framework.uc_eval (Gate.toUCom bits swapG) * (U_fwd s_in))) s_out
+      ≤ 2 * (numAdds : ℝ) * (2 / 2 ^ m) := by
+  rw [uc_eval_eq_permState swapG bits hwt_swap (U_fwd s_in)]
+  rw [uc_eval_eq_permState swapG bits hwt_swap I_fwd] at hrev
+  exact inPlaceMul_coset_deviation U_fwd
+    (fun s : Matrix (Fin (2 ^ bits)) (Fin 1) ℂ =>
+      Framework.uc_eval (Gate.toUCom bits (Gate.reverse mulInv)) * s)
+    (gateToPerm swapG bits hwt_swap).symm s_in I_fwd s_out numAdds m
+    (fun a b => gate_uc_eval_normSqDist_perm (Gate.reverse mulInv) bits
+      (reverse_wellTyped mulInv bits hwt_inv) a b)
     hfwd hrev
 
 end FormalRV.Shor.CosetEigenstate.InPlaceCoset
