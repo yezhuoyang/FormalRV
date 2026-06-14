@@ -96,6 +96,22 @@ theorem normSqDist_chain {dim : Nat} (s : Nat → QState dim) (d : ℝ) :
             linarith
         _ = ((n + 1 : Nat) : ℝ) * d := by push_cast; ring
 
+/-- Apply a basis permutation `σ` to a state. -/
+noncomputable def permState {dim : Nat} (σ : Equiv.Perm (Fin dim)) (s : QState dim) : QState dim :=
+  fun i z => s (σ i) z
+
+/-- **Non-expansiveness / hybrid lemma (the composition justification).**  A basis
+    permutation `σ` — e.g. `uc_eval` of any reversible gate, which permutes the
+    basis indices — leaves `normSqDist` INVARIANT (it just reindexes the Born
+    distributions identically on both states).  This is what justifies the LINEAR
+    accumulation `t·d` of the chain bound across the controlled-addition
+    composition: the surrounding reversible ops preserve the per-step deviation, so
+    `normSqDist(s_i, s_{i+1})` equals the single-op deviation, not something larger. -/
+theorem normSqDist_perm_invariant {dim : Nat} (σ : Equiv.Perm (Fin dim))
+    (s₁ s₂ : QState dim) :
+    normSqDist (permState σ s₁) (permState σ s₂) = normSqDist s₁ s₂ :=
+  Equiv.sum_comp σ (fun i => |Complex.normSq (s₁ i 0) - Complex.normSq (s₂ i 0)|)
+
 /-! ## §2. The single-addition deviation (the combinatorial support-overlap, lifted). -/
 
 /-- **Adjacent-window deviation (the combinatorial core).**  The window at `s+N`
