@@ -160,25 +160,26 @@ register, QROM-read the table row into the addend, run the adder, QROM-read
 again (clearing the addend), uncopy the window.  We track the state through
 `g₁ … g₅` and re-establish all four invariant conjuncts. -/
 
-theorem stepInv_step (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
+theorem stepInv_stepT (A : Adder) (w bits : Nat) (T : Nat → Nat) (numWin y : Nat)
+    (hw : 0 < w)
     (j : Nat) (hj : j < numWin) (s : Nat) (g : Nat → Bool)
     (hg : StepInv A w bits numWin y s g) :
-    StepInv A w bits numWin y (s + a * (2 ^ w) ^ j * WindowedArith.window w y j)
+    StepInv A w bits numWin y (s + T (WindowedArith.window w y j))
       (Gate.applyNat
-        (windowStepOf A w bits a bits (1 + 2 * w) (1 + 2 * w + A.span bits) j)
+        (windowStepTOf A w bits T bits (1 + 2 * w) (1 + 2 * w + A.span bits) j)
         g) := by
   obtain ⟨hF, hD, hC, hV⟩ := hg
   -- Expose the five-fold composition.
-  simp only [windowStepOf, lookupAddAtOf, Gate.applyNat_seq]
+  simp only [windowStepTOf, lookupAddAtOf, Gate.applyNat_seq]
   set g1 : Nat → Bool :=
     Gate.applyNat (copyWindow w (1 + 2 * w + A.span bits) j) g with hg1def
   set g2 : Nat → Bool :=
     Gate.applyNat (lookupReadAt w (A.addendIdx (1 + 2 * w)) bits
-      (fun v => a * (2 ^ w) ^ j * v)) g1 with hg2def
+      T) g1 with hg2def
   set g3 : Nat → Bool := Gate.applyNat (A.circuit bits (1 + 2 * w)) g2 with hg3def
   set g4 : Nat → Bool :=
     Gate.applyNat (lookupReadAt w (A.addendIdx (1 + 2 * w)) bits
-      (fun v => a * (2 ^ w) ^ j * v)) g3 with hg4def
+      T) g3 with hg4def
   set g5 : Nat → Bool :=
     Gate.applyNat (copyWindow w (1 + 2 * w + A.span bits) j) g4 with hg5def
   -- ── Standing zone facts ────────────────────────────────────────────────
@@ -299,16 +300,16 @@ theorem stepInv_step (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
   have hvlt : WindowedArith.window w y j < 2 ^ w := WindowedArith.window_lt w y j
   have hg2_addend : ∀ i, i < bits →
       g2 (A.addendIdx (1 + 2 * w) i)
-        = (a * (2 ^ w) ^ j * WindowedArith.window w y j).testBit i := by
+        = (T (WindowedArith.window w y j)).testBit i := by
     intro i hi
     rw [hg2def,
-        lookupReadAt_selects_word w bits (fun v => a * (2 ^ w) ^ j * v)
+        lookupReadAt_selects_word w bits T
           (A.addendIdx (1 + 2 * w)) g1 (WindowedArith.window w y j)
           hw hvlt hg1_ctrl hg1_addr hg1_and hpos_high hpos_inj i hi,
         hg1_addend i hi, Bool.false_xor]
   have hg2_frame : ∀ p, (∀ k, k < bits → p ≠ A.addendIdx (1 + 2 * w) k) →
       g2 p = g1 p :=
-    fun p hp => lookupReadAt_frame w bits (fun v => a * (2 ^ w) ^ j * v)
+    fun p hp => lookupReadAt_frame w bits T
       (A.addendIdx (1 + 2 * w)) g1 hpos_high p hp
   have hg2_ctrl : g2 ulookup_ctrl_idx = true := by
     rw [hg2_frame _ hctrl_ne_pos]
@@ -339,15 +340,15 @@ theorem stepInv_step (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
           omega)]
   -- ── g₃ = the adder: augend ← augend + row, addend restored ────────────
   have hg3_dec : decodeReg (A.augendIdx (1 + 2 * w)) bits g3
-      = (s + a * (2 ^ w) ^ j * WindowedArith.window w y j) % 2 ^ bits := by
+      = (s + T (WindowedArith.window w y j)) % 2 ^ bits := by
     rw [hg3def, A.sumCorrect bits (1 + 2 * w) g2 hg2_clean,
         decodeReg_ext (A.augendIdx (1 + 2 * w)) bits g2 g hg2_aug, hV,
         decodeReg_eq_mod_of_testBit (A.addendIdx (1 + 2 * w)) bits
-          (a * (2 ^ w) ^ j * WindowedArith.window w y j) g2 hg2_addend,
+          (T (WindowedArith.window w y j)) g2 hg2_addend,
         ← Nat.add_mod]
   have hg3_addend : ∀ i, i < bits →
       g3 (A.addendIdx (1 + 2 * w) i)
-        = (a * (2 ^ w) ^ j * WindowedArith.window w y j).testBit i := by
+        = (T (WindowedArith.window w y j)).testBit i := by
     intro i hi
     rw [hg3def, A.addendRestored bits (1 + 2 * w) g2 hg2_clean i hi]
     exact hg2_addend i hi
@@ -371,13 +372,13 @@ theorem stepInv_step (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
   have hg4_addend : ∀ i, i < bits → g4 (A.addendIdx (1 + 2 * w) i) = false := by
     intro i hi
     rw [hg4def,
-        lookupReadAt_selects_word w bits (fun v => a * (2 ^ w) ^ j * v)
+        lookupReadAt_selects_word w bits T
           (A.addendIdx (1 + 2 * w)) g3 (WindowedArith.window w y j)
           hw hvlt hg3_ctrl hg3_addr hg3_and hpos_high hpos_inj i hi,
         hg3_addend i hi, Bool.xor_self]
   have hg4_frame : ∀ p, (∀ k, k < bits → p ≠ A.addendIdx (1 + 2 * w) k) →
       g4 p = g3 p :=
-    fun p hp => lookupReadAt_frame w bits (fun v => a * (2 ^ w) ^ j * v)
+    fun p hp => lookupReadAt_frame w bits T
       (A.addendIdx (1 + 2 * w)) g3 hpos_high p hp
   have hg4_clean : A.ancClean g4 bits (1 + 2 * w) := by
     refine A.ancClean_ext bits (1 + 2 * w) g3 g4 ?_ hg3_clean
@@ -443,18 +444,34 @@ theorem stepInv_step (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
         decodeReg_ext (A.augendIdx (1 + 2 * w)) bits g4 g3 hg4_aug]
     exact hg3_dec
 
+/-- **The original (hard-wired table) window step**, recovered as the
+    `T := fun v => a·(2^w)^j·v` instance of `stepInv_stepT` (defeq: `windowStepOf` is
+    `windowStepTOf` at that table).  Statement and signature are byte-identical to the
+    pre-generalization theorem, so all downstream callers are unchanged. -/
+theorem stepInv_step (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
+    (j : Nat) (hj : j < numWin) (s : Nat) (g : Nat → Bool)
+    (hg : StepInv A w bits numWin y s g) :
+    StepInv A w bits numWin y (s + a * (2 ^ w) ^ j * WindowedArith.window w y j)
+      (Gate.applyNat
+        (windowStepOf A w bits a bits (1 + 2 * w) (1 + 2 * w + A.span bits) j)
+        g) :=
+  stepInv_stepT A w bits (fun v => a * (2 ^ w) ^ j * v) numWin y hw j hj s g hg
+
 /-! ## §5. The fold: the invariant holds after every prefix of window-steps. -/
 
-/-- Running the first `n` window-steps (`n ≤ numWin`) of the windowed
-    multiplier establishes the invariant with partial sum
-    `Σ_{k<n} a·(2^w)^k·windowₖ(y)`. -/
-theorem stepInv_fold (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
+/-- **Table-generic fold.**  Running the first `n` table-generic window-steps
+    (`n ≤ numWin`) establishes the invariant with partial sum
+    `Σ_{k<n} Tfam k (windowₖ(y))`.  The hard-wired `stepInv_fold` is the
+    `Tfam k := fun v => a·(2^w)^k·v` instance; the reduced coset multiplier is
+    `Tfam := tableValue a N w`. -/
+theorem stepInv_foldT (A : Adder) (w bits : Nat) (Tfam : Nat → Nat → Nat) (numWin y : Nat)
+    (hw : 0 < w)
     (hclean : A.ancClean (mulInputOf A w bits numWin y) bits (1 + 2 * w)) :
     ∀ n, n ≤ numWin →
       StepInv A w bits numWin y
-        (∑ k ∈ Finset.range n, a * (2 ^ w) ^ k * WindowedArith.window w y k)
+        (∑ k ∈ Finset.range n, Tfam k (WindowedArith.window w y k))
         (Gate.applyNat
-          (windowedMulOf A w bits a bits (1 + 2 * w) (1 + 2 * w + A.span bits) n)
+          (windowedMulTOf A w bits Tfam bits (1 + 2 * w) (1 + 2 * w + A.span bits) n)
           (mulInputOf A w bits numWin y)) := by
   intro n
   induction n with
@@ -467,17 +484,30 @@ theorem stepInv_fold (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
     exact stepInv_init A w bits numWin y hclean
   | succ n ih =>
     intro hn
-    have hsplit : windowedMulOf A w bits a bits (1 + 2 * w)
+    have hsplit : windowedMulTOf A w bits Tfam bits (1 + 2 * w)
           (1 + 2 * w + A.span bits) (n + 1)
         = Gate.seq
-            (windowedMulOf A w bits a bits (1 + 2 * w)
+            (windowedMulTOf A w bits Tfam bits (1 + 2 * w)
               (1 + 2 * w + A.span bits) n)
-            (windowStepOf A w bits a bits (1 + 2 * w)
+            (windowStepTOf A w bits (Tfam n) bits (1 + 2 * w)
               (1 + 2 * w + A.span bits) n) := by
-      unfold windowedMulOf
+      unfold windowedMulTOf
       rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil]
     rw [hsplit, Gate.applyNat_seq, Finset.sum_range_succ]
-    exact stepInv_step A w bits a numWin y hw n (by omega) _ _ (ih (by omega))
+    exact stepInv_stepT A w bits (Tfam n) numWin y hw n (by omega) _ _ (ih (by omega))
+
+/-- **The original (hard-wired table) fold**, recovered as the
+    `Tfam k := fun v => a·(2^w)^k·v` instance of `stepInv_foldT`.  Statement and
+    signature are byte-identical to the pre-generalization theorem. -/
+theorem stepInv_fold (A : Adder) (w bits a numWin y : Nat) (hw : 0 < w)
+    (hclean : A.ancClean (mulInputOf A w bits numWin y) bits (1 + 2 * w)) :
+    ∀ n, n ≤ numWin →
+      StepInv A w bits numWin y
+        (∑ k ∈ Finset.range n, a * (2 ^ w) ^ k * WindowedArith.window w y k)
+        (Gate.applyNat
+          (windowedMulOf A w bits a bits (1 + 2 * w) (1 + 2 * w + A.span bits) n)
+          (mulInputOf A w bits numWin y)) :=
+  stepInv_foldT A w bits (fun k v => a * (2 ^ w) ^ k * v) numWin y hw hclean
 
 /-! ## §6. The headline: adder-generic windowed-multiplier value correctness. -/
 

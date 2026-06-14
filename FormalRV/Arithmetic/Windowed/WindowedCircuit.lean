@@ -100,6 +100,38 @@ def windowedMulOf (A : Adder) (w W a : Nat) (bits q_start yBase numWin : Nat) : 
 def windowedMulCircuitOf (A : Adder) (w bits a numWin : Nat) : Gate :=
   windowedMulOf A w bits a bits (1 + 2 * w) (1 + 2 * w + A.span bits) numWin
 
+/-! ### Table-generic surface: the windowed multiplier over an ARBITRARY lookup table.
+
+The defs above hard-wire the table `fun v => a·(2^w)^j·v` (giving `a·y mod 2^bits`).
+The `…TOf` variants below take the per-window table as a free parameter, so the SAME
+circuit + value proof serve both the standard multiplier (`Tfam j := fun v => a·(2^w)^j·v`)
+and the mod-`N`-REDUCED coset multiplier (`Tfam := tableValue a N w`, entries `< N`).
+The hard-wired defs are recovered DEFINITIONALLY as the standard-table instances, so all
+existing call sites and proofs are unchanged. -/
+
+/-- **Table-generic window step.**  Like `windowStepOf` but with an ARBITRARY lookup
+    table `T : Nat → Nat` for this window (instead of the hard-wired
+    `fun v => a·(2^w)^j·v`). -/
+def windowStepTOf (A : Adder) (w W : Nat) (T : Nat → Nat) (bits q_start yBase j : Nat) : Gate :=
+  Gate.seq (Gate.seq (copyWindow w yBase j)
+                     (lookupAddAtOf A w W T bits q_start))
+           (copyWindow w yBase j)
+
+/-- **Table-generic windowed multiplier**, a fold of table-generic window-steps with a
+    per-window table family `Tfam : Nat → Nat → Nat` (`Tfam j` = the table for window `j`). -/
+def windowedMulTOf (A : Adder) (w W : Nat) (Tfam : Nat → Nat → Nat)
+    (bits q_start yBase numWin : Nat) : Gate :=
+  (List.range numWin).foldl
+    (fun g j => Gate.seq g (windowStepTOf A w W (Tfam j) bits q_start yBase j)) Gate.I
+
+/-- **The full table-generic windowed-multiplier circuit**, standard layout (identical to
+    `windowedMulCircuitOf`'s).  Recovers `windowedMulCircuitOf` at
+    `Tfam := fun j v => a·(2^w)^j·v`, and the reduced coset multiplier at
+    `Tfam := tableValue a N w` (= `fun j v => (a·(2^w)^j·v) % N`). -/
+def windowedMulCircuitTOf (A : Adder) (w bits : Nat) (Tfam : Nat → Nat → Nat)
+    (numWin : Nat) : Gate :=
+  windowedMulTOf A w bits Tfam bits (1 + 2 * w) (1 + 2 * w + A.span bits) numWin
+
 /-! ### Cuccaro surface: the existing API, recovered as the `cuccaroAdder` specialization.
 
 The original names are now the `A := cuccaroAdder` instances of the generic engine.
