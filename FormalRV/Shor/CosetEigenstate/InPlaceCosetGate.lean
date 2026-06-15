@@ -6,37 +6,38 @@
   The in-place phase (see `InPlaceCosetSpec`, tag `coset-shor-scaffold-complete`) builds
   a concrete oracle satisfying `inplaceReducedLookupCosetMul_shift`.  THIS file is
   checkpoint 1: define the literal gate and make the register/bad-set reindexing
-  obligations EXPLICIT.  No Shor-level lemma is proven here, and no abstract
-  permutation/`workMat` is introduced — only the gate term, its well-typedness, the
-  (proven) register-dimension identity, and the precisely-stated open obligations for
-  checkpoints 2–4.
+  obligations EXPLICIT.
 
-  THE CONSTRUCTION (the standard out-of-place → in-place trick, `InPlace.inPlaceMul`):
+  IDIOM (review decision 2026-06-15): the un-compute leg is a SECOND FORWARD multiply by
+  `(N − aInv)`, NOT `Gate.reverse(mulFwd aInv)`.  This is the EXACT idiom of the repo's
+  one PROVEN in-place multiplier `windowedModNMulInPlace`/`_correct`
+  (FormalRV/Arithmetic/Windowed/WindowedModNInPlace.lean), so checkpoint 3 clones that
+  verified basis proof at the coset level (cancellation by `mod_inv_cancel_identity`:
+  `(y + (N − aInv)·(a·y % N)) % N = 0`).  Gidney's source idiom is `OOPmul(a) ; SWAP ;
+  OOPmul(−a⁻¹)`.
 
-      inplaceCosetGate = mulFwd(a) ; accYSwap ; reverse(mulFwd(a⁻¹))
+  THE CONSTRUCTION (the standard out-of-place → in-place trick):
 
-         |z⟩|0⟩  --fwd(a)-->  |z⟩|a·z⟩  --swap-->  |a·z⟩|z⟩  --rev fwd(a⁻¹)-->  |a·z⟩|0⟩
+      inplaceCosetGate = mulFwd(a) ; accYSwap ; mulFwd(N − aInv)
+
+         |z⟩|0⟩  --fwd(a)-->  |z⟩|a·z⟩  --swap-->  |a·z⟩|z⟩  --fwd(N−aInv)-->  |a·z⟩|0⟩
 
     * `mulFwd(c) = cosetModMulCircuitOf cuccaroAdder w bits N c numWin` — the VERIFIED
       out-of-place reduced-lookup coset multiplier (multiplies the y-register coset into
       the accumulator), at constant `c`.
     * `accYSwap cuccaroAdder w bits` — the proven acc↔y register swap
-      (`augendIdx (1+2w)` ↔ `1+2w + span bits + i`).
-    * `reverse (mulFwd(a⁻¹))` — `Gate.reverse` of the `a⁻¹`-forward multiplier; per
-      `InPlace.inPlaceMul_correct` the un-compute leg is discharged by PURE reversibility
-      (`applyNat_reverse_cancel`), isolating ALL arithmetic into a single `hchain`
-      (checkpoint 2/3, stated below as `inplaceCosetGate_hchain`).
+      (`augendIdx (1+2w)` ↔ `1+2w + span bits + i`), moving the post-`mulFwd(a)`
+      accumulator into the y-register.
+    * `mulFwd(N − aInv)` — the second forward multiply, reading the swapped y-register and
+      clearing the accumulator (now holding the old `y`) to the coset of `0`.
 
-  `a⁻¹` (`aInv`) is a free `Nat` parameter here (the modular inverse with
-  `(a*aInv)%N = 1`, `aInv < N`, exists by `CosetModArith.cosetModInv_exists` under
-  `Coprime a N`); its arithmetic role is a correctness hypothesis, NOT part of the
-  gate definition.
+  `aInv` (the modular inverse, `(a*aInv)%N = 1`, `aInv < N`, exists by
+  `CosetModArith.cosetModInv_exists` under `Coprime a N`) is a free `Nat` parameter; the
+  uncompute leg uses the additive-complement constant `N − aInv`.
 
   Kernel-clean: no `sorry`, no `native_decide`, no axioms beyond the prelude.
 -/
 import FormalRV.Shor.CosetEigenstate.ReducedLookupCosetGate
-import FormalRV.Shor.CosetEigenstate.InPlace
-import FormalRV.Shor.CosetEigenstate.GatePerm
 import FormalRV.Shor.WindowedModNShor
 
 namespace FormalRV.Shor.CosetEigenstate.InPlaceCosetGate
@@ -45,52 +46,46 @@ open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
 open FormalRV.Shor.WindowedCircuit (accYSwap)
 open FormalRV.Shor.CosetEigenstate.ReducedLookupCosetGate
   (cosetModMulCircuitOf cosetDim cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim)
-open FormalRV.Shor.CosetEigenstate.InPlace (inPlaceMul)
-open FormalRV.Shor.CosetEigenstate.GatePerm (reverse_wellTyped)
 open FormalRV.BQAlgo.WindowedModNShor (accYSwap_cuccaro_wellTyped)
 
 /-! ## §1. The literal gate. -/
 
 /-- **The literal in-place reduced-lookup coset multiplier gate** (checkpoint 1).
-    `mulFwd(a) ; accYSwap ; reverse(mulFwd(a⁻¹))`, defeq to
-    `Gate.seq (cosetModMulCircuitOf … a) (Gate.seq (accYSwap …) (Gate.reverse (cosetModMulCircuitOf … aInv)))`.
-    Lives on `cosetDim w bits` qubits (the swap is internal; `reverse` preserves indices). -/
+    `mulFwd(a) ; accYSwap ; mulFwd(N − aInv)`, the coset analogue of the proven
+    `windowedModNMulInPlace`.  Lives on `cosetDim w bits` qubits (the swap is internal). -/
 def inplaceCosetGate (w bits N a aInv numWin : Nat) : Gate :=
-  inPlaceMul
-    (cosetModMulCircuitOf cuccaroAdder w bits N a    numWin)
-    (accYSwap cuccaroAdder w bits)
-    (cosetModMulCircuitOf cuccaroAdder w bits N aInv numWin)
+  Gate.seq
+    (Gate.seq (cosetModMulCircuitOf cuccaroAdder w bits N a numWin)
+              (accYSwap cuccaroAdder w bits))
+    (cosetModMulCircuitOf cuccaroAdder w bits N (N - aInv) numWin)
 
-/-- **Definitional unfolding (machine-checked direction guard).**  `InPlace.inPlaceMul`
-    applies `Gate.reverse` to its THIRD argument, so the un-compute leg of
-    `inplaceCosetGate` is literally `Gate.reverse (mulFwd aInv)` — the SUBTRACTING
-    `a⁻¹`-multiply that clears the scratch — NOT a forward `mulFwd aInv`.  This `rfl`
-    confirms the direction the prose claims (closing the naming ambiguity: the third arg
-    is reversed by the combinator, not pre-reversed). -/
+/-- **Structure guard (machine-checked, `rfl`).**  The gate is literally
+    `(mulFwd(a) ; accYSwap) ; mulFwd(N − aInv)` — the un-compute leg is a FORWARD multiply
+    by the additive-complement constant `N − aInv` (matching the proven
+    `windowedModNMulInPlace`), NOT a `Gate.reverse`.  Confirms the idiom in code, and names
+    the explicit three-leg structure for rewriting in checkpoint 3. -/
 theorem inplaceCosetGate_unfold (w bits N a aInv numWin : Nat) :
     inplaceCosetGate w bits N a aInv numWin
-      = Gate.seq (cosetModMulCircuitOf cuccaroAdder w bits N a numWin)
-          (Gate.seq (accYSwap cuccaroAdder w bits)
-            (GateReversible.Gate.reverse
-              (cosetModMulCircuitOf cuccaroAdder w bits N aInv numWin))) :=
+      = Gate.seq
+          (Gate.seq (cosetModMulCircuitOf cuccaroAdder w bits N a numWin)
+                    (accYSwap cuccaroAdder w bits))
+          (cosetModMulCircuitOf cuccaroAdder w bits N (N - aInv) numWin) :=
   rfl
 
 /-! ## §2. Well-typedness (the only proof discharged at checkpoint 1). -/
 
 /-- **The in-place coset gate is well-typed at its own dimension** `cosetDim w bits`.
-    Each of the three legs is well-typed at `cosetDim`: the two forward multipliers by
-    `cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim`, the swap by
-    `accYSwap_cuccaro_wellTyped` (its budget `1+2w+(2bits+1)+bits = cosetDim` holds with
-    equality), and the un-compute leg by `reverse_wellTyped` of the `aInv` forward gate. -/
+    All three legs are well-typed at `cosetDim`: the two forward multipliers by
+    `cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim` (at constants `a` and `N − aInv`),
+    the swap by `accYSwap_cuccaro_wellTyped` (its budget `1+2w+(2bits+1)+bits = cosetDim`
+    holds with equality). -/
 theorem inplaceCosetGate_cuccaro_wellTyped (w bits N a aInv numWin : Nat)
     (hw : 0 < w) (hbits : numWin * w = bits) :
     Gate.WellTyped (cosetDim w bits) (inplaceCosetGate w bits N a aInv numWin) := by
-  unfold inplaceCosetGate inPlaceMul
-  refine ⟨cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim w bits N a numWin hw hbits,
-    accYSwap_cuccaro_wellTyped w bits (cosetDim w bits) (by unfold cosetDim; omega),
-    reverse_wellTyped (cosetModMulCircuitOf cuccaroAdder w bits N aInv numWin)
-      (cosetDim w bits)
-      (cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim w bits N aInv numWin hw hbits)⟩
+  unfold inplaceCosetGate
+  exact ⟨⟨cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim w bits N a numWin hw hbits,
+          accYSwap_cuccaro_wellTyped w bits (cosetDim w bits) (by unfold cosetDim; omega)⟩,
+         cosetModMulCircuitOf_cuccaro_wellTyped_cosetDim w bits N (N - aInv) numWin hw hbits⟩
 
 /-! ## §3. The register-dimension identity — the Nat core of reindexing OBLIGATION (a). -/
 
@@ -108,20 +103,25 @@ def cosetAnc (w bits : Nat) : Nat := 2 + 2 * w + 2 * bits
 theorem cosetWork_dim_eq (w bits : Nat) : bits + cosetAnc w bits = cosetDim w bits := by
   unfold cosetAnc cosetDim; omega
 
-/-! ## §4. The arithmetic-heart OBLIGATION — the basis round-trip (checkpoints 2–3).
+/-! ## §4. The clearing mechanism (checkpoint 3 — clone of the proven template).
 
-    `InPlace.inPlaceMul_correct` reduces the gate's basis action to ONE round-trip
-    hypothesis: `swap ∘ mulFwd(a)` carries the input encoding `s0` to exactly what
-    `mulFwd(a⁻¹)` produces from the output encoding `sFinal`; the un-compute is then pure
-    reversibility.  This Prop names that hypothesis for THIS gate — discharging it (for
-    `s0`/`sFinal` the canonical residue encodings, off the wrap boundary) is checkpoints
-    2–3, and yields `applyNat (inplaceCosetGate …) s0 = sFinal`. -/
-def inplaceCosetGate_hchain (w bits N a aInv numWin : Nat) (s0 sFinal : Nat → Bool) : Prop :=
-  Gate.applyNat (accYSwap cuccaroAdder w bits)
-      (Gate.applyNat (cosetModMulCircuitOf cuccaroAdder w bits N a numWin) s0)
-    = Gate.applyNat (cosetModMulCircuitOf cuccaroAdder w bits N aInv numWin) sFinal
+    Checkpoint 3 follows `windowedModNMulInPlace_correct` (WindowedModNInPlace.lean:224)
+    at the coset level, via `Gate.applyNat`-level bookkeeping lifted with
+    `uc_eval_eq_permState`:
+      1. `mulFwd(a)` advances the accumulator to the coset of `a·y` (checkpoint 2,
+         `InPlaceCosetForward.inplaceCosetGate_forward_state`); y stays plain.
+      2. `accYSwap` exchanges accumulator ↔ y-register (`accYSwap_apply`): accumulator ←
+         plain `y`, y-register ← coset of `a·y`.
+      3. `mulFwd(N − aInv)` reads the swapped y-register and clears the accumulator to the
+         coset of `0` by `mod_inv_cancel_identity`: `(y + (N − aInv)·(a·y % N)) % N = 0`
+         (runway terms `k·N` vanish mod `N`).
+    HONEST DEVIATION: the in-place bad set is the forward-wrap ∪ reverse-wrap (two window
+    symmetric differences); the swap contributes 0 (`normSqDist_perm_invariant`).  The
+    total Born-mass bound DOUBLES to `≤ 2·numWin/2^cm` (the spec's `numWin/2^cm` constant
+    is relaxed accordingly downstream — a constant, no structural change).
+-/
 
-/-! ## §5. The remaining OBLIGATIONS, stated explicitly (checkpoints 2–4).
+/-! ## §5. The remaining OBLIGATIONS, stated explicitly (checkpoints 3–4).
 
   These are the precise targets the next checkpoints must discharge.  They are NOT
   proven here, and nothing in the verified scaffold depends on them (grep-confirmed:
@@ -131,31 +131,29 @@ def inplaceCosetGate_hchain (w bits N a aInv numWin : Nat) (s0 sFinal : Nat → 
   ── OBLIGATION (b) — bad-set reindex `B (work register) ↔ wrap boundary` ─────────────
     The spec's bad set `B : Finset (Fin (2^(bits + cosetAnc w bits)))` is the image,
     under the OBLIGATION-(a) reindex `Fin (2^(bits+cosetAnc w bits)) ≃ Fin (2^cosetDim)`,
-    of the multiplier-local wrap-boundary set of
-    `ReducedLookupCosetShift.reducedLookupWindowedMul_embedAgreeOff_local` (the runway
-    overflow, mass `≤ numWin/2^cm`).  REQUIREMENT (the user's caution): `B` must be
-    PHASE-INDEPENDENT — it may depend on the gate `(w,bits,N,a,numWin)` but NOT on any
-    control outcome / phase branch.  The forward leg's set lives on the ACCUMULATOR
-    factor `Fin (2^bits)`; the in-place result's `B` lives on the residue (y-) factor —
-    the swap moves the runway, so the `B ↔ wrap` correspondence must be proven through
-    `accYSwap`, NOT assumed equal.
+    of the forward-wrap ∪ reverse-wrap boundary (each leg's mass `≤ numWin/2^cm` by
+    `ReducedLookupCosetShift.reducedLookupWindowedMul_embedAgreeOff_local`, summing to
+    `≤ 2·numWin/2^cm`).  REQUIREMENT (the user's caution): `B` must be PHASE-INDEPENDENT —
+    it may depend on the gate `(w,bits,N,a,numWin)` but NOT on any control outcome / phase
+    branch.  The forward leg's set lives on the ACCUMULATOR factor `Fin (2^bits)`; the
+    in-place result's `B` lives on the residue (y-) factor — the swap moves the runway, so
+    the `B ↔ wrap` correspondence must be proven THROUGH `accYSwap`, NOT assumed equal.
 
   ── OBLIGATION (c) — value-encoding `cosetState z ↔ residue-register encoding` ───────
     The spec asserts `uc_eval (Gate.toUCom (cosetDim w bits) (inplaceCosetGate …))
     (cosetState (2^(bits+cosetAnc)) N cm z) = cosetState … ((a*z)%N)` off `B`.  At the
-    basis level this is `inplaceCosetGate_hchain` with `s0`/`sFinal` the canonical coset
-    encodings of `z` / `(a*z)%N` (residue = y-register, scratch clean — the
-    `ModNMulReady`/`MulReady` contract); lifting the basis action to the `cosetState`
-    superposition and through `Gate.toUCom`'s `uc_eval` is checkpoint 4 (the
-    branchOfE-control-form → in-place row-action conversion + the accumulator-dim →
-    work-dim transport via OBLIGATION (a)).
+    basis level this is the §4 three-step clone (`mulFwd(a)`; `accYSwap`; `mulFwd(N−aInv)`)
+    with `z` the residue in the y-register and clean scratch (the `ModNMulReady`/`MulReady`
+    contract); lifting the basis action to the `cosetState` superposition and through
+    `Gate.toUCom`'s `uc_eval` is checkpoint 4 (the branchOfE-control-form → in-place
+    row-action conversion + the accumulator-dim → work-dim transport via OBLIGATION (a)).
 
-  ── THE TARGET (what checkpoints 2–4 assemble) ──────────────────────────────────────
-    `inplaceReducedLookupCosetMul_shift bits (cosetAnc w bits) N cm a numWin
+  ── THE TARGET (what checkpoints 3–4 assemble) ──────────────────────────────────────
+    `inplaceReducedLookupCosetMul_shift bits (cosetAnc w bits) N cm a (2*numWin)
         (cosetWork_dim_eq w bits ▸ Gate.toUCom (cosetDim w bits) (inplaceCosetGate w bits N a aInv numWin))`
     i.e. the in-place gate, lifted to a `BaseUCom` and transported to the work dimension,
-    satisfies the frozen interface — which then feeds `ControlOracleLift` and the
-    (deferred) lemma-5 glue.
+    satisfies the frozen interface (with the doubled mass budget) — which then feeds
+    `ControlOracleLift` and the (deferred) lemma-5 glue.
 -/
 
 end FormalRV.Shor.CosetEigenstate.InPlaceCosetGate
