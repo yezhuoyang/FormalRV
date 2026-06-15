@@ -132,3 +132,41 @@ Fin(2^(n+anc))` absorbs both wrap boundaries.
 
 **Hardest part:** step 1 (the contiguous-accumulator adder + `sumCorrect`) — strictly prior to
 everything, and a substantial build comparable to a chunk of the arithmetic library.
+
+────────────────────────────────────────────────────────────────────────────
+## §5. NEXT-SESSION START PLAN (consolidation checkpoint, 2026-06-15)
+
+CONSOLIDATED HERE — do NOT start the contiguous-accumulator adder at the tail of a long run.
+Phase order: **contiguous Adder instance → two-register product-add wrapper → faithful gate →
+WellTyped → deviation correctness → `inplaceReducedLookupCosetMul_shift`.**
+
+**First subtask is NOT implementation — it is a TRANSPORT INVESTIGATION (do this first):**
+> Investigate whether the existing interleaved `cuccaroAdder`/`gidneyAdder` correctness
+> (`cuccaro_n_bit_adder_full_correct`, `gidney_adder_correct_full`, the `Adder.correct`
+> obligations) can be TRANSPORTED into the contiguous-accumulator layout by a fixed qubit
+> PERMUTATION (relabel augend positions `q+2i+1 ↦ q+i`, addend/carry into a separate block),
+> reusing the verified ripple-carry arithmetic.
+> - If transport works: define `contiguousAccumulatorAdder` as the permuted instance and derive
+>   its `Adder.correct`/`wellTyped` from the existing proof via the permutation — NO re-proving
+>   ripple-carry arithmetic. (Strongly preferred.)
+> - Only if transport fails (e.g. `copyWindow`/decoder are not permutation-stable): build the
+>   new adder instance deliberately, with a fresh `applyNat`/ripple-carry `sumCorrect`.
+> WARNING: do NOT casually rebuild a fresh adder from scratch before checking transport.
+
+**Narrow spec to define first (interface, not implementation):**
+`ContiguousAccumulatorAdder` (an `Adder` instance) with:
+  * contiguous augend/accumulator indices `augendIdx q i = q + i`;
+  * a SEPARATE addend/control block (not interleaved with the augend);
+  * the no-overlap / disjointness lemmas (`augendIdx_inBlock`, `addendIdx_inBlock`,
+    `augendIdx_inj`, `augend_addend_disjoint`);
+  * `wellTyped`;
+  * `applyNat`/ripple-carry `sumCorrect` (the `Adder.correct` obligation);
+  * **permutation-transport option from the existing Cuccaro/Gidney proof if viable** (the
+    preferred route — settle this before any fresh ripple-carry proof).
+
+STATUS AT CONSOLIDATION: scaffold + multiplier-local correctness verified & axiom-clean
+(tags `coset-multiplier-local-complete`, `coset-shor-scaffold-complete`); in-place bricks
+1/2a/2b/2c/3a committed but on the now-RETIRED `accYSwap` variant (kept only as the q(j)
+regression evidence); faithful construction decided + planned; the contiguous-accumulator adder
+is the named upstream dependency. The coset-Shor bound remains conditional on
+`inplaceReducedLookupCosetMul_shift`, now with a concrete faithful build path.
