@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq
 
 namespace VerifiedShor
@@ -82,7 +82,7 @@ theorem mod_add_above_layout_noop_on_F
     · subst hp; rw [FormalRV.Framework.update_eq]; exact h_q_val.symm
     · rw [FormalRV.Framework.update_neq _ _ _ _ hp]
   have h_commute :=
-    sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    style_controlledModAddConst_gate_commute_update_outside_fun bits N
       c flagIdx q false
       (cuccaro_input_F 2 false 0 acc)
       h_q_out h_q_ne_one hq_ne_flag
@@ -133,9 +133,9 @@ theorem mod_add_state_eq_when_control_false_on_Case3Input
     · subst hp; rw [FormalRV.Framework.update_eq]; exact h_F_flag.symm
     · rw [FormalRV.Framework.update_neq _ _ _ _ hp]
   unfold toyWindow2Case3Input
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         c flagIdx b1Idx b1 _ h_b1_out h_b1_ne_one h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         c flagIdx b0Idx b0 _ h_b0_out h_b0_ne_one h_b0_ne_flag]
   by_cases hq_b1 : q = b1Idx
   · rw [hq_b1]
@@ -168,7 +168,7 @@ theorem mod_add_state_eq_when_control_false_on_Case3Input
   by_cases hq_2 : q = 2
   · subst hq_2
     conv_lhs => rw [← h_F_self]
-    rw [sqir_style_controlledModAddConst_gate_carry_in_restored bits N
+    rw [style_controlledModAddConst_gate_carry_in_restored bits N
         c acc flagIdx false hbits hN_pos hN hN2 hc hacc h_flag_allowed h_flag_ne_1]
     exact (cuccaro_input_F_at_c_in 2 false 0 acc).symm
   by_cases hq_1 : q = 1

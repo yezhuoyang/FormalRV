@@ -19,7 +19,7 @@
     no sorry) AND its PPM resource cost is derived from its proved Toffoli count
     (`tcount_… = 14(n+2)` ⇒ `2(n+2)` Toffolis ⇒ `2(n+2)` CCZ magic states).
   * STILL a cost model (NOT welded): the full mod-exp `16n³` of `ModExpToffoliCount`.  The
-    verified modular multiplier `sqir_modmult_MCP_gate` exists and is semantically proved,
+    verified modular multiplier `modmult_MCP_gate` exists and is semantically proved,
     but it has no Toffoli-count theorem yet, and no Gate term iterates it `2n` times into a
     verified modular exponentiation.  So the 137-billion figure is an un-windowed upper
     bound, not a count read off a verified mod-exp circuit.  This file welds the adder

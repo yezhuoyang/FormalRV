@@ -50,7 +50,7 @@
 
   No `sorry`, no new `axiom`.
 -/
-import FormalRV.Shor.ProbabilityTransfer
+import FormalRV.Shor.OrderFinding.ProbabilityTransfer
 import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.MeanInequalities
 import Mathlib.Tactic.Positivity

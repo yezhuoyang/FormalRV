@@ -10,7 +10,7 @@
   (see README STILL UNSOLVED).
 -/
 import FormalRV.Shor.PostQFT.PostQFTCompletion
-import FormalRV.Shor.SuccessSensitivity
+import FormalRV.Shor.OrderFinding.SuccessSensitivity
 import FormalRV.Verifier
 #verify_clean FormalRV.SQIRPort.Shor_correct_var
 #verify_clean FormalRV.Shor.SuccessSensitivity.master_success_bound

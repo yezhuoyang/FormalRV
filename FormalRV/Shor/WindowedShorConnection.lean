@@ -3,71 +3,58 @@
   windowed-arithmetic modular multiplier up to the HEADLINE
   Shor success-probability theorem.
 
-  ## What this file proves (honest scope)
+  ## What this file proves (honest scope — UPDATED: the chain is CLOSED)
 
-  The headline theorem `Shor_correct_verified_no_modmult_axioms`
-  currently rides on the SQIR-faithful (Pipeline B) multiplier.
-  The windowed-arithmetic (Pipeline C) chain culminating in
-  `VerifiedShor.windowedSwapLoadAdapter_then_selectedAdd_apply_clean`
-  is fully proven but ends in a `windowed2Input` output layout and
-  is NOT yet connected to the headline.
+  This file defines THE multiplier interface and connects it — and the
+  windowed multiplier — all the way to the Shor success bound, kernel-clean:
 
-  This file supplies the **connecting reduction**, proven and
-  kernel-clean:
-
-    * `EncodeRoundTripModMul N bits anc` — the precise residual
-      obligation: a gate family that, per multiplier constant `c`,
+    * `EncodeRoundTripModMul N bits anc` — THE pluggable multiplier
+      interface: a gate family that, per multiplier constant `c`,
       round-trips the canonical `encodeDataZeroAnc` layout
-      (`x ↦ (c*x) % N`) and is well-typed.
-    * `EncodeRoundTripModMul.toVerifiedModMulFamily` — turns any
-      such obligation into the framework's reusable
-      `VerifiedShor.VerifiedModMulFamily` contract, by reusing the
-      existing matrix-level MCP bridge
-      (`toUCom_satisfies_MultiplyCircuitProperty_of_applyNat_encodeDataZeroAnc`)
-      and the well-typedness bridge
-      (`uc_well_typed_toUCom_of_Gate_WellTyped`).
-    * `shor_correct_of_encodeRoundTrip` — the HEADLINE
-      success-probability bound `≥ κ / (log₂ N)^4` for the family,
-      via `VerifiedModMulFamily.shorCorrect`.
+      (`x ↦ (c*x) % N`) and is well-typed.  The `roundTrip` field
+      carries an INVERTIBILITY GUARD (`∃ d, c*d % N = 1`) — a
+      soundness necessity, not a weakening: well-typed gates are
+      injective on basis states, while `x ↦ (c*x) % N` is
+      non-injective for non-invertible `c` (the unguarded version is
+      provably uninhabitable).  Shor only ever instantiates
+      `c := a^(2^i)` with invertible `a`, where the guard is free.
+    * `EncodeRoundTripModMul.toVerifiedModMulFamily` /
+      `shor_correct_of_encodeRoundTrip` — ANY instance yields the
+      framework's `VerifiedModMulFamily` and the HEADLINE bound
+      `≥ κ / (log₂ N)^4`, via the matrix-level MCP bridge.
+      Every layer above the round-trip is reusable.
+    * **The windowed path is CONNECTED** (§5b–§9 below):
+      `windowedInplaceModMulGate` (forward load+selected-add ; SWAP ;
+      inverse-clear ; unload) round-trips `encodeDataZeroAnc`
+      unconditionally, giving `windowedModMulFamily` and the
+      UNCONDITIONAL `windowed_shor_correct`.
+    * Sibling instances for the two ripple-adder multipliers
+      (`cuccaroMultiplier`, `gidneyMultiplier`) live in
+      `Shor/MultiplierInstances.lean` — three independent multiplier
+      routes to the same Shor bound, all through this one interface.
 
-  In other words: **every layer above the `encodeDataZeroAnc`
-  round-trip is reusable**, so connecting the windowed multiplier
-  to Shor reduces *exactly* to inhabiting `EncodeRoundTripModMul`
-  with the windowed circuit.
+  ## What remains (honest residuals)
 
-  ## What remains (the genuinely-missing windowed circuit fact)
-
-  `windowed_residual_target` and the docstring on
-  `WindowedToEncodeRoundTrip` state the precise remaining work to
-  inhabit `EncodeRoundTripModMul` from the proven windowed forward
-  gate.  Per the project's hard rules we do NOT fake it with a
-  `sorry` or a tautological closure; it is named as an explicit
-  structure (analogous to `TFactoryToffoliObligation`) and left
-  un-instantiated.  The three missing pieces are:
-
-    1. An in-place wrapper (compute into a workspace accumulator,
-       SWAP into the data register, then windowed-uncompute the
-       original `x` using the inverse `c⁻¹ mod N`) — the windowed
-       analogue of `sqir_modmult_inplace_candidate`.
-    2. The output/uncompute adapter mapping the `windowed2Input`
-       layout back to `encodeDataZeroAnc` (clearing the window
-       registers, moving the result to the data register).
-    3. Coverage of odd `bits` (the proven apex requires
-       `2 * numWin = bits`, i.e. `bits` even; the headline uses
-       `bits = Nat.log2 (2*N) + 1`).
+    * `WindowedCompletion` (§5) is an ALTERNATIVE completion-style
+      route kept for its interface value; its `roundTrip` carries the
+      same invertibility guard.  The live windowed route (§5b–§9)
+      does not go through it.
+    * The count-optimal babbush EGate mod-exp (`Shor/WindowedComposed`)
+      still rides a different circuit variant than the semantics
+      apex here; unifying them is the named
+      `BabbushLookupAddValueSpec` obligation.
 
   ## Honesty tier (per CLAUDE.md)
 
-  - The reduction theorems below are **Verified** (semantic, not
-    arithmetic-only): `mmi` invokes the matrix-vector MCP semantics
-    via the existing bridge; `shorCorrect` is the real Shor
-    success-probability theorem.
-  - The windowed→`EncodeRoundTripModMul` step is **Scaffolded /
-    open**: stated precisely, not proven, not faked.
+  All reduction and connection theorems below are **Verified**
+  (semantic, not arithmetic-only) and kernel-clean
+  (`[propext, Classical.choice, Quot.sound]`).
 -/
 import FormalRV.Shor.VerifiedShor
 import FormalRV.Arithmetic.MCPBridge
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
+import FormalRV.Shor.VerifiedShor.RelaxedSetting
+import FormalRV.Arithmetic.ModExp
 
 namespace FormalRV.BQAlgo.WindowedShorConnection
 
@@ -84,15 +71,26 @@ open VerifiedShor.Windowed
     meet to plug into the headline Shor theorem.  `gate c` is the
     compiled multiply-by-`c`-mod-`N` circuit in the canonical
     data+ancilla layout; `roundTrip` is its Boolean
-    `Gate.applyNat` correctness in that layout. -/
+    `Gate.applyNat` correctness in that layout, for every constant `c`
+    that is invertible mod `N` (witnessed by some `d` with
+    `(c*d) % N = 1`).  The invertibility guard is NOT a weakening of
+    the intended contract but a soundness necessity: well-typed gates
+    act injectively on basis states (X/CX/CCX on distinct wires are
+    permutations), while `x ↦ (c*x) % N` is non-injective on `[0,N)`
+    for non-invertible `c` (e.g. `c = 0` collapses `0` and `1`), so an
+    unguarded round-trip would make the structure uninhabitable for
+    every composite `N ≥ 2`.  Shor only ever instantiates `c := a^(2^i)`
+    with `a` invertible mod `N`, so the guard is free at the use site
+    (see `toVerifiedModMulFamily`). -/
 structure EncodeRoundTripModMul (N bits anc : Nat) where
   /-- The multiply-by-`c` gate, indexed by the multiplier constant. -/
   gate : Nat → Gate
   /-- Each gate is well-typed at the total dimension `bits + anc`. -/
   wellTyped : ∀ c, Gate.WellTyped (bits + anc) (gate c)
   /-- Boolean correctness in the `encodeDataZeroAnc` layout:
-      `|x⟩|0⟩ ↦ |(c*x) % N⟩|0⟩` for every `x < N`. -/
-  roundTrip : ∀ c x, x < N →
+      `|x⟩|0⟩ ↦ |(c*x) % N⟩|0⟩` for every `x < N` and every constant
+      `c` invertible mod `N`. -/
+  roundTrip : ∀ c x, x < N → (∃ d, (c * d) % N = 1) →
     Gate.applyNat (gate c) (encodeDataZeroAnc bits anc x)
       = encodeDataZeroAnc bits anc ((c * x) % N)
 
@@ -101,17 +99,25 @@ structure EncodeRoundTripModMul (N bits anc : Nat) where
     For QPE iterate `i` the family must multiply by `a^(2^i)`; we
     instantiate `gate` at the raw constant `a^(2^i)` so the
     round-trip target `((a^(2^i)) * x) % N` matches
-    `MultiplyCircuitProperty (a^(2^i)) …` on the nose. -/
+    `MultiplyCircuitProperty (a^(2^i)) …` on the nose.  The
+    invertibility guard at iterate `i` is discharged by the witness
+    `ainv0^(2^i)` from the base inverse `a · ainv0 ≡ 1 (mod N)` via
+    `mul_pow_mod_one` — the same per-power-inverse pattern as
+    `windowedModMulFamily` (§9). -/
 noncomputable def EncodeRoundTripModMul.toVerifiedModMulFamily
     {N bits anc : Nat} (W : EncodeRoundTripModMul N bits anc)
-    (a : Nat) (hN : N ≤ 2 ^ bits) :
+    (a : Nat) (hN : N ≤ 2 ^ bits)
+    (ainv0 : Nat) (hN1 : 1 < N) (h_inv0 : a * ainv0 % N = 1) :
     VerifiedModMulFamily a N bits anc where
   family := fun i => Gate.toUCom (bits + anc) (W.gate (a ^ (2 ^ i)))
   mmi := by
     intro i
     exact toUCom_satisfies_MultiplyCircuitProperty_of_applyNat_encodeDataZeroAnc
       (W.wellTyped (a ^ (2 ^ i))) hN
-      (fun x hx => W.roundTrip (a ^ (2 ^ i)) x hx)
+      (fun x hx => W.roundTrip (a ^ (2 ^ i)) x hx
+        ⟨ainv0 ^ (2 ^ i), by
+          rw [Nat.mul_mod]
+          exact mul_pow_mod_one a ainv0 N (2 ^ i) hN1 h_inv0⟩)
   wellTyped := by
     intro i
     exact uc_well_typed_toUCom_of_Gate_WellTyped (bits + anc)
@@ -130,11 +136,12 @@ noncomputable def EncodeRoundTripModMul.toVerifiedModMulFamily
 theorem shor_correct_of_encodeRoundTrip
     {N bits anc : Nat} (W : EncodeRoundTripModMul N bits anc)
     (a r m : Nat) (hN : N ≤ 2 ^ bits)
+    (ainv0 : Nat) (hN1 : 1 < N) (h_inv0 : a * ainv0 % N = 1)
     (h_setting : ShorSetting a r N m bits) :
     probability_of_success a r N m bits anc
-        (W.toVerifiedModMulFamily a hN).family
+        (W.toVerifiedModMulFamily a hN ainv0 hN1 h_inv0).family
       ≥ κ / (Nat.log2 N : ℝ) ^ 4 :=
-  (W.toVerifiedModMulFamily a hN).shorCorrect r m h_setting
+  (W.toVerifiedModMulFamily a hN ainv0 hN1 h_inv0).shorCorrect r m h_setting
 
 /-! ## §4. Concrete windowed layout + the PROVEN forward gate.
 
@@ -225,8 +232,20 @@ structure WindowedCompletion (N bits anc : Nat) where
   wellTyped : ∀ c,
     Gate.WellTyped (bits + anc) (Gate.seq (windowedForwardGate c N bits) (complete c))
   /-- The completion maps the windowed output back to the canonical
-      `encodeDataZeroAnc` layout.  THIS is the one open circuit fact. -/
-  roundTrip : ∀ c x, x < N →
+      `encodeDataZeroAnc` layout, for every constant `c` invertible mod `N`
+      (witnessed by some `d` with `(c*d) % N = 1`).  THIS is the one open
+      circuit fact.  The invertibility guard is NOT a weakening of the
+      intended contract but a soundness necessity (exactly as on
+      `EncodeRoundTripModMul.roundTrip`): the composite
+      `windowedForwardGate ; complete` is well-typed, hence acts injectively
+      on basis states, yet via `windowedForwardGate_apply` an unguarded
+      completion would force it to realize `x ↦ (c*x) % N`, which is
+      non-injective on `[0,N)` for non-invertible `c` (e.g. `c = 0` collapses
+      `0` and `1`) — so an unguarded round-trip would make the structure
+      uninhabitable for every composite `N ≥ 2`.  Shor only ever instantiates
+      `c := a^(2^i)` with `a` invertible mod `N`, so the guard is free at the
+      use site (see `toEncodeRoundTripModMul`). -/
+  roundTrip : ∀ c x, x < N → (∃ d, (c * d) % N = 1) →
     Gate.applyNat (complete c)
         (windowed2Input ((c * x) % N) (wb0Idx bits) (wb1Idx bits)
           (windowed2_b0_of_x x) (windowed2_b1_of_x x) (wnumWin bits))
@@ -244,10 +263,10 @@ noncomputable def WindowedCompletion.toEncodeRoundTripModMul
   gate := fun c => Gate.seq (windowedForwardGate c N bits) (W.complete c)
   wellTyped := W.wellTyped
   roundTrip := by
-    intro c x hx
+    intro c x hx hc
     rw [Gate.applyNat_seq,
         windowedForwardGate_apply c N bits anc x hbits h_even hN_pos hN hN2 h_anc_pos hx]
-    exact W.roundTrip c x hx
+    exact W.roundTrip c x hx hc
 
 /-- **HEADLINE bound from the windowed circuit, modulo the in-place
     completion.** Composing §3 with §5: once the windowed in-place
@@ -259,13 +278,15 @@ theorem shor_correct_of_windowedCompletion
     {N bits anc : Nat} (W : WindowedCompletion N bits anc)
     (a r m : Nat) (hbits : 1 ≤ bits) (h_even : 2 ∣ bits) (hN_pos : 0 < N)
     (hN : N ≤ 2 ^ bits) (hN2 : 2 * N ≤ 2 ^ bits) (h_anc_pos : 0 < anc)
+    (ainv0 : Nat) (hN1 : 1 < N) (h_inv0 : a * ainv0 % N = 1)
     (h_setting : ShorSetting a r N m bits) :
     probability_of_success a r N m bits anc
         ((W.toEncodeRoundTripModMul hbits h_even hN_pos hN hN2 h_anc_pos).toVerifiedModMulFamily
-          a hN).family
+          a hN ainv0 hN1 h_inv0).family
       ≥ κ / (Nat.log2 N : ℝ) ^ 4 :=
   shor_correct_of_encodeRoundTrip
-    (W.toEncodeRoundTripModMul hbits h_even hN_pos hN hN2 h_anc_pos) a r m hN h_setting
+    (W.toEncodeRoundTripModMul hbits h_even hN_pos hN hN2 h_anc_pos) a r m hN
+    ainv0 hN1 h_inv0 h_setting
 
 /-! ## §5b. Gap 1 — the in-place multiplier composition (the hard glue).
 
@@ -283,7 +304,7 @@ theorem shor_correct_of_windowedCompletion
       * `toyWindowed2SelectedAddGate_state_mul_correct` (PROVEN,
         window-preserving selected-add) for stage 3,
       * `windowed2Value_of_x_mod` (PROVEN) to decode the window value,
-      * `sqir_modmult_inverse_clear_arith` (PROVEN, SQIRModMult.lean
+      * `modmult_inverse_clear_arith` (PROVEN, ModMult.lean
         §, q_start-independent) for the modular-inverse cancellation
         `(x + (N-ainv)·((c·x)%N)) % N = 0`.
 
@@ -347,7 +368,7 @@ theorem windowedInplaceModMul_roundTrip
   -- Decode the window value: windowed2Value (bits of (c*x)%N) = (c*x)%N.
   rw [windowed2Value_of_x_mod, h_numWin, Nat.mod_eq_of_lt hcx_pow]
   -- Modular-inverse cancellation: (x + (N-ainv)·((c*x)%N)) % N = 0.
-  rw [sqir_modmult_inverse_clear_arith N c ainv x hN_pos hx h_ainv_le h_inv]
+  rw [modmult_inverse_clear_arith N c ainv x hN_pos hx h_ainv_le h_inv]
   -- Stage 5 (unload): windowed2Input 0 (windows = (c*x)%N) ↦ encodeDataZeroAnc ((c*x)%N).
   rw [h_unload ((c * x) % N) hcx_pow]
 
@@ -358,7 +379,7 @@ theorem windowedInplaceModMul_roundTrip
     hence self-inverse.  Granting that involution, the unload step is
     just the loader run a second time on the loaded state — exactly
     the `forward + involution ⇒ reverse` pattern the codebase already
-    uses for `sqir_encode_to_mult_adapter_reverse`
+    uses for `encode_to_mult_adapter_reverse`
     (`reverse_register_swap_involution_general`).
 
     This lemma discharges `h_unload` from the single hypothesis
@@ -1077,7 +1098,7 @@ theorem exists_even_bits_setting_sizing
     composition `windowedInplaceModMul_roundTrip` becomes an
     UNCONDITIONAL Boolean round-trip of the canonical `encodeDataZeroAnc`
     layout: `|x⟩|0⟩ ↦ |(c·x) % N⟩|0⟩`.  This is the windowed (Pipeline C)
-    analogue of `sqir_modmult_inplace_candidate`, and the exact
+    analogue of `modmult_inplace_candidate`, and the exact
     `EncodeRoundTripModMul.roundTrip` obligation for the windowed
     multiplier (for any constant `c` equipped with a modular inverse
     `ainv`). -/

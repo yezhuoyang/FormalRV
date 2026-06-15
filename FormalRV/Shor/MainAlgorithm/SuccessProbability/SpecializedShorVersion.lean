@@ -16,8 +16,8 @@ import FormalRV.Core.QuantumGate
 import FormalRV.Core.QuantumLib
 import FormalRV.QPE.QPE
 import FormalRV.QPE.QPEAmplitude
-import FormalRV.Shor.Eigenstate
-import FormalRV.Shor.TotientLowerBound
+import FormalRV.Shor.OrderFinding.Eigenstate
+import FormalRV.Shor.OrderFinding.TotientLowerBound
 import FormalRV.Shor.MainAlgorithm.PostProcessingAndMeasurement
 
 
@@ -266,18 +266,10 @@ sufficient for downstream typing. The specific RCIR implementation
 in Coq uses a similar linear-in-n count. -/
 def modmult_rev_anc (n : Nat) : Nat := 2 * n + 1
 
-/-- The RCIR-derived modular-multiplication oracle family
-(Coq: `Shor.v:118` `f_modmult_circuit`).
-
-**DEPRECATED (2026-05-29, Tick 84):** This is a placeholder axiom.
-The verified replacement is `FormalRV.BQAlgo.f_modmult_circuit_verified_bits`,
-which is constructively defined (not axiomatic) and built on the
-SQIR-faithful modular multiplier `sqir_modmult_MCP_gate`.  For
-end-to-end Shor correctness without this axiom, cite
-`FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms`. -/
-@[deprecated "Use FormalRV.BQAlgo.f_modmult_circuit_verified_bits and cite FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms" (since := "2026-05-29")]
-axiom f_modmult_circuit :
-  (a ainv N n : Nat) → Nat → BaseUCom (n + modmult_rev_anc n)
+-- (removed 2026-06-09) Deprecated placeholder `axiom f_modmult_circuit` deleted.
+-- Use the constructive `FormalRV.BQAlgo.f_modmult_circuit_verified_bits`; for
+-- end-to-end Shor correctness cite
+-- `FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms`.
 
 /-- The modular inverse of `a` mod `N`
 (Coq: `NumTheory.v` `modinv`).

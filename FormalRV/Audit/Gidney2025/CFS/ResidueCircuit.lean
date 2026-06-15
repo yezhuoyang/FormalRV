@@ -19,7 +19,7 @@
 
   Connecting to the already-verified gate circuit: each `e_k = 1` step `r ↦ (M_k · r) mod p_j` is an
   instance of `FormalRV.Arithmetic`'s verified in-place modular multiplier
-  `sqir_modmult_inplace_shifted_correct` (`SQIRModMult/Proofs3.lean`: the output register holds
+  `modmult_inplace_shifted_correct` (`ModMult/Proofs3.lean`: the output register holds
   `(a · x) mod N` given `a · a⁻¹ ≡ 1`), with `a := M_k`, `N := p_j`.  So the per-step circuit is
   already verified at the `Gate`-IR level; this file proves the COMPOSITION over the `m` exponent
   bits reproduces `modexpProd % p_j`.

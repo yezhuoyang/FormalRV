@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.ToyWindow2Case3StateEquality
 
 namespace VerifiedShor
@@ -41,8 +41,8 @@ internal flag, read register, top carry).
 Proof: `funext q`, case-split on `q`'s position class (b0Idx,
 b1Idx, flagIdx, above-layout, scalar workspace, parametric
 target/read bit), dispatch each case to the appropriate R7d^v
-through R7d^ix helper.  The proof mirrors `sqir_modmult_step_state_eq`
-from SQIRModMult.lean but is parameterized over `b0Idx`/`b1Idx`/
+through R7d^ix helper.  The proof mirrors `modmult_step_state_eq`
+from ModMult.lean but is parameterized over `b0Idx`/`b1Idx`/
 `flagIdx` rather than the SQIR multiplier control index. -/
 theorem toyWindow2Case3Gate_state_eq
     (bits N a k acc flagIdx b0Idx b1Idx : Nat)
@@ -239,10 +239,10 @@ theorem toyWindow2Case1Gate_readVal
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b1Idx (!b1) _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b0Idx b0 _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [cuccaro_read_val_update_outside_workspace bits 2 b1Idx (!b1) _ h_b1_out]
@@ -332,11 +332,11 @@ theorem toyWindow2Case1Gate_aboveLayoutFalse
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- Push b1Idx, b0Idx outside mod-add and read through.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ hq_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ hq_ne_b0]
@@ -355,7 +355,7 @@ theorem toyWindow2Case1Gate_aboveLayoutFalse
       exact h_input_q.symm
     · rw [FormalRV.Framework.update_neq _ _ _ _ hpq]
   have h_commute :=
-    sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    style_controlledModAddConst_gate_commute_update_outside_fun bits N
       (tableValue a N 2 k 1) flagIdx q false
       (update (cuccaro_input_F 2 false 0 acc) flagIdx true)
       h_q_out h_q_ne_one hq_ne_flag
@@ -440,11 +440,11 @@ theorem toyWindow2Case1Gate_preserves_b0Idx
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_b0_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_eq]
@@ -589,7 +589,7 @@ theorem toyWindow2Case1Gate_preserves_b1Idx
     · rw [FormalRV.Framework.update_neq _ _ _ _ hp]
   -- Use the SQIR commute lemma at b1Idx with v = true.
   have h_commute :=
-    sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    style_controlledModAddConst_gate_commute_update_outside_fun bits N
       (tableValue a N 2 k 1) flagIdx b1Idx true state
       h_b1_out h_b1_ne_one h_b1_ne_flag
   -- h_commute : applyNat M (update state b1Idx true) = update (applyNat M state) b1Idx true
@@ -607,7 +607,7 @@ theorem toyWindow2Case1Gate_preserves_b1Idx
 Three helpers needed for the case-1 state_eq assembly:
 - `_internalFlagFalse` (position 1, finishes through `clean_flagFalse`).
 - `_carryInRestored` (position 2, finishes through
-  `sqir_style_controlledModAddConst_gate_carry_in_restored`).
+  `style_controlledModAddConst_gate_carry_in_restored`).
 - `_restores_flagIdx` (flagIdx, three inner h_MA_* haves + outer
   C2 dispatch, mirrors case-3 with X1/X2 layers + `update_idem`). -/
 
@@ -681,10 +681,10 @@ theorem toyWindow2Case1Gate_internalFlagFalse
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_1_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b0Idx true _ h_b0_out h_b0_ne_one h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_1_ne_b0]
   exact ControlledModAdd.clean_flagFalse ControlledModAdd.sqirCuccaroImpl
@@ -761,13 +761,13 @@ theorem toyWindow2Case1Gate_carryInRestored
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_2_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b0Idx true _ h_b0_out h_b0_ne_one h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_2_ne_b0]
-  exact sqir_style_controlledModAddConst_gate_carry_in_restored bits N
+  exact style_controlledModAddConst_gate_carry_in_restored bits N
     (tableValue a N 2 k 1) acc flagIdx true
     hbits hN_pos hN hN2 h_c_lt_N hacc h_flag_allowed h_flag_ne_1
 
@@ -835,11 +835,11 @@ theorem toyWindow2Case1Gate_restores_flagIdx
     rw [FormalRV.Framework.update_idem]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ h_b0_ne_b1]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 1) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_eq]
@@ -856,7 +856,7 @@ theorem toyWindow2Case1Gate_restores_flagIdx
     rw [FormalRV.Framework.update_idem]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_eq]
@@ -873,11 +873,11 @@ theorem toyWindow2Case1Gate_restores_flagIdx
     rw [FormalRV.Framework.update_idem]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 1) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b1_ne_flag)]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 1) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b0_ne_flag)]
@@ -1109,10 +1109,10 @@ theorem toyWindow2Case2Gate_readVal
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b0Idx (!b0) _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b1Idx b1 _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [cuccaro_read_val_update_outside_workspace bits 2 b0Idx (!b0) _ h_b0_out]
@@ -1192,11 +1192,11 @@ theorem toyWindow2Case2Gate_aboveLayoutFalse
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ hq_ne_b0]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ hq_ne_b1]
@@ -1214,7 +1214,7 @@ theorem toyWindow2Case2Gate_aboveLayoutFalse
       exact h_input_q.symm
     · rw [FormalRV.Framework.update_neq _ _ _ _ hpq]
   have h_commute :=
-    sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    style_controlledModAddConst_gate_commute_update_outside_fun bits N
       (tableValue a N 2 k 2) flagIdx q false
       (update (cuccaro_input_F 2 false 0 acc) flagIdx true)
       h_q_out h_q_ne_one hq_ne_flag
@@ -1278,7 +1278,7 @@ theorem toyWindow2Case2Gate_preserves_b0Idx
       exact h_state_b0.symm
     · rw [FormalRV.Framework.update_neq _ _ _ _ hp]
   have h_commute :=
-    sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    style_controlledModAddConst_gate_commute_update_outside_fun bits N
       (tableValue a N 2 k 2) flagIdx b0Idx true state
       h_b0_out h_b0_ne_one h_b0_ne_flag
   rw [h_in_eq] at h_commute
@@ -1353,11 +1353,11 @@ theorem toyWindow2Case2Gate_preserves_b1Idx
   rw [FormalRV.Framework.update_idem]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b0_ne_b1)]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_eq]
@@ -1420,7 +1420,7 @@ theorem toyWindow2Case2Gate_restores_flagIdx
     rw [FormalRV.Framework.update_idem]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 2) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_eq]
@@ -1438,11 +1438,11 @@ theorem toyWindow2Case2Gate_restores_flagIdx
     rw [FormalRV.Framework.update_idem]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 2) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b0_ne_b1)]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 2) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_eq]
@@ -1460,11 +1460,11 @@ theorem toyWindow2Case2Gate_restores_flagIdx
     rw [FormalRV.Framework.update_idem]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 2) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b0_ne_flag)]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 2) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b1_ne_flag)]

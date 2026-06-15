@@ -68,43 +68,7 @@ theorem mathlib_dens_int_gen_eq_OF_post_step (n o m : Nat) :
     rw [← h1, ← h2]
   exact_mod_cast h_eq
 
-/-- **Strategy for the cf_aux ↔ mathlib bridge** (Phase 3 r_found_1,
-documentation):
 
-The bridge `mathlib_dens_int_gen n o m = cf_aux's q_curr after evolving from
-initial state via n Euclidean steps` cannot be proved by simple induction on `n`
-because cf_aux's recursive call uses NEW inputs `(m, o % m)` while
-mathlib's `dens (n+1)` for `o/m` involves the SAME `o/m`. The connection
-is via mathlib's `of_s_succ`: `(GenContFract.of (o/m)).s.get? (n+1) =
-(GenContFract.of (m/(o%m))).s.get? n`, plus our `stream_succ_euclidean`.
-
-The right joint invariant tracks cf_aux's running state `(p_prev, p_curr,
-q_prev, q_curr)` against mathlib's (nums offset, nums (offset+1), dens
-offset, dens (offset+1)) for an evolving offset. Each Euclidean step of
-cf_aux advances offset by 1 in mathlib's framework. The succ case of the
-joint induction then uses `nums_recurrence`/`dens_recurrence` to extend
-both sides by one more step.
-
-This invariant is mechanically constructable but proof-wise complex
-(multi-tick effort). For now, captured here as design intent. -/
-def cf_aux_bridge_invariant : Prop := True  -- placeholder docs
-
-/-- **Empirical bridge validation by case enumeration**: hand-traced
-proof that step-2 cf_aux output and mathlib dens(2) match for both
-sub-cases (verified informally in tick 55 PROGRESS.md notes).
-
-Case A (`o%2^m ≠ 0` AND `(2^m)%(o%2^m) = 0`): both sides give `(2^m)/(o%2^m)`.
-  - cf_aux: a' = (2^m)/(o%2^m), stream terminates at step 1, dens(2) = dens(1) = a'.
-Case B (`o%2^m ≠ 0` AND `(2^m)%(o%2^m) ≠ 0`): both sides give `a''·a' + 1`.
-  - cf_aux: returns (a''·(a'·a+1)+a, a''·a'+1).
-  - mathlib: b_0 = a', b_1 = a'', dens(2) = b_1·dens(1) + dens(0) = a''·a' + 1.
-
-This case-enumeration validates the proof pattern. The general n-step proof
-follows the SAME mechanism but inducted: cf_aux's "current after Euclidean
-shift" matches mathlib's "dens at corresponding shifted offset". The
-inductive step uses `dens_recurrence` + the Euclidean shift via
-`stream_succ_euclidean`. Mechanical but ~50-100 lines. -/
-def cf_aux_step_2_validated : Prop := True  -- empirical validation marker
 
 -- (General bridge scaffold moved later — needs `mathlib_OF_post_step_nat_eq_OF_post_step_div_general`.)
 

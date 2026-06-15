@@ -1,5 +1,6 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.ShorSettingCircuitSizing
+import FormalRV.Shor.VerifiedShor.RelaxedQPE_MMI
 
 namespace VerifiedShor
 namespace ShorSetting

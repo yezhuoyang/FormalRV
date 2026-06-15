@@ -6,7 +6,7 @@
 import FormalRV.Core.GateQASM
 import FormalRV.Arithmetic.SQIRModMult.Defs
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
-import FormalRV.Shor.CliffordTControlledModExp
+import FormalRV.Shor.Resource.CliffordTControlledModExp
 
 open FormalRV.Framework
 open FormalRV.Framework.Gate

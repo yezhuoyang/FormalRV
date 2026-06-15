@@ -296,43 +296,9 @@ theorem uc_eval_QPE {k n : Nat} (c : Nat → BaseUCom (k + n)) :
     future work). The proof is sorried — it requires translating the
     180+ line SQIR proof plus all of QuantumLib it depends on. -/
 
-/-- QPE_semantics_full — FAITHFUL translation of SQIR's headline theorem.
-    SQIR/examples/shor/QPEGeneral.v line 105:
-
-    ```coq
-    Lemma QPE_semantics_full : forall k n (c : base_ucom n) z (ψ : Vector (2^n)) (δ : R),
-      (n > 0)%nat -> (k > 1)%nat -> uc_well_typed c -> Pure_State_Vector ψ ->
-      (-1 / 2^(k+1) <= δ < 1 / 2^(k+1))%R ->
-      let θ := ((INR (funbool_to_nat k z) / 2^k) + δ)%R in
-      (uc_eval c) × ψ = Cexp (2 * PI * θ) .* ψ ->
-      probability_of_outcome
-          ((f_to_vec k z) ⊗ ψ)
-          (@Mmult _ _ (1*1) (uc_eval (QPE k n c)) (k ⨂ ∣0⟩ ⊗ ψ))
-      >= 4 / (PI ^ 2).
-    ```
-
-    DEFERRED — ref: SQIR/examples/shor/QPEGeneral.v `Lemma QPE_semantics_full`
-    (~180 LOC of Coq, depending on the full QuantumLib QFT/Fourier
-    infrastructure). G-T axiom catalogue. Closing this in Lean requires:
-    (a) full QFT correctness theorem, (b) inverse-QFT-on-eigenstate analysis,
-    (c) Born-rule lower bound via Dirichlet kernel summation. Total estimated
-    ~1500 LOC of Lean (mathlib has no quantum-circuit Fourier library). -/
-axiom QPE_semantics_full
-    (k n : Nat) (c : BaseUCom (k + n)) (z : Nat → Bool)
-    (ψ : Matrix (Fin (2^n)) (Fin 1) ℂ) (δ : ℝ)
-    (hn : 0 < n) (hk : 1 < k)
-    (hc : UCom.WellTyped (k + n) c)
-    (hψ : Pure_State_Vector ψ)
-    (hδ_low  : (-1 : ℝ) / 2^(k+1) ≤ δ)
-    (hδ_high : δ < 1 / 2^(k+1))
-    (θ : ℝ)
-    (θ_def : θ = ((funbool_to_nat k z : ℝ) / 2^k) + δ)
-    (h_eigen : uc_eval c * (kron_zeros k ⊗ᵥ ψ) =
-               Complex.exp (2 * Real.pi * θ * Complex.I) • (kron_zeros k ⊗ᵥ ψ)) :
-    probability_of_outcome
-        ((f_to_vec k z) ⊗ᵥ ψ)
-        (uc_eval (QPE k n (fun _ => c)) * (kron_zeros k ⊗ᵥ ψ))
-      ≥ 4 / Real.pi ^ 2
+-- (removed 2026-06-09) Dead axiom `QPE_semantics_full` deleted: it was only ever
+-- referenced by comments. The verified QPE peak bound is the proven theorem
+-- `FormalRV.SQIRPort.QPE_MMI_correct`.
 
 end BaseUCom
 end FormalRV.Framework

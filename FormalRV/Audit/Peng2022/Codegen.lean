@@ -25,7 +25,7 @@
     • system          — one surgery gadget → Stim + its footprint  distance-3
 -/
 
-import FormalRV.Shor.ShorEmit
+import FormalRV.Shor.PPM.ShorEmit
 import FormalRV.Codegen.GateQasm
 import FormalRV.PPM.PPMToQASM
 import FormalRV.QEC.FrontendAlgebraic

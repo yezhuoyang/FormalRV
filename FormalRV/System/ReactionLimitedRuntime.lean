@@ -30,7 +30,7 @@
   No `sorry`, no new `axiom`.
 -/
 
-import FormalRV.Shor.ShorFullMachineRequirement
+import FormalRV.Shor.Resource.ShorFullMachineRequirement
 
 namespace FormalRV.System.ReactionLimitedRuntime
 

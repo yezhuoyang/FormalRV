@@ -534,12 +534,9 @@ noncomputable def modinv (a N : Nat) : Nat :=
 /-- Number of ancilla qubits used by the modular-mult subcircuit. -/
 def modmult_rev_anc (n : Nat) : Nat := 2 * n  -- placeholder
 
-/-- The reversible modular multiplication circuit family. -/
-axiom f_modmult_circuit (a a_inv N n : Nat) : Nat → BaseUCom (n + modmult_rev_anc n)
-
-/-- Probability that Shor's algorithm succeeds in recovering the order. -/
-axiom probability_of_success
-    (a r N m n : Nat) (anc : Nat) (f : Nat → BaseUCom (n + anc)) : ℝ
+-- (removed 2026-06-09) Dead `FormalRV.Framework` axioms `f_modmult_circuit` and
+-- `probability_of_success` deleted: they shadowed the live `FormalRV.SQIRPort`
+-- symbols of the same name and were never referenced by the verified chain.
 
 /-- Shor's success-probability constant κ = 4 · e⁻² / π² ≈ 0.055. -/
 noncomputable def kappa : ℝ := 4 * Real.exp (-2) / Real.pi ^ 2

@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 
 namespace VerifiedShor
@@ -36,11 +36,11 @@ so that `ControlledModAddImpl` can be stated without them.
 **Scope (Level 1 only)**: this struct only carries facts needed to
 state and prove **controlled-modular-add correctness**.  It does
 NOT abstract:
-* The multiplier register layout (`sqir_mult_control_idx`,
-  `sqir_mult_input_F`, install machinery) — that is Level 2
+* The multiplier register layout (`mult_control_idx`,
+  `modmult_input_F`, install machinery) — that is Level 2
   `MultiplierStepLayout`, reserved for R5c.
 * The Shor/MCP adapter layout (`encodeDataZeroAnc`,
-  `sqir_encode_to_mult_adapter`, `Gate.shift`) — that is Level 3
+  `encode_to_mult_adapter`, `Gate.shift`) — that is Level 3
   `MCPAdapterLayout`, reserved for R5d.
 
 **Fields are functions of `bits`**, not constants, so different

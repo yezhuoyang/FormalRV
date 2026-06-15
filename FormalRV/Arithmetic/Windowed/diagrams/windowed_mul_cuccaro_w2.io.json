@@ -1,0 +1,8 @@
+{
+  "title": "Windowed multiplier on the CUCCARO adder   windowedMulCircuitOf cuccaroAdder 2 2 3 1   acc <- (3*y) mod 4     [w=2, bits=2, 1 window;  12 qubits, 72 gates, 36 Toffoli]",
+  "wires": ["ctrl", "a0", "s0", "a1", "s1", "cin", "t0", "r0", "t1", "r1", "y0", "y1"],
+  "input":  ["ctrl=1", "(y1,y0)=y (multiplier input)", "acc (t1,t0)=0", "addr a*, AND s*, cin, table-word r* = 0"],
+  "output": ["acc (t1,t0)=(3*y) mod 4", "y register preserved", "addr/AND/cin/r* restored to 0"],
+  "fold": 26,
+  "fontsize": 11
+}

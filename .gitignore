@@ -22,3 +22,6 @@ __pycache__/
 
 # Downloaded paper sources (arXiv e-prints; kept local for formalization reference)
 /papers/
+
+# Cloned arXiv LaTeX sources of audited papers (not part of the repo)
+Library/
