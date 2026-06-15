@@ -220,3 +220,42 @@ hardest sub-step — lift `stepInv_foldT_acc`'s Boolean post-state through `uc_e
 the data-dependent addend, giving `branchOfE e_gate (uc_eval … |coset⟩) b = actualAcc … numWin`);
 (iii) sum over the runway → `shiftState`/`actualAcc_eq_cosetState_runningSum`; (iv) feed
 `cosetOutOfPlace_hfwd_E` → `cosetState(k) → cosetState((a·k) mod N)` off `numWin/2^m`.
+
+### 7. MULTIPLIER-LOCAL COMPLETE — and the honest Shor-level assembly scope
+
+**Steps (i)–(iv) above are DONE.** The full multiplier-local chain is closed, all axiom-clean:
+`ReducedLookupCosetGate` (gate+WellTyped) → `ReducedLookupCosetValue` (Boolean value) →
+`ReducedLookupStepAction` (per-step `uc_eval` — the hard `uc_eval_basis_agree` lift) →
+`ReducedLookupEgate` (`e_gate` + one-pass `branchOfE`) → `ReducedLookupCosetShift`
+(fold + `hfac_act` discharge → `reducedLookupWindowedMul_cosetState_shift`, plus the off-bad
+`EmbedAgreeOff`-language form `reducedLookupWindowedMul_embedAgreeOff_local`).
+
+**The Shor-level assembly is NOT pure wiring — it is a genuine remaining CONSTRUCTION** (verified
+by interface audit, 2026-06-15).  `ApproxCosetOrbitShift` + `coset_route2_success_conditional`
+are real and their proof is wiring, BUT the structure fields hide constructions the repo has
+ALWAYS abstracted as hypotheses (`DataOracle.acts`, `DataLocal.acts`, `PhaseLocal.acts`,
+`hdecomp`) and NEVER discharged for any concrete circuit.  The multiplier-local theorem lives on
+the `cosetDim` register (multiplier × accumulator); the engine needs it on the **Shor `jointIdx`
+(phase × work)** register under the **phase-controlled** oracle.  The 5 lemmas to build:
+
+1. `E_phys_dataLocal` — a concrete `E_phys = I_phase ⊗ E_data` (E_data = coset embedding) + its
+   `DataLocal (shorDvd m n anc)` proof. **(C, small once E_phys defined)**
+2. `cosetOracle_dataOracle` — `DataOracle (shorDvd …) (uc_eval (control k (f_coset k)))` + ideal
+   analogue: the controlled-modmul acts as `(O φ)(jointIdx x y) = φ(jointIdx x ((τ x).symm y))`.
+   Relate `control` semantics (`QPE/ControlledGates`) to the `acts` form. **(C, hard — controlled-oracle representation)**
+3. The off-bad `hintertwine` on the Shor register — embed the multiplier-local result
+   (`reducedLookupWindowedMul_embedAgreeOff_local`) into the `work` factor and lift through the
+   phase-control. **(C, HARDEST — controlled-oracle representation theory)**
+4. `Shor_final_state = orbitState Fa init numIter` (coset + ideal): the QPE stage-decomposition.
+   `uc_eval_QPE` is `rfl` but only gives the 3-piece split; interleaving phase-local (`npar_H`,
+   `QFTinv`) + `numIter` controlled-oracle stages into one `orbitState`, threading `QState.cast`
+   and `controlled_powers_succ`, is real plumbing. **(C, medium)**
+5. Glue: instantiate `bad_delta`; `totalWrapMass_le_numWin` for both wrap bounds; cite
+   `physCosetEmbed_isometry` for `hmarg`; supply `h_ideal` from the verified ideal Shor bound;
+   then `coset_route2_success_conditional`. **(W/D — wiring once 1–4 land)**
+
+The cheap deviation→off-bad conversion is DONE (`reducedLookupWindowedMul_embedAgreeOff_local`).
+The genuine frontier is the **controlled-oracle representation** (lemmas 2–3) + the QPE
+stage-decomposition (lemma 4) — bringing the verified multiplier onto the Shor register under the
+phase-controlled QPE oracle.  This is orchestration-layer circuit content, distinct from (and
+strictly downstream of) the now-closed multiplier correctness.
