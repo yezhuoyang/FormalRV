@@ -38,6 +38,8 @@
 import FormalRV.Shor.CosetEigenstate.InPlaceCosetGate
 import FormalRV.Shor.CosetEigenstate.InPlaceCosetForward
 import FormalRV.Shor.CosetEigenstate.ReducedLookupStepAction
+import FormalRV.Shor.CosetEigenstate.ReducedLookupCosetValue
+import FormalRV.Shor.CosetEigenstate.CosetTableSum
 
 namespace FormalRV.Shor.CosetEigenstate.InPlaceCosetClearing
 
@@ -46,6 +48,8 @@ open FormalRV.Shor.WindowedCircuit
 open FormalRV.Shor.WindowedArith (tableValue window)
 open FormalRV.Shor.CosetEigenstate.ReducedLookupCosetGate (cosetModMulCircuitOf)
 open FormalRV.Shor.CosetEigenstate.ReducedLookupStepAction (stepInv_determines_mulInputAccOf)
+open FormalRV.Shor.CosetEigenstate.ReducedLookupCosetValue (idealAcc_eq_sum_mod)
+open FormalRV.Shor.CosetEigenstate.CosetTableSum (cosetWindowConst idealAcc_cosetWindowConst)
 
 /-- **CHECKPOINT 3, brick 1 — the coset multiplier's basis fold (reusable, BOTH passes).**
     A `StepInv` state at partial sum `acc₀` advances under the whole forward coset
@@ -190,5 +194,41 @@ theorem inplaceCosetGate_per_term (w bits N a aInv numWin acc₀ y : Nat) (hw : 
   rw [cosetMul_pass_concrete w bits N a numWin acc₀ y hw,
       accYSwap_mulInputAccOf w bits numWin _ y hbits,
       cosetMul_pass_concrete w bits N (N - aInv) numWin y _ hw]
+
+/-- **CHECKPOINT 3, brick 3a — the clearing DECOMPOSITION (the quotient is exposed, not erased).**
+    The pass-2 accumulator NUMERATOR `y + ∑ tableValue (N−aInv) (window V)` is `≡ 0 (mod N)`,
+    so it equals `q·N` for the actual table-sum quotient `q` (`q = numerator / N`) — proven from
+    the table sum's literal mod-`N` value, NOT by replacing the sum with a congruence.
+
+    Grounded in: `idealAcc_eq_sum_mod` (`(∑ cosetWindowConst) % N = idealAcc`, i.e. the canonical
+    residue of the UNREDUCED sum — the quotient is the remainder) + `idealAcc_cosetWindowConst`
+    (`= ((N−aInv)·V) % N`, needs `V < (2^w)^numWin`) + `mod_inv_cancel_identity`
+    (`(y + (N−aInv)·(a·y % N)) % N = 0`).  Consumes `V ≡ a·y (mod N)` as `hVmod`.
+
+    This is the integer-level decomposition step required before the finite-window lift: it
+    licenses writing the cleared value as `0 + q·N`, which `cosetState_multiWrap_agree_off` then
+    classifies into the coset-0 window vs the reverse-wrap bad set (brick 3, next). -/
+theorem cosetMul_clearing_residue (w N a aInv numWin y V : Nat)
+    (hN : 0 < N) (hV_lt : V < (2 ^ w) ^ numWin) (hVmod : V % N = (a * y) % N)
+    (hy : y < N) (haInv : aInv < N) (hinv : a * aInv % N = 1) :
+    (y + ∑ k ∈ Finset.range numWin, tableValue (N - aInv) N w k (window w V k)) % N = 0 := by
+  -- The table sum's literal mod-N value is the canonical residue `((N−aInv)·V) % N`.
+  have hsum : (∑ k ∈ Finset.range numWin, tableValue (N - aInv) N w k (window w V k)) % N
+      = ((N - aInv) * V) % N := by
+    show (∑ k ∈ Finset.range numWin, cosetWindowConst (N - aInv) N w V k) % N
+        = ((N - aInv) * V) % N
+    rw [← idealAcc_eq_sum_mod N (cosetWindowConst (N - aInv) N w V) numWin,
+        idealAcc_cosetWindowConst (N - aInv) N w numWin V hN hV_lt]
+  have hV : V ≡ a * y [MOD N] := hVmod
+  -- y + (table sum) ≡ y + (N−aInv)·(a·y % N)  (mod N) — the quotient ride-along is tracked.
+  have hchain : (y + ∑ k ∈ Finset.range numWin, tableValue (N - aInv) N w k (window w V k))
+      ≡ (y + (N - aInv) * (a * y % N)) [MOD N] :=
+    Nat.ModEq.add_left y
+      (hsum.trans ((Nat.ModEq.mul_left _ hV).trans
+        (Nat.ModEq.mul_left _ (Nat.mod_modEq (a * y) N).symm)))
+  have hEq : (y + ∑ k ∈ Finset.range numWin, tableValue (N - aInv) N w k (window w V k)) % N
+      = (y + (N - aInv) * (a * y % N)) % N := hchain
+  rw [hEq]
+  exact mod_inv_cancel_identity a aInv N y hN hy haInv hinv
 
 end FormalRV.Shor.CosetEigenstate.InPlaceCosetClearing
