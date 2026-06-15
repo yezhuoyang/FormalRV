@@ -35,7 +35,7 @@ All proofs discharge by `decide`/`native_decide`/`rfl` with no `sorry` and no cu
 the logical `X̄ = X₆X₇X₈`. `StimEmit.surgeryToStim` emits the merged-code syndrome
 circuit (above: each X-check is an ancilla in `|+⟩`, `CX anc→support`, `MX`; each
 Z-check is `CX support→anc`, `M`). `surface3_x_surgery_measures_logicalX`
-(`Corpus/SurgeryDemoSurface.lean:118`, **Verified**, axiom-clean) proves the
+(`SurgeryDemoSurface.lean:118`, **Verified**, axiom-clean) proves the
 span-witness-selected ancilla X-checks multiply to exactly `signedXRow X̄`, and
 `surface3_x_surgery_verifies` passes the structural verifier. Stim's `has_flow` then
 re-derives the same fact externally — the LaSsynth gold standard.
@@ -48,7 +48,7 @@ re-derives the same fact externally — the LaSsynth gold standard.
    (`targets_logical_correctly`, by `decide`) — the GF(2) fact that
    `selectedSignedProduct_eq` lifts to the signed Pauli product.
 3. **Rejecting a bad gadget.** `topology_pair_alias_rejected`
-   (`SurgeryGadgetToSysCalls.lean:834`, `native_decide`) proves the combined checker
+   (`SurgeryGadgetToSysCalls.lean:835`, `native_decide`) proves the combined checker
    returns `false` for two parallel gadgets that *share* ancilla sites — a structural
    aliasing bug caught before any physics (the contract file's §22 shows two
    individually-valid certs that must NOT auto-compose).
@@ -93,7 +93,7 @@ ancilla coupled to *both* logical supports. It passes the **same** `verify_surge
 `surface3_xxx_merge` does the joint **X̄₁X̄₂X̄₃** on three patches (`native_decide`, 40 qubits).
 
 **Any code distance.** The per-merge gadget is generic in the distance:
-`surface_d_x_surgery d` (`Corpus/ShorEmitDistance.lean`) builds the surgery gadget on
+`surface_d_x_surgery d` (`../Shor/ShorEmitDistance.lean`) builds the surgery gadget on
 `surfaceHGP d` (the `[[d²+(d−1)², 1, d]]` surface code), with its logical X̄ computed by the
 code-general `pairedLogicalX` and `τ_s = ⌈2d/3⌉`. It passes the **same**
 `verify_surgery_gadget` at each chosen distance — `surface_d_x_surgery_verifies_d3`
@@ -119,10 +119,12 @@ sequence of its gadget measurements. Concrete schedules: `cczInjectionSchedule =
 `demoSchedule = List.replicate 3 surface3_x_surgery` (`SurfaceShorFullStack.lean`), and
 the parametric `shorSchedule` (RSA-2048 = 412,316,860,416 merges, `ShorEmit.lean`).
 
-**The full lattice-surgery CNOT is VERIFIED.** It is the two-merge schedule
+**The full lattice-surgery CNOT is STRUCTURALLY VERIFIED (both merges pass the surgery verifier).** It is the two-merge schedule
 `surface3_cnot = [surface3_zz_merge, surface3_xx_merge]` (a `ZZ`-merge, then an `XX`-merge,
-then measure the ancilla), and `surface3_cnot_verifies` proves **both** merges pass the
-framework verifier — `decide`, axiom-clean (`propext`). The Z-merge is handled by **CSS
+then measure the ancilla), and `surface3_cnot_verifies` is the structural Boolean check
+`verify_surgery_schedule surface3_cnot = true` — i.e. **both** merges pass the per-gadget
+framework verifier — `decide`, axiom-clean (`propext`). This is a structural-verifier pass,
+not a CNOT-level semantic theorem. The Z-merge is handled by **CSS
 duality** (measuring X̄ of the dual code `{hx := hz, hz := hx}` *is* measuring Z̄), so it reuses
 the **same** `verify_surgery_gadget` with no new machinery.
 

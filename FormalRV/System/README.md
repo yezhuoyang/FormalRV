@@ -232,9 +232,14 @@ lake env lean FormalRV/Codegen/SysCallEmitDemo.lean     # prints the emitted DEV
 - `MagicStateReadiness.lean` / `MagicScheduleComplete.lean` — magic-state latency + footprint +
   routing + the whole-circuit wait law; factory-count / footprint accounting.
 - `NaiveSchedule.lean` — the full ~10⁹-op RSA schedule defined recursively; `naiveSchedule_valid`
-  proves it valid for **all** sizes (kernel-clean, no enumeration).
+  proves it valid for **all** sizes (kernel-clean, no enumeration). This is the provably-correct
+  **fully-serial** baseline — one op at a time, so every conflict/capacity/decoder/factory concern is
+  trivially satisfied (nothing overlaps); parallel/space-packed/factory-pipelined scheduling is future
+  work built on top of it.
 - `ScheduleLowerBound.lean` — IMPOSSIBILITY: causal chain (`causal_chain4`) + spacetime packing
-  (`magic_spacetime_floor`: `Q·T ≥ K·fq·prod`); RSA floor ≈ 22.4M qubit-hours.
+  (`magic_spacetime_floor`: `Q·T ≥ K·fq·prod`, a **Verified** theorem on an *abstract* schedule);
+  the RSA floor ≈ 22.4M qubit-hours is that bound *instantiated* at recorded parameters
+  (`rsa2048_floor_value`, **Arithmetic-only** `native_decide`).
 - `HardwareSensitivity.lean` — the bound as a function of the full hardware-parameter set, with a
   proven monotonicity (sensitivity) theorem for each (decoding speed, architecture size, routing
   latency, measurement time, max parallelism, …); instantiated for both Gidney papers.
@@ -335,7 +340,7 @@ values (cited from hardware papers), and factory distillation correctness is ass
 ## Essential proof techniques
 
 - **A ∀-size feasibility ceiling by induction.** `naivePeak_le_footprint`
-  (`NaiveUpperBound.lean:86`) proves the one-Toffoli-at-a-time schedule's peak qubit
+  (`NaiveUpperBound.lean:93`) proves the one-Toffoli-at-a-time schedule's peak qubit
   demand never exceeds the static footprint, by a one-line induction on the step
   count (`max footprint (≤footprint) = footprint`) — so the bound holds for *every*
   problem size, not just the concrete instance.

@@ -4,7 +4,7 @@
   each .qasm, counts gates, and confirms they equal these numbers — justifying the counting.
 -/
 import FormalRV.Core.GateQASM
-import FormalRV.Arithmetic.SQIRModMult.Defs
+import FormalRV.Arithmetic.SQIRModMult.SQIRModMultDefinitions
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 import FormalRV.Shor.CliffordTControlledModExp
 

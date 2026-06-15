@@ -19,8 +19,17 @@ codes, windowed Ekerå–Håstad, factory sharing, reaction-limited pipelining).
 |---|---|---|
 | **1. The algorithm succeeds** | order finding succeeds with prob. `≥ κ/(log₂N)⁴` (κ = 4·e⁻²/π²), N-parametric | `orderFindingSucceeds`, `successProbabilityBound`, `successConstant` |
 | **2. The circuit is correct** | a SQIR-faithful modular multiplier (built from the verified Cuccaro adder) implements the oracle | `verifiedModularMultiplier`, `cuccaroAdderCorrect` |
-| **3. Gates = lattice surgery** | on the distance-3 surface code, a logical CNOT is a verified ZZ-merge + XX-merge; a Toffoli is a verified `|C̄CZ̄⟩` injection | `surfaceCnotVerifies`, `surfaceToffoliInjectionVerifies` |
+| **3. Gates = lattice surgery** | on the distance-3 surface code, a logical CNOT is a structurally-verified ZZ-merge + XX-merge; a Toffoli is a structurally-verified `|C̄CZ̄⟩` injection | `surfaceCnotVerifies`, `surfaceToffoliInjectionVerifies` |
 | **4. End to end** | the Shor PPM program is physically realized as a surface-code surgery schedule that reduces the stabilizer state | `surfaceShorEndToEnd`, `surfaceFullStack` |
+
+> **Honest scope for Steps 3–4.** These are **structural** checks of the framework's
+> Boolean surgery verifier (`verify_surgery_schedule` / `verify_surgery_gadget`) — a
+> `decide` for the CNOT and `native_decide` (arithmetic-tier) for the Toffoli injection
+> — *not* full unitary-semantic proofs. The Toffoli injection also **assumes a logical
+> magic state is already present at the port** (it is an input, not verified-prepared), and physical
+> distance / decoder / fault-tolerant error suppression are out of scope. The precise
+> honesty boundary lives in [`LatticeSurgery/README.md`](../LatticeSurgery/README.md).
+> Steps 1–2 carry no such caveat: they are axiom-clean semantic theorems.
 
 ## Verify it yourself
 

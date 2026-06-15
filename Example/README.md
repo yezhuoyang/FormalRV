@@ -7,11 +7,17 @@ step and **verify it yourself** — and re-run the resource verification on **yo
 > ```bash
 > lake env lean --run Example/Adder2EndToEnd.lean
 > ```
-> Running it **type-checks every theorem** below (including `schedule_fits` — a machine-checked
-> proof that the surgery schedule fits the architecture) and prints the resource table. **Edit the
-> `EDIT HERE` block (zones, decoder width, parallelism, reaction latency), re-run, and you get a new
-> machine-checked verdict + new verified bounds.** If your hardware can't host the schedule, the
-> proof is *rejected* — that's the verification.
+> Running it **type-checks every theorem** below (including `schedule_fits` — a kernel-trusted
+> machine-checked proof, by `native_decide`, that the surgery schedule fits the architecture) and
+> prints the resource table. **Edit the `EDIT HERE` block (zones, decoder width, parallelism,
+> reaction latency), re-run, and you get a new machine-checked verdict + new verified bounds.** If
+> your hardware can't host the schedule, the proof is *rejected* — that's the verification.
+>
+> *(`schedule_fits` is proved `by native_decide` — a decidable, kernel-trusted Boolean evaluation,
+> i.e. an arithmetic-tier machine check. Unlike the headline axiom-clean Shor success bound, it
+> would **not** pass the stricter `#verify_clean` gate, because `native_decide` introduces
+> `Lean.ofReduceBool`. It is a genuine machine-checked decision procedure, not an axiom-clean
+> semantic theorem.)*
 
 Everything below is the **actual emitted output** of the real compilers — not hand-typed.
 
@@ -53,11 +59,14 @@ the parsers, so the files stay machine-readable).
 `cuccaro_n_bit_adder_full 2 0`, proven by **`cuccaro_n_bit_adder_full_correct`** (target register
 `:= a + b mod 4`, read register restored, carry preserved) — a *theorem*, not a test. 5 qubits.
 
-## L2 → OpenQASM ([`adder2.qasm`](adder2.qasm)) — Qiskit re-verifies the counts
+## L2 → OpenQASM ([`adder2.qasm`](adder2.qasm)) — emitted counts + an independent Qiskit re-count
 
-`Core/GateQASM.toQASM` emits the full circuit; `5` qubits, `8·cx + 4·ccx`, `tcount 28`.
-`python PyCircuits/verified_circuit_qasm_count.py` reloads it in Qiskit and confirms the gate
-counts equal the Lean-proved numbers.
+`Core/GateQASM.toQASM` emits the full adder circuit into [`adder2.qasm`](adder2.qasm); `5` qubits,
+`8·cx + 4·ccx`, `tcount 28` (the numbers below). Separately,
+`python PyCircuits/verified_circuit_qasm_count.py` independently re-counts the Toffoli/modmult/
+controlled-multiplier circuit family in Qiskit (8/8 checks pass) — confirming `Core/GateQASM`'s
+counting matches Qiskit on that family. (That script does **not** load `adder2.qasm` itself; the
+adder counts here are the ones `Core/GateQASM` emits.)
 
 ```qasm
 OPENQASM 2.0; include "qelib1.inc"; qreg q[5];
@@ -97,8 +106,15 @@ Timing: `t_react = 10 µs`, window `= 1000 µs`. **All of these are the `EDIT HE
 
 ## System — the full schedule ([`adder2_full_schedule.txt`](adder2_full_schedule.txt), 192 SysCalls)
 
-The 12 PPM measurements lower to 12 surgery merge blocks (3 syndrome rounds each), scheduled onto
-the zones with explicit `begin..end` µs. Excerpt (one merge block):
+The schedule is **12 replicas of one representative scheduling block** (`surgery_ppm_A`, each 3
+syndrome rounds / 16 SysCalls), count-matched to the 12 joint PPM measurements via the theorem
+**`merge_blocks_match_ppm`** (`numMergeBlocks = numMeasurements`). Note `surgery_ppm_A`'s surgery IR
+is a **trivial τ_s=3 timing template** (empty merged code), so what is machine-checked here is the
+schedule's *timing / zone / capacity / freshness shape*, **not** a syndrome-level surface-code merge
+— that real distance-3 merge (88 / 131 CX) is the [`neutral_atom/`](neutral_atom) version below. The
+blocks are replicas of a single accepted gadget, not 12 individually-derived gadgets; the counts (12
+blocks, 192 SysCalls, 192 µs) are exact. Scheduled onto the zones with explicit `begin..end` µs.
+Excerpt (one merge block):
 
 ```
 FRESHANC 1 0 1        # allocate a fresh ancilla patch in zone 1 (Ancilla)
@@ -109,16 +125,18 @@ DECODE 0 4 5          # decode the syndrome
 ... (× 12 blocks, then PauliFrameUpdate)
 ```
 
-This schedule is **proven** to satisfy *every* strict system invariant on the architecture above —
-operation-capacity, feedback-after-decode, slot-capacity, ancilla-freshness — by
-**`schedule_fits`** (`= all_invariants_strict_with_slot_capacity_and_freshness_ok … = true`,
-`native_decide`).
+This schedule is **machine-checked** to satisfy *every* strict system invariant on the architecture
+above — operation-capacity, feedback-after-decode, slot-capacity, ancilla-freshness — by
+**`schedule_fits`** (`= all_invariants_strict_with_slot_capacity_and_freshness_ok … = true`, proved
+`by native_decide`). This is an arithmetic-tier, kernel-trusted decision procedure (it would not
+pass `#verify_clean`), not an axiom-clean semantic theorem.
 
 ## L4 → lattice surgery ([certificate](adder2_ls_certificate.txt))
 
 `python PyCircuits/ls_compile.py PyCircuits/qasm/adder2.qasm` auto-compiles the circuit to a
-conflict-free surface-code space-time layout with a **certificate** (the trusted artifact) and a
-ray-traced render:
+conflict-free surface-code space-time layout with a **certificate** and a ray-traced render. This
+is an **external Python compiler**; the certificate is a **trusted external artifact**, not a
+Lean-verified object:
 
 <p align="center"><img src="../docs/diagrams/ls_adder2_blender.png" width="460" alt="2-bit adder, surface-code lattice surgery, ray-traced"></p>
 
@@ -130,13 +148,18 @@ qubits 5 · depth 11 · two_qubit_merges 8 · magic_injections 4 · conflict_fre
 
 | Layer | Resource | Value | Verified by |
 |---|---|---:|---|
-| L2 logical | qubits / Toffolis / CX / T-count | 5 / 4 / 8 / 28 | `cuccaro_n_bit_adder_full_correct` + `Core/GateQASM` (Qiskit) |
+| L2 logical | qubits / Toffolis / CX / T-count | 5 / 4 / 8 / 28 | `cuccaro_n_bit_adder_full_correct` + `Core/GateQASM` (Qiskit re-counts the modmult/Toffoli family) |
 | L3 PPM | `\|C̄CZ̄⟩` magic states | 4 | `compileArithmeticGateToPPM` |
 | L3 PPM | joint logical measurements | 12 | `compileArithmeticGateToPPM` |
 | System | SysCalls / merges / **wall-clock** | 192 / 72 / **192 µs** | `scheduleWallclockUs` (foldl over the schedule) |
-| System | **schedule fits architecture** | ✓ | **`schedule_fits`** (all strict invariants) |
+| System | **schedule fits architecture** | ➗ | **`schedule_fits`** (all strict invariants; arithmetic-tier `native_decide`, not `#verify_clean`) |
 | System | **wall-clock lower bound** | **≥ 72 µs** | `gate2q_capacity_lower_bound_us` (⌈72 Gate2q / 1‖⌉ · 1 µs) |
-| L4 surgery | conflict-free layout, volume | ✓ / 60 | `ls_compile` certificate |
+| L4 surgery | conflict-free layout, volume | ✓ / 60 | `ls_compile` certificate (trusted external Python artifact, not Lean-verified) |
+
+*Legend (repo honesty taxonomy): the only **semantic** axiom-clean theorem here is
+`cuccaro_n_bit_adder_full_correct` (circuit correctness). `➗` marks an **arithmetic-tier**
+`native_decide`/`decide` machine check (kernel-trusted Boolean evaluation, but not `#verify_clean`);
+the L4 `✓` is a **trusted external artifact** from the Python compiler, not a Lean proof.*
 
 ## Re-run on YOUR hardware
 

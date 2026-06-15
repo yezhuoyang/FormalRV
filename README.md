@@ -31,12 +31,18 @@ estimates against machine-checked bounds** — making the residue that *cannot* 
 - **Proof → runnable code.** The same circuits FormalRV *proves* correct are *emitted* as OpenQASM
   2/3 and Stim, and an **independent** tool (Qiskit, Stim) re-verifies the artifact without trusting
   Lean — emitted gate counts match the proved counts; Stim `has_flow` re-checks each surgery. The
-  verified schedule also compiles to `tqec`-validated **3D surface-code lattice-surgery layouts**
-  (`.glb` / ray-traced) via [`PyCircuits/ls_compile.py`](PyCircuits/ls_compile.py).
+  verified schedule also renders to **3D surface-code lattice-surgery layouts** (`.glb` / ray-traced)
+  via [`PyCircuits/ls_compile.py`](PyCircuits/ls_compile.py) — which emits its own conflict-free
+  certificate — and is translated into a `tqec`-validated `BlockGraph` by
+  [`PyCircuits/draw_tqec_blocks.py`](PyCircuits/draw_tqec_blocks.py) /
+  [`draw_tqec_translator.py`](PyCircuits/draw_tqec_translator.py).
 - **Device scheduling + hard resource bounds.** A unified FT-scheduling framework
   ([`System/FTFramework`](FormalRV/System/FTFramework.lean)): the full ~10⁹-op RSA-2048 schedule
-  defined recursively and **proven valid for all sizes**; a kernel-clean lower bound
-  `Q·T ≥ K·fq·prod` (≈ 22.4M qubit-hours for RSA-2048) that no schedule can beat; a hardware
+  defined recursively and **proven valid for all sizes** — this is the `naiveSchedule`, the
+  provably-correct fully-**serial** baseline (one op at a time, no parallelism, no factory sharing;
+  parallel/optimized scheduling is future work *on top of* it); a kernel-clean lower bound
+  `Q·T ≥ K·fq·prod` (≈ 22.4M qubit-hours for RSA-2048) that no schedule can beat — the genuine hard
+  floor; a hardware
   sensitivity analysis monotone in every device parameter; and a device-program emitter unifying
   physical operations + system calls, checked against four system invariants.
 - **Seven-paper corpus.** Each estimate is bound to one typed tuple, with a machine-checked bound
@@ -64,7 +70,7 @@ PPM program, the 192-SysCall schedule, and a self-verifying parameterized Lean f
 **[`Example/`](Example/)**. Run it (and re-run it for *your own* hardware) with:
 
 ```bash
-lake env lean --run Example/Adder2EndToEnd.lean   # type-checks `schedule_fits` + prints the table below
+lake env lean --run Example/Adder2EndToEnd.lean   # machine-checks `schedule_fits` (native_decide) + prints the table below
 ```
 
 **Architecture** — 4 zones × 100 logical-patch sites: `Data[0,100)` · `Ancilla[100,200)` ·
@@ -75,13 +81,20 @@ lake env lean --run Example/Adder2EndToEnd.lean   # type-checks `schedule_fits` 
 
 | Layer | Resource | Value | Verified by |
 |---|---|---:|---|
-| L2 logical | qubits / Toffoli / T-count | 5 / 4 / 28 | `cuccaro_n_bit_adder_full_correct` (+ Qiskit count re-check) |
+| L2 logical | qubits / Toffoli / T-count | 5 / 4 / 28 | `cuccaro_n_bit_adder_full_correct` (counts re-emitted by `Core/GateQASM`; the Qiskit script re-checks the modmult/Toffoli family, not this adder) |
 | L3 PPM | `\|C̄CZ̄⟩` magic / joint measurements | 4 / 12 | `compileArithmeticGateToPPM` |
-| System | SysCalls / **wall-clock** | 192 / **192 µs** | `scheduleWallclockUs`; **fits the architecture** via `schedule_fits` |
+| System | SysCalls / **wall-clock** | 192 / **192 µs** | `scheduleWallclockUs`; **accepted by the FT invariant engine** via `schedule_fits` (proved `by native_decide` — a kernel-trusted ➗ arithmetic-tier check, *not* an axiom-clean ✅ like the Shor bound) |
 | System | **wall-clock lower bound** | **≥ 72 µs** | `gate2q_capacity_lower_bound_us` (⌈72 Gate2q / 1‖⌉·1µs) |
 | L4 surgery | conflict-free layout / volume | ✓ / 60 | `ls_compile` certificate |
 
 If you tighten the hardware past feasibility, `schedule_fits` is *rejected* — that is the verdict.
+(`schedule_fits` and `merge_blocks_match_ppm` are `by native_decide`: real kernel-evaluated Boolean
+decisions, but ➗ arithmetic-tier — they would *not* pass the `#verify_clean` gate the headline Shor
+bound passes. The 192-SysCall schedule is 12 replicas of one representative scheduling block
+`surgery_ppm_A` — a trivial τ_s=3 surgery-IR timing template, so this layer checks the schedule's
+timing/zone/capacity *shape*, not a syndrome-level merge (the real d=3 surface-code merge syndrome
+is the neutral-atom version below) — count-matched to the 12 PPM measurements; the counts are
+faithful, the 12 blocks are identical copies, not 12 independently-derived gadgets.)
 
 <p align="center"><img src="docs/diagrams/ls_adder2_blender.png" width="440" alt="2-bit Cuccaro adder compiled to surface-code lattice surgery, ray-traced"></p>
 
@@ -97,8 +110,8 @@ placeholders:
 2. **d=3 lattice surgery** — each of the 5 logical qubits is a `[[13,1,3]]` patch; every gate is the
    **full merged-code syndrome** (verified `surface3_zz_merge` 88 CX / `surface3_zzz_merge` 131 CX),
    each Toffoli a **real `|C̄CZ̄⟩` injection**.
-3. **Detailed system schedule** — 192 SysCalls, machine-checked to fit the architecture
-   (`schedule_fits`), wall-clock 192 µs.
+3. **Detailed system schedule** — 192 SysCalls, accepted by the FT invariant engine
+   (`schedule_fits`, `by native_decide` — ➗ arithmetic-tier, not an axiom-clean ✅), wall-clock 192 µs.
 4. **Neutral-atom compile (ZAC, HPCA 2025)** — **107 atoms** (Memory / Ancilla / Factory / Reservoir
    zones), **1240 `CZ`**, 95 Rydberg stages, **ZAC-verified**, invariants re-proven under
    neutral-atom capacities. The GIF shows the atoms physically moving to do it:

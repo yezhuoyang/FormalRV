@@ -31,9 +31,13 @@ the ➗ rows are explicitly arithmetic-only, and the open problems are named und
 Semantic core: a naive modexp = a sequence of logical-Z PPMs PRESERVES every stabilizer of the real
 [[18,2,d]] BB code, proved by **induction** (so it holds at the full ~10⁹-PPM scale without
 enumeration); a lattice-surgery gadget on the LP family implements a genuine logical measurement.
-Resource: that semantic correctness makes the naive cost a genuine **upper bound** (7,809 qubits,
-~1.3×10¹³ µs); a structural **lower bound** (incompressible memory; critical-path Toffoli depth) is
-proved ≤ it. The paper's ~10⁴ qubits / ~1 week sits **between** the two verified bounds.
+Resource: that semantic correctness makes the naive cost a genuine **upper bound**, and at lp_20's
+DERIVED parameters ([[4350,1224,20]]) that bound is **7,809 qubits / ~1.3×10¹³ µs** — but those two
+figures are ➗ `decide` ARITHMETIC on the 4350-qubit parameters, *not* a semantic proof on the
+4350-qubit object; the induction code-preservation proof above is on the 18-qubit BB code. The
+headline `qianxu_verified_upper_bound` bundles both (the 18-qubit semantic fact + the arithmetic
+figures) under one `#verify_clean`. A structural **lower bound** (incompressible memory; critical-path
+Toffoli depth) is proved ≤ it. The paper's ~10⁴ qubits / ~1 week sits **between** the two verified bounds.
 
 ## GAP we determined / STILL UNSOLVED
 - the ~4,961-qubit gap = **factory-sharing / multi-block packing** (claimed, NOT constructed);

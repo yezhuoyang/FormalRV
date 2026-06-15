@@ -3,7 +3,8 @@
 **Headline:** ECC-256 in < 500,000 physical qubits, in 18–23 minutes — the first NON-RSA paper.
 
 **Honest status:** parameter-tuple binding (it stress-tests that the L1 `ShorAlgorithm` interface is
-modulus-agnostic) + a verified magic-state spacetime FLOOR. The end-to-end obligation is OPEN.
+modulus-agnostic) + a magic-state spacetime FLOOR (a `native_decide` numeric value, computed with
+qianxu CCZ-factory parameters as a stand-in — see the Verifier row). The end-to-end obligation is OPEN.
 
 ## Per-layer ledger  (✅ verify-clean · ➗ arithmetic/native · ⬜ GAP/recorded)
 
@@ -15,7 +16,7 @@ modulus-agnostic) + a verified magic-state spacetime FLOOR. The end-to-end oblig
 | L2 arithmetic | [`L2_Arithmetic.lean`](L2_Arithmetic.lean) | ⬜ GAP — ECC-256 arithmetic not re-synthesised |
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ⬜ GAP |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded surface code [[425,1,14]] |
-| Verifier | [`Verifier.lean`](Verifier.lean) | ➗ verified magic-state spacetime FLOOR (769,500 qubit·hours); end-to-end OPEN |
+| Verifier | [`Verifier.lean`](Verifier.lean) | ➗ magic-state spacetime FLOOR (769,500 qubit·hours) — a `native_decide` numeric value computed with the **qianxu** CCZ factory (2565 qubits, 12000 µs) as a STAND-IN, not Babbush's own factory; a framework-generalization illustration, not a Babbush-specific instantiation of the lower-bound theorem. End-to-end OPEN |
 | Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; Babbush params noted in comments) |
 
 ## STILL UNSOLVED

@@ -12,9 +12,9 @@ adder:
       over many random measurement-outcome branches (so feed-forward is exercised, not bypassed).
 
 CNOTs are realized measurement-based too (lattice-surgery joint-parity gadget), so the whole
-computation is measurement-driven. Gap (3), fault tolerance / d=3 QEC, is handled separately in
-verify_d3_qec.py. This file is a full statevector simulation (non-Clifford magic), no dependencies
-beyond numpy.
+computation is measurement-driven. Gap (3), fault tolerance / d=3 QEC, is out of scope for this
+script (it is handled at the d=3 surface-code layer, not here). This file is a full statevector
+simulation (non-Clifford magic), no dependencies beyond numpy.
 """
 import numpy as np
 

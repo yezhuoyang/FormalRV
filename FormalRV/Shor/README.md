@@ -10,22 +10,22 @@ Euler-totient lower bound into the final `Shor_correct_var` theorem.
 
 ## Layout
 - `Main.lean` — single entry point; `export`s the three headline theorems.
-- `QPE.lean` — QPE circuit (`QPE`, `QFTinv`, `controlled_powers`); contains the superseded `QPE_semantics_full` axiom.
-- `QPEAmplitude.lean` — standalone Dirichlet-kernel amplitude math (`qpe_amp`, `qpe_prob`); no circuit semantics.
-- `PhaseKickback.lean` — block-disjoint commutation + the shifted controlled-powers eigenstate cascade.
-- `ControlledGates.lean` — concrete controlled gates (`controlled_X`, `controlled_Rz`) toward a real `control`.
+- `../QPE/QPE.lean` — QPE circuit (`QPE`, `QFTinv`, `controlled_powers`); contains the superseded `QPE_semantics_full` axiom. (Now in the sibling `FormalRV/QPE/` folder after the QFT/QPE refactor.)
+- `../QPE/QPEAmplitude.lean` — standalone Dirichlet-kernel amplitude math (`qpe_amp`, `qpe_prob`); no circuit semantics.
+- `../QPE/PhaseKickback.lean` — block-disjoint commutation + the shifted controlled-powers eigenstate cascade.
+- `../QPE/ControlledGates.lean` — concrete controlled gates (`controlled_X`, `controlled_Rz`) toward a real `control`.
 - `Eigenstate.lean` — Fourier orthogonality, modular-multiplier eigenstates `ψ_k`, orbit decomposition of `|1⟩`.
 - `TotientLowerBound.lean` — elementary `φ(r)/r ≥ e⁻²/(log₂N)⁴` (no Mertens).
-- `PostQFT/` (`IQFTDefinitions`, `IQFTCircuitCorrectness`, `IQFTRecursiveArbitrary`, `PostQFTCompletion`) — ideal IQFT matrix + the final `QPE_MMI_correct` / `Shor_correct_var`.
+- `PostQFT/PostQFTCompletion.lean` — the final `QPE_MMI_correct` / `Shor_correct_var`. (The ideal-IQFT-matrix sub-files `IQFTDefinitions`, `IQFTCircuitCorrectness`, `IQFTRecursiveArbitrary` now live in the sibling `FormalRV/QFT/` folder; `PostQFTCompletion.lean` is the only file left under `PostQFT/`.)
 - `MainAlgorithm/` (`QuantumAndContinuedFractions`, `ContinuedFractionBridge`, `PostProcessingAndMeasurement`, `SuccessProbability`) — defs (`ModMulImpl`, `Shor_final_state`, `probability_of_success`) and the conditional chain.
 - `VerifiedShor/` (`PublicApi`, `ShorSuccessProbabilityTheorems`, …) — the public end-to-end pipeline wrapper.
 
 ## Key definitions
-- `QPE` (`QPE.lean`) — the k+n-qubit QPE circuit (H layer; controlled powers; `QFTinv`).
+- `QPE` (`../QPE/QPE.lean`) — the k+n-qubit QPE circuit (H layer; controlled powers; `QFTinv`).
 - `ModMulImpl` (`MainAlgorithm/QuantumAndContinuedFractions/ShorStatesAndHeadlineStatements.lean`) — oracle contract: `f i` multiplies by `a^(2^i)` mod N.
 - `Shor_final_state` (`MainAlgorithm/QuantumAndContinuedFractions/ShorStatesAndHeadlineStatements.lean`) — post-QPE state, `uc_eval (QPE_var …)` on `|0⟩|1⟩|0⟩`.
 - `modmult_eigenstate` (`Eigenstate.lean`) — Shor eigenstate `ψ_k` over the modular orbit.
-- `IQFT_matrix` (`PostQFT/IQFTDefinitions.lean`) — ideal inverse-QFT matrix, the target for `QFTinv`.
+- `IQFT_matrix` (`../QFT/IQFTDefinitions.lean`) — ideal inverse-QFT matrix, the target for `QFTinv`.
 - `probability_of_success` (`MainAlgorithm/QuantumAndContinuedFractions/ShorStatesAndHeadlineStatements.lean`) — success measure the headline theorem bounds.
 
 ## Key theorems
@@ -34,13 +34,13 @@ Euler-totient lower bound into the final `Shor_correct_var` theorem.
 - `phi_n_over_n_lowerbound` (`MainAlgorithm/PostProcessingAndMeasurement/RFoundGenericAndAssembly.lean`) — totient ratio bound `≥ e⁻²/(log₂N)⁴` — **Verified**.
 - `modmult_eigenstate_orthonormal` (`Eigenstate.lean`) — the `ψ_k` family is orthonormal under `Order a r N` — **Verified**.
 - `orbit_decomposition_pointwise` (`Eigenstate.lean`) — `(1/√r)·∑ ψ_k = |1⟩` (Fourier inversion) — **Verified**.
-- `pad_u_shifted_kron_basis_factors` (`PhaseKickback.lean`) — shifted `pad_u` factors through `kron_vec` — **Verified**.
-- `QPE_semantics_full` (`QPE.lean`) — textbook QPE Born-rule bound — **Axiom** (superseded; off the headline proof path).
+- `pad_u_shifted_kron_basis_factors` (`../QPE/PhaseKickback.lean`) — shifted `pad_u` factors through `kron_vec` — **Verified**.
+- `QPE_semantics_full` (`../QPE/QPE.lean`) — textbook QPE Born-rule bound — **Axiom** (superseded; off the headline proof path).
 
 ## Status
 The two headline theorems (`Shor_correct_var`, `QPE_MMI_correct`) are Verified —
 axiom-free with full semantic proofs, not gate counts. Four `axiom`s remain in
-the folder (`QPE_semantics_full` in `QPE.lean`; the deprecated
+the folder (`QPE_semantics_full` in `../QPE/QPE.lean`; the deprecated
 `f_modmult_circuit*` placeholders in `MainAlgorithm/SuccessProbability/`), but none lie on the
 proof path of the re-exported results, which instead route through the LSB
 pipeline and (for the fully axiom-free oracle) the SQIR-faithful multiplier in
@@ -81,13 +81,13 @@ mod-exp chain has `numCCX = 1440`, `tcount = 7·1440 = 10080` (the `#eval`s at
 `CliffordTControlledModExp.lean:129`).
 
 **(2) The inverse QFT goes through the approximate QFT.** `compileLadder`
-(`AQFTCompile.lean:54`) keeps only rotations of depth `m < c` and drops the rest; for
+(`../QFT/AQFTCompile.lean:54`) keeps only rotations of depth `m < c` and drops the rest; for
 cutoff `c ≤ 2` every kept rotation is Clifford+T (`m=0 → S/S†`, `m=1 → T/T†`,
 `compileLadder_isCliffordT`), and the truncation error is bounded in closed form:
 
 <p align="center"><img src="../../docs/diagrams/aqft_error_budget.png" width="560" alt="AQFT error budget"></p>
 
-`compileLadder_error_budget` (`AQFTCompile.lean:138`, **Verified**) proves
+`compileLadder_error_budget` (`../QFT/AQFTCompile.lean:138`, **Verified**) proves
 `Σ_{m≥c} π/2^m ≤ 2π/2^c` (via `aqft_ladder_error_budget`, from `|e^{iθ}−1| ≤ |θ|`), and
 `compileLadder_acts_on_basis` proves the compiled ladder's computational-basis action.
 
@@ -112,12 +112,12 @@ failure probability are amplitude-level / design concerns (see `QPE_MMI_correct`
 - **Amplitude analysis, not a Gate-IR circuit.** QPE correctness is a statement
   about complex amplitudes: after the inverse QFT, the amplitude at `s_closest` is a
   Dirichlet kernel bounded below by `4/(π²r)` via a geometric-series closed form
-  (`qpe_amp`, `QPEAmplitude.lean`). FormalRV proves this at the state-vector level;
+  (`qpe_amp`, `../QPE/QPEAmplitude.lean`). FormalRV proves this at the state-vector level;
   it is *not* an emittable `{I,X,CX,CCX}` circuit (the reversible IR has no `H`/QFT).
 - **Phase kickback by block-disjoint commutation.** The controlled-powers cascade is
   justified by showing the shift-lifted data circuit is fresh on the control wires
   and commutes block-disjointly with the control gates
-  (`uc_eval_map_qubits_shift_commutes_pad_u`, `PhaseKickback.lean`), so each `ψₖ`
+  (`uc_eval_map_qubits_shift_commutes_pad_u`, `../QPE/PhaseKickback.lean`), so each `ψₖ`
   simply accrues its phase.
 - **An elementary totient bound.** `phi_n_over_n_lowerbound` (`MainAlgorithm/PostProcessingAndMeasurement/RFoundGenericAndAssembly.lean`)
   avoids Mertens: `φ(r)/r = ∏_{p|r}(1−1/p) ≥ (1/2)^{#primes}`, and
@@ -131,4 +131,4 @@ failure probability are amplitude-level / design concerns (see `QPE_MMI_correct`
 Honest scope: the standalone control-gate implementation remains a `SKIP` stub; the
 re-exported headline theorems route around it via the LSB pipeline and the
 SQIR-faithful multiplier (so they are axiom-free), while `QPE_semantics_full`
-(`QPE.lean`) is a superseded axiom off the proof path.
+(`../QPE/QPE.lean`) is a superseded axiom off the proof path.

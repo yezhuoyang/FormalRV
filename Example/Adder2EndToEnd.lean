@@ -6,12 +6,16 @@
 
       lake env lean --run Example/Adder2EndToEnd.lean
 
-  Running it (a) TYPE-CHECKS every theorem below — including `schedule_fits`, which is a
-  machine-checked proof that the surgery schedule fits the architecture you set — and
+  Running it (a) TYPE-CHECKS every theorem below — including `schedule_fits`, a kernel-evaluated
+  machine check (by `native_decide`, arithmetic-tier — NOT an axiom-clean `#verify_clean` theorem
+  like the Shor success bound) that the surgery schedule fits the architecture you set — and
   (b) prints the full per-layer resource breakdown.  **Edit the `EDIT HERE` block, re-run,
   and you get a new machine-checked verdict + new verified resource bounds for *your*
   hardware.**  If your hardware cannot host the schedule, `schedule_fits` fails to compile
-  (that is the verification: the claim is false, so the proof is rejected).
+  (that is the verification: the claim is false, so the proof is rejected).  NOTE: the surgery
+  schedule is 12 replicas of one representative gadget (`surgery_ppm_A`, a trivial τ_s=3 timing
+  template) count-matched to the 12 PPM measurements; it validates the SCHEDULING shape, not a
+  syndrome-level surface-code merge (that lives in `Example/neutral_atom/`).
 
   Trust chain (all CI-checked in the FormalRV library; this file only instantiates them):
     * circuit correctness   : `cuccaro_n_bit_adder_full_correct`  (target := a+b, read restored)
@@ -152,6 +156,6 @@ def main : IO Unit := do
   IO.println s!"L3 PPM (real compiler):         |CCZ⟩ magic states={numMagicStates}  joint measurements={numMeasurements}  commands={ppmProgram.length}"
   IO.println s!"System schedule:                SysCalls={syscallCount}  Gate2q merges={gate2qCount}  wall-clock={wallclockUs}µs"
   IO.println ""
-  IO.println s!"✓ VERIFIED  schedule fits this architecture        (theorem schedule_fits)"
+  IO.println s!"✓ schedule fits this architecture   (schedule_fits — native_decide, arithmetic-tier, not #verify_clean)"
   IO.println s!"✓ VERIFIED  wall-clock LOWER BOUND ≥ {wallclockLowerBoundUs}µs   (gate2q capacity: ⌈{gate2qCount}/{maxGate2qParallel}⌉·{gate2qUs}µs)"
   IO.println "Edit the EDIT-HERE block above and re-run to re-verify for your own hardware."

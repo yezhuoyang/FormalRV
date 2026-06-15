@@ -3,7 +3,7 @@
 The complete pipeline for **one** circuit, the 2-bit Cuccaro adder, with every layer present and
 checked — no placeholders:
 
-1. **Logical adder computes `a+b`** — proven, and *re-verified for the realization*.
+1. **Logical adder computes `a+b`** — proven (Lean), and *re-checked for the realization by simulation*.
 2. **d=3 surface-code lattice surgery** — every gate is a real merged-code merge / real `|C̄CZ̄⟩`
    magic injection.
 3. **Detailed system schedule** — 192 SysCalls, machine-checked to fit the architecture.
@@ -18,12 +18,12 @@ FormalRV SysCall each ZAC op realizes.*
 
 ---
 
-## 1 · The logical adder actually computes `a+b` — VERIFIED TWO WAYS
+## 1 · The logical adder actually computes `a+b` — a Lean theorem + an independent simulation re-check
 
-| What is verified | How |
+| What is established | How |
 |---|---|
-| the **logical circuit** computes `a+b` | `cuccaro_n_bit_adder_full_correct` (Lean theorem) |
-| the **measurement-based realization** computes `a+b` | [`logical_adder/verify_mb_adder.py`](logical_adder/verify_mb_adder.py) — full statevector simulation |
+| WHAT the **logical circuit** computes (`a+b`) | `cuccaro_n_bit_adder_full_correct` (Lean theorem) |
+| the **measurement-based realization** also computes `a+b` on all tested inputs/branches | [`logical_adder/verify_mb_adder.py`](logical_adder/verify_mb_adder.py) — NumPy statevector **simulation** (python-vs-python) |
 
 `python logical_adder/verify_mb_adder.py` builds the adder out of **real measurement-based gadgets**
 and checks it:
@@ -39,8 +39,12 @@ and checks it:
 This is what makes it a *real* adder, and closes the gaps the earlier draft had — the **4 Toffolis
 are genuinely performed** (real `|C̄CZ̄⟩` magic consumed by gate teleportation), the computation is
 **measurement-driven with outcome-conditioned Pauli/Clifford feed-forward**, and "computes `a+b`" is
-established **for the realization** (over many random measurement branches), not just inherited from
-the abstract proof.
+shown **for the realization** (over many random measurement branches), not just inherited from the
+abstract proof. Note the scope: this is a NumPy statevector **simulation** that re-checks the
+measurement-based realization against an *ideal* Cuccaro adder — both built in Python — so it is an
+independent re-check, **not** a comparison against the Lean object and not itself a Lean proof. The
+Lean theorem (separately) proves WHAT the adder computes; the simulation shows the realization
+matches it on all 32 inputs × 30 branches tested.
 
 ## 2 · d=3 surface-code lattice surgery — the FULL merged-code syndrome per gate
 
@@ -69,6 +73,9 @@ System schedule:  SysCalls=192  Gate2q merges=72  wall-clock=192µs
 The 192 SysCalls (`FRESHANC / GATE2Q / MEAS / DECODE / PFU / MAGIC`) are scheduled onto the
 Data/Ancilla/Factory/Routing zones with explicit µs intervals and **machine-checked** to satisfy
 every strict invariant (operation-capacity, feedback-after-decode, slot-capacity, ancilla-freshness).
+(`schedule_fits` is proved `by native_decide` — an arithmetic-tier decidable machine check, not an
+axiom-clean semantic theorem. The 12 surgery blocks are count-matched replicas of one verified
+representative merge gadget via `merge_blocks_match_ppm`, also `native_decide`.)
 
 ## 4 · Neutral-atom compile (ZAC) — `python run_zac_surgery.py all`
 
@@ -77,13 +84,24 @@ every strict invariant (operation-capacity, feedback-after-decode, slot-capacity
 | logical qubits / patches | 5 |
 | physical atoms | **107** (65 data + 39 reused ancillae + 3 `\|C̄CZ̄⟩` magic) |
 | entangling `CZ` (full merged-code syndromes + magic) | **1240** |
-| Rydberg stages (max parallel `CZ`) | 95 (≤ 21) |
-| ZAIR atom-movement instructions | **1892** |
-| schedule runtime | 318 881 µs (≈ 319 ms) |
-| ZAC gate-scheduling + placement verification | ✓ pass |
+| Rydberg stages (runtime ZAC output) | ~95 |
+| ZAIR atom-movement instructions | ~1892 |
+| schedule runtime | ~318 881 µs (≈ 319 ms) |
+| ZAC gate-scheduling + placement verification | pass (external ZAC verifier) |
+
+The atom/`CZ` counts (**107**, **1240**) are static properties of `surface3_adder2_d3_full.qasm` and
+its `.roles.json`. The Rydberg-stage count (~95), ZAIR instruction count (~1892), runtime (~318 881 µs)
+and the "verification pass" are **runtime outputs of `run_zac_surgery.py` driving the external ZAC
+tool** (UCLA-VAST) — they are *not* stored in the repo's data files and *not* Lean-proven; rerunning
+ZAC reproduces them. The per-stage parallelism ZAC actually achieves and the conservative parallelism
+cap used by the Lean proof are **different quantities**: `NeutralAtomInvariants.lean` justifies a
+conservative `max_gate2q_active = 12` ("up to 12 parallel CZ per Rydberg stage") and the ZAC run may
+report a different (looser) figure.
 
 Plus [`NeutralAtomInvariants.lean`](NeutralAtomInvariants.lean): the FormalRV system invariants are
-re-proven (`native_decide`) under neutral-atom (Rydberg-parallel) capacities.
+re-checked via `native_decide` under neutral-atom (Rydberg-parallel) capacities (`max_gate2q_active = 12`).
+This is an arithmetic-tier decidable machine check (kernel-trusted Boolean evaluation), **not** an
+axiom-clean semantic theorem.
 
 ## Reproduce the whole thing
 
