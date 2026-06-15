@@ -292,3 +292,42 @@ REVISED remaining: lemma 2 = `hc_local` for `control k (map_qubits(·+m) g)` (th
 lemma 3 = the off-bad `hintertwine` (bit-k=0 trivial, bit-k=1 the work intertwining); lemma 5 = the
 embedded-init variant of `coset_shor_succeeds_embed` (`probability_of_success_cosetEmbedded` over
 `Shor_final_state_cosetEmbedded`) + `totalWrapMass`/`E_phys_marginal` glue → the bound.
+
+### §9. LEMMA 5(a) — the in-place coset-multiplier gap (interface audit 2026-06-15, DECISIVE)
+
+DONE + axiom-clean: lemma 4 (`QPEStageDecomp`), lemma 1 (`CosetEphys`), `hinit` resolution
+(`CosetEmbeddedInit`), the layout bridge (`ControlStageBridge`), lemmas 2+3 (`ControlOracleLift`).
+The ENTIRE controlled-oracle/QPE representation is built ABSTRACTLY — every `ApproxCosetOrbitShift`-style
+obligation has its abstract proof; the engine lemmas (`controlled_shifted_oracle_hc_local`/`hintertwine`)
+are real and done.
+
+**But lemma 5(a) — discharging the two abstract work hypotheses for the CONCRETE coset oracle — is a
+LARGE construction, NOT coordinate wiring.** The hidden gap: the repo's verified coset multiplier
+(`reducedLookupWindowedMul_*`) is **OUT-OF-PLACE** (`cosetInput 0 y → accumulator holds a·y`, multiplier
+`y` as control, fresh accumulator as data, on `cosetDim w bits = 2+2w+3·bits`). The Shor QPE oracle is
+**IN-PLACE** (`MultiplyCircuitProperty`: `|x·2^anc⟩ → |(a·x % N)·2^anc⟩`, same `Fin (2^(n+anc))` register).
+The out-of-place result does NOT directly give the in-place work-oracle action:
+- **No in-place coset multiplier exists.** `InPlaceCoset.lean` has the `mulFwd ; swap ; reverse mulInv`
+  composition ALGEBRA, but its leg deviations + the two-register tensor factorization are OPEN HYPOTHESES
+  (`InPlaceCoset.lean:26-35`: "not done for any literal `mulFwd`"). `RunwayMul.runwayMul_cosetState_shift`
+  is the EXACT in-place shift but only GIVEN a permutation `σ` realizing it (`hσ` undischarged). And the
+  EXACT in-place shift is FALSE for the literal `v↦cv` (runway coarsening, `CosetRoute2Consolidated:31-39`);
+  the honest version is approximate/off-bad — which the out-of-place reduced-lookup gate achieves, but only
+  out-of-place.
+- **Register mismatch:** `cosetDim` (full cuccaro circuit) ≠ `n+anc` (Shor work register); no relation
+  exists (would need `n = bits`, `anc = cosetDim − bits`, unbuilt). `cosetEmbedMat` lives on `2^(n+anc)`;
+  the multiplier-local cosetState lives on the accumulator `2^bits`; no `Fin(2^bits) ≃ Fin(2^(n+anc))` reindex.
+- **Form mismatch:** the out-of-place deliverable is `branchOfE e_gate (xCtrl y) = cosetState((a·y)%N)`
+  (multiplier-as-control); the work hypothesis needs an in-place ROW action `workMat_c y yp` against
+  `cosetEmbedMat`. No theorem converts one to the other. The bad-set correspondence (`B` on `2^bits`
+  accumulator vs `badY` on `2^(n+anc)` work) is not even on comparable spaces yet.
+
+**The 4 sub-lemmas for lemma 5(a) (LARGE):** (1) the in-place coset gate `cosetModMulCircuitOf ; swap ;
+reverse(a⁻¹ gate)` on a register with `n=bits`, `anc` = the multiplier scratch budget; (2) **[HARDEST]**
+its `cosetState z → cosetState((a·z)%N)` off-bad correctness on a single `Fin(2^bits)` register — from
+the out-of-place legs through swap+uncompute (discharging `InPlaceCoset.lean`'s `hfwd`/`hrev`), AND
+converting the control-branch `branchOfE` form into the in-place row action; (3) the register
+identification `Fin(2^bits) ≅ Fin(2^(n+anc))` + the explicit `B ↔ badY` reindex; (4) the `workMat_c`/
+`workMat_i` extraction. Difficulty: LARGE (comparable to the multiplier-local effort). This is the genuine
+remaining frontier — the in-place coset multiplier, which the repo has never built; the abstract assembly
+above is the verified scaffold waiting for it.
