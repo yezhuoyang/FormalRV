@@ -61,6 +61,20 @@ def inplaceCosetGate (w bits N a aInv numWin : Nat) : Gate :=
     (accYSwap cuccaroAdder w bits)
     (cosetModMulCircuitOf cuccaroAdder w bits N aInv numWin)
 
+/-- **Definitional unfolding (machine-checked direction guard).**  `InPlace.inPlaceMul`
+    applies `Gate.reverse` to its THIRD argument, so the un-compute leg of
+    `inplaceCosetGate` is literally `Gate.reverse (mulFwd aInv)` — the SUBTRACTING
+    `a⁻¹`-multiply that clears the scratch — NOT a forward `mulFwd aInv`.  This `rfl`
+    confirms the direction the prose claims (closing the naming ambiguity: the third arg
+    is reversed by the combinator, not pre-reversed). -/
+theorem inplaceCosetGate_unfold (w bits N a aInv numWin : Nat) :
+    inplaceCosetGate w bits N a aInv numWin
+      = Gate.seq (cosetModMulCircuitOf cuccaroAdder w bits N a numWin)
+          (Gate.seq (accYSwap cuccaroAdder w bits)
+            (GateReversible.Gate.reverse
+              (cosetModMulCircuitOf cuccaroAdder w bits N aInv numWin))) :=
+  rfl
+
 /-! ## §2. Well-typedness (the only proof discharged at checkpoint 1). -/
 
 /-- **The in-place coset gate is well-typed at its own dimension** `cosetDim w bits`.
