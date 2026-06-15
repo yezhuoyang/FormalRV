@@ -1,8 +1,11 @@
 /-
-  FormalRV.Shor.CosetEigenstate.FormalRV.Shor.CosetEigenstate.ReducedLookupCosetShift — FOLD the one-pass coset action.
+  FormalRV.Shor.CosetEigenstate.ReducedLookupCosetShift — FOLD the one-pass coset action
+  across all window passes, discharge `cosetOutOfPlace_hfwd_E.hfac_act` for the concrete
+  reduced-lookup gate, and state the multiplier-local cosetState-shift deliverable.
 -/
 import FormalRV.Shor.CosetEigenstate.ReducedLookupEgate
 import FormalRV.Shor.CosetEigenstate.CosetDeviationE
+import FormalRV.Shor.CosetEigenstate.CosetFoldWindowed
 
 namespace FormalRV.Shor.CosetEigenstate.ReducedLookupCosetShift
 
@@ -20,6 +23,8 @@ open FormalRV.Shor.CosetEigenstate.CosetMul
   (actualAcc runningSum actualAcc_eq_cosetState_runningSum)
 open FormalRV.Shor.CosetEigenstate.CosetTableSum (cosetWindowConst cosetWindowConst_lt)
 open FormalRV.Shor.CosetEigenstate.CosetDeviationE (cosetOutOfPlace_hfwd_E)
+open FormalRV.Shor.CosetEigenstate.CosetFoldWindowed (cosetState_windowedMul_embed_off)
+open FormalRV.Shor.CosetBornWeight (bornWeightOn)
 
 /-! ## PART 1 — STATE-LEVEL one-pass. -/
 
@@ -311,5 +316,50 @@ theorem reducedLookupWindowedMul_cosetState_shift (w bits N a numWin y cm : Nat)
         (cosetInput w bits numWin N cm ((a * y) % N) y)
       ≤ (numWin : ℝ) * (2 / 2 ^ cm) :=
   reducedLookupWindowedMul_deviation w bits N a numWin y cm hw hbits hN hy hfit_engine hfitAll
+
+/-! ## PART 5 — the trusted local oracle in the engine's `EmbedAgreeOff` language.
+
+The deviation form (`reducedLookupWindowedMul_cosetState_shift`) is what the Shor-level
+engine consumes through `normSqDist`; but the `EmbedAgreeOff`-based engine
+(`embedAgreeOff_oracle_step`, `cosetOutOfPlace_hfwd_E`) consumes an EXACT off-bad
+agreement plus a Born-mass bound.  This restates the multiplier-local result in exactly
+that off-bad form (on the gate's own `e_gate` factorization): the gate output, read on the
+active control branch `xCtrl y`, agrees with the ideal `cosetState ((a·y) mod N)` off a bad
+set `B` whose Born mass is `≤ numWin/2^cm` on each side.  This is the trusted-local-oracle
+endpoint; the Shor-level assembly transports it through the controlled-oracle / `jointIdx`
+register lift (the genuine remaining construction, NOT yet done). -/
+theorem reducedLookupWindowedMul_embedAgreeOff_local (w bits N a numWin y cm : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits) (hN : 0 < N)
+    (hy : y < (2 ^ w) ^ numWin)
+    (hfitAll : runningSum (cosetWindowConst a N w y) numWin + (2 ^ cm - 1) * N < 2 ^ bits) :
+    ∃ B : Finset (Fin (2 ^ bits)),
+      (∀ z, z ∉ B →
+        branchOfE (e_gate w bits numWin)
+            (Framework.uc_eval (Gate.toUCom (cosetDim w bits)
+                (cosetModMulCircuitOf cuccaroAdder w bits N a numWin))
+              * (id (cosetInput w bits numWin N cm 0 y) :
+                  Matrix (Fin (2 ^ cosetDim w bits)) (Fin 1) ℂ))
+            (xCtrl w bits numWin y) z 0
+          = cosetState (2 ^ bits) N cm ((a * y) % N) z 0)
+      ∧ bornWeightOn
+          (cosetState (2 ^ bits) N cm (runningSum (cosetWindowConst a N w y) numWin)) B
+          ≤ (numWin : ℝ) / 2 ^ cm
+      ∧ bornWeightOn (cosetState (2 ^ bits) N cm ((a * y) % N)) B ≤ (numWin : ℝ) / 2 ^ cm := by
+  obtain ⟨B, hagree, hb1, hb2⟩ :=
+    cosetState_windowedMul_embed_off (2 ^ bits) N cm a w numWin y hN hy
+  refine ⟨B, ?_, hb1, hb2⟩
+  intro z hzB
+  have hbr : branchOfE (e_gate w bits numWin)
+        (Framework.uc_eval (Gate.toUCom (cosetDim w bits)
+            (cosetModMulCircuitOf cuccaroAdder w bits N a numWin))
+          * (id (cosetInput w bits numWin N cm 0 y) :
+              Matrix (Fin (2 ^ cosetDim w bits)) (Fin 1) ℂ))
+        (xCtrl w bits numWin y)
+      = cosetState (2 ^ bits) N cm (runningSum (cosetWindowConst a N w y) numWin) := by
+    rw [reducedWindowedMul_cosetInput w bits N a numWin y cm hw hbits hN hfitAll]
+    exact branchOfE_cosetInput_active w bits numWin N cm
+      (runningSum (cosetWindowConst a N w y) numWin) y
+  rw [congrFun (congrFun hbr z) 0]
+  exact hagree z hzB
 
 end FormalRV.Shor.CosetEigenstate.ReducedLookupCosetShift
