@@ -259,3 +259,36 @@ The genuine frontier is the **controlled-oracle representation** (lemmas 2–3) 
 stage-decomposition (lemma 4) — bringing the verified multiplier onto the Shor register under the
 phase-controlled QPE oracle.  This is orchestration-layer circuit content, distinct from (and
 strictly downstream of) the now-closed multiplier correctness.
+
+### §8. PROGRESS + CORRECTIONS (2026-06-15, assembly phase)
+
+DONE: lemma 4 `QPEStageDecomp.shor_final_eq_orbitState` (the hdecomp, oracle abstract, fixes the
+stage interface — `Fa k` = cast-conjugated `uc_eval(control k (map_qubits(·+m)(f(revIndex m k))))`);
+lemma 1 safe parts `CosetEphys` (`E_phys = I_phase ⊗ E_data` cosetState embedder + acts-form `E_phys_acts`
++ phase-commute `E_phys_comm` + per-branch marginal isometry `E_phys_marginal`); the `hinit` resolution
+`CosetEmbeddedInit` (resolution 1 — embedded-init coset Shor `Shor_final_state_cosetEmbedded` =
+`orbitState (qpeStageMap f) (E_phys qpeInit) (m+1)`, making `hdecomp_a` + `hinit` DEFINITIONAL `rfl`).
+
+**CORRECTION to lemmas 2–3 (interface audit, decisive):** DO NOT build a `DataOracle` instance.
+`DataOracle` (`PhaseMarginalOracle.lean:49`) is consumed ONLY by the ABANDONED phase-indexed σ engine
+(`dataOracle_intertwines`), which is UNSOUND (the phase-dependent bad set does not commute through the
+inverse QFT — the documented obstruction). The LIVE engine `embedAgreeOff_oracle_step`
+(`EmbedOrbitCompose.lean:92`) consumes the controlled oracle via two WEAKER predicates — `hc_local`
+(data-locality off `badY`) + `hintertwine` (off-bad `O_c∘E_phys = E_phys∘O_i`) — NOT `DataOracle.acts`.
+So lemmas 2–3 should target `hc_local`/`hintertwine` directly (lighter, sound). GOOD NEWS: the
+controlled-gate semantics is FULLY PROVEN (not a stub): `uc_eval_control_eq_proj_decomp`
+(`QPE/ControlledGates.lean:906`) gives `uc_eval(control q c) = P0_q + P1_q·uc_eval c` (apply iff phase
+bit q set); `uc_eval_map_qubits_shift_kron_basis_control_vec` (`PhaseKickback.lean:652`) gives the
+shifted-lift data-locality (phase factor untouched, `uc_eval g` on the data factor). Difficulty: MEDIUM
+(not hard). SINGLE HARDEST sub-step: the **jointIdx ↔ qubit-bit / kron_vec layout bridge** (reconcile 3
+index conventions — contiguous `jointIdx`/`QState`, tensor `kron_vec`/`basis_vector`, physical-qubit
+`pad_u`/`f_to_vec`; `jointIdx_eq_finProdFinEquiv` bridges i↔ii, NO existing lemma bridges to iii — the new
+construction). WATCH: `hc_local` likely needs the per-oracle permutation to preserve the complement of
+`badY` (off-wrap the oracle is a clean coset shift) — a real sub-condition to nail, connected to the
+multiplier-local off-bad form. Keep `g` abstract (parameterize by `g` + an abstract work-register
+hypothesis à la `runwayMul_intertwines_Ephys`'s `hFa/hFi`); instantiate with the reduced-lookup gate later.
+
+REVISED remaining: lemma 2 = `hc_local` for `control k (map_qubits(·+m) g)` (the layout bridge + data-locality);
+lemma 3 = the off-bad `hintertwine` (bit-k=0 trivial, bit-k=1 the work intertwining); lemma 5 = the
+embedded-init variant of `coset_shor_succeeds_embed` (`probability_of_success_cosetEmbedded` over
+`Shor_final_state_cosetEmbedded`) + `totalWrapMass`/`E_phys_marginal` glue → the bound.
