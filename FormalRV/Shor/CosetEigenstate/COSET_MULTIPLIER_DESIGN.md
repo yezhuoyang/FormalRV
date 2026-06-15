@@ -192,3 +192,31 @@ The gate is OUT-OF-PLACE (fresh accumulator at `augendIdx`, `y` restored); no in
 `cosetModMulCircuitOf`, so `actualAcc` acts on the accumulator factor and `y` is a classical control.
 The runway-fit `hfit` (Boolean `fold < 2^bits`, already a hypothesis in
 `reducedCosetMul_decodeAcc_residue_cuccaro`) is the shadow of the bounded runway growth.
+
+### 6½. The layout bridge — BUILT as a reusable abstraction (step 1)
+
+The crux design (step 3 / the flat↔jointIdx factorization) is resolved and built **reusably**,
+NOT buried in the multiplier proof.  The key realization: the deviation engine
+(`cosetMul_superposition_deviation`/`cosetOutOfPlace_hfwd`) touches `jointIdx` ONLY through its
+bijection property (`branchOf` + `sum_jointIdx_eq` = `Equiv.sum_comp`).  So instead of relabeling
+qubits to the contiguous `jointIdx` convention (which would need a qubit-position-permutation
+marginal-invariance lemma that does NOT exist), GENERALIZE the factorization to an arbitrary
+product equiv — a circuit's natural qubit-block factorization then feeds the engine DIRECTLY:
+
+- `BranchFactor.lean` (reusable, standalone): `branchOfE e s x = fun y => s (e (x,y))` over any
+  `e : Fin m × Fin d ≃ Fin full`; `normSqDist_branchOfE_decomp` + the controlled lifts
+  (`_controlled_lift{,_weighted,_subnormalized}`); `jointEquiv h` + `branchOf_eq_branchOfE`
+  (the contiguous `jointIdx`/`branchOf` is the `e := jointEquiv h` instance, so this strictly
+  generalizes `ControlledLift` — engine + capstone unaffected).  Reusable for controlled oracles /
+  jointIdx / QPE staging.
+- `CosetDeviationE.lean`: `cosetMul_superposition_deviation_E` + `cosetOutOfPlace_hfwd_E` — the
+  engine over `branchOfE e` (data dim explicit `d`), so a concrete gate's qubit-block equiv +
+  per-branch coset-fold action yields `≤ numWin·(2/2^cm)` directly.
+
+**Remaining (steps 2–5, the QState-semantics core):** (i) the gate's CONCRETE qubit-block product
+equiv `e_gate : Fin m × Fin d ≃ Fin (2^dim)` (control = restored multiplier register + clean
+ancilla; data = accumulator `2^bits`); (ii) **the per-pass `uc_eval` coset action** (the single
+hardest sub-step — lift `stepInv_foldT_acc`'s Boolean post-state through `uc_eval_basis_agree` for
+the data-dependent addend, giving `branchOfE e_gate (uc_eval … |coset⟩) b = actualAcc … numWin`);
+(iii) sum over the runway → `shiftState`/`actualAcc_eq_cosetState_runningSum`; (iv) feed
+`cosetOutOfPlace_hfwd_E` → `cosetState(k) → cosetState((a·k) mod N)` off `numWin/2^m`.
