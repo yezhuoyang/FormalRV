@@ -1,0 +1,8 @@
+{
+  "title": "Windowed multiplier on the GIDNEY adder   windowedMulCircuitOf gidneyAdder 2 2 3 1   acc <- (3*y) mod 4     [w=2, bits=2, 1 window;  15 qubits, 74 gates, 36 Toffoli]",
+  "wires": ["ctrl", "a0", "s0", "a1", "s1", "r0", "t0", "c0", "r1", "t1", "c1", "x0", "x1", "y0", "y1"],
+  "input":  ["ctrl=1", "(y1,y0)=y (multiplier input)", "acc (t1,t0)=0", "addr a*, AND s*, table-word r*, carries c*, scratch x* = 0"],
+  "output": ["acc (t1,t0)=(3*y) mod 4", "y register preserved", "addr/AND/r*/c* restored to 0"],
+  "fold": 26,
+  "fontsize": 11
+}

@@ -5,5 +5,5 @@
   (✅, FormalRV.StandardShor.surfaceShorEndToEnd /
    FormalRV.LatticeSurgery.SurfaceShorPPMEndToEnd.surface_shor_ppm_physically_realized).
 -/
-import FormalRV.StandardShor
+import FormalRV.Shor.StandardShor
 #check @FormalRV.StandardShor.surfaceShorEndToEnd     -- ✅ shared: Shor PPM realized as surface surgery

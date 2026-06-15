@@ -6,7 +6,7 @@
   finding ≥ κ/(log₂N)⁴ — Audit/Peng2022, FormalRV.StandardShor).
 -/
 import FormalRV.Framework.L1_Algorithm
-import FormalRV.StandardShor
+import FormalRV.Shor.StandardShor
 
 namespace FormalRV.Audit.GidneyEkera2021
 

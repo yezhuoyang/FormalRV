@@ -75,7 +75,7 @@ theorem numCCX_ctrlGate (cq anc : Nat) (g : Gate) :          -- CliffordTControl
     numCCX (ctrlGate cq anc g) = numCX g + 3 * numCCX g
 ```
 
-For `x ↦ 7x mod 15` (`sqir_modmult_MCP_gate 2 15 7 13`: 168 CX, 64 CCX) the controlled
+For `x ↦ 7x mod 15` (`modmult_MCP_gate 2 15 7 13`: 168 CX, 64 CCX) the controlled
 oracle has `magic = 168 + 3·64 = 360`, all `{x,cx,ccx}` (no rotations); the full `m=4`
 mod-exp chain has `numCCX = 1440`, `tcount = 7·1440 = 10080` (the `#eval`s at
 `CliffordTControlledModExp.lean:129`).

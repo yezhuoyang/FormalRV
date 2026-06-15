@@ -4,5 +4,5 @@
   verified Cuccaro adder (✅, FormalRV.StandardShor.cuccaroAdderCorrect).  The full
   RSA-scale windowed circuit's literal enumeration is out of scope (see README GAP).
 -/
-import FormalRV.StandardShor
+import FormalRV.Shor.StandardShor
 #check @FormalRV.StandardShor.cuccaroAdderCorrect      -- ✅ shared: the n-bit adder computes a+b

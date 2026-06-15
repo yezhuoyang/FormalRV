@@ -1,0 +1,8 @@
+{
+  "title": "Cuccaro/SQIR modular adder   sqir_style_modAddConst_clean_gate 3 3 1   target <- (x + 1) mod 3     [bits=3, N=3, c=1;  q_start=2, flag=1;  9 qubits, 91 gates, 168 T]",
+  "wires": [".", "flag", "cin", "t0", "r0", "t1", "r1", "t2", "r2"],
+  "input":  ["read r(a)=0 (const c=1 loaded internally)", "target t(b)=x=1", "cin=0, flag=0"],
+  "output": ["target (t0,t1,t2)=(x+1)%3=2  -> t1=1", "read r restored to 0", "cin/flag restored to 0"],
+  "fold": 32,
+  "fontsize": 11
+}

@@ -17,7 +17,7 @@
   layer with a proven, closed-form magic budget — the same `Gate`-IR interface the rest
   of the framework consumes.
 -/
-import FormalRV.Shor.WindowedCircuit
+import FormalRV.Arithmetic.Windowed.WindowedCircuit
 import FormalRV.PPM.CircuitToPPMFactoryProvision
 
 namespace FormalRV.Shor.WindowedPPM

@@ -41,7 +41,7 @@
   once those sources are read — feeding the encoding-agnostic keystone
   (`FormalRV.Shor.EncodingAgnostic`).
 -/
-import FormalRV.Shor.EncodingAgnostic
+import FormalRV.Shor.OrderFinding.EncodingAgnostic
 
 namespace FormalRV.Audit.Gidney2025.EkeraHastad
 

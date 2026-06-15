@@ -1,5 +1,5 @@
-import FormalRV.Arithmetic.SQIRModMult
-import FormalRV.Shor.VerifiedShor.WindowedLookupArithmetic
+import FormalRV.Arithmetic.ModMult
+import FormalRV.Shor.VerifiedShor.ReservedExtensionSlot
 
 namespace VerifiedShor
 namespace Windowed
@@ -298,7 +298,7 @@ Proof route:
 2. The inner CCX computes `update F0 flagIdx (b0 AND b1)` since
    `F0 flagIdx = false` (from the cuccaro_input_F at `flagIdx < 2`).
 3. Updates at `b0Idx`, `b1Idx` (both above the workspace) commute
-   with the mod-add (via `sqir_style_controlledModAddConst_gate_commute_update_outside_fun`)
+   with the mod-add (via `style_controlledModAddConst_gate_commute_update_outside_fun`)
    and are invisible to `cuccaro_target_val` (via the outside-workspace
    lemma).
 4. The remaining `Gate.applyNat (mod-add) (update (cuccaro_input_F ...) flagIdx ctrl)`
@@ -371,10 +371,10 @@ theorem toyWindow2Case3Gate_correct
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- Step 4: push b0Idx, b1Idx updates outside the mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx b1 _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx b0 _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   -- Step 5: drop the outside-workspace updates from cuccaro_target_val.
@@ -564,10 +564,10 @@ theorem toyWindow2Case1Gate_correct
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- Push b0Idx, b1Idx updates outside the mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b1Idx (!b1) _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 1) flagIdx b0Idx b0 _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   -- Drop the outside-workspace updates from cuccaro_target_val.
@@ -677,10 +677,10 @@ theorem toyWindow2Case2Gate_correct
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   -- Push b0Idx, b1Idx updates outside the mod-add.  Outermost is b0Idx.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b0Idx (!b0) _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 2) flagIdx b1Idx b1 _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   -- Drop the outside-workspace updates.  Outermost is b0Idx.
@@ -733,7 +733,7 @@ Proof pattern (used by both):
 7. Simplify `xor false (true && true) = true`.
 8. Reorder updates via `update_comm` (twice) to bring flagIdx innermost.
 9. Push b0Idx/b1Idx outside the mod-add via
-   `sqir_style_controlledModAddConst_gate_commute_update_outside_fun`.
+   `style_controlledModAddConst_gate_commute_update_outside_fun`.
 10. Finish with `update_eq`. -/
 
 /-- The case-3 gate preserves the value `true` at the external
@@ -793,12 +793,12 @@ theorem toyWindow2Case3Gate_preserves_b0Idx
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- State is now: update (update (update G flagIdx true) b0Idx true) b1Idx true.
   -- Push b1Idx (outermost) outside the mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one h_b1_ne_flag]
   -- Read at b0Idx through outer b1Idx update (b0Idx ≠ b1Idx).
   rw [FormalRV.Framework.update_neq _ _ _ _ h_b0_ne_b1]
   -- Push b0Idx outside the mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one h_b0_ne_flag]
   -- Read at b0Idx via update_eq.
   rw [FormalRV.Framework.update_eq]
@@ -863,11 +863,11 @@ theorem toyWindow2Case3Gate_restores_flagIdx
     simp only [Bool.and_self, Bool.false_xor]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ h_b0_ne_b1]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_eq]
@@ -882,7 +882,7 @@ theorem toyWindow2Case3Gate_restores_flagIdx
     simp only [Bool.and_self, Bool.false_xor]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_eq]
@@ -897,11 +897,11 @@ theorem toyWindow2Case3Gate_restores_flagIdx
     simp only [Bool.and_self, Bool.false_xor]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
     rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
           h_b1_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b1_ne_flag)]
-    rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
           (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
           h_b0_ne_flag]
     rw [FormalRV.Framework.update_neq _ _ _ _ (Ne.symm h_b0_ne_flag)]
@@ -978,7 +978,7 @@ theorem toyWindow2Case3Gate_preserves_b1Idx
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- State: update (update (update G flagIdx true) b0Idx true) b1Idx true.
   -- Push b1Idx (outermost) outside the mod-add, then read via update_eq.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one h_b1_ne_flag]
   rw [FormalRV.Framework.update_eq]
 
@@ -994,7 +994,7 @@ restores the internal Cuccaro-workspace scalar positions:
 Each proof follows the same skeleton as `_preserves_b0Idx` /
 `_preserves_b1Idx`, but the finishing rule is:
 * `clean_flagFalse` for position 1.
-* `sqir_style_controlledModAddConst_gate_carry_in_restored` for
+* `style_controlledModAddConst_gate_carry_in_restored` for
   position 2 (the carry-in restore theorem is not in the R4b
   bundle, so we use the SQIR theorem directly — it's NOT in the
   forbidden list).
@@ -1059,12 +1059,12 @@ theorem toyWindow2Case3Gate_internalFlagFalse
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- Push b1Idx outside mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_1_ne_b1]
   -- Push b0Idx outside mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_1_ne_b0]
@@ -1129,16 +1129,16 @@ theorem toyWindow2Case3Gate_carryInRestored
   simp only [Bool.and_self, Bool.false_xor]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_2_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_2_ne_b0]
   -- Apply the SQIR carry_in_restored theorem (NOT in the forbidden list).
-  exact sqir_style_controlledModAddConst_gate_carry_in_restored bits N
+  exact style_controlledModAddConst_gate_carry_in_restored bits N
     (tableValue a N 2 k 3) acc flagIdx true
     hbits hN_pos hN hN2 h_c_lt_N hacc h_flag_allowed h_flag_ne_1
 
@@ -1198,11 +1198,11 @@ theorem toyWindow2Case3Gate_topCarryFalse
   simp only [Bool.and_self, Bool.false_xor]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_tc_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ h_tc_ne_b0]
@@ -1298,10 +1298,10 @@ theorem toyWindow2Case3Gate_readVal
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- Step 4: push b0Idx, b1Idx updates outside the mod-add.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx b1 _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx b0 _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   -- Step 5: drop the outside-workspace updates from cuccaro_read_val.
@@ -1319,7 +1319,7 @@ Proof: instantiate `toyWindow2Case3Gate_correct` at `b0 = b1 = true`
 (case 3 firing condition) to get the target_val decode equality, then
 apply the converse decoder `cuccaro_target_val_eq_implies_bits_match`.
 
-This is the bit-level analog of `sqir_modmult_step_target_bit`. -/
+This is the bit-level analog of `modmult_step_target_bit`. -/
 theorem toyWindow2Case3Gate_targetBit
     (bits N a k acc flagIdx b0Idx b1Idx : Nat)
     (hbits : 1 ≤ bits) (hN_pos : 0 < N)
@@ -1361,7 +1361,7 @@ equality, then apply the converse decoder
 `cuccaro_read_val_eq_implies_bits_match` at `S = 0`; finish with
 `Nat.zero_testBit`.
 
-This is the bit-level analog of `sqir_modmult_step_read_bit`. -/
+This is the bit-level analog of `modmult_step_read_bit`. -/
 theorem toyWindow2Case3Gate_readBit
     (bits N a k acc flagIdx b0Idx b1Idx : Nat)
     (hbits : 1 ≤ bits) (hN_pos : 0 < N)
@@ -1388,7 +1388,7 @@ theorem toyWindow2Case3Gate_readBit
 For positions `q ≥ 2 + 2*bits + 1` distinct from `b0Idx`, `b1Idx`,
 `flagIdx`, the case-3 gate leaves `q` at `false` (its input value).
 
-Proof strategy mirrors the SQIRModMult `sqir_modmult_step_at_untouched_pos`
+Proof strategy mirrors the ModMult `modmult_step_at_untouched_pos`
 trick: at q the input is `false`, so `update input q false = input` (no-op).
 By the SQIR commute lemma, the mod-add commutes with this trivial update,
 yielding `applyNat mod-add input q = false` directly.
@@ -1459,11 +1459,11 @@ theorem toyWindow2Case3Gate_aboveLayoutFalse
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b1_ne_flag]
   rw [FormalRV.Framework.update_comm _ _ _ _ _ h_b0_ne_flag]
   -- Step 4: push b1Idx, b0Idx updates outside the mod-add and read through.
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b1Idx true _ h_b1_out h_b1_ne_one
         h_b1_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ hq_ne_b1]
-  rw [sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+  rw [style_controlledModAddConst_gate_commute_update_outside_fun bits N
         (tableValue a N 2 k 3) flagIdx b0Idx true _ h_b0_out h_b0_ne_one
         h_b0_ne_flag]
   rw [FormalRV.Framework.update_neq _ _ _ _ hq_ne_b0]
@@ -1486,7 +1486,7 @@ theorem toyWindow2Case3Gate_aboveLayoutFalse
       exact h_input_q.symm
     · rw [FormalRV.Framework.update_neq _ _ _ _ hpq]
   have h_commute :=
-    sqir_style_controlledModAddConst_gate_commute_update_outside_fun bits N
+    style_controlledModAddConst_gate_commute_update_outside_fun bits N
       (tableValue a N 2 k 3) flagIdx q false
       (update (cuccaro_input_F 2 false 0 acc) flagIdx true)
       h_q_out h_q_ne_one hq_ne_flag

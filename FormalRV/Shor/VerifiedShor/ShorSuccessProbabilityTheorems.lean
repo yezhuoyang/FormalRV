@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.ModularMultiplicationGates
 
 namespace VerifiedShor
@@ -30,13 +30,13 @@ def ancillaWidth (bits : Nat) : Nat := sqir_modmult_rev_anc bits
 
 /-- **Total dimension** of the verified modular multiplier:
 `bits + ancillaWidth bits`. -/
-def totalDim (bits : Nat) : Nat := sqir_total_dim bits
+def totalDim (bits : Nat) : Nat := modmult_total_dim bits
 
 /-- **Verified modular multiplication gate** in the `encodeDataZeroAnc`
 / `MultiplyCircuitProperty` layout.  Three-stage composition:
 data-register adapter → in-place modular multiplier → adapter. -/
 def gateMCP (bits N a ainv : Nat) : Gate :=
-  sqir_modmult_MCP_gate bits N a ainv
+  modmult_MCP_gate bits N a ainv
 
 /-- **Apply correctness in the encoded layout.**  Maps
 `encodeDataZeroAnc bits anc x` to
@@ -48,14 +48,14 @@ theorem gateMCP_apply_encode
     Gate.applyNat (gateMCP bits N a ainv)
         (encodeDataZeroAnc bits (ancillaWidth bits) x)
       = encodeDataZeroAnc bits (ancillaWidth bits) ((a * x) % N) :=
-  sqir_modmult_MCP_gate_apply_encode bits N a ainv x hbits hN_pos hN hN2 h_ainv_le hx h_inv
+  modmult_MCP_gate_apply_encode bits N a ainv x hbits hN_pos hN hN2 h_ainv_le hx h_inv
 
 /-- **Gate is well-typed at `totalDim bits`.** -/
 theorem gateMCP_wellTyped
     (bits N a ainv : Nat) (hbits : 1 ≤ bits) (hN_pos : 0 < N)
     (hN : N ≤ 2^bits) (hN2 : 2 * N ≤ 2^bits) :
     Gate.WellTyped (totalDim bits) (gateMCP bits N a ainv) :=
-  sqir_modmult_MCP_gate_wellTyped bits N a ainv hbits hN_pos hN hN2
+  modmult_MCP_gate_wellTyped bits N a ainv hbits hN_pos hN hN2
 
 /-- **Main bridge theorem**: the verified gate, compiled to a `BaseUCom`,
 satisfies SQIR's `MultiplyCircuitProperty` — the spec consumed by
@@ -66,7 +66,7 @@ theorem satisfiesMultiplyCircuitProperty
     (h_ainv_le : ainv ≤ N) (h_inv : (a * ainv) % N = 1) :
     MultiplyCircuitProperty a N bits (ancillaWidth bits)
       (Gate.toUCom (totalDim bits) (gateMCP bits N a ainv)) :=
-  sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty
+  modmult_MCP_gate_satisfies_MultiplyCircuitProperty
     bits N a ainv hbits hN_pos hN hN2 h_ainv_le h_inv
 
 /-- **Per-QPE-iteration modular multiplication family**:

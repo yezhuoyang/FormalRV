@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.WindowedSwapLoaderWithDataClear
 
 namespace VerifiedShor
@@ -439,10 +439,10 @@ where `newAccV` selects the case-fired accumulator update.
 
 These state-equality theorems require funext + per-position case
 splits (~60-90 lines per case), analogous to
-`sqir_modmult_step_state_eq` (SQIRModMult.lean:1156).  The proof
+`modmult_step_state_eq` (ModMult.lean:1156).  The proof
 infrastructure is in place (`cuccaro_target_val_eq_implies_bits_match`,
 `cuccaro_read_val_eq_implies_bits_match`, R4b clean conjuncts, the
-above-layout commute lemmas, `sqir_style_controlledModAddConst_gate_carry_in_restored`),
+above-layout commute lemmas, `style_controlledModAddConst_gate_carry_in_restored`),
 but the per-case-per-position bookkeeping is substantial.
 
 Once the three case_state_eq theorems land, the composition theorem
@@ -465,7 +465,7 @@ theorem toyWindow2SelectedAddGate_correct
 * v=3 (b0=T, b1=T): case3 fires; finish with `windowedStepSpec_window2_v3`.
 
 **Next tick**: prove the three `_state_eq` theorems (mirroring
-`sqir_modmult_step_state_eq` proof structure), then add the composition
+`modmult_step_state_eq` proof structure), then add the composition
 theorem with the 4-way case split above. -/
 
 /-! ## Phase R7d^xxix-L-REVIEW — diagnostic on the reverse-SWAP unloader

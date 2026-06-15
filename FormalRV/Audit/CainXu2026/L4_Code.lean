@@ -78,24 +78,10 @@ example : bb_first_x_check.length = 144 := by native_decide
 example : (bb_first_x_check.filter id).length = 6 := by native_decide
 
 /-============================================================================
-  PART B — bb18 [[248,10,18]]: k DERIVED from the constructed matrices
-           (was QianxuCodeParams)
+  PART B — bb18 [[248,10,18]] derived-k.
+  MOVED to `FormalRV.Audit.CainXu2026.CodeKDerived` (expensive native_decide
+  GF(2)-rank; not gated, so kept off the default build path).
 ============================================================================-/
-
-/-- **bb18's k = 10, DERIVED from its constructed matrices** (n=248, rank H_X =
-    rank H_Z = 119), matching the paper's `[[248,10,18]]`.  Not hardcoded —
-    computed from `bb18.hx`/`bb18.hz` by the GF(2)-rank algorithm.
-
-    Certificate: `native_decide` (kernel `decide` times out at 248 qubits); this
-    adds a native-eval axiom — the k VALUE is derived, the CERTIFICATE is native. -/
-theorem bb18_k_derived : derivedK bb18 = 10 := by
-  unfold derivedK; native_decide
-
-/-- bb18's n is kernel-clean (the easy half); only the rank-based k needs native. -/
-theorem bb18_n : bb18.n = 248 := by decide
-
-/-- The derived k matches the paper's reported logical count for bb18. -/
-theorem bb18_k_matches_paper : derivedK bb18 = 10 := bb18_k_derived
 
 /-============================================================================
   PART C — ResourceBounds machinery (was QianxuBounds)
@@ -183,21 +169,13 @@ theorem qianxu_time_respects_floor : qianxu_time_bounds.respectsFloor = true := 
   PART D — FULL LP-code logical counts + resource brackets (was QianxuFullLP)
 ============================================================================-/
 
-/-! ## §D.1. FULL LP-code logical-qubit counts, DERIVED from the matrices -/
-
-/-- **lp_16^{3,7}: k = 744, derived from the parity matrices** (n=2610, rank H_X =
-    rank H_Z = 933), matching the paper's [[2610, 744, 16]].  Certified by
-    `native_decide` (kernel `decide` times out at this scale). -/
-theorem lp16_k_derived : lp16.n - rank lp16.hx - rank lp16.hz = 744 := by native_decide
+/-! ## §D.1. FULL LP-code logical-qubit counts (lp_16 / lp_20).
+    The DERIVED-k rank theorems (`lp16_k_derived`, `lp20_k_derived`) are
+    expensive native_decide GF(2)-rank computations — MOVED to
+    `FormalRV.Audit.CainXu2026.CodeKDerived` (off the default build path). -/
 
 def lp20_n : Nat := 4350
-
-/-- **lp_20^{3,7}: k = 1224, DERIVED from the parity matrices** (n=4350), matching
-    the paper's [[4350,1224,20]].  Certified by `native_decide` (kernel `decide`
-    times out at 4350 columns; native adds a native-eval axiom, flagged). -/
-theorem lp20_k_derived : lp20.n - rank lp20.hx - rank lp20.hz = 1224 := by native_decide
-
-def lp20_k : Nat := 1224   -- now backed by `lp20_k_derived` (native_decide), matches paper
+def lp20_k : Nat := 1224   -- = lp20_k_derived (see CodeKDerived); matches paper
 def lp20_d : Nat := 20
 
 /-! ## §D.2. Resource bounds + GAPS for the FULL lp_20 memory instance -/
@@ -229,21 +207,11 @@ theorem lp20_time_bracketed : lp20_time_bounds.bracketed = true := by decide
     the paper does not construct in detail. -/
 theorem lp20_time_gap : lp20_time_bounds.optimizationGap = 12_987_000_000_000 := by decide
 
-/-! ## §D.3. The headline -/
-
-/-- **FULL LP-CODE REPORT.**  The paper's lp_16 logical count is DERIVED (=744),
-    the qubit resource of the full lp_20 instance is bracketed [4350, 14961] with a
-    4961 optimization gap, and the time is bracketed with a ~1000× parallelisation
-    gap. -/
-theorem full_lp_report :
-    lp16.n - rank lp16.hx - rank lp16.hz = 744
-    ∧ lp20_qubit_bounds.bracketed = true ∧ lp20_qubit_bounds.optimizationGap = 4_961
-    ∧ lp20_time_bounds.bracketed = true := by
-  refine ⟨lp16_k_derived, lp20_qubit_bracketed, lp20_qubit_gap, lp20_time_bracketed⟩
+/-! ## §D.3. The headline `full_lp_report` (bundles the derived-k with the
+    resource brackets) is MOVED to `FormalRV.Audit.CainXu2026.CodeKDerived`,
+    since it depends on the expensive rank computations. -/
 
 end FormalRV.Audit.CainXu2026
 
 #check @FormalRV.Audit.CainXu2026.cainxu_code           -- QECCode (LP qLDPC tile)
--- ➗ k DERIVED from the constructed matrices via GF(2) rank (native_decide):
-#check @FormalRV.Audit.CainXu2026.bb18_k_derived        -- bb18 k = 10
-#check @FormalRV.Audit.CainXu2026.lp20_k_derived        -- lp_20 k = 1224
+-- ➗ derived-k smoke `#check`s (bb18_k_derived, lp20_k_derived) live in CodeKDerived.

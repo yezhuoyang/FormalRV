@@ -98,37 +98,13 @@ theorem Order_modinv_correct (a N r : Nat) (h_ord : Order a r N) (h_lt : a < N) 
   rw [Nat.ModEq] at h_target_nat
   rw [h_target_nat, h_1_mod]
 
-/-! ### Tier-3 RCIR circuit-level supporting axioms (Coq: `ExtrShor.v`) -/
-
-/-- The RCIR-derived `f_modmult_circuit` family satisfies `ModMulImpl`.
-
-**DEPRECATED (2026-05-29, Tick 84):** The verified replacement is
-`FormalRV.BQAlgo.f_modmult_circuit_verified_bits_MMI` (proven, not
-axiomatic).  Cite `FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms`
-for end-to-end Shor correctness. -/
-@[deprecated "Use FormalRV.BQAlgo.f_modmult_circuit_verified_bits_MMI and cite FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms" (since := "2026-05-29")]
-axiom f_modmult_circuit_MMI
-    (a ainv N n : Nat)
-    (_h_a_lt : a < N) (_h_ainv_lt : ainv < N)
-    (_h_inv : a * ainv % N = 1) :
-    ModMulImpl a N n (modmult_rev_anc n) (f_modmult_circuit a ainv N n)
-
-/-- Every iterate of the RCIR `f_modmult_circuit` family is well-typed.
-
-**DEPRECATED (2026-05-29, Tick 84):** The verified replacement is
-`FormalRV.BQAlgo.f_modmult_circuit_verified_bits_uc_well_typed`
-(proven, not axiomatic).  Cite
-`FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms` for
-end-to-end Shor correctness. -/
-@[deprecated "Use FormalRV.BQAlgo.f_modmult_circuit_verified_bits_uc_well_typed and cite FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms" (since := "2026-05-29")]
-axiom f_modmult_circuit_uc_well_typed
-    (a ainv N n : Nat)
-    (_h_N : 1 < N) (_h_a_lt : a < N) (_h_ainv_lt : ainv < N) :
-    ∀ i, uc_well_typed (f_modmult_circuit a ainv N n i)
-
--- `Shor_correct` (the specialised version at `f_modmult_circuit`) moved
--- to `PostQFT.lean` (2026-05-27) so it can use the new `Shor_correct_var`
--- (proved via the LSB pipeline).
+-- (removed 2026-06-09) Deprecated placeholder axioms `f_modmult_circuit_MMI`
+-- and `f_modmult_circuit_uc_well_typed` deleted, along with the placeholder
+-- `f_modmult_circuit` they referenced.  Use the constructive, proven
+-- `FormalRV.BQAlgo.f_modmult_circuit_verified_bits_MMI` /
+-- `..._uc_well_typed`; cite
+-- `FormalRV.BQAlgo.Shor_correct_verified_no_modmult_axioms` for end-to-end
+-- Shor correctness.
 
 /-! ## §10.5. `uc_eval` linearity over state-vector superpositions (Phase 4.D)
 

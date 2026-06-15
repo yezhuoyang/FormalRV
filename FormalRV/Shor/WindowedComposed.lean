@@ -22,7 +22,7 @@
   a parameter and does not affect the Toffoli count.)
 -/
 import FormalRV.Shor.MeasUncompute
-import FormalRV.Shor.WindowedCircuit
+import FormalRV.Arithmetic.Windowed.WindowedCircuit
 
 namespace FormalRV.Shor.WindowedComposed
 

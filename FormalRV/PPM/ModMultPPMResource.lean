@@ -2,8 +2,8 @@
   FormalRV.PPM.ModMultPPMResource — END-TO-END semantically-verified PPM resource bound
   for the modular multiplier (the substantive mod-exp building block).
 
-  Welds two proofs about the SAME Gate IR term `sqir_modmult_const_gate bits N a`:
-    * SEMANTICS: `sqir_modmult_const_gate_target_decode` — it computes `(a · m) % N` into
+  Welds two proofs about the SAME Gate IR term `modmult_const_gate bits N a`:
+    * SEMANTICS: `modmult_const_gate_target_decode` — it computes `(a · m) % N` into
       the accumulator register (no sorry, axiom-clean);
     * RESOURCE:  `tcount_sqir_modmult_const_gate_le` — its T-count is `≤ 56·bits²`, hence
       its Toffoli count is `≤ 8·bits²`, hence (through the verified `Gate → PPM` bridge)
@@ -12,7 +12,7 @@
   So the per-modmult factor of the un-windowed schoolbook count is no longer an abstract
   `def`: it is a proved upper bound on a circuit PROVED to multiply.  Later sections make
   these EXACT (`= 56·bits²`/`112·bits²`) for valid Shor bases, bind the count to the actual
-  verified oracle `sqir_modmult_MCP_gate` (§7), and count the whole arithmetic mod-exp on
+  verified oracle `modmult_MCP_gate` (§7), and count the whole arithmetic mod-exp on
   that oracle (§8 → `32·bits³` Toffolis, `274 877 906 944` at 2048).
 
   ## Honest note on the control overhead (why the arithmetic count is the clean one)
@@ -30,10 +30,8 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.PPM.GateToPPMResource
-import FormalRV.Arithmetic.SQIRModMult.ToffoliCount
-import FormalRV.Arithmetic.SQIRModMult.ModExpCount
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultPrefixInvariant
-import FormalRV.Arithmetic.SQIRModMult.SQIRModMultAccumulatorRange
+import FormalRV.Arithmetic.ModMult
+import FormalRV.Arithmetic.ModExp
 
 namespace FormalRV.PPM.ModMultPPMResource
 
@@ -47,14 +45,14 @@ open FormalRV.BQAlgo
 /-- Toffoli count of the verified modular multiplier `≤ 8·bits²` (from `tcount ≤ 56·bits²`
     and `tcount = 7·toffCount`). -/
 theorem toffCount_sqir_modmult_const_gate_le (bits N a : Nat) :
-    toffCount (sqir_modmult_const_gate bits N a) ≤ 8 * bits ^ 2 := by
+    toffCount (modmult_const_gate bits N a) ≤ 8 * bits ^ 2 := by
   have h := tcount_sqir_modmult_const_gate_le bits N a
   rw [tcount_eq_seven_mul_toffCount] at h
   omega
 
 /-- PPM CCZ-magic states to teleport-compile the verified modular multiplier `≤ 8·bits²`. -/
 theorem numCCZMagic_sqir_modmult_const_gate_le (na bits N a : Nat) :
-    numCCZMagic (circuitToPPM na (gateToHL (sqir_modmult_const_gate bits N a))) ≤ 8 * bits ^ 2 := by
+    numCCZMagic (circuitToPPM na (gateToHL (modmult_const_gate bits N a))) ≤ 8 * bits ^ 2 := by
   rw [numCCZMagic_circuitToPPM_gateToHL]
   exact toffCount_sqir_modmult_const_gate_le bits N a
 
@@ -64,16 +62,16 @@ theorem numCCZMagic_sqir_modmult_const_gate_le (na bits N a : Nat) :
     ONE Gate IR term simultaneously
     (a) computes `(a · m) % N` into the accumulator, AND
     (b) costs `≤ 8·bits²` CCZ magic states when compiled to PPM.
-    Both conjuncts are about the SAME `sqir_modmult_const_gate bits N a`. -/
+    Both conjuncts are about the SAME `modmult_const_gate bits N a`. -/
 theorem verified_modmult_end_to_end
     (bits N a m : Nat) (hbits : 1 ≤ bits) (hN_pos : 0 < N)
     (hN : N ≤ 2 ^ bits) (hN2 : 2 * N ≤ 2 ^ bits) (hm : m < 2 ^ bits) :
     cuccaro_target_val bits 2
-        (Gate.applyNat (sqir_modmult_const_gate bits N a) (sqir_mult_input_F bits m 0))
+        (Gate.applyNat (modmult_const_gate bits N a) (modmult_input_F bits m 0))
       = (a * m) % N
     ∧ numCCZMagic (circuitToPPM 0
-          (gateToHL (sqir_modmult_const_gate bits N a))) ≤ 8 * bits ^ 2 :=
-  ⟨sqir_modmult_const_gate_target_decode bits N a m hbits hN_pos hN hN2 hm,
+          (gateToHL (modmult_const_gate bits N a))) ≤ 8 * bits ^ 2 :=
+  ⟨modmult_const_gate_target_decode bits N a m hbits hN_pos hN hN2 hm,
    numCCZMagic_sqir_modmult_const_gate_le 0 bits N a⟩
 
 /-! ## RSA-2048 instantiation of the verified per-modmult bound. -/
@@ -82,7 +80,7 @@ theorem verified_modmult_end_to_end
     `≤ 8·2048² = 33 554 432` CCZ magic states.  Multiplying by the `2n = 4096` exponent
     register (structural, not welded) reproduces the whole-algorithm `137 438 953 472`. -/
 theorem shor2048_per_modmult_CCZMagic_le (na N a : Nat) :
-    numCCZMagic (circuitToPPM na (gateToHL (sqir_modmult_const_gate 2048 N a))) ≤ 33554432 := by
+    numCCZMagic (circuitToPPM na (gateToHL (modmult_const_gate 2048 N a))) ≤ 33554432 := by
   have h := numCCZMagic_sqir_modmult_const_gate_le na 2048 N a
   norm_num at h
   exact h
@@ -138,23 +136,23 @@ theorem shor2048_Meas_outOfPlaceModel (na N a : Nat)
     numMeas (circuitToPPM na (gateToHL (shorModExp 2048 N a))) = 412316860416 := by
   rw [numMeas_shorModExp na 2048 N a hcop hodd h1]; norm_num
 
-/-! ## §7. Count welded onto the ACTUAL verified Shor oracle term `sqir_modmult_MCP_gate`.
+/-! ## §7. Count welded onto the ACTUAL verified Shor oracle term `modmult_MCP_gate`.
 
     The verified Shor theorem `Shor_correct_verified_no_modmult_axioms` uses
-    `f_modmult_circuit_verified_bits → sqir_modmult_MCP_gate` (the in-place modular
+    `f_modmult_circuit_verified_bits → modmult_MCP_gate` (the in-place modular
     multiplier) as its oracle, and that whole theorem is axiom-clean / sorry-free.  Here the
     EXACT Toffoli count is bound to THAT same term, paired with its semantic proof
-    `sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty`. -/
+    `modmult_MCP_gate_satisfies_MultiplyCircuitProperty`. -/
 
 theorem toffCount_sqir_modmult_MCP_gate (bits N a ainv : Nat)
     (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
     (hpos : 0 < ainv) (hlt : ainv < N) (hodd : Odd N) (h1 : 1 < N) :
-    toffCount (sqir_modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
+    toffCount (modmult_MCP_gate bits N a ainv) = 16 * bits ^ 2 := by
   have h := tcount_sqir_modmult_MCP_gate_shor bits N a ainv hcop hcopinv hpos hlt hodd h1
   rw [tcount_eq_seven_mul_toffCount] at h
   omega
 
-/-- **END-TO-END on the ACTUAL verified Shor oracle.**  ONE term `sqir_modmult_MCP_gate
+/-- **END-TO-END on the ACTUAL verified Shor oracle.**  ONE term `modmult_MCP_gate
     bits N a ainv` simultaneously (a) computes `|x⟩ ↦ |a·x mod N⟩` (its `Gate.toUCom`
     satisfies `MultiplyCircuitProperty` — the property the verified Shor algorithm relies
     on) and (b) costs EXACTLY `16·bits²` CCZ magic states in PPM. -/
@@ -164,17 +162,17 @@ theorem verified_MCP_oracle_end_to_end
     (hodd : Odd N) (h1 : 1 < N) (hcop : Nat.Coprime a N) (hcopinv : Nat.Coprime ainv N)
     (hpos : 0 < ainv) (hlt : ainv < N) (h_inv : a * ainv % N = 1) :
     FormalRV.SQIRPort.MultiplyCircuitProperty a N bits (sqir_modmult_rev_anc bits)
-        (Gate.toUCom (sqir_total_dim bits) (sqir_modmult_MCP_gate bits N a ainv))
-    ∧ numCCZMagic (circuitToPPM 0 (gateToHL (sqir_modmult_MCP_gate bits N a ainv)))
+        (Gate.toUCom (modmult_total_dim bits) (modmult_MCP_gate bits N a ainv))
+    ∧ numCCZMagic (circuitToPPM 0 (gateToHL (modmult_MCP_gate bits N a ainv)))
         = 16 * bits ^ 2 :=
-  ⟨sqir_modmult_MCP_gate_satisfies_MultiplyCircuitProperty bits N a ainv hbits hN_pos hN hN2
+  ⟨modmult_MCP_gate_satisfies_MultiplyCircuitProperty bits N a ainv hbits hN_pos hN hN2
       (le_of_lt hlt) h_inv,
    by rw [numCCZMagic_circuitToPPM_gateToHL,
           toffCount_sqir_modmult_MCP_gate bits N a ainv hcop hcopinv hpos hlt hodd h1]⟩
 
 /-! ## §8. HEADLINE: whole mod-exp ARITHMETIC magic-state count on the VERIFIED in-place oracle.
 
-    `shorModExpVerified` chains `2·bits` of the verified MCP oracle (`sqir_modmult_MCP_gate`),
+    `shorModExpVerified` chains `2·bits` of the verified MCP oracle (`modmult_MCP_gate`),
     the term the verified Shor theorem actually uses.  Its PPM CCZ-magic count is EXACTLY
     `32·bits³` — `274 877 906 944` at 2048.  This is the honest verified-oracle arithmetic
     figure and supersedes the out-of-place `shorModExp` count (`16·bits³`, §6), which is 2×

@@ -18,7 +18,7 @@
   omitting them (it is the bare lookup-add-uncompute loop), and the total gap is therefore
   exactly `LookupAdditionCount · (1 + n·g_pad/g_sep)`.
 -/
-import FormalRV.Shor.WindowedCostModel
+import FormalRV.Arithmetic.Windowed.WindowedCostModel
 import FormalRV.Shor.WindowedComposed
 
 namespace FormalRV.Shor.WindowedComposedCost

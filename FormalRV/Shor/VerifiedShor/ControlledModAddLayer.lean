@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.SqirModMulFamilyInstance
 
 namespace VerifiedShor
@@ -73,8 +73,8 @@ primitive that the multiplier proof chain currently consumes via
 
 ### Scope (R4b)
 This phase ONLY makes the contract visible.  The existing multiplier
-proof chain (`sqir_modmult_step_target_decode`,
-`sqir_modmult_inplace_candidate_state_eq`, etc.) still uses the
+proof chain (`modmult_step_target_decode`,
+`modmult_inplace_candidate_state_eq`, etc.) still uses the
 SQIR-specific theorem directly.  A future tick (R4c) will refactor
 the multiplier proof to consume `ControlledModAddImpl` instead.
 

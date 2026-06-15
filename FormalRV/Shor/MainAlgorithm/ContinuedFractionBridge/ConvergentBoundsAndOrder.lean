@@ -16,8 +16,8 @@ import FormalRV.Core.QuantumGate
 import FormalRV.Core.QuantumLib
 import FormalRV.QPE.QPE
 import FormalRV.QPE.QPEAmplitude
-import FormalRV.Shor.Eigenstate
-import FormalRV.Shor.TotientLowerBound
+import FormalRV.Shor.OrderFinding.Eigenstate
+import FormalRV.Shor.OrderFinding.TotientLowerBound
 import FormalRV.Shor.MainAlgorithm.QuantumAndContinuedFractions
 
 

@@ -13,7 +13,7 @@
   single-window phase-estimation (no Ekerå–Håstad multi-window optimisation).
 -/
 import FormalRV.Framework.L1_Algorithm
-import FormalRV.Shor.SuccessSensitivity
+import FormalRV.Shor.OrderFinding.SuccessSensitivity
 import FormalRV.Shor.PostQFT.PostQFTCompletion
 import FormalRV.Verifier
 

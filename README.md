@@ -9,9 +9,9 @@
 
 📖 **API docs:** <https://yezhuoyang.github.io/FormalRV/>
 
-▶ **New here?** Start with [`FormalRV.StandardShor`](FormalRV/StandardShor.lean) — the standard,
+▶ **New here?** Start with [`FormalRV.Shor.StandardShor`](FormalRV/Shor/StandardShor.lean) — the standard,
 textbook Shor + surface-code lattice surgery, curated as a four-step learning path
-([guide](FormalRV/StandardShor/README.md)). Read it before the advanced low-overhead papers.
+([guide](FormalRV/Shor/StandardShor/README.md)). Read it before the advanced low-overhead papers.
 
 ---
 

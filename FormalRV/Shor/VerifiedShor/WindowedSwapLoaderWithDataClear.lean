@@ -1,4 +1,4 @@
-import FormalRV.Arithmetic.SQIRModMult
+import FormalRV.Arithmetic.ModMult
 import FormalRV.Shor.VerifiedShor.WindowedLoaderBitExtraction
 
 namespace VerifiedShor
@@ -658,7 +658,7 @@ corrupting the multiply-add. So copy-based loading CANNOT bridge to
 the existing `windowed2SelectedAddGate` correctness.
 
 **The correct bridge** requires a SWAP-based adapter (analogous to the
-existing `sqir_encode_to_mult_adapter`) that MOVES `x`'s bits from
+existing `encode_to_mult_adapter`) that MOVES `x`'s bits from
 data positions to window-bit positions, leaving the data register zero.
 This is the natural continuation of the R7d^xxix-D work.
 
@@ -826,7 +826,7 @@ move data bits from `encodeDataZeroAnc` positions to window-bit
 ancillas, leaving the data positions cleared (to whatever the
 window-bit ancilla initially held — typically 0).
 
-This is the analog of `sqir_encode_to_mult_adapter` /
+This is the analog of `encode_to_mult_adapter` /
 `reverse_register_swap` but targets the windowed b0Idx/b1Idx ancilla
 positions rather than the SQIR multiplier-shifted layout. -/
 

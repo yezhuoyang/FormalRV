@@ -195,31 +195,6 @@ theorem eucl_iter_stable :
       rw [if_neg h_m]
       exact h_succ
 
-/-- **Structural insight for the joint induction succ case** (Phase 3
-r_found_1, documentation tick 76):
-
-The cf_aux_full recursion `(p_prev, p_curr) → (p_curr, a · p_curr + p_prev)`
-EXACTLY mirrors mathlib's `conts_recurrence`:
-`conts (n+2) = ⟨b · (conts (n+1)).a + a · (conts n).a, ...⟩` with `a = 1`
-for SimpContFract.of (i.e., `GenContFract.of`).
-
-The matching: cf_aux's `a` parameter at iteration k = mathlib's `b_k`
-(the k-th partial denominator). cf_aux's state (p_prev, p_curr, q_prev,
-q_curr) at iteration k = mathlib's (conts(k-1), conts(k)) for v = original
-o/m.
-
-**To make the joint induction work**, the invariant needs to be stated in
-the most general form: for ANY state and ANY Euclidean shift of the
-inputs, cf_aux's K-step result matches mathlib's contsAux applied K times
-from the corresponding mathlib starting state. This is the form that
-makes induction on K succeed.
-
-**Formalization is multi-tick**: requires (a) stating the predicate
-"cf_aux state matches mathlib at offset k for v" precisely, (b) proving
-this predicate is preserved under one cf_aux_full step, (c) showing the
-initial state (0, 1, 1, 0) at (o, m) matches mathlib at offset "before
-the first step", which after one cf_aux iteration becomes offset 0. -/
-def cf_aux_general_invariant_intent : Prop := True  -- design docs
 
 /-- **Derive `o % m ≠ 0` from non-termination at step 0** (Phase 3
 r_found_1 base case prep, added 2026-05-24 tick 73): when

@@ -10,7 +10,7 @@
   (`StandardShor.orderFindingSucceeds`).
 -/
 import FormalRV.Framework.L1_Algorithm
-import FormalRV.StandardShor
+import FormalRV.Shor.StandardShor
 
 namespace FormalRV.Audit.Babbush2026
 

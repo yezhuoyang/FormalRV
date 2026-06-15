@@ -1,5 +1,5 @@
-import FormalRV.Arithmetic.SQIRModMult
-import FormalRV.Shor.VerifiedShor.PublicApi
+import FormalRV.Arithmetic.ModMult
+import FormalRV.Shor.VerifiedShor.RelaxedSetting
 
 namespace VerifiedShor
 open FormalRV.SQIRPort

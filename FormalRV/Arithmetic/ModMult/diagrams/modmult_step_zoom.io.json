@@ -1,0 +1,7 @@
+{
+  "title": "Zoom — ONE green MODADD box at the gate level: a controlled modular adder (acc += 2 mod 3, controlled by x0 = q12). This is a Cuccaro-style modular adder; the multiplier chains 3 of these.",
+  "fontsize": 14,
+  "idle_wires": false,
+  "input": ["q12 = control (multiplier bit x0)", "accumulator bits live in q5/q7/q9; q4..q11 = Cuccaro workspace (carry/flag/read)"],
+  "output": ["if x0 = 1: accumulator += 2 (mod 3); else unchanged. workspace restored. CX = ripple/carry, CCX = majority/AND (the adder + mod-N reduction)"]
+}

@@ -1,4 +1,5 @@
 import FormalRV.Codegen.SysCallEmit
+import FormalRV.Codegen.QASMEmit
 
 /-!
 # FormalRV.Codegen
