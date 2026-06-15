@@ -85,5 +85,50 @@ symmetric two-register product-adds in both directions (`a→b` and `b→a`).
 
 OPEN QUESTION for the build: instantiate the existing `windowedMulTOf`/`Adder` machinery for
 two separate registers in both directions (resolving the interleave-vs-contiguous mismatch), or
-introduce a contiguous-accumulator + separate-addend adder layout matching Gidney. Resolved by
-the layout investigation; determines how deliverable 1's gate is defined.
+introduce a contiguous-accumulator + separate-addend adder layout matching Gidney.
+
+### §4.1 RESOLUTION (layout investigation, 2026-06-15)
+
+**The crux:** `copyWindow` reads the multiplicand CONTIGUOUSLY (`yBase+j*w+i`), but BOTH repo
+adders interleave the augend — `cuccaroAdder.augendIdx q i = q+2i+1` (stride 2),
+`gidneyAdder.augendIdx q i = q+3i+1` (stride 3). In Gidney's construction register `a` is the
+contiguous multiplicand in pass 1 AND the accumulator in pass 2; with an interleaved adder those
+roles are mutually exclusive on one register. There is NO contiguous-accumulator adder in the
+repo (only `Adder/Cuccaro.lean`, `Adder/Gidney.lean`, both interleaved).
+
+**Concrete two-register layout** (needs a contiguous-accumulator adder):
+```
+[0]                            ctrl
+[1,3,…,2w-1] / [2,4,…,2w]      address / AND-ancillas   (shared lookup zone [0,1+2w))
+[1+2w        .. 1+2w+bits)     register a (contiguous)
+[1+2w+bits   .. 1+2w+2bits)    register b (contiguous)
+[1+2w+2bits  .. )             addend-temp + carry scratch (adder's own block)
+```
+Pass 1 (`b += a·k`): multiplicand `a`, accumulator `b`. Pass 2 (`a −= b·kInv`): multiplicand
+`b`, accumulator `a` (same multiplier with register bases swapped — reusable once contiguous).
+
+**Findings:** (i) `windowedMulTOf` (generic) already takes free `q_start`/`yBase`, so a thin
+wrapper gives the two-register product-add; only the *wrapper* `windowedMulCircuitTOf` hard-wires
+`yBase = q_start + span`. (ii) Pass 1 = the existing `cosetModMulCircuitOf` (verified forward
+leg); pass 2 is the transposed direction — NOT in the repo, must be built. (iii) **Subtract leg:
+prefer `Gate.reverse` of a forward transposed product-add** (literal `a −= b·kInv`, inverse free
+via `applyNat_reverse_cancel`); fallback = add `(N−kInv)` reusing `mod_inv_cancel_identity`.
+(iv) **The single-register spec needs NO reframe** — register `b` lives inside `anc`, allocated
+and freed at `cosetState 0`; the marginal on the `a`-factor is the coset shift, and `B ⊆
+Fin(2^(n+anc))` absorbs both wrap boundaries.
+
+**Build plan for deliverable 1 (gate + well-typedness only):**
+1. **[LARGEST / hardest, strictly prior]** a contiguous-accumulator `Adder` instance
+   (`augendIdx q i = q+i`, separate addend block) + its 11 interface obligations incl. the
+   ripple-carry `sumCorrect`. This is the layout obstruction; the existing adders' correctness
+   is tied to their interleaved decoders, so a fresh instance (or a permutation-transport of an
+   existing proof) is needed.
+2. a two-register product-add wrapper exposing `q_start`/`yBase` independently (thin over
+   `windowedMulTOf`).
+3. `gidneyTwoRegInPlaceCosetMul := (b += a·k) ; Gate.reverse (a += b·kInv)` (relabel at the
+   spec/interface level, not in the gate).
+4. WellTyped lemma (mirror `cosetModMulCircuitOf_cuccaro_wellTyped` per leg + `Gate.reverse`
+   WellTyped-preservation).
+
+**Hardest part:** step 1 (the contiguous-accumulator adder + `sumCorrect`) — strictly prior to
+everything, and a substantial build comparable to a chunk of the arithmetic library.
