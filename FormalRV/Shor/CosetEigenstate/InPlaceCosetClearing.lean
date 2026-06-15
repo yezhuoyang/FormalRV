@@ -37,13 +37,15 @@
 -/
 import FormalRV.Shor.CosetEigenstate.InPlaceCosetGate
 import FormalRV.Shor.CosetEigenstate.InPlaceCosetForward
+import FormalRV.Shor.CosetEigenstate.ReducedLookupStepAction
 
 namespace FormalRV.Shor.CosetEigenstate.InPlaceCosetClearing
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
-open FormalRV.Shor.WindowedCircuit (StepInv stepInv_foldT_acc)
+open FormalRV.Shor.WindowedCircuit
 open FormalRV.Shor.WindowedArith (tableValue window)
 open FormalRV.Shor.CosetEigenstate.ReducedLookupCosetGate (cosetModMulCircuitOf)
+open FormalRV.Shor.CosetEigenstate.ReducedLookupStepAction (stepInv_determines_mulInputAccOf)
 
 /-- **CHECKPOINT 3, brick 1 — the coset multiplier's basis fold (reusable, BOTH passes).**
     A `StepInv` state at partial sum `acc₀` advances under the whole forward coset
@@ -59,5 +61,36 @@ theorem cosetMul_stepInv_fold (w bits N c numWin y acc₀ : Nat) (hw : 0 < w)
         (Gate.applyNat (cosetModMulCircuitOf cuccaroAdder w bits N c numWin) f) :=
   stepInv_foldT_acc cuccaroAdder w bits (tableValue c N w) numWin y acc₀ hw f hf
     numWin (le_refl numWin)
+
+/-- **CHECKPOINT 3, brick 2a — the concrete per-pass action (reusable for BOTH passes).**
+    On the literal nonzero-accumulator input `mulInputAccOf acc₀ y` (accumulator `acc₀`,
+    multiplicand `y`, everything else clean), one whole forward coset pass at constant `c`
+    produces `mulInputAccOf` with the accumulator advanced to the LITERAL transformed value
+    `(acc₀ + ∑ tableValue c) % 2^bits` (the unreduced runway sum, mod the register width) —
+    NOT a modular congruence.  Clones `reducedWindowStep_applyNat`'s structure
+    (`hinj`/`hclean`/`stepInv_init_acc`) but folds the WHOLE multiplier via brick 1
+    (`cosetMul_stepInv_fold`) instead of one step.  Pass 1 = this at `(c := a, acc₀)`;
+    pass 2 = this at `(c := N − aInv, acc₀ := y, multiplicand := V)`. -/
+theorem cosetMul_pass_concrete (w bits N c numWin acc₀ y : Nat) (hw : 0 < w) :
+    Gate.applyNat (cosetModMulCircuitOf cuccaroAdder w bits N c numWin)
+        (mulInputAccOf cuccaroAdder w bits numWin acc₀ y)
+      = mulInputAccOf cuccaroAdder w bits numWin
+          ((acc₀ + ∑ k ∈ Finset.range numWin, tableValue c N w k (window w y k)) % 2 ^ bits) y := by
+  have hinj : ∀ i j, i < bits → j < bits →
+      cuccaroAdder.augendIdx (1 + 2 * w) i = cuccaroAdder.augendIdx (1 + 2 * w) j → i = j :=
+    fun i j _ _ h => cuccaroAdder_augendIdx_inj (1 + 2 * w) i j h
+  have hclean : cuccaroAdder.ancClean (mulInputAccOf cuccaroAdder w bits numWin acc₀ y) bits
+      (1 + 2 * w) := by
+    show mulInputAccOf cuccaroAdder w bits numWin acc₀ y (1 + 2 * w) = false
+    unfold mulInputAccOf
+    rw [writeReg_frame _ _ _ _ _ (fun i hi heq => by
+      have : cuccaroAdder.augendIdx (1 + 2 * w) i = 1 + 2 * w + 2 * i + 1 := rfl
+      omega)]
+    have hspan : cuccaroAdder.span bits = 2 * bits + 1 := rfl
+    exact mulInputOf_low cuccaroAdder w bits numWin y _
+      (by unfold ulookup_ctrl_idx; omega) (by rw [hspan]; omega)
+  have hstart := stepInv_init_acc cuccaroAdder w bits numWin acc₀ y hinj hclean
+  exact stepInv_determines_mulInputAccOf w bits numWin y _ _
+    (cosetMul_stepInv_fold w bits N c numWin y acc₀ hw _ hstart)
 
 end FormalRV.Shor.CosetEigenstate.InPlaceCosetClearing
