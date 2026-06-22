@@ -1,0 +1,32 @@
+﻿# DEMO A: enough AVERAGE factory throughput, starved anyway.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/demo_backend.yaml \
+#       ftq_vm/backend/examples/demo_factory_starvation.yaml --out out/demoA
+#
+# Average reasoning says this schedule is fine: two factories produce
+# 2 * 0.85 / 50us = one TState every ~29.4us on average, and the workload
+# consumes one every 30us.  But factories fail stochastically: a short
+# streak of failed batches drains the small starting inventory and the
+# injections hit an empty buffer (TokenUnavailable).  This is exactly the
+# gap between average-rate resource estimates and finite-service contracts.
+#
+# demo_fixed.yaml repairs it.  Try --seed to explore other failure traces;
+# --factory-mode conservative replaces randomness with a pessimistic
+# every-ceil(1/p)-th-attempt-succeeds contract.
+
+program: demo_factory_starvation
+description: average T throughput is sufficient, stochastic failures starve anyway
+
+ops:
+  - {id: run_F0, do: start_factory, factory: F0, at_us: 0,
+     repeat: {every_us: 50, until_us: 950}}
+  - {id: run_F1, do: start_factory, factory: F1, at_us: 0,
+     repeat: {every_us: 50, until_us: 950}}
+
+  - id: t_inject
+    do: magic_inject
+    at_us: 60
+    duration_us: 10
+    consume: TState
+    qubits: ["dq[0]","dq[1]"]
+    repeat: {every_us: 29, until_us: 985}   # one TState every 29us

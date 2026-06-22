@@ -23,7 +23,7 @@ import FormalRV.QEC.Instances
 import FormalRV.QEC.CodeDimension   -- general helper `derivedK` (k = n − rank Hx − rank Hz)
 import FormalRV.QEC.GF2Rank
 import FormalRV.Framework.ResourceBounds
-import FormalRV.System.DependencyGraph
+import FormalRV.System.DeviceLane.DependencyGraph
 import FormalRV.Audit.CainXu2026.Hardware
 
 namespace FormalRV.Audit.CainXu2026

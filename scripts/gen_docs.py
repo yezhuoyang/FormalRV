@@ -208,8 +208,8 @@ def main():
             concerns.setdefault(concern, []).append((modname, rel, mdoc, decls))
     # also the root FormalRV.lean
     rootlean = os.path.join(base, a.src + ".lean")
-    order = ["Core", "Arithmetic", "Shor", "QEC", "PPM", "LatticeSurgery",
-             "System", "Framework", "Corpus", "Qualtran", "(top level)"]
+    order = ["Core", "Arithmetic", "Shor", "QFT", "QPE", "QEC", "PPM", "Resource",
+             "System", "Framework", "Audit", "Codegen", "Verifier", "Qualtran", "(top level)"]
     concern_names = [c for c in order if c in concerns] + [c for c in sorted(concerns) if c not in order]
 
     def sidebar(active):

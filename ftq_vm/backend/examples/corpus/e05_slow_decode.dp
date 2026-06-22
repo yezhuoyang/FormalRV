@@ -1,0 +1,7 @@
+DEVICE-PROGRAM 1.0;
+// e05_slow_decode {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[2,3)us  PHYS  gate2q             q[50],q[100] gate=CNOT
+[3,4)us  PHYS  measure            q[100] basis=Z
+[4,24)us  SYS   decode_syndrome    round=0

@@ -1,0 +1,26 @@
+{
+  "unit": {"time": "us"},
+  "name": "adder_d3_tinyQueue",
+  "description": "GENERATED from FormalRV/System/Params/HardwareCatalog.lean — configure there, not here.",
+  "zones": {
+    "data": {"kind": "data_qubit", "count": 100, "site_lo": 0},
+    "anc": {"kind": "helper_qubit", "count": 100, "site_lo": 100, "reset_required": true, "start_dirty": true, "reset_kinds": ["request_ancilla"], "dirty_kinds": ["measure"], "min_reset_us": 1},
+    "factory": {"kind": "factory_qubit", "count": 100, "site_lo": 200},
+    "routing": {"kind": "routing_qubit", "count": 100, "site_lo": 300}
+  },
+  "resources": {
+    "decoder_pool": {"kind": "service", "workers": 4, "max_latency_us": 10, "queue_capacity": 8, "processing_time_us": 1}
+  },
+  "gates": {
+    "CNOT": {"duration_us": 1, "qubits": 2, "max_parallel": 1},
+    "H": {"duration_us": 1, "qubits": 1, "max_parallel": 4},
+    "measure": {"duration_us": 1, "qubits": 1, "max_parallel": 4},
+    "request_ancilla": {"duration_us": 1, "qubits": 1, "max_parallel": 100}
+  },
+  "x-lean": {
+    "t_cycle_us": 1, "v_max_um_per_us": 0,
+    "window_us": 1000, "max_per_window": 1000,
+    "max_feedback_active": 4, "max_magic_req_active": 100,
+    "max_fresh_ancilla_active": 100, "max_transit_active": 100
+  }
+}

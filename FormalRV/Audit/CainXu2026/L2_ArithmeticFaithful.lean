@@ -63,12 +63,21 @@ theorem cainxu_E3_to_E4_factor_two (n q_start ctrl : Nat) :
 /-! ## E9 — the QROM lookup.  Paper: `2^q_a` Toffoli (Babbush merged-AND, measured).
     Our measured QROM read is `2^q_a − 1` — the paper rounds the single root AND up. -/
 
-/-- **E9 faithful**: the measured unary QROM read has Toffoli count `2^d − 1`
-    (= the paper's `2^q_a` minus the one merged-AND root). -/
+/-- **E9 faithful — count bundled with a value property.**  The measured unary QROM read
+    simultaneously (i) has Toffoli count `2^d − 1` (= the paper's `2^q_a` minus the one merged-AND
+    root) AND (ii) leaves its `d` ancilla qubits CLEARED after the read — the no-garbage hallmark of a
+    correct measured-uncompute QROM (no leftover ancilla to corrupt later windows).  This makes the E9
+    count a property of a circuit with a genuine (if partial) value behaviour, on par with E3/E4
+    (which are likewise count theorems whose value lemmas are `#check`'d).  Note (ii) is ancilla
+    restoration, NOT the full word-selection — that is `unaryQROMAt_selects_word` (it needs the
+    address-disjointness + `pos`-injectivity contract), witnessed below. -/
 theorem cainxu_E9_lookup_read_toffoli
     (pos : Nat → Nat) (W : Nat) (T : Nat → Nat) (addrBase ancBase d ctrl base : Nat) :
-    EGate.toffoli (unaryQROMAt pos W T addrBase ancBase d ctrl base) = 2 ^ d - 1 :=
-  toffoli_unaryQROMAt pos W T addrBase ancBase d ctrl base
+    EGate.toffoli (unaryQROMAt pos W T addrBase ancBase d ctrl base) = 2 ^ d - 1
+    ∧ (∀ (f : Nat → Bool) (i : Nat), i < d →
+        EGate.applyNat (unaryQROMAt pos W T addrBase ancBase d ctrl base) f (ancBase + i) = false) :=
+  ⟨toffoli_unaryQROMAt pos W T addrBase ancBase d ctrl base,
+   fun f i hi => unaryQROMAt_anc_cleared pos W T addrBase ancBase d ctrl base f i hi⟩
 
 /-! ## The faithful-gadget WITNESSES — the counts above ride circuits that compute
     the correct arithmetic value (not bare `Nat` defs). -/
@@ -79,6 +88,9 @@ theorem cainxu_E9_lookup_read_toffoli
 -- E4 controlled adder value: target = (if ctrl then a+b else b) % 2^bits.
 #check @gidneyAdderMeasuredControlled_correct
 #check @gidneyAdderMeasuredControlled_target_val
+-- E9 lookup value: selects word `T (l)` under the address-disjointness contract, ancilla cleared.
+#check @unaryQROMAt_selects_word
+#check @unaryQROMAt_anc_cleared
 
 /-
   ════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,34 @@
+DEVICE-PROGRAM 1.0;
+// adder-2bit BAD: two merge blocks in parallel (exceeds gate2q capacity 1)  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[2,3)us  PHYS  gate2q             q[50],q[100] gate=CNOT
+[3,4)us  PHYS  measure            q[100] basis=Z
+[4,5)us  SYS   decode_syndrome    round=0
+[5,6)us  SYS   request_ancilla    q[100]
+[6,7)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[7,8)us  PHYS  gate2q             q[50],q[100] gate=CNOT
+[8,9)us  PHYS  measure            q[100] basis=Z
+[9,10)us  SYS   decode_syndrome    round=1
+[10,11)us  SYS   request_ancilla    q[100]
+[11,12)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[12,13)us  PHYS  gate2q             q[50],q[100] gate=CNOT
+[13,14)us  PHYS  measure            q[100] basis=Z
+[14,15)us  SYS   decode_syndrome    round=2
+[15,16)us  SYS   pauli_frame_update corr=0
+[0,1)us  SYS   request_ancilla    q[101]
+[1,2)us  PHYS  gate2q             q[10],q[101] gate=CNOT
+[2,3)us  PHYS  gate2q             q[60],q[101] gate=CNOT
+[3,4)us  PHYS  measure            q[101] basis=Z
+[4,5)us  SYS   decode_syndrome    round=10
+[5,6)us  SYS   request_ancilla    q[101]
+[6,7)us  PHYS  gate2q             q[10],q[101] gate=CNOT
+[7,8)us  PHYS  gate2q             q[60],q[101] gate=CNOT
+[8,9)us  PHYS  measure            q[101] basis=Z
+[9,10)us  SYS   decode_syndrome    round=11
+[10,11)us  SYS   request_ancilla    q[101]
+[11,12)us  PHYS  gate2q             q[10],q[101] gate=CNOT
+[12,13)us  PHYS  gate2q             q[60],q[101] gate=CNOT
+[13,14)us  PHYS  measure            q[101] basis=Z
+[14,15)us  SYS   decode_syndrome    round=12
+[15,16)us  SYS   pauli_frame_update corr=10

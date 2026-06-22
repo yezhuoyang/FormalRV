@@ -86,6 +86,21 @@ theorem bornWeightOn_nonneg {dim : Nat} (s : QState dim) (B : Finset (Fin dim)) 
     0 ≤ bornWeightOn s B :=
   Finset.sum_nonneg (fun _ _ => Complex.normSq_nonneg _)
 
+/-- **Born-weight subadditivity over a union.**  `bornWeightOn s (A ∪ B) ≤
+    bornWeightOn s A + bornWeightOn s B` — inclusion–exclusion, dropping the
+    nonnegative `A ∩ B` overlap term.  This is the bare-`bornWeightOn` analogue of
+    `PhaseMarginalOracle.dataBornMass_union_le` (which composes through `jointIdx`),
+    and the doubling engine for a bad set assembled as a UNION of per-pass wrap
+    sets (e.g. the two-register in-place multiplier's forward ∪ reverse legs). -/
+theorem bornWeightOn_union_le {dim : Nat} (s : QState dim) (A B : Finset (Fin dim)) :
+    bornWeightOn s (A ∪ B) ≤ bornWeightOn s A + bornWeightOn s B := by
+  unfold bornWeightOn
+  have hui := Finset.sum_union_inter (s₁ := A) (s₂ := B)
+    (f := fun i => Complex.normSq (s i 0))
+  have hin : (0 : ℝ) ≤ ∑ i ∈ A ∩ B, Complex.normSq (s i 0) :=
+    Finset.sum_nonneg (fun _ _ => Complex.normSq_nonneg _)
+  linarith
+
 /-- **Agree-off collapses the L1 sum to the bad set.**  If `s₁` and `s₂` agree
     entrywise off `B`, then `normSqDist s₁ s₂ = ∑_{i∈B} |‖s₁ᵢ‖²−‖s₂ᵢ‖²|`. -/
 theorem normSqDist_eq_sum_on_bad {dim : Nat} (s₁ s₂ : QState dim)

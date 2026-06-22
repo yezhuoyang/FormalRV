@@ -5,13 +5,13 @@
   arbitrary layout.  Run: `lake env lean --run scripts/EmitSysCallSchedule.lean`.
   Output: PyCircuits/syscalls/{ppm_block,adder}.txt  (ZONE lines + one SysCall per line).
 -/
-import FormalRV.System.AdderSystem
+import FormalRV.System.Examples.AdderSystem
 
 open FormalRV.Framework
-open FormalRV.Framework.Architecture
-open FormalRV.Framework.ScheduleInv
-open FormalRV.Framework.SurgeryGadgetToSysCalls
-open FormalRV.Framework.AdderSystem
+open FormalRV.System.Architecture
+open FormalRV.System.ScheduleInv
+open FormalRV.System.SurgeryGadgetToSysCalls
+open FormalRV.System.AdderSystem
 
 def kindStr : SysCallKind → String
   | .Gate1q q _            => s!"GATE1Q {q}"

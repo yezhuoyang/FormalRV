@@ -12,7 +12,7 @@ import FormalRV.PPM.CircuitToPPMInterface
 
 open FormalRV.Framework
 open FormalRV.Framework.Gate
-open FormalRV.Framework.Architecture
+open FormalRV.System.Architecture
 open FormalRV.Framework.CircuitToPPMInterface
 open FormalRV.BQAlgo
 

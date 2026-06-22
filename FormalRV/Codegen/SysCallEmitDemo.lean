@@ -9,7 +9,7 @@
   (`Codegen/SysCallEmit.lean`, `System/SystemInvariantExamples.lean`); this file only renders them.
 -/
 import FormalRV.Codegen.SysCallEmit
-import FormalRV.System.SystemInvariantExamples
+import FormalRV.System.Examples.SystemInvariantExamples
 
 open FormalRV.Codegen.SysCallEmit
 open FormalRV.System.SystemInvariantExamples

@@ -23,15 +23,13 @@
   a specific code family + subthreshold formula, which is the
   implementer's responsibility.
 
-  Concretely: the implementer supplies `HardwareErrorParams`
-  with per-syscall error rates already computed; the framework
-  composes them via union bound.
+  Concretely: the implementer supplies per-syscall error rates
+  already computed; the framework composes them via union bound.
 
   No Mathlib dependency; pure Nat for `decide`.
 -/
 
 import FormalRV.Framework.L4_QECCode
-import FormalRV.System.HardwareErrorParams
 
 namespace FormalRV.Framework
 

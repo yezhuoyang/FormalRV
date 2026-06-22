@@ -13,13 +13,41 @@
   Rendering is a syntactic serialization; the schedule's MEANING (timing, conflicts, the wait law,
   the I1–I4 invariants) is what `System.DeviceSchedule` / `ScheduleInvariantsExplicit` verify.
 -/
-import FormalRV.System.Architecture
+import FormalRV.System.Core.Architecture
 
 namespace FormalRV.Codegen.SysCallEmit
 
-open FormalRV.Framework.Architecture
+open FormalRV.System.Architecture
 
 def qref (q : Nat) : String := "q[" ++ toString q ++ "]"
+
+/-! ## Canonical gate / basis name tables
+
+    The DEVICE-PROGRAM syntax is EXPLICIT about which gate an op is
+    (`gate=CNOT`, never an opaque numeral): the checkers verify both that
+    the named gate is SUPPORTED by the backend and that its declared time
+    matches the hardware gate table.  These tables are the single source
+    of truth for the numeric-id ↔ name correspondence used by the emitter,
+    the Lean parser (`Codegen/DeviceProgramParse`), and (by name) the
+    FTQ-VM's gate tables. -/
+
+/-- Canonical two-qubit gate names, indexed by `gate_id`. -/
+def gate2qNames : List String := ["CNOT", "CZ", "SWAP", "XX", "ZZ"]
+
+/-- Canonical single-qubit gate names, indexed by `gate_id`. -/
+def gate1qNames : List String := ["X", "Y", "Z", "H", "S", "T", "Sdg", "Tdg"]
+
+/-- Canonical measurement basis names, indexed by `basis`. -/
+def basisNames : List String := ["Z", "X", "Y"]
+
+def gate2qName (g : Nat) : String := (gate2qNames[g]?).getD s!"G2_{g}"
+def gate1qName (g : Nat) : String := (gate1qNames[g]?).getD s!"G1_{g}"
+def basisName  (b : Nat) : String := (basisNames[b]?).getD s!"B_{b}"
+
+/-- Inverse lookups (used by the parser; `none` = unknown name). -/
+def gate2qIdOf (s : String) : Option Nat := gate2qNames.idxOf? s
+def gate1qIdOf (s : String) : Option Nat := gate1qNames.idxOf? s
+def basisIdOf  (s : String) : Option Nat := basisNames.idxOf? s
 
 /-- Is a SysCall a PHYSICAL operation or a SYSTEM call? -/
 def categoryOf : SysCallKind → String
@@ -32,13 +60,15 @@ def categoryOf : SysCallKind → String
   | .DecodeSyndrome _      => "SYS "
   | .PauliFrameUpdate _    => "SYS "
 
-/-- Render one SysCall's operation. -/
+/-- Render one SysCall's operation.  Gates and bases are rendered by NAME
+    (`gate=CNOT`, `basis=Z`) and the ancilla request names its exact qubit
+    (`request_ancilla q[100]`) — explicit, checkable syntax. -/
 def renderKind : SysCallKind → String
-  | .Gate1q q g            => "gate1q             " ++ qref q ++ " gate=" ++ toString g
-  | .Gate2q a b g          => "gate2q             " ++ qref a ++ "," ++ qref b ++ " gate=" ++ toString g
-  | .Measure q bas         => "measure            " ++ qref q ++ " basis=" ++ toString bas
+  | .Gate1q q g            => "gate1q             " ++ qref q ++ " gate=" ++ gate1qName g
+  | .Gate2q a b g          => "gate2q             " ++ qref a ++ "," ++ qref b ++ " gate=" ++ gate2qName g
+  | .Measure q bas         => "measure            " ++ qref q ++ " basis=" ++ basisName bas
   | .TransitQubit q c      => "transit            " ++ qref q ++ " via channel=" ++ toString c
-  | .RequestFreshAncilla z => "request_ancilla    zone=" ++ toString z
+  | .RequestFreshAncilla site => "request_ancilla    " ++ qref site
   | .RequestMagicState z   => "request_magic      factory=" ++ toString z
   | .DecodeSyndrome r      => "decode_syndrome    round=" ++ toString r
   | .PauliFrameUpdate c    => "pauli_frame_update corr=" ++ toString c

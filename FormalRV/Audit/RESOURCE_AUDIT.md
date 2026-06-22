@@ -13,13 +13,22 @@ optimal (not a paper error); `PAPER ERROR` = the paper's own equation is interna
 
 ---
 
-## ⚠️ Genuine paper arithmetic errors (the only announceable ones)
+## ⚠️ Genuine paper arithmetic errors
+
+**MACHINE-CHECKED** (a `decide`/`native_decide` refutation on named paper-claim constants — the only
+`✅`-grade announceable errors):
 
 | Paper | Equation | Paper says | Correct | How found |
 |---|---|---|---|---|
-| **Cain–Xu 2026** | E10 `τ_Toff` (RSA, space-eff) | `0.5·25 + 0.5·71 ≈ 43 τ_s` | **`= 48 τ_s`** (11.6% low) | `decide`-refuted, `PaperClaims` |
-| **Cain–Xu 2026** | E7/E9 lookup split | `⌈q_w/(k_p−3)⌉` (prose) **vs** `⌈q_w/(k_p−1)⌉` (Eq E9) | `k_p−3` (geometry) | self-contradiction |
-| **GE2021** | l.712 per-lookup term | `2^{g_exp+g_pad}` | **`2^{g_exp+g_mul}=2^10`** | typo; our model uses the fix |
+| **Cain–Xu 2026** | E10 `τ_Toff` (RSA, space-eff) | `0.5·25 + 0.5·71 ≈ 43 τ_s` | **`= 48 τ_s`** (11.6% low) | `decide`-refuted, `PaperClaims.lean` (`example`, "The E10 refutation") |
+
+**PROSE OBSERVATIONS** (un-formalized — NOT machine-checked; a reader should treat these as
+narrative findings, not `decide`-grade proofs):
+
+| Paper | Equation | Paper says | Correct | How found |
+|---|---|---|---|---|
+| **Cain–Xu 2026** | E7/E9 lookup split | `⌈q_w/(k_p−3)⌉` (prose) **vs** `⌈q_w/(k_p−1)⌉` (Eq E9) | `k_p−3` (geometry) | self-contradiction — **prose only, no `decide`** |
+| **GE2021** | l.712 per-lookup term | `2^{g_exp+g_pad}` | **`2^{g_exp+g_mul}=2^10`** | typo; our model uses the fix — **prose only** |
 | **Gidney 2025** | — | (none in the verified simple form) | | |
 | **Pinnacle** | — | (none) | | |
 
@@ -75,7 +84,7 @@ Faithful re-audit: `Audit/CainXu2026/L2_ArithmeticFaithful.lean` (on the verifie
 
 ## Gidney 2025 (2505.15917) — CFS approximate-residue arithmetic (NOT windowed modexp)
 
-`Audit/Gidney2025/CFS/` (11 modules) verifies the **simple residue form** end-to-end. The
+`Shor/CFS/` (11 modules) verifies the **simple residue form** end-to-end. The
 **optimized** algorithm (whose `6.5e9`-Toffoli / `<1M`-qubit numbers are the headline)
 needs three gadgets we don't yet have.
 
@@ -87,7 +96,7 @@ needs three gadgets we don't yet have.
 | Truncation deviation | `\|P\|·ℓ·2^{-f}` | `modDev_truncAcc_normalized` | **VERIFIED** | — |
 | Approx. periodicity | `Δ_N ≤ 2ε` | `approx_periodic` | **VERIFIED** | — |
 | Ekerå–Håstad recovery | `d = p+q−2` | `ekera_hastad_recovery` | **VERIFIED** | — |
-| **dlog reduction** | `S_p = Σ D_{p,k}·e_k → V_p = g_p^{S_p} mod p` | **MISSING** | ⬜ GAP | the optimized arithmetic's defining step (audit models the controlled-MULTIPLY form, not the addition form) |
+| **dlog reduction** | `S_p = Σ D_{p,k}·e_k → V_p = g_p^{S_p} mod p` | `dlog_reduction_eq_residueAccumulate` (`CFS/DiscreteLogReduction.lean`) | ◑ VALUE-level CLOSED | the optimized arithmetic's defining step is proven EQUAL to the verified residue accumulate at the Nat/ZMod value level; CIRCUIT-level (a single Gate of the addition form with its own count) still ⬜ GAP |
 | **PHASEUP** | Berry `√(2^w)` amplitude negation | **MISSING** | ⬜ GAP | unmodeled (shared w/ Pinnacle) |
 | **2.5n modular adder** | subtract-with-underflow + lookup fixup | have the wrong 5× construction | ⬜ GAP | mechanism + cost mismatch |
 | `6.5e9` Toffoli total | grid-scan output | not derived from per-gadget × iterations | ⬜ GAP | needs the 3 above |

@@ -1,0 +1,602 @@
+DEVICE-PROGRAM 1.0;
+// ge2021-probe {backend=ge2021} d=27 W2 output: X-merge + CCZ injection + Z-merge, tau_s=27  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[6200]
+[1,2)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[2,3)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[3,4)us  PHYS  measure            q[6200] basis=Z
+[4,5)us  SYS   decode_syndrome    round=0
+[5,6)us  SYS   request_ancilla    q[6200]
+[6,7)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[7,8)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[8,9)us  PHYS  measure            q[6200] basis=Z
+[9,10)us  SYS   decode_syndrome    round=1
+[10,11)us  SYS   request_ancilla    q[6200]
+[11,12)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[12,13)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[13,14)us  PHYS  measure            q[6200] basis=Z
+[14,15)us  SYS   decode_syndrome    round=2
+[15,16)us  SYS   request_ancilla    q[6200]
+[16,17)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[17,18)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[18,19)us  PHYS  measure            q[6200] basis=Z
+[19,20)us  SYS   decode_syndrome    round=3
+[20,21)us  SYS   request_ancilla    q[6200]
+[21,22)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[22,23)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[23,24)us  PHYS  measure            q[6200] basis=Z
+[24,25)us  SYS   decode_syndrome    round=4
+[25,26)us  SYS   request_ancilla    q[6200]
+[26,27)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[27,28)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[28,29)us  PHYS  measure            q[6200] basis=Z
+[29,30)us  SYS   decode_syndrome    round=5
+[30,31)us  SYS   request_ancilla    q[6200]
+[31,32)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[32,33)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[33,34)us  PHYS  measure            q[6200] basis=Z
+[34,35)us  SYS   decode_syndrome    round=6
+[35,36)us  SYS   request_ancilla    q[6200]
+[36,37)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[37,38)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[38,39)us  PHYS  measure            q[6200] basis=Z
+[39,40)us  SYS   decode_syndrome    round=7
+[40,41)us  SYS   request_ancilla    q[6200]
+[41,42)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[42,43)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[43,44)us  PHYS  measure            q[6200] basis=Z
+[44,45)us  SYS   decode_syndrome    round=8
+[45,46)us  SYS   request_ancilla    q[6200]
+[46,47)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[47,48)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[48,49)us  PHYS  measure            q[6200] basis=Z
+[49,50)us  SYS   decode_syndrome    round=9
+[50,51)us  SYS   request_ancilla    q[6200]
+[51,52)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[52,53)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[53,54)us  PHYS  measure            q[6200] basis=Z
+[54,55)us  SYS   decode_syndrome    round=10
+[55,56)us  SYS   request_ancilla    q[6200]
+[56,57)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[57,58)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[58,59)us  PHYS  measure            q[6200] basis=Z
+[59,60)us  SYS   decode_syndrome    round=11
+[60,61)us  SYS   request_ancilla    q[6200]
+[61,62)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[62,63)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[63,64)us  PHYS  measure            q[6200] basis=Z
+[64,65)us  SYS   decode_syndrome    round=12
+[65,66)us  SYS   request_ancilla    q[6200]
+[66,67)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[67,68)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[68,69)us  PHYS  measure            q[6200] basis=Z
+[69,70)us  SYS   decode_syndrome    round=13
+[70,71)us  SYS   request_ancilla    q[6200]
+[71,72)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[72,73)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[73,74)us  PHYS  measure            q[6200] basis=Z
+[74,75)us  SYS   decode_syndrome    round=14
+[75,76)us  SYS   request_ancilla    q[6200]
+[76,77)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[77,78)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[78,79)us  PHYS  measure            q[6200] basis=Z
+[79,80)us  SYS   decode_syndrome    round=15
+[80,81)us  SYS   request_ancilla    q[6200]
+[81,82)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[82,83)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[83,84)us  PHYS  measure            q[6200] basis=Z
+[84,85)us  SYS   decode_syndrome    round=16
+[85,86)us  SYS   request_ancilla    q[6200]
+[86,87)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[87,88)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[88,89)us  PHYS  measure            q[6200] basis=Z
+[89,90)us  SYS   decode_syndrome    round=17
+[90,91)us  SYS   request_ancilla    q[6200]
+[91,92)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[92,93)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[93,94)us  PHYS  measure            q[6200] basis=Z
+[94,95)us  SYS   decode_syndrome    round=18
+[95,96)us  SYS   request_ancilla    q[6200]
+[96,97)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[97,98)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[98,99)us  PHYS  measure            q[6200] basis=Z
+[99,100)us  SYS   decode_syndrome    round=19
+[100,101)us  SYS   request_ancilla    q[6200]
+[101,102)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[102,103)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[103,104)us  PHYS  measure            q[6200] basis=Z
+[104,105)us  SYS   decode_syndrome    round=20
+[105,106)us  SYS   request_ancilla    q[6200]
+[106,107)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[107,108)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[108,109)us  PHYS  measure            q[6200] basis=Z
+[109,110)us  SYS   decode_syndrome    round=21
+[110,111)us  SYS   request_ancilla    q[6200]
+[111,112)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[112,113)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[113,114)us  PHYS  measure            q[6200] basis=Z
+[114,115)us  SYS   decode_syndrome    round=22
+[115,116)us  SYS   request_ancilla    q[6200]
+[116,117)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[117,118)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[118,119)us  PHYS  measure            q[6200] basis=Z
+[119,120)us  SYS   decode_syndrome    round=23
+[120,121)us  SYS   request_ancilla    q[6200]
+[121,122)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[122,123)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[123,124)us  PHYS  measure            q[6200] basis=Z
+[124,125)us  SYS   decode_syndrome    round=24
+[125,126)us  SYS   request_ancilla    q[6200]
+[126,127)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[127,128)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[128,129)us  PHYS  measure            q[6200] basis=Z
+[129,130)us  SYS   decode_syndrome    round=25
+[130,131)us  SYS   request_ancilla    q[6200]
+[131,132)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[132,133)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[133,134)us  PHYS  measure            q[6200] basis=Z
+[134,135)us  SYS   decode_syndrome    round=26
+[135,136)us  SYS   pauli_frame_update corr=0
+[136,137)us  SYS   request_magic      factory=0
+[137,138)us  SYS   request_ancilla    q[6200]
+[138,139)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[139,140)us  PHYS  measure            q[6200] basis=Z
+[140,141)us  SYS   decode_syndrome    round=27
+[141,142)us  SYS   request_ancilla    q[6200]
+[142,143)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[143,144)us  PHYS  measure            q[6200] basis=Z
+[144,145)us  SYS   decode_syndrome    round=28
+[145,146)us  SYS   request_ancilla    q[6200]
+[146,147)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[147,148)us  PHYS  measure            q[6200] basis=Z
+[148,149)us  SYS   decode_syndrome    round=29
+[149,150)us  SYS   request_ancilla    q[6200]
+[150,151)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[151,152)us  PHYS  measure            q[6200] basis=Z
+[152,153)us  SYS   decode_syndrome    round=30
+[153,154)us  SYS   request_ancilla    q[6200]
+[154,155)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[155,156)us  PHYS  measure            q[6200] basis=Z
+[156,157)us  SYS   decode_syndrome    round=31
+[157,158)us  SYS   request_ancilla    q[6200]
+[158,159)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[159,160)us  PHYS  measure            q[6200] basis=Z
+[160,161)us  SYS   decode_syndrome    round=32
+[161,162)us  SYS   request_ancilla    q[6200]
+[162,163)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[163,164)us  PHYS  measure            q[6200] basis=Z
+[164,165)us  SYS   decode_syndrome    round=33
+[165,166)us  SYS   request_ancilla    q[6200]
+[166,167)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[167,168)us  PHYS  measure            q[6200] basis=Z
+[168,169)us  SYS   decode_syndrome    round=34
+[169,170)us  SYS   request_ancilla    q[6200]
+[170,171)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[171,172)us  PHYS  measure            q[6200] basis=Z
+[172,173)us  SYS   decode_syndrome    round=35
+[173,174)us  SYS   request_ancilla    q[6200]
+[174,175)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[175,176)us  PHYS  measure            q[6200] basis=Z
+[176,177)us  SYS   decode_syndrome    round=36
+[177,178)us  SYS   request_ancilla    q[6200]
+[178,179)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[179,180)us  PHYS  measure            q[6200] basis=Z
+[180,181)us  SYS   decode_syndrome    round=37
+[181,182)us  SYS   request_ancilla    q[6200]
+[182,183)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[183,184)us  PHYS  measure            q[6200] basis=Z
+[184,185)us  SYS   decode_syndrome    round=38
+[185,186)us  SYS   request_ancilla    q[6200]
+[186,187)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[187,188)us  PHYS  measure            q[6200] basis=Z
+[188,189)us  SYS   decode_syndrome    round=39
+[189,190)us  SYS   request_ancilla    q[6200]
+[190,191)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[191,192)us  PHYS  measure            q[6200] basis=Z
+[192,193)us  SYS   decode_syndrome    round=40
+[193,194)us  SYS   request_ancilla    q[6200]
+[194,195)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[195,196)us  PHYS  measure            q[6200] basis=Z
+[196,197)us  SYS   decode_syndrome    round=41
+[197,198)us  SYS   request_ancilla    q[6200]
+[198,199)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[199,200)us  PHYS  measure            q[6200] basis=Z
+[200,201)us  SYS   decode_syndrome    round=42
+[201,202)us  SYS   request_ancilla    q[6200]
+[202,203)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[203,204)us  PHYS  measure            q[6200] basis=Z
+[204,205)us  SYS   decode_syndrome    round=43
+[205,206)us  SYS   request_ancilla    q[6200]
+[206,207)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[207,208)us  PHYS  measure            q[6200] basis=Z
+[208,209)us  SYS   decode_syndrome    round=44
+[209,210)us  SYS   request_ancilla    q[6200]
+[210,211)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[211,212)us  PHYS  measure            q[6200] basis=Z
+[212,213)us  SYS   decode_syndrome    round=45
+[213,214)us  SYS   request_ancilla    q[6200]
+[214,215)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[215,216)us  PHYS  measure            q[6200] basis=Z
+[216,217)us  SYS   decode_syndrome    round=46
+[217,218)us  SYS   request_ancilla    q[6200]
+[218,219)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[219,220)us  PHYS  measure            q[6200] basis=Z
+[220,221)us  SYS   decode_syndrome    round=47
+[221,222)us  SYS   request_ancilla    q[6200]
+[222,223)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[223,224)us  PHYS  measure            q[6200] basis=Z
+[224,225)us  SYS   decode_syndrome    round=48
+[225,226)us  SYS   request_ancilla    q[6200]
+[226,227)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[227,228)us  PHYS  measure            q[6200] basis=Z
+[228,229)us  SYS   decode_syndrome    round=49
+[229,230)us  SYS   request_ancilla    q[6200]
+[230,231)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[231,232)us  PHYS  measure            q[6200] basis=Z
+[232,233)us  SYS   decode_syndrome    round=50
+[233,234)us  SYS   request_ancilla    q[6200]
+[234,235)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[235,236)us  PHYS  measure            q[6200] basis=Z
+[236,237)us  SYS   decode_syndrome    round=51
+[237,238)us  SYS   request_ancilla    q[6200]
+[238,239)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[239,240)us  PHYS  measure            q[6200] basis=Z
+[240,241)us  SYS   decode_syndrome    round=52
+[241,242)us  SYS   request_ancilla    q[6200]
+[242,243)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[243,244)us  PHYS  measure            q[6200] basis=Z
+[244,245)us  SYS   decode_syndrome    round=53
+[245,246)us  SYS   pauli_frame_update corr=27
+[246,247)us  SYS   request_ancilla    q[6200]
+[247,248)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[248,249)us  PHYS  measure            q[6200] basis=Z
+[249,250)us  SYS   decode_syndrome    round=54
+[250,251)us  SYS   request_ancilla    q[6200]
+[251,252)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[252,253)us  PHYS  measure            q[6200] basis=Z
+[253,254)us  SYS   decode_syndrome    round=55
+[254,255)us  SYS   request_ancilla    q[6200]
+[255,256)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[256,257)us  PHYS  measure            q[6200] basis=Z
+[257,258)us  SYS   decode_syndrome    round=56
+[258,259)us  SYS   request_ancilla    q[6200]
+[259,260)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[260,261)us  PHYS  measure            q[6200] basis=Z
+[261,262)us  SYS   decode_syndrome    round=57
+[262,263)us  SYS   request_ancilla    q[6200]
+[263,264)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[264,265)us  PHYS  measure            q[6200] basis=Z
+[265,266)us  SYS   decode_syndrome    round=58
+[266,267)us  SYS   request_ancilla    q[6200]
+[267,268)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[268,269)us  PHYS  measure            q[6200] basis=Z
+[269,270)us  SYS   decode_syndrome    round=59
+[270,271)us  SYS   request_ancilla    q[6200]
+[271,272)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[272,273)us  PHYS  measure            q[6200] basis=Z
+[273,274)us  SYS   decode_syndrome    round=60
+[274,275)us  SYS   request_ancilla    q[6200]
+[275,276)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[276,277)us  PHYS  measure            q[6200] basis=Z
+[277,278)us  SYS   decode_syndrome    round=61
+[278,279)us  SYS   request_ancilla    q[6200]
+[279,280)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[280,281)us  PHYS  measure            q[6200] basis=Z
+[281,282)us  SYS   decode_syndrome    round=62
+[282,283)us  SYS   request_ancilla    q[6200]
+[283,284)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[284,285)us  PHYS  measure            q[6200] basis=Z
+[285,286)us  SYS   decode_syndrome    round=63
+[286,287)us  SYS   request_ancilla    q[6200]
+[287,288)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[288,289)us  PHYS  measure            q[6200] basis=Z
+[289,290)us  SYS   decode_syndrome    round=64
+[290,291)us  SYS   request_ancilla    q[6200]
+[291,292)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[292,293)us  PHYS  measure            q[6200] basis=Z
+[293,294)us  SYS   decode_syndrome    round=65
+[294,295)us  SYS   request_ancilla    q[6200]
+[295,296)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[296,297)us  PHYS  measure            q[6200] basis=Z
+[297,298)us  SYS   decode_syndrome    round=66
+[298,299)us  SYS   request_ancilla    q[6200]
+[299,300)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[300,301)us  PHYS  measure            q[6200] basis=Z
+[301,302)us  SYS   decode_syndrome    round=67
+[302,303)us  SYS   request_ancilla    q[6200]
+[303,304)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[304,305)us  PHYS  measure            q[6200] basis=Z
+[305,306)us  SYS   decode_syndrome    round=68
+[306,307)us  SYS   request_ancilla    q[6200]
+[307,308)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[308,309)us  PHYS  measure            q[6200] basis=Z
+[309,310)us  SYS   decode_syndrome    round=69
+[310,311)us  SYS   request_ancilla    q[6200]
+[311,312)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[312,313)us  PHYS  measure            q[6200] basis=Z
+[313,314)us  SYS   decode_syndrome    round=70
+[314,315)us  SYS   request_ancilla    q[6200]
+[315,316)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[316,317)us  PHYS  measure            q[6200] basis=Z
+[317,318)us  SYS   decode_syndrome    round=71
+[318,319)us  SYS   request_ancilla    q[6200]
+[319,320)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[320,321)us  PHYS  measure            q[6200] basis=Z
+[321,322)us  SYS   decode_syndrome    round=72
+[322,323)us  SYS   request_ancilla    q[6200]
+[323,324)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[324,325)us  PHYS  measure            q[6200] basis=Z
+[325,326)us  SYS   decode_syndrome    round=73
+[326,327)us  SYS   request_ancilla    q[6200]
+[327,328)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[328,329)us  PHYS  measure            q[6200] basis=Z
+[329,330)us  SYS   decode_syndrome    round=74
+[330,331)us  SYS   request_ancilla    q[6200]
+[331,332)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[332,333)us  PHYS  measure            q[6200] basis=Z
+[333,334)us  SYS   decode_syndrome    round=75
+[334,335)us  SYS   request_ancilla    q[6200]
+[335,336)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[336,337)us  PHYS  measure            q[6200] basis=Z
+[337,338)us  SYS   decode_syndrome    round=76
+[338,339)us  SYS   request_ancilla    q[6200]
+[339,340)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[340,341)us  PHYS  measure            q[6200] basis=Z
+[341,342)us  SYS   decode_syndrome    round=77
+[342,343)us  SYS   request_ancilla    q[6200]
+[343,344)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[344,345)us  PHYS  measure            q[6200] basis=Z
+[345,346)us  SYS   decode_syndrome    round=78
+[346,347)us  SYS   request_ancilla    q[6200]
+[347,348)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[348,349)us  PHYS  measure            q[6200] basis=Z
+[349,350)us  SYS   decode_syndrome    round=79
+[350,351)us  SYS   request_ancilla    q[6200]
+[351,352)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[352,353)us  PHYS  measure            q[6200] basis=Z
+[353,354)us  SYS   decode_syndrome    round=80
+[354,355)us  SYS   pauli_frame_update corr=54
+[355,356)us  SYS   request_ancilla    q[6200]
+[356,357)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[357,358)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[358,359)us  PHYS  measure            q[6200] basis=Z
+[359,360)us  SYS   decode_syndrome    round=81
+[360,361)us  SYS   request_ancilla    q[6200]
+[361,362)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[362,363)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[363,364)us  PHYS  measure            q[6200] basis=Z
+[364,365)us  SYS   decode_syndrome    round=82
+[365,366)us  SYS   request_ancilla    q[6200]
+[366,367)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[367,368)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[368,369)us  PHYS  measure            q[6200] basis=Z
+[369,370)us  SYS   decode_syndrome    round=83
+[370,371)us  SYS   request_ancilla    q[6200]
+[371,372)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[372,373)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[373,374)us  PHYS  measure            q[6200] basis=Z
+[374,375)us  SYS   decode_syndrome    round=84
+[375,376)us  SYS   request_ancilla    q[6200]
+[376,377)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[377,378)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[378,379)us  PHYS  measure            q[6200] basis=Z
+[379,380)us  SYS   decode_syndrome    round=85
+[380,381)us  SYS   request_ancilla    q[6200]
+[381,382)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[382,383)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[383,384)us  PHYS  measure            q[6200] basis=Z
+[384,385)us  SYS   decode_syndrome    round=86
+[385,386)us  SYS   request_ancilla    q[6200]
+[386,387)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[387,388)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[388,389)us  PHYS  measure            q[6200] basis=Z
+[389,390)us  SYS   decode_syndrome    round=87
+[390,391)us  SYS   request_ancilla    q[6200]
+[391,392)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[392,393)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[393,394)us  PHYS  measure            q[6200] basis=Z
+[394,395)us  SYS   decode_syndrome    round=88
+[395,396)us  SYS   request_ancilla    q[6200]
+[396,397)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[397,398)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[398,399)us  PHYS  measure            q[6200] basis=Z
+[399,400)us  SYS   decode_syndrome    round=89
+[400,401)us  SYS   request_ancilla    q[6200]
+[401,402)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[402,403)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[403,404)us  PHYS  measure            q[6200] basis=Z
+[404,405)us  SYS   decode_syndrome    round=90
+[405,406)us  SYS   request_ancilla    q[6200]
+[406,407)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[407,408)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[408,409)us  PHYS  measure            q[6200] basis=Z
+[409,410)us  SYS   decode_syndrome    round=91
+[410,411)us  SYS   request_ancilla    q[6200]
+[411,412)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[412,413)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[413,414)us  PHYS  measure            q[6200] basis=Z
+[414,415)us  SYS   decode_syndrome    round=92
+[415,416)us  SYS   request_ancilla    q[6200]
+[416,417)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[417,418)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[418,419)us  PHYS  measure            q[6200] basis=Z
+[419,420)us  SYS   decode_syndrome    round=93
+[420,421)us  SYS   request_ancilla    q[6200]
+[421,422)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[422,423)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[423,424)us  PHYS  measure            q[6200] basis=Z
+[424,425)us  SYS   decode_syndrome    round=94
+[425,426)us  SYS   request_ancilla    q[6200]
+[426,427)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[427,428)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[428,429)us  PHYS  measure            q[6200] basis=Z
+[429,430)us  SYS   decode_syndrome    round=95
+[430,431)us  SYS   request_ancilla    q[6200]
+[431,432)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[432,433)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[433,434)us  PHYS  measure            q[6200] basis=Z
+[434,435)us  SYS   decode_syndrome    round=96
+[435,436)us  SYS   request_ancilla    q[6200]
+[436,437)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[437,438)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[438,439)us  PHYS  measure            q[6200] basis=Z
+[439,440)us  SYS   decode_syndrome    round=97
+[440,441)us  SYS   request_ancilla    q[6200]
+[441,442)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[442,443)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[443,444)us  PHYS  measure            q[6200] basis=Z
+[444,445)us  SYS   decode_syndrome    round=98
+[445,446)us  SYS   request_ancilla    q[6200]
+[446,447)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[447,448)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[448,449)us  PHYS  measure            q[6200] basis=Z
+[449,450)us  SYS   decode_syndrome    round=99
+[450,451)us  SYS   request_ancilla    q[6200]
+[451,452)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[452,453)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[453,454)us  PHYS  measure            q[6200] basis=Z
+[454,455)us  SYS   decode_syndrome    round=100
+[455,456)us  SYS   request_ancilla    q[6200]
+[456,457)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[457,458)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[458,459)us  PHYS  measure            q[6200] basis=Z
+[459,460)us  SYS   decode_syndrome    round=101
+[460,461)us  SYS   request_ancilla    q[6200]
+[461,462)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[462,463)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[463,464)us  PHYS  measure            q[6200] basis=Z
+[464,465)us  SYS   decode_syndrome    round=102
+[465,466)us  SYS   request_ancilla    q[6200]
+[466,467)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[467,468)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[468,469)us  PHYS  measure            q[6200] basis=Z
+[469,470)us  SYS   decode_syndrome    round=103
+[470,471)us  SYS   request_ancilla    q[6200]
+[471,472)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[472,473)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[473,474)us  PHYS  measure            q[6200] basis=Z
+[474,475)us  SYS   decode_syndrome    round=104
+[475,476)us  SYS   request_ancilla    q[6200]
+[476,477)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[477,478)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[478,479)us  PHYS  measure            q[6200] basis=Z
+[479,480)us  SYS   decode_syndrome    round=105
+[480,481)us  SYS   request_ancilla    q[6200]
+[481,482)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[482,483)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[483,484)us  PHYS  measure            q[6200] basis=Z
+[484,485)us  SYS   decode_syndrome    round=106
+[485,486)us  SYS   request_ancilla    q[6200]
+[486,487)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[487,488)us  PHYS  gate2q             q[1],q[6200] gate=CNOT
+[488,489)us  PHYS  measure            q[6200] basis=Z
+[489,490)us  SYS   decode_syndrome    round=107
+[490,491)us  SYS   pauli_frame_update corr=81
+[491,492)us  SYS   request_ancilla    q[6200]
+[492,493)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[493,494)us  PHYS  measure            q[6200] basis=Z
+[494,495)us  SYS   decode_syndrome    round=108
+[495,496)us  SYS   request_ancilla    q[6200]
+[496,497)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[497,498)us  PHYS  measure            q[6200] basis=Z
+[498,499)us  SYS   decode_syndrome    round=109
+[499,500)us  SYS   request_ancilla    q[6200]
+[500,501)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[501,502)us  PHYS  measure            q[6200] basis=Z
+[502,503)us  SYS   decode_syndrome    round=110
+[503,504)us  SYS   request_ancilla    q[6200]
+[504,505)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[505,506)us  PHYS  measure            q[6200] basis=Z
+[506,507)us  SYS   decode_syndrome    round=111
+[507,508)us  SYS   request_ancilla    q[6200]
+[508,509)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[509,510)us  PHYS  measure            q[6200] basis=Z
+[510,511)us  SYS   decode_syndrome    round=112
+[511,512)us  SYS   request_ancilla    q[6200]
+[512,513)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[513,514)us  PHYS  measure            q[6200] basis=Z
+[514,515)us  SYS   decode_syndrome    round=113
+[515,516)us  SYS   request_ancilla    q[6200]
+[516,517)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[517,518)us  PHYS  measure            q[6200] basis=Z
+[518,519)us  SYS   decode_syndrome    round=114
+[519,520)us  SYS   request_ancilla    q[6200]
+[520,521)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[521,522)us  PHYS  measure            q[6200] basis=Z
+[522,523)us  SYS   decode_syndrome    round=115
+[523,524)us  SYS   request_ancilla    q[6200]
+[524,525)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[525,526)us  PHYS  measure            q[6200] basis=Z
+[526,527)us  SYS   decode_syndrome    round=116
+[527,528)us  SYS   request_ancilla    q[6200]
+[528,529)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[529,530)us  PHYS  measure            q[6200] basis=Z
+[530,531)us  SYS   decode_syndrome    round=117
+[531,532)us  SYS   request_ancilla    q[6200]
+[532,533)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[533,534)us  PHYS  measure            q[6200] basis=Z
+[534,535)us  SYS   decode_syndrome    round=118
+[535,536)us  SYS   request_ancilla    q[6200]
+[536,537)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[537,538)us  PHYS  measure            q[6200] basis=Z
+[538,539)us  SYS   decode_syndrome    round=119
+[539,540)us  SYS   request_ancilla    q[6200]
+[540,541)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[541,542)us  PHYS  measure            q[6200] basis=Z
+[542,543)us  SYS   decode_syndrome    round=120
+[543,544)us  SYS   request_ancilla    q[6200]
+[544,545)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[545,546)us  PHYS  measure            q[6200] basis=Z
+[546,547)us  SYS   decode_syndrome    round=121
+[547,548)us  SYS   request_ancilla    q[6200]
+[548,549)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[549,550)us  PHYS  measure            q[6200] basis=Z
+[550,551)us  SYS   decode_syndrome    round=122
+[551,552)us  SYS   request_ancilla    q[6200]
+[552,553)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[553,554)us  PHYS  measure            q[6200] basis=Z
+[554,555)us  SYS   decode_syndrome    round=123
+[555,556)us  SYS   request_ancilla    q[6200]
+[556,557)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[557,558)us  PHYS  measure            q[6200] basis=Z
+[558,559)us  SYS   decode_syndrome    round=124
+[559,560)us  SYS   request_ancilla    q[6200]
+[560,561)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[561,562)us  PHYS  measure            q[6200] basis=Z
+[562,563)us  SYS   decode_syndrome    round=125
+[563,564)us  SYS   request_ancilla    q[6200]
+[564,565)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[565,566)us  PHYS  measure            q[6200] basis=Z
+[566,567)us  SYS   decode_syndrome    round=126
+[567,568)us  SYS   request_ancilla    q[6200]
+[568,569)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[569,570)us  PHYS  measure            q[6200] basis=Z
+[570,571)us  SYS   decode_syndrome    round=127
+[571,572)us  SYS   request_ancilla    q[6200]
+[572,573)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[573,574)us  PHYS  measure            q[6200] basis=Z
+[574,575)us  SYS   decode_syndrome    round=128
+[575,576)us  SYS   request_ancilla    q[6200]
+[576,577)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[577,578)us  PHYS  measure            q[6200] basis=Z
+[578,579)us  SYS   decode_syndrome    round=129
+[579,580)us  SYS   request_ancilla    q[6200]
+[580,581)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[581,582)us  PHYS  measure            q[6200] basis=Z
+[582,583)us  SYS   decode_syndrome    round=130
+[583,584)us  SYS   request_ancilla    q[6200]
+[584,585)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[585,586)us  PHYS  measure            q[6200] basis=Z
+[586,587)us  SYS   decode_syndrome    round=131
+[587,588)us  SYS   request_ancilla    q[6200]
+[588,589)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[589,590)us  PHYS  measure            q[6200] basis=Z
+[590,591)us  SYS   decode_syndrome    round=132
+[591,592)us  SYS   request_ancilla    q[6200]
+[592,593)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[593,594)us  PHYS  measure            q[6200] basis=Z
+[594,595)us  SYS   decode_syndrome    round=133
+[595,596)us  SYS   request_ancilla    q[6200]
+[596,597)us  PHYS  gate2q             q[0],q[6200] gate=CNOT
+[597,598)us  PHYS  measure            q[6200] basis=Z
+[598,599)us  SYS   decode_syndrome    round=134
+[599,600)us  SYS   pauli_frame_update corr=108

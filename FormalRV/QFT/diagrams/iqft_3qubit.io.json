@@ -1,0 +1,6 @@
+{
+  "title": "Inverse QFT (3 qubits): |Fourier⟩ → |y⟩",
+  "wires": ["q0", "q1", "q2"],
+  "input":  ["q2q1q0 = Fourier-basis state"],
+  "output": ["q2q1q0 = y (computational basis)"]
+}

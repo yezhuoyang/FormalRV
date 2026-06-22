@@ -1,0 +1,31 @@
+# DEMO E fixed: the same circuit scheduled within the control budget.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/demo_gates_backend.yaml \
+#       ftq_vm/backend/examples/demo_gates_fixed.yaml --out out/demoE_fixed
+#
+# The H layer is split 4 + 2 (FPGA cap 4), the CNOTs run 2 then 1 (AOD cap
+# 2), and the measurements run 2 then 1 (2 readout lines).  PASSES, and the
+# reported runtime honestly reflects the serialization the hardware forces:
+# the last measurement starts only after a readout line frees up.
+
+program: demo_gates_fixed
+description: same circuit, scheduled within FPGA/AOD/readout budgets
+
+ops:
+  # ---- H layer split 4 + 2 (max_parallel_gates: 4) ------------------------
+  - {id: h0, do: H, at_us: 0, qubits: ["q[0]"]}
+  - {id: h1, do: H, at_us: 0, qubits: ["q[1]"]}
+  - {id: h2, do: H, at_us: 0, qubits: ["q[2]"]}
+  - {id: h3, do: H, at_us: 0, qubits: ["q[3]"]}
+  - {id: h4, do: H, at_us: 100, qubits: ["q[4]"]}
+  - {id: h5, do: H, at_us: 100, qubits: ["q[5]"]}
+
+  # ---- CNOTs 2 then 1 (CNOT max_parallel: 2) ------------------------------
+  - {id: cx01, do: CNOT, at_us: 200, qubits: ["q[0]", "q[1]"], deps: [h0, h1]}
+  - {id: cx23, do: CNOT, at_us: 200, qubits: ["q[2]", "q[3]"], deps: [h2, h3]}
+  - {id: cx45, do: CNOT, at_us: 1200, qubits: ["q[4]", "q[5]"], deps: [h4, h5]}
+
+  # ---- measurements 2 then 1 (2 readout lines) ----------------------------
+  - {id: m0, do: measure, at_us: 2200, qubits: ["q[0]"], deps: [cx01]}
+  - {id: m2, do: measure, at_us: 2200, qubits: ["q[2]"], deps: [cx23]}
+  - {id: m4, do: measure, at_us: 7200, qubits: ["q[4]"], deps: [cx45]}

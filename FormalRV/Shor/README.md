@@ -46,6 +46,47 @@ proof path of the re-exported results, which instead route through the LSB
 pipeline and (for the fully axiom-free oracle) the SQIR-faithful multiplier in
 `Arithmetic/`.
 
+## Scheme closure — semantics ⊕ resource on ONE syntactic object
+
+Both arithmetic schemes have a single capstone in which the **Shor success bound** and
+the **resource count** are stated about the *same* per-iterate syntactic `Gate` — the
+resource read off that gate by the tree-walk counter (`tcount`/`toffoliCount`, "the
+Prover"), the gate lifted to the `BaseUCom` family the QPE success theorem consumes by a
+`rfl` bridge that is *load-bearing* in the proof. Both are axiom-clean
+(`propext`/`Classical.choice`/`Quot.sound`; `#print axioms`).
+
+| scheme | one-object capstone (file) | per-iterate syntactic gate | count |
+|---|---|---|---|
+| **Standard** (un-windowed) | `shor_resource_welded_one_object` (`VerifiedShor/ModExpWelded.lean`) | `shorModExpGate a ainv N bits i` = `modmult_MCP_gate …` | `∑ = m·112·bits²` |
+| **Windowed** (QROM-lookup, window `w`) | `windowed_shor_resource_welded_one_object` (`WindowedModNShor.lean`) | `windowedModNEncodeGate w bits N numWin ((a^(2^i))%N) (modInv N (a^(2^i)))` | `∑ = m·2·numWin·(56·w·2^w+56·bits)` |
+
+The lift in each is `family_iterate_gate` / `windowedFamily_iterate_gate` (`rfl`):
+the verified family the bound rides is, pointwise, `Gate.toUCom` of the very gate the
+counter walks — so count and semantics are one object, no `Gate`-vs-`BaseUCom` look-alike.
+
+The windowed **full modular exponentiator** (uncontrolled) is also closed end-to-end on one
+`Gate`: `windowedModNExpInPlace_verified` (`WindowedModExpValue.lean`) proves, on the same
+syntactic circuit, both `Gate.applyNat … → a^e mod N` (every gadget composed) **and**
+`toffoliCount … = nE·numWin·(16·w·2^w+16·bits)`.
+
+### Per-gadget composition chain (windowed, for review)
+`cuccaro_n_bit_adder_full` (add) → unary QROM read → windowed lookup-add → `windowedModNMulGate`
+(one in-place mod-N pass) → `windowedModNEncodeGate` (welded per-iterate, layout-adapted) →
+`windowedModNMultiplier_verifiedModMulFamily.family` (QPE iterate `×a^(2^i) mod N`) →
+`windowed_shor_correct` (success). Each arrow is a named lemma with its own
+correctness + `tcount` (the gadget-spine convention); the capstone only conjoins the two
+endpoints.
+
+### Honest residuals (NOT claimed closed)
+- The **measured-uncompute count-optimum** `2 578 993 152` rides `WindowedComposed(At).modExp`, a
+  *count-faithful skeleton* (stacked per-window address regions that do not thread across
+  multiplications — it does not itself compute `a^e mod N`). Connecting it to the faithful
+  in-place circuit above is the deferred measurement-uncompute amplitude lift
+  (`Shor/MeasUncompute*`, `EGateToUnitaryBridge`), not these capstones.
+- The windowed mod-`N` value holds under an explicit **no-wrap** hypothesis; the full
+  RSA-2048 wrap regime is the coset/runway *approximate* deviation framework
+  (`Shor/GidneyInPlace`, `Approx/`), out of scope for the exact capstones here.
+
 ## Worked example — phase estimation of `7ˣ mod 15` (order r = 4)
 
 ![QPE schematic](../../docs/diagrams/qpe_frame.png)

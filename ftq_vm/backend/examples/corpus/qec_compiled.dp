@@ -1,0 +1,46 @@
+DEVICE-PROGRAM 1.0;
+// qec-compiled {backend=magicstock} W2-driver output: X-merge + CCZ injection + Z-merge  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  SYS   request_ancilla    q[101]
+[2,3)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[3,4)us  PHYS  gate2q             q[1],q[100] gate=CNOT
+[4,5)us  PHYS  measure            q[100] basis=Z
+[5,6)us  PHYS  measure            q[101] basis=Z
+[6,7)us  SYS   decode_syndrome    round=0
+[7,8)us  SYS   request_ancilla    q[100]
+[8,9)us  SYS   request_ancilla    q[101]
+[9,10)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[10,11)us  PHYS  gate2q             q[1],q[100] gate=CNOT
+[11,12)us  PHYS  measure            q[100] basis=Z
+[12,13)us  PHYS  measure            q[101] basis=Z
+[13,14)us  SYS   decode_syndrome    round=1
+[14,15)us  SYS   pauli_frame_update corr=0
+[15,16)us  SYS   request_magic      factory=0
+[16,17)us  SYS   request_ancilla    q[100]
+[17,18)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[18,19)us  PHYS  measure            q[100] basis=Z
+[19,20)us  SYS   decode_syndrome    round=2
+[20,21)us  SYS   pauli_frame_update corr=2
+[21,22)us  SYS   request_ancilla    q[100]
+[22,23)us  PHYS  gate2q             q[1],q[100] gate=CNOT
+[23,24)us  PHYS  measure            q[100] basis=Z
+[24,25)us  SYS   decode_syndrome    round=3
+[25,26)us  SYS   pauli_frame_update corr=3
+[26,27)us  SYS   request_ancilla    q[100]
+[27,28)us  PHYS  gate2q             q[2],q[100] gate=CNOT
+[28,29)us  PHYS  measure            q[100] basis=Z
+[29,30)us  SYS   decode_syndrome    round=4
+[30,31)us  SYS   pauli_frame_update corr=4
+[31,32)us  SYS   request_ancilla    q[100]
+[32,33)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[33,34)us  PHYS  measure            q[100] basis=Z
+[34,35)us  SYS   decode_syndrome    round=5
+[35,36)us  SYS   request_ancilla    q[100]
+[36,37)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[37,38)us  PHYS  measure            q[100] basis=Z
+[38,39)us  SYS   decode_syndrome    round=6
+[39,40)us  SYS   request_ancilla    q[100]
+[40,41)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[41,42)us  PHYS  measure            q[100] basis=Z
+[42,43)us  SYS   decode_syndrome    round=7
+[43,44)us  SYS   pauli_frame_update corr=5

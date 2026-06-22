@@ -28,18 +28,18 @@
   SysCall stream remain explicit named contracts in the lower layers — not re-proven here.
 -/
 import FormalRV.Shor.WindowedShorConnection
-import FormalRV.PPM.CircuitToPPMFactoryProvision
-import FormalRV.System.ScheduleInvariantsExplicit
+import FormalRV.PPM.QECBridge.CircuitToPPMFactoryProvision
+import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 
 namespace FormalRV.Shor.WindowedShorPPMFactoryE2E
 
 open FormalRV.Framework
-open FormalRV.Framework.Architecture
+open FormalRV.System.Architecture
 open FormalRV.Framework.Factory
 open FormalRV.Framework.CircuitToPPMMagicFactory
 open FormalRV.Framework.CircuitToPPMToffoliMagic
 open FormalRV.Framework.CircuitToPPMFactoryProvision
-open FormalRV.Framework.ScheduleInv
+open FormalRV.System.ScheduleInv
 open FormalRV.BQAlgo
 open FormalRV.BQAlgo.WindowedShorConnection
 

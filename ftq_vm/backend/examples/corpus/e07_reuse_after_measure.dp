@@ -1,0 +1,7 @@
+DEVICE-PROGRAM 1.0;
+// e07_reuse_after_measure {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[2,3)us  PHYS  measure            q[100] basis=Z
+[3,4)us  PHYS  gate2q             q[1],q[100] gate=CNOT
+[4,5)us  PHYS  measure            q[100] basis=Z

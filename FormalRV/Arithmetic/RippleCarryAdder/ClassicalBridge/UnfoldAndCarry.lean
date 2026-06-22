@@ -9,7 +9,7 @@ import FormalRV.Core.Gate
 import FormalRV.Arithmetic.Cuccaro.Cuccaro
 import FormalRV.Arithmetic.Correctness
 import FormalRV.Framework.PaperClaims
-import FormalRV.PPM.GidneyAND
+import FormalRV.PPM.Magic.GidneyAND
 import Mathlib.Tactic.IntervalCases
 import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderDef
 import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderForwardAndCost

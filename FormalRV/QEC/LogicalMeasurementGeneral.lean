@@ -22,8 +22,7 @@
 -/
 
 import FormalRV.QEC.Logical
-import FormalRV.LatticeSurgery.SurgeryCorrect
-
+import FormalRV.QEC.LatticeSurgery.SurgeryCorrect
 namespace FormalRV.QEC.LogicalMeasurementGeneral
 
 open FormalRV.QEC

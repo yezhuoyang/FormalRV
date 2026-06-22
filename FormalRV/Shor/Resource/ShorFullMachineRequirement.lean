@@ -19,14 +19,13 @@
   No `sorry`, no new `axiom`.
 -/
 
-import FormalRV.System.ConcreteMachineFeasibility
-import FormalRV.LatticeSurgery.SurfaceSystemCompile
-
+import FormalRV.System.Examples.ConcreteMachineFeasibility
+import FormalRV.System.Compile.SurfaceSystemCompile
 namespace FormalRV.Shor.ShorFullMachineRequirement
 
 open FormalRV.System.ConcreteMachineFeasibility
 open FormalRV.LatticeSurgery.SurfaceShorResourceCount
-open FormalRV.LatticeSurgery.SurfaceSystemCompile
+open FormalRV.System.SurfaceSystemCompile
 open FormalRV.Framework.Resource
 
 /-! ## Q1. T-factory scheduling and its space-time ASSUMPTIONS

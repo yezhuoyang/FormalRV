@@ -71,7 +71,7 @@
   right Boolean output) — not merely a syntactic gate-count.
 -/
 import FormalRV.Shor.VerifiedShor
-import FormalRV.PPM.CircuitToPPMFactoryProvision
+import FormalRV.PPM.QECBridge.CircuitToPPMFactoryProvision
 
 namespace FormalRV.Shor.ShorModMulPPMFactoryE2E
 

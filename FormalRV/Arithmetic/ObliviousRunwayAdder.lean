@@ -12,6 +12,7 @@
   the honest-scope ledger.
 -/
 import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderFunctional
+import FormalRV.Arithmetic.ObliviousRunwayAdder.ParallelDepth
 import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderAdvance
 import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderContiguous
 import FormalRV.Arithmetic.ObliviousRunwayAdder.RunwayAdderMultiAdd

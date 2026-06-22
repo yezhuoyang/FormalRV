@@ -306,8 +306,7 @@ example : qianxu_E9_full_lookup_tau_s_RSA2048 = 22720 := by decide
     τ_s` — the `15` that appears in Eqs. E12 and E13.
 
     This is the **ctl-adder analog of `gidney_*` defs above**. The
-    raw constant `15` was already in `G_A.lean`
-    (`paper_claim_ctl_adder_per_toffoli`); these anchors now bind it
+    raw constant `15` was an early paper-claim constant; these anchors now bind it
     to the same per-Toffoli/Toffoli-count chain pattern. -/
 
 /-- Per-Toffoli τ_s cost of the controlled adder in the space-efficient
@@ -366,8 +365,8 @@ theorem qianxu_E9_full_lookup_via_toffoli_count :
 /-! ### App E τ_Toff totals (p. 24, Eqs. E10–E13) -/
 
 /-- E10: space-efficient RSA-2048 amortized τ_Toff. Paper says 43 τ_s.
-    The arithmetic LHS (0.5·25 + 0.5·71) actually yields 48 — see
-    `lean/FormalRV/G_A.lean` for the formal `decide` refuting this. -/
+    The arithmetic LHS (0.5·25 + 0.5·71) actually yields 48 — the formal `decide` refuting this is
+    the `example` below (search "The E10 refutation" in this file). -/
 def qianxu_E10_tau_Toff_RSA_se_tau_s : Nat := 43
 
 /-- E11: balanced RSA-2048 amortized τ_Toff. 10 τ_s. -/
@@ -754,11 +753,10 @@ example : peng_2022_shor_circuit_n_squared_coeff = 212 := by decide
 example : qianxu_per_toffoli_adder_se_tau_s = 25 := by decide
 example : qianxu_per_toffoli_lookup_se_tau_s = 71 := by decide
 
-/-- The E10 LHS recomputed against the now-explicit E3 and E9 anchors:
-    `0.5·adder + 0.5·lookup = (25 + 71) / 2 = 48`, not the claimed 43.
-    Decide-checked. The full attribution lives in
-    `lean/FormalRV/G_A.lean`; this lemma just re-binds the
-    discrepancy to the named paper-claim constants for clarity. -/
+/-- **The E10 refutation (the machine-checked Cain–Xu arithmetic error).**  The E10 LHS recomputed
+    against the now-explicit E3 and E9 anchors: `0.5·adder + 0.5·lookup = (25 + 71) / 2 = 48`, not the
+    claimed 43.  `decide`-checked HERE (the lemma immediately below), on the named paper-claim
+    constants — this is THE formal home of the refutation. -/
 example :
     (qianxu_per_toffoli_adder_se_tau_s + qianxu_per_toffoli_lookup_se_tau_s) / 2
       ≠ qianxu_E10_tau_Toff_RSA_se_tau_s := by decide

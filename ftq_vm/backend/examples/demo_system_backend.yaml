@@ -1,0 +1,51 @@
+# Backend for the system-level demo: a finite-bandwidth syndrome bus in
+# front of the decoders, and helper qubits that need explicit timed resets.
+#
+# The syndrome bus is a service used as a PIPE: workers = parallel lanes,
+# processing_time_us = transfer time per syndrome packet, and the service
+# queue IS the syndrome buffer (queue_capacity = buffer slots).  Jobs carry
+# result_token: a packet only EXISTS at the decoder once its transfer
+# completes, so consuming it earlier is a TokenUnavailable violation.
+
+unit:
+  time: us
+
+name: demo_system
+description: >
+  Syndrome-bus bandwidth, decode reaction chaining and helper-qubit reset
+  discipline, at TUI-friendly scale.
+
+zones:
+  lq:
+    kind: logical_qubit
+    count: 8
+    description: logical qubits being measured
+
+  anc:
+    kind: helper_qubit
+    count: 2
+    reset_required: true        # helpers cannot be reused without a reset
+    reset_kinds: [reset]
+    min_reset_us: 3             # ... and a reset takes at least 3us
+    description: reusable helper qubits
+
+resources:
+  syndrome_bus:
+    kind: service
+    workers: 1                  # one transfer lane
+    max_latency_us: 10          # a packet should reach the decoder in 10us
+    queue_capacity: 6           # the syndrome buffer holds 6 packets
+    processing_time_us: 4       # 4us per packet on the lane
+    description: finite-bandwidth link from the qubits to the decoders
+
+  decoder_pool:
+    kind: service
+    workers: 2
+    max_latency_us: 30
+    queue_capacity: 100
+    processing_time_us: 3
+
+qubit_touching_kinds: [logical_measure, helper_op, reset]
+
+tokens:
+  SyndromeAtDecoder: {}         # produced by completed bus transfers

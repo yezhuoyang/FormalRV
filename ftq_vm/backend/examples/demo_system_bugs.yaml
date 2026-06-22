@@ -1,0 +1,63 @@
+# DEMO D: three system-level failure modes in one small schedule.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/demo_system_backend.yaml \
+#       ftq_vm/backend/examples/demo_system_bugs.yaml --out out/demoD
+#
+#   1. Syndrome-bus backlog -- every round measures 8 logical qubits and
+#      ships 8 syndrome packets, but the single bus lane moves only one
+#      packet per 4us: packets pile up in the 6-slot syndrome buffer
+#      (ServiceQueueOverflow) and arrive far past the 10us transport
+#      deadline (DeadlineMiss).  The decoders are idle the whole time --
+#      the bottleneck is the BUS, not decoding.
+#   2. Reaction chaining -- eager_decode consumes a SyndromeAtDecoder packet
+#      at t=3us, but the first transfer only completes at t=4us
+#      (TokenUnavailable: the schedule assumed data that had not arrived).
+#   3. Helper-qubit reuse -- helper_b reuses anc[0] with no reset after
+#      helper_a, and the reset on anc[1] is shorter than the required 3us
+#      (QubitReuseViolation x2).  helper_d shows the legal pattern:
+#      use, reset >= 3us, reuse.
+
+program: demo_system_bugs
+description: bus backlog, premature decode, and helper reuse without reset
+
+ops:
+  # ---- BUG 1: 8 packets per 10us vs 1 lane x 4us/packet ------------------
+  - id: measure_round
+    do: logical_measure
+    at_us: 0
+    duration_us: 5
+    qubits: ["lq[0:8]"]
+    service:
+      service: syndrome_bus
+      count: 8
+      result_token: SyndromeAtDecoder
+    repeat: {every_us: 10, until_us: 90}
+
+  # ---- BUG 2: decoding data that has not arrived yet ----------------------
+  - id: eager_decode
+    do: decode_kickoff
+    at_us: 3
+    duration_us: 2
+    consume: SyndromeAtDecoder          # first packet only lands at t=4us
+    service: {service: decoder_pool, count: 1}
+
+  - id: ok_decode                        # correct: waits for real arrivals
+    do: decode_kickoff
+    at_us: 20
+    duration_us: 4
+    consume: [{kind: SyndromeAtDecoder, count: 2}]
+    service: {service: decoder_pool, count: 2}
+
+  # ---- BUG 3: helper qubits reused without (sufficient) reset -------------
+  - {id: helper_a, do: helper_op, at_us: 30, duration_us: 5, qubits: ["anc[0]"]}
+  - {id: helper_b, do: helper_op, at_us: 40, duration_us: 5, qubits: ["anc[0]"]}
+    # ^ no reset of anc[0] between helper_a and helper_b -> violation
+
+  - {id: helper_c1, do: helper_op, at_us: 30, duration_us: 5, qubits: ["anc[1]"]}
+  - {id: short_reset, do: reset, at_us: 36, duration_us: 2, qubits: ["anc[1]"]}
+    # ^ only 2us < min_reset_us: 3 -> violation
+  - {id: helper_c2, do: helper_op, at_us: 40, duration_us: 5, qubits: ["anc[1]"]}
+
+  # ---- the legal reuse pattern: use, reset >= 3us, reuse ------------------
+  - {id: good_reset, do: reset, at_us: 50, duration_us: 3, qubits: ["anc[0]"]}
+  - {id: helper_d, do: helper_op, at_us: 55, duration_us: 5, qubits: ["anc[0]"]}

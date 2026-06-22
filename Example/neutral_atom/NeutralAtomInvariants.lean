@@ -17,13 +17,13 @@
   invariants checked here are the LOGICAL-level capacity/ordering/freshness constraints, which a
   more-parallel neutral-atom platform satisfies a fortiori.
 -/
-import FormalRV.System.AdderSystem
+import FormalRV.System.Examples.AdderSystem
 
 open FormalRV.Framework
-open FormalRV.Framework.Architecture
-open FormalRV.Framework.ScheduleInv
-open FormalRV.Framework.SystemInvariantStrengthening
-open FormalRV.Framework.AdderSystem
+open FormalRV.System.Architecture
+open FormalRV.System.ScheduleInv
+open FormalRV.System.SystemInvariantStrengthening
+open FormalRV.System.AdderSystem
 
 /-- Neutral-atom operation-capacity model — derived from the ZAC compile of `surface3_xx_merge`:
     Rydberg pulses give up to 12 parallel CZ (so `max_gate2q_active = 12`, vs the superconducting

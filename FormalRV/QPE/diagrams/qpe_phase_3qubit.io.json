@@ -1,0 +1,6 @@
+{
+  "title": "QPE (3 measurement qubits) for a phase oracle, θ = 1/8",
+  "wires": ["m0", "m1", "m2", "u"],
+  "input":  ["m2m1m0 = |0..0⟩", "u = |1⟩  (eigenstate of u1(2πθ))"],
+  "output": ["m2m1m0 ≈ y with y/8 ≈ θ = 1/8  (peak at y=1)", "u = |1⟩ (preserved)"]
+}

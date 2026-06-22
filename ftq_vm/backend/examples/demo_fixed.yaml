@@ -1,0 +1,29 @@
+﻿# DEMO C: the starvation workload of demo A, fixed.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/demo_backend.yaml \
+#       ftq_vm/backend/examples/demo_fixed.yaml --out out/demoC
+#
+# Two repairs (either alone would already help):
+#   * the T-consuming ops start later (t=150us) and fire every 45us, giving
+#     the factories slack to absorb failure streaks;
+#   * consumption (1/45us) now sits clearly below average production
+#     (1/29.4us) without piling up past the 12-token buffer before the
+#     consumers start.
+# Alternative fixes: add a factory, enable auto_retry, or enlarge the buffer.
+
+program: demo_fixed
+description: starvation demo repaired by delaying and spacing the T consumers
+
+ops:
+  - {id: run_F0, do: start_factory, factory: F0, at_us: 0,
+     repeat: {every_us: 50, until_us: 950}}
+  - {id: run_F1, do: start_factory, factory: F1, at_us: 0,
+     repeat: {every_us: 50, until_us: 950}}
+
+  - id: t_inject
+    do: magic_inject
+    at_us: 150
+    duration_us: 10
+    consume: TState
+    qubits: ["dq[0]","dq[1]"]
+    repeat: {every_us: 31, until_us: 980}

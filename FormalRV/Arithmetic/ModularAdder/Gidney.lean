@@ -25,3 +25,4 @@ import FormalRV.Arithmetic.ModularAdder.Gidney.ControlledPipeline
 import FormalRV.Arithmetic.ModularAdder.Gidney.SwapSemantics
 import FormalRV.Arithmetic.ModularAdder.Gidney.Correctness
 import FormalRV.Arithmetic.ModularAdder.Gidney.Resource
+import FormalRV.Arithmetic.ModularAdder.Gidney.TimeCount

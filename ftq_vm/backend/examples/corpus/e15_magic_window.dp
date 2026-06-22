@@ -1,0 +1,4 @@
+DEVICE-PROGRAM 1.0;
+// e15_magic_window {backend=magicstock}  (PHYS = physical op, SYS = system call)
+[0,12000)us  SYS   request_magic      factory=0
+[100,12100)us  SYS   request_magic      factory=1

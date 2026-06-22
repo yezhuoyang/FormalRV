@@ -1,0 +1,91 @@
+# A toy Shor-like workload with three INTENTIONAL bugs -- in the strict
+# explicit-qubit discipline: every qubit-touching op names exactly which
+# qubits it uses.
+#
+# Run against backend_simple.yaml:
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/backend_simple.yaml \
+#                        ftq_vm/backend/examples/program_buggy.yaml --out out/
+#
+# The FTQ-VM reports:
+#
+#   1. TState starvation -- T injections fire every 2us from t=40us, but the
+#      four factories only deliver ~3.6 TStates per 50us (plus 8 initial):
+#      the late injections find an empty buffer.
+#   2. Decoder queue overflow + deadline misses -- a syndrome burst at
+#      t=155us dumps 100257 decoder jobs at once: 256 start on the workers
+#      and 100001 queue up, exceeding queue_capacity=100000.  The backlog
+#      also makes every later syndrome round miss the 10us decode deadline.
+#   3. Measurement-bus capacity violation -- two overlapping measurement
+#      windows demand 40 + 25 = 65 channels; the bus only has 64.
+#
+# program_fixed.yaml is the same workload with all three bugs repaired.
+
+program: shor_toy_buggy
+description: toy Shor-like workload with intentional resource-contract bugs
+
+ops:
+  # ---- T-state production: each factory runs back-to-back on its own
+  # ---- fixed footprint (magic[0:18], magic[18:36], ...) ------------------
+  - {id: run_F0, do: start_factory, factory: F0, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+  - {id: run_F1, do: start_factory, factory: F1, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+  - {id: run_F2, do: start_factory, factory: F2, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+  - {id: run_F3, do: start_factory, factory: F3, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+
+  # ---- BUG 1: T injections every 2us outrun the factories ----------------
+  # Each injection acts on the explicit target/routing pair data[0], data[1];
+  # instances are back-to-back ([40,42), [42,44), ...; half-open, no overlap).
+  - id: t_inject
+    do: magic_inject
+    at_us: 40
+    duration_us: 2
+    consume: TState
+    qubits:
+      target: ["data[0]"]
+      routing: ["data[1]"]
+    repeat: {every_us: 2, until_us: 98}     # 30 injections: t=40,42,...,98
+
+  # ---- syndrome extraction every 10us on the explicit syndrome qubits ----
+  - id: syndrome_round
+    do: syndrome_round
+    at_us: 100
+    duration_us: 10
+    qubits:
+      syndrome: ["syndrome[0:16]"]
+    service: {service: decoder_pool, count: 1024, processing_time_us: 1}
+    repeat: {every_us: 10, until_us: 190}   # instances syndrome_round@0..@9
+
+  # ---- BUG 2: a burst dumps 100257 decoder jobs at once (no qubits) ------
+  - id: syndrome_burst_storm
+    do: syndrome_burst
+    at_us: 155
+    duration_us: 5
+    uses: {decoder_pool: 100257}            # default processing_time_us: 2
+
+  # ---- BUG 3: overlapping measurement windows oversubscribe the bus ------
+  - id: measure_window_a
+    do: logical_measure
+    at_us: 160
+    duration_us: 20
+    qubits: ["data[8:24]"]
+    uses: {measurement_bus: 40, correction_storage: 32}
+
+  - id: measure_window_b
+    do: logical_measure
+    at_us: 165
+    duration_us: 20
+    qubits: ["data[24:40]"]
+    uses: {measurement_bus: 25, correction_storage: 32}
+
+  # ---- final readout after the last syndrome round ------------------------
+  - id: logical_measure_final
+    do: logical_measure
+    at_us: 200
+    duration_us: 10
+    deps: [syndrome_round@9]
+    qubits: ["data[8:24]"]
+    uses: {measurement_bus: 16, correction_storage: 16}

@@ -1,0 +1,21 @@
+# An INVALID program: it violates the explicit-qubit discipline.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/backend_simple.yaml \
+#                        ftq_vm/backend/examples/program_invalid.yaml
+#
+# is rejected at LOAD TIME (exit code 2) with a QubitExplicitnessViolation:
+# the op asks for "one syndrome qubit from the pool" instead of naming which
+# one.  Qubits are never fungible in an executable schedule -- the VM is a
+# checker of concrete finite-resource claims, not an allocator.
+
+program: invalid_fungible_qubits
+description: asks for an anonymous qubit -- rejected at load
+
+ops:
+  - id: extract_Z3
+    do: syndrome_round
+    at_us: 0
+    duration_us: 4
+    uses:
+      syndrome: 1        # INVALID: which syndrome qubit? Name it: syndrome[7]
+    service: {service: decoder_pool, count: 1}

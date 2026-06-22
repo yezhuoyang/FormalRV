@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lattice Surgery Visualizer — verified diagrams</title>
+<style>
+  :root { --bg:#0e1116; --panel:#161b22; --ink:#e6edf3; --mut:#8b949e; --blue:#3b82f6; --red:#ef4444; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font:14px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; overflow:hidden; }
+  #app { position:fixed; inset:0; }
+  #ui { position:absolute; top:12px; left:12px; z-index:10; background:var(--panel);
+    border:1px solid #30363d; border-radius:10px; padding:12px 14px; min-width:230px;
+    box-shadow:0 8px 30px rgba(0,0,0,.45); }
+  #ui h1 { font-size:14px; margin:0 0 8px; letter-spacing:.2px; }
+  #ui .row { display:flex; align-items:center; gap:8px; margin:6px 0; }
+  #ui select, #ui button { background:#0d1117; color:var(--ink); border:1px solid #30363d;
+    border-radius:7px; padding:6px 8px; font-size:13px; }
+  #ui label { color:var(--mut); user-select:none; cursor:pointer; display:flex; gap:6px; align-items:center; }
+  .legend { display:flex; gap:14px; margin-top:8px; color:var(--mut); }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:5px; }
+  #meta { color:var(--mut); margin-top:8px; font-size:12px; }
+  #tip { position:absolute; z-index:20; pointer-events:none; background:rgba(13,17,23,.95);
+    border:1px solid #30363d; border-radius:7px; padding:6px 9px; max-width:340px; font-size:12.5px;
+    color:var(--ink); display:none; box-shadow:0 6px 20px rgba(0,0,0,.5); }
+  #hint { position:absolute; bottom:12px; left:12px; color:var(--mut); font-size:12px; z-index:10; }
+  .seg { display:inline-flex; border:1px solid #30363d; border-radius:7px; overflow:hidden; }
+  .seg button { border:0; border-radius:0; background:#0d1117; padding:6px 12px; }
+  .seg button.on { background:#1f6feb; color:#fff; }
+  #app2d { position:fixed; inset:0; display:none; background:var(--bg); }
+  #c2d { width:100%; height:100%; display:block; }
+  #play { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:15;
+    display:none; gap:12px; align-items:center; background:var(--panel); border:1px solid #30363d;
+    border-radius:10px; padding:8px 14px; box-shadow:0 8px 30px rgba(0,0,0,.45); }
+  #play button { background:#0d1117; color:var(--ink); border:1px solid #30363d; border-radius:7px;
+    padding:5px 10px; font-size:14px; cursor:pointer; }
+  #play input[type=range] { width:240px; accent-color:#1f6feb; }
+  #tlab { color:var(--mut); font-size:12.5px; min-width:96px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="ui">
+  <h1>Lattice Surgery — <span style="color:var(--mut);font-weight:400">verified</span></h1>
+  <div class="row">
+    <select id="scene"></select>
+    <button id="reset" title="Reset camera">⟲</button>
+  </div>
+  <div class="row">
+    <span class="seg"><button id="m3d" class="on">3D</button><button id="m2d">2D</button></span>
+    <span style="color:var(--mut);font-size:12px">view</span>
+  </div>
+  <div class="row"><label><input type="checkbox" id="tSurf"> correlation / flow surfaces</label></div>
+  <div class="row"><label><input type="checkbox" id="tFlows"> per-flow colors</label></div>
+  <div class="legend">
+    <span><i style="background:#3b82f6"></i>smooth · Z̄</span>
+    <span><i style="background:#ef4444"></i>rough · X̄</span>
+  </div>
+  <div class="legend">
+    <span><i style="background:#22c55e"></i>port hat / Ȳ</span>
+    <span><i style="background:#eab308"></i>H rotation</span>
+  </div>
+  <div id="meta"></div>
+</div>
+<div id="app2d"><canvas id="c2d"></canvas></div>
+<div id="play">
+  <button id="pStep" title="step back">◀</button>
+  <button id="pPlay" title="play / pause">▶</button>
+  <button id="pNext" title="step forward">▶▶</button>
+  <input type="range" id="tk" min="0" max="1" value="0" step="1">
+  <span id="tlab"></span>
+</div>
+<div id="tip"></div>
+<div id="hint">drag to rotate · scroll to zoom · right-drag to pan · hover a piece for its meaning</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

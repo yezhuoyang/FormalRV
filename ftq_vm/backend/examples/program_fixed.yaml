@@ -1,0 +1,69 @@
+# The same toy Shor-like workload as program_buggy.yaml with all three bugs
+# repaired.  Run against backend_simple.yaml; the FTQ-VM reports PASS.
+#
+#   1. T injections are spread to one every 20us (16 total), well within
+#      what 8 initial states + four 0.9-success factories supply.
+#   2. The decoder burst is gone; every syndrome round submits 1024 jobs of
+#      processing time 1us, which 256 workers drain in 4us -- far inside the
+#      10us deadline and the queue capacity.
+#   3. The measurement windows demand 40 + 24 = 64 channels, exactly the bus
+#      capacity (half-open intervals: a use ending at t does not overlap one
+#      starting at t).
+
+program: shor_toy_fixed
+description: toy Shor-like workload, resource-contract clean
+
+ops:
+  # ---- T-state production: each factory runs back-to-back ----------------
+  - {id: run_F0, do: start_factory, factory: F0, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+  - {id: run_F1, do: start_factory, factory: F1, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+  - {id: run_F2, do: start_factory, factory: F2, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+  - {id: run_F3, do: start_factory, factory: F3, at_us: 0,
+     repeat: {every_us: 50, until_us: 450}}
+
+  # ---- FIX 1: one injection every 20us, after the first deliveries -------
+  - id: t_inject
+    do: magic_inject
+    at_us: 60
+    duration_us: 10
+    consume: TState
+    qubits:
+      target: ["data[0]"]
+      routing: ["data[1]"]
+    repeat: {every_us: 20, until_us: 360}   # 16 injections: t=60,80,...,360
+
+  # ---- syndrome extraction every 10us on the explicit syndrome qubits ----
+  - id: syndrome_round
+    do: syndrome_round
+    at_us: 100
+    duration_us: 10
+    qubits:
+      syndrome: ["syndrome[0:16]"]
+    service: {service: decoder_pool, count: 1024, processing_time_us: 1}
+    repeat: {every_us: 10, until_us: 190}
+
+  # ---- FIX 3: measurement windows fit the bus: 40 + 24 = 64 --------------
+  - id: measure_window_a
+    do: logical_measure
+    at_us: 160
+    duration_us: 20
+    qubits: ["data[8:24]"]
+    uses: {measurement_bus: 40, correction_storage: 32}
+
+  - id: measure_window_b
+    do: logical_measure
+    at_us: 165
+    duration_us: 20
+    qubits: ["data[24:40]"]
+    uses: {measurement_bus: 24, correction_storage: 32}
+
+  - id: logical_measure_final
+    do: logical_measure
+    at_us: 200
+    duration_us: 10
+    deps: [syndrome_round@9]
+    qubits: ["data[8:24]"]
+    uses: {measurement_bus: 16, correction_storage: 16}

@@ -29,7 +29,7 @@
   No `sorry`, no `axiom`.
 -/
 
-import FormalRV.PPM.CircuitToPPMMagicFactory
+import FormalRV.PPM.Magic.CircuitToPPMMagicFactory
 import FormalRV.Arithmetic.Correctness
 
 namespace FormalRV.Shor.ShorPPMUnitaryReduction

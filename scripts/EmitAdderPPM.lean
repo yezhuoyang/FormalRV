@@ -11,7 +11,7 @@ import FormalRV.Arithmetic.Cuccaro.CuccaroFull
 import FormalRV.Arithmetic.SQIRModMult.Defs
 
 open FormalRV.Framework
-open FormalRV.Framework.Architecture
+open FormalRV.System.Architecture
 open FormalRV.Framework.CircuitToPPMInterface
 open FormalRV.BQAlgo
 

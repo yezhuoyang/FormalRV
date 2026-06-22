@@ -18,19 +18,19 @@
 -/
 import FormalRV.Audit.CainXu2026.L3_PPM
 import FormalRV.Audit.CainXu2026.L4_Code
-import FormalRV.LatticeSurgery.SurfaceShorResourceCount
-import FormalRV.System.InvariantFramework
-import FormalRV.System.CompressedRepeatSoundness
+import FormalRV.QEC.LatticeSurgery.SurfaceShorResourceCount
+import FormalRV.System.Invariants.InvariantFramework
+import FormalRV.System.Artifacts.CompressedRepeatSoundness
 import FormalRV.Verifier
 
 namespace FormalRV.Audit.CainXu2026
 
-open FormalRV.Framework.Architecture
-open FormalRV.Framework.ScheduleInv
-open FormalRV.Framework.InvariantFramework
-open FormalRV.Framework.SystemInvariantStrengthening
-open FormalRV.Framework.LayeredArtifactInterface
-open FormalRV.Framework.CompressedRepeatSoundness
+open FormalRV.System.Architecture
+open FormalRV.System.ScheduleInv
+open FormalRV.System.InvariantFramework
+open FormalRV.System.SystemInvariantStrengthening
+open FormalRV.System.LayeredArtifactInterface
+open FormalRV.System.CompressedRepeatSoundness
 open FormalRV.LatticeSurgery.SurfaceShorResourceCount
 open FormalRV.Framework.LDPC
 

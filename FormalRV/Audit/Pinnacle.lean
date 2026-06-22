@@ -14,7 +14,13 @@ import FormalRV.Audit.Pinnacle.Hardware
 import FormalRV.Audit.Pinnacle.SystemZones
 import FormalRV.Audit.Pinnacle.L1_Algorithm
 import FormalRV.Audit.Pinnacle.L2_Arithmetic
+import FormalRV.Audit.Pinnacle.L2_ArithmeticFaithful
 import FormalRV.Audit.Pinnacle.L3_PPM
 import FormalRV.Audit.Pinnacle.L4_Code
+import FormalRV.Audit.Pinnacle.ParallelReduction
+import FormalRV.Audit.Pinnacle.EndToEndQPE
+import FormalRV.Audit.Pinnacle.ResourceCheck
+import FormalRV.Audit.Pinnacle.FactoringClosure
+import FormalRV.Audit.Pinnacle.PPMEndToEnd
 import FormalRV.Audit.Pinnacle.Verifier
 import FormalRV.Audit.Pinnacle.Codegen

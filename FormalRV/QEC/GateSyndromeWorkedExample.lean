@@ -14,7 +14,7 @@
 
   No Mathlib.  Pure Bool / Nat / List + decide.
 -/
-import FormalRV.PPM.CliffordConj
+import FormalRV.PPM.Rules.CliffordConj
 import FormalRV.QEC.Instances
 
 namespace FormalRV.QEC.GateSyndrome

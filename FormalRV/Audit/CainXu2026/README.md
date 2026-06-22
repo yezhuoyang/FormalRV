@@ -21,10 +21,13 @@ the ➗ rows are explicitly arithmetic-only, and the open problems are named und
 | Hardware | [`Hardware.lean`](Hardware.lean) | recorded (1e-3, 1 µs) |
 | System zones | [`SystemZones.lean`](SystemZones.lean) | ✅ all SysLayer invariants hold; ✅ the full ~10⁹-PPM modexp schedule is system-correct (induction) |
 | L1 algorithm | [`L1_Algorithm.lean`](L1_Algorithm.lean) | ✅ shared N-parametric success bound `≥ κ/(log₂N)⁴` |
-| L2 arithmetic | [`L2_Arithmetic.lean`](L2_Arithmetic.lean) | ✅ Eqs E3/E4 (exact identities); ➗ E9 (22,720 τ_s, `decide`) |
+| L2 arithmetic | [`L2_Arithmetic.lean`](L2_Arithmetic.lean) · [`L2_ArithmeticFaithful.lean`](L2_ArithmeticFaithful.lean) | ✅ E3/E4 exact identities; ✅ FAITHFUL E3 (adder n) / E4 (ctrl 2n) / E9 (lookup 2^q−1, now bundling ancilla-restoration) on value-correct MEASURED gadgets (now IN the build + verify-clean gate) |
+| **End-to-end QPE** | [`EndToEndQPE.lean`](EndToEndQPE.lean) | ✅ `cainxu_modexp_endToEnd` — the Babbush-measured windowed modexp (= cain-xu's imported Gidney arithmetic) drives Shor success `≥ κ/(log₂N)⁴`, AND its whole-ladder assembled Toffoli (4×-rescaled Gidney T) is counted on the SAME real `Gate`; `cainxu_pbc_runtime_on_assembled_ladder` feeds that VERIFIED count into the paper's amortized τ_Toff·n_Toff runtime |
+| **Resource check** | [`ResourceCheck.lean`](ResourceCheck.lean) | ✅ verified-count checks of the paper's equations: adder = q_A and ctrl-adder = 2·q_A MATCH; unary lookup 2^q_a OVERCOUNTS by exactly 1 (merged-AND root); the STATED RSA 50/50 lookup/adder split holds to ~2% (≈49/51) IFF the window does a modular add (~2 raw adds) — would be ~65/35 for a plain add |
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ✅ each PPM is a correct logical measurement; ✅ the whole modexp PRESERVES the code (induction, scale-free) |
+| **PPM end-to-end** | [`PPMEndToEnd.lean`](PPMEndToEnd.lean) | ✅ `cainxu_modexp_ppm_realized` — the windowed modexp Gate LOWERED to a magic-aware PPM program (Pauli-product measurements + one factory-DISTILLED `\|T⟩` per Toffoli) RUNS and its measured output decodes to `(a·y) mod N`; distilled-T demand = Toffoli count. Carried: the `teleportCCXRel` Clifford+T + physical distillation contracts (`TFactoryContract`) |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ✅ structurally-verified LP-code surgery gadget; ➗ k=10/1224 DERIVED from matrices (`native_decide`) |
-| Verifier | [`Verifier.lean`](Verifier.lean) | ✅ verified resource UPPER BOUND + ✅ lower-≤-upper SOUNDNESS |
+| Verifier | [`Verifier.lean`](Verifier.lean) | ✅ verified resource UPPER BOUND + ✅ lower-≤-upper SOUNDNESS + ✅ the end-to-end QPE capstone & resource checks |
 | Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; cain-xu's real bb18/lp20 codes noted in comments) |
 
 ## Our approach

@@ -36,8 +36,8 @@
 -/
 
 import FormalRV.QEC.GF2Linear
-import FormalRV.PPM.PPMOperational
-import FormalRV.PPM.PPMUpdateInvariants
+import FormalRV.PPM.Semantics.PPMOperational
+import FormalRV.PPM.Rules.PPMUpdateInvariants
 import FormalRV.Framework.L4_QECCode
 
 namespace FormalRV.QEC

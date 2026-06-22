@@ -41,7 +41,7 @@
 
   No Mathlib.  Pure Nat + `decide`.  No `sorry`, no `axiom`.
 -/
-import FormalRV.System.DependencyGraph
+import FormalRV.System.DeviceLane.DependencyGraph
 
 namespace FormalRV.Shor.ShorCriticalPathFloor
 

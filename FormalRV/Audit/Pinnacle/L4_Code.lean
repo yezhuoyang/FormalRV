@@ -23,12 +23,13 @@
     • the Pinnacle codes are GB codes — the SAME family as the [[72,12,6]]
       gross-code instance below; we CONSTRUCT it and DERIVE k = 12 from the
       parity matrices (k = n − rank H_X − rank H_Z), not hardcoded.
-    • the paper's RSA-2048 instance is recorded as GB [[1620,16,24]]
-      (notes/webster-2026.md lines 74, 195: n_cb = 1620, κ = 16 logical
-      at distance 24, syndrome rounds d_t = d+2 = 26).
+    • the paper's RSA-2048 instance is recorded as the GB code ⟦510,16,24⟧
+      (paper main.tex line 502: ⟦510,16,24⟧, n_cb = 2n = 1020, n_g = 99, n_b = 51;
+      the processing-block footprint is n_pb = n_cb + 4n_g + 4n_b = 1620, recorded
+      separately as `pinnacle_n_pb` — it is NOT the code's n).
 
-  ⬜ RECORDED / GAP: the RSA-scale [[1620,16,24]] parity matrices are stubbed
-  `[]` — deriving k at 1620 columns needs the GB homological formula (brute
+  ⬜ RECORDED / GAP: the RSA-scale ⟦510,16,24⟧ parity matrices are stubbed
+  `[]` — deriving k at 510 columns needs the GB homological formula (brute
   rank infeasible, exactly as for lp_20 in cain-xu).  See README STILL UNSOLVED.
 
   This file also holds the full Pinnacle parametric tuple `pinnacle_instance`
@@ -70,32 +71,40 @@ theorem pinnacle_gb_72_k_derived : derivedK pinnacle_gb_72 = 12 := by native_dec
 
 /-! ## The paper's RSA-2048 instance — recorded (full GB matrices brute-rank-infeasible) -/
 
-/-- Pinnacle GB code: `[[1620, 16, 24]]` generalised-bicycle code
-(paper Tab.; notes/webster-2026.md lines 74, 195: n_cb = 1620,
-κ = 16 logical qubits, distance 24, syndrome rounds d_t = d+2 = 26).
-Distance scaling is paper-flagged Type-B conjecture (notes line 143).
-Parity matrices stubbed `[]` — explicit GB matrix encoding is a later tick. -/
+/-- Pinnacle's RSA-2048 generalised-bicycle CODE is `⟦510, 16, 24⟧` (paper main.tex Table at
+line 502: `⟦510,16,24⟧`, ℓ=255, with `n_cb = 2n = 1020` code-block qubits, `n_g = 99`, `n_b = 51`).
+The code's `n` is **510** — NOT 1620; 1620 is the PROCESSING-BLOCK footprint `n_pb = n_cb + 4n_g +
+4n_b = 1020 + 396 + 204 = 1620` (an architecture constant, recorded as `pinnacle_n_pb` below), which
+the resource formula `n = n_pb·⌈N/k⌉ + n_me` (paper line 751) uses — not the QECCode `n` field.
+Parity matrices stubbed `[]` — deriving `k` at 510 columns needs the GB homological formula
+(brute-rank-infeasible, exactly as lp_20 in cain-xu). -/
 def pinnacle_code : QECCode :=
-  { n := 1620, k := 16, d := 24, hx := [], hz := [] }
+  { n := 510, k := 16, d := 24, hx := [], hz := [] }
+
+/-- The PROCESSING-BLOCK footprint `n_pb = n_cb + 4·n_g + 4·n_b = 1020 + 4·99 + 4·51 = 1620`
+    (paper line 502/476/521) — the per-block physical-qubit count that drives the resource formula.
+    This is an ARCHITECTURE constant, NOT the GB code's `n` (= 510). -/
+def pinnacle_n_pb : Nat := 1620
 
 /-- The full parametric tuple for the Pinnacle instance. -/
 def pinnacle_instance : ShorAlgorithm × QECCode × QualtranPhysicalParameters :=
   (pinnacle_shor, pinnacle_code, pinnacle_hw)
 
-/-- Pinnacle's RSA-2048 generalised-bicycle code is recorded as `[[1620,16,24]]`;
-    its `k`/`d` are paper-recorded (parity matrices stubbed — deriving `k` at 1620
-    columns needs the GB homological formula, out of brute rank reach, exactly as
-    for lp_20 in cain-xu). -/
+/-- Pinnacle's RSA-2048 generalised-bicycle code is recorded as `⟦510,16,24⟧` (paper line 502);
+    its `k`/`d` are paper-recorded (parity matrices stubbed — deriving `k` needs the GB homological
+    formula, out of brute rank reach, exactly as for lp_20 in cain-xu).  The processing-block
+    footprint `n_pb = 1620` is recorded separately (`pinnacle_n_pb`), NOT as the code's `n`. -/
 theorem pinnacle_rsa_code_recorded :
-    pinnacle_code.n = 1620 ∧
+    pinnacle_code.n = 510 ∧
     pinnacle_code.k = 16 ∧
-    pinnacle_code.d = 24 := by
-  refine ⟨by decide, by decide, by decide⟩
+    pinnacle_code.d = 24 ∧
+    pinnacle_n_pb = 1620 := by
+  refine ⟨by decide, by decide, by decide, by decide⟩
 
-/-- Smoke: paper-stated parameters read back. q_A = 3072; GB [[1620,16,24]];
+/-- Smoke: paper-stated parameters read back. q_A = 3072; GB code `⟦510,16,24⟧`; n_pb = 1620;
 hardware matches the 1e-3 / 1 µs baseline. -/
 example : pinnacle_instance.1.q_A = 3072 := by rfl
-example : pinnacle_instance.2.1.n = 1620 ∧
+example : pinnacle_instance.2.1.n = 510 ∧
           pinnacle_instance.2.1.k = 16 ∧
           pinnacle_instance.2.1.d = 24 := ⟨rfl, rfl, rfl⟩
 example : pinnacle_instance.2.2.physical_error_thousandths = 1 := by rfl
@@ -105,4 +114,4 @@ end FormalRV.Audit.Pinnacle
 #check @FormalRV.Audit.Pinnacle.pinnacle_gb_72_n          -- ➗ n = 72
 #check @FormalRV.Audit.Pinnacle.pinnacle_gb_72_css        -- ➗ valid CSS
 #check @FormalRV.Audit.Pinnacle.pinnacle_gb_72_k_derived  -- ➗ k = 12 DERIVED (native_decide)
-#verify_clean FormalRV.Audit.Pinnacle.pinnacle_rsa_code_recorded  -- ✅ RSA instance [[1620,16,24]]
+#verify_clean FormalRV.Audit.Pinnacle.pinnacle_rsa_code_recorded  -- ✅ RSA instance ⟦510,16,24⟧, n_pb=1620

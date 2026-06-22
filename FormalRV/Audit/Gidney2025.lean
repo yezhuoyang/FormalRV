@@ -17,5 +17,15 @@ import FormalRV.Audit.Gidney2025.L3_PPM
 import FormalRV.Audit.Gidney2025.L4_Code
 import FormalRV.Audit.Gidney2025.Verifier
 import FormalRV.Audit.Gidney2025.Codegen
-import FormalRV.Audit.Gidney2025.CFS
+import FormalRV.Shor.CFS
 import FormalRV.Audit.Gidney2025.EkeraHastad
+import FormalRV.Audit.Gidney2025.EkeraCombinatorics
+import FormalRV.Audit.Gidney2025.EkeraEndToEnd
+import FormalRV.Audit.Gidney2025.EkeraHastadCircuit
+import FormalRV.Audit.Gidney2025.EkeraHastadCircuitMeasurement
+import FormalRV.Audit.Gidney2025.EkeraHastadOracleGate
+import FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect
+-- The cost-optimal canonical windowed multiplier `gcMul` imported into this audit: Shor success ∧
+-- per-window count PROVEN EQUAL to the loop-body cost model `lookupCost + addCost` (gadget-for-gadget,
+-- no over-count) ∧ canonical in-register output `(a·x) mod N < N` (no coset rep / no adaptOut).
+import FormalRV.Audit.Gidney2025.GidneyCheapModMulConnection

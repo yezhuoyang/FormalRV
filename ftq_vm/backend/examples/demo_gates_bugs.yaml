@@ -1,0 +1,39 @@
+# DEMO E: finite control electronics at the gate level.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/demo_gates_backend.yaml \
+#       ftq_vm/backend/examples/demo_gates_bugs.yaml --out out/demoE
+#
+#   1. FPGA channel cap -- the first layer fires 6 H gates simultaneously,
+#      but max_parallel_gates is 4: CapacityExceeded on gates.parallel.
+#   2. AOD cap -- 3 simultaneous CNOTs exceed CNOT's max_parallel: 2:
+#      CapacityExceeded on gate.CNOT.parallel.
+#   3. Readout lines -- 3 simultaneous measurements hold 3 readout lines,
+#      capacity 2: CapacityExceeded on readout_lines.
+#
+# Durations are honest: every gate op takes its hardware time (H 100us,
+# CNOT 1000us, measure 5000us -- the run ends at t=7100us, dominated by
+# measurement).  Note none of the ops declare duration_us: the gate table
+# fills it in.  Try claiming "duration_us: 5" on a CNOT -- the loader
+# rejects the schedule.
+
+program: demo_gates_bugs
+description: gate layers exceeding FPGA channels, AOD capacity and readout lines
+
+ops:
+  # ---- BUG 1: 6 simultaneous H gates vs max_parallel_gates: 4 ------------
+  - {id: h0, do: H, at_us: 0, qubits: ["q[0]"]}
+  - {id: h1, do: H, at_us: 0, qubits: ["q[1]"]}
+  - {id: h2, do: H, at_us: 0, qubits: ["q[2]"]}
+  - {id: h3, do: H, at_us: 0, qubits: ["q[3]"]}
+  - {id: h4, do: H, at_us: 0, qubits: ["q[4]"]}
+  - {id: h5, do: H, at_us: 0, qubits: ["q[5]"]}
+
+  # ---- BUG 2: 3 simultaneous CNOTs vs CNOT max_parallel: 2 ---------------
+  - {id: cx01, do: CNOT, at_us: 100, qubits: ["q[0]", "q[1]"]}
+  - {id: cx23, do: CNOT, at_us: 100, qubits: ["q[2]", "q[3]"]}
+  - {id: cx45, do: CNOT, at_us: 100, qubits: ["q[4]", "q[5]"]}
+
+  # ---- BUG 3: 3 simultaneous measurements vs 2 readout lines -------------
+  - {id: m0, do: measure, at_us: 2100, qubits: ["q[0]"], deps: [cx01]}
+  - {id: m2, do: measure, at_us: 2100, qubits: ["q[2]"], deps: [cx23]}
+  - {id: m4, do: measure, at_us: 2100, qubits: ["q[4]"], deps: [cx45]}

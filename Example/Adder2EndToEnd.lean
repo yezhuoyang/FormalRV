@@ -23,19 +23,19 @@
 -/
 import FormalRV.Core.GateQASM
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
-import FormalRV.PPM.CircuitToPPMInterface
-import FormalRV.System.AdderSystem
+import FormalRV.PPM.Compiler.CircuitToPPMInterface
+import FormalRV.System.Examples.AdderSystem
 
 open FormalRV.Framework
 open FormalRV.Framework.Gate
-open FormalRV.Framework.Architecture
-open FormalRV.Framework.ScheduleInv
-open FormalRV.Framework.SurgeryGadgetToSysCalls
-open FormalRV.Framework.SystemInvariantStrengthening
-open FormalRV.Framework.LatticeSurgeryPPMContract
+open FormalRV.System.Architecture
+open FormalRV.System.ScheduleInv
+open FormalRV.System.SurgeryGadgetToSysCalls
+open FormalRV.System.SystemInvariantStrengthening
+open FormalRV.System.LatticeSurgeryPPMContract
 open FormalRV.Framework.CircuitToPPMInterface
 open FormalRV.BQAlgo
-open FormalRV.Framework.AdderSystem
+open FormalRV.System.AdderSystem
 
 /-! ## The circuit (verified) -/
 

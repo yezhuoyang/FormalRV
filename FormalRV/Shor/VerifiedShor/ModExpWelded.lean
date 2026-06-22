@@ -108,10 +108,61 @@ theorem shor_resource_welded (a r N m ainv : Nat)
   · exact tcount_verified_modexp_chain a ainv N (Nat.log2 (2 * N) + 1) m
       hcop_a hcop_ainv hodd h1
 
+/-! ## WS1a' — success AND count on ONE SYNTACTIC GATE (the bridge made load-bearing).
+
+The `shor_resource_welded` above states both facts but names two terms of two types (the count on
+the raw `Gate`, the success on the `BaseUCom` family); `family_iterate_gate` related them but was
+never invoked.  Here we name a SINGLE syntactic per-iterate gate `shorModExpGate`, run the resource
+counter on THAT gate, and lift the SAME gate (via `family_iterate_gate`, now genuinely load-bearing)
+to the `BaseUCom` family the Shor success theorem consumes — so success and count are about one
+syntactic object. -/
+
+/-- **The per-iterate Shor modular-multiplication GATE — the syntactic object.**  Iterate `i`
+    multiplies by `a^(2^i) mod N`.  This is exactly the `Gate` the verified family
+    `f_modmult_circuit_verified_bits` is `Gate.toUCom` of, and the term the tree-walk resource
+    counter (`tcount`) runs on. -/
+def shorModExpGate (a ainv N bits i : Nat) : Gate :=
+  modmult_MCP_gate bits N ((a ^ (2 ^ i)) % N) ((ainv ^ (2 ^ i)) % N)
+
+/-- **The lift, as one equation (makes `family_iterate_gate` load-bearing).**  The verified family
+    is, pointwise, `Gate.toUCom` of the syntactic gate `shorModExpGate`.  Lifting `shorModExpGate`
+    to the family the Shor success theorem consumes goes through THIS equation. -/
+theorem family_eq_toUCom_shorModExpGate (a ainv N bits : Nat) :
+    (fun i => Gate.toUCom (bits + sqir_modmult_rev_anc bits) (shorModExpGate a ainv N bits i))
+      = f_modmult_circuit_verified_bits a ainv N bits := by
+  funext i; exact (family_iterate_gate a ainv N bits i).symm
+
+/-- **★ WS1a' — Standard Shor: success AND resource count on ONE syntactic gate. ★**  Both
+    (i) the order-finding success bound `≥ κ/(log₂N)⁴` and (ii) the exact total T-count `m·112·bits²`
+    are stated about the SAME per-iterate syntactic gate `shorModExpGate` — success via the
+    PROVEN `family_iterate_gate` lift (now load-bearing through `family_eq_toUCom_shorModExpGate`),
+    count via the tree-walk counter `tcount` run on that gate.  No `Gate`-vs-`BaseUCom` look-alike:
+    the gate the count rides IS the gate the success rides. -/
+theorem shor_resource_welded_one_object (a r N m ainv : Nat)
+    (h_basic_r : BasicSettingRelaxed a r N m (Nat.log2 (2 * N) + 1))
+    (h_inv : a * ainv % N = 1)
+    (hcop_a : Nat.Coprime a N) (hcop_ainv : Nat.Coprime ainv N)
+    (hodd : Odd N) (h1 : 1 < N) :
+    FormalRV.SQIRPort.probability_of_success a r N m (Nat.log2 (2 * N) + 1)
+        (sqir_modmult_rev_anc (Nat.log2 (2 * N) + 1))
+        (fun i => Gate.toUCom
+          (Nat.log2 (2 * N) + 1 + sqir_modmult_rev_anc (Nat.log2 (2 * N) + 1))
+          (shorModExpGate a ainv N (Nat.log2 (2 * N) + 1) i))
+      ≥ FormalRV.SQIRPort.κ / (Nat.log2 N : ℝ) ^ 4
+    ∧ (∑ i ∈ Finset.range m, tcount (shorModExpGate a ainv N (Nat.log2 (2 * N) + 1) i))
+        = m * (112 * (Nat.log2 (2 * N) + 1) ^ 2) := by
+  refine ⟨?_, ?_⟩
+  · rw [family_eq_toUCom_shorModExpGate]
+    exact Shor_correct_verified_no_modmult_axioms a r N m ainv h_basic_r h_inv
+  · simp only [shorModExpGate]
+    exact tcount_verified_modexp_chain a ainv N (Nat.log2 (2 * N) + 1) m
+      hcop_a hcop_ainv hodd h1
+
 /-! ## Anti-cheat gate: the build FAILS if these stop being axiom-clean. -/
 
 #verify_clean shor_modexp_welded
 #verify_clean tcount_verified_modexp_chain
 #verify_clean shor_resource_welded
+#verify_clean shor_resource_welded_one_object
 
 end FormalRV.BQAlgo
