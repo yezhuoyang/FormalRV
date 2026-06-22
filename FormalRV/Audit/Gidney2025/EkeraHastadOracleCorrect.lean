@@ -178,6 +178,317 @@ theorem adder_target_val_general (bits q_start : Nat) (g : Nat → Bool) :
   congr 1
   omega
 
+/-! ## §4. Decoder congruences (value depends only on the register bits) -/
+
+theorem cuccaro_target_val_congr (q_start : Nat) (f f' : Nat → Bool) :
+    ∀ bits, (∀ i, i < bits → f (q_start + 2 * i + 1) = f' (q_start + 2 * i + 1)) →
+      cuccaro_target_val bits q_start f = cuccaro_target_val bits q_start f' := by
+  intro bits
+  induction bits with
+  | zero => intro _; rfl
+  | succ k ih =>
+      intro h
+      show cuccaro_target_val k q_start f + (if f (q_start + 2 * k + 1) then 2 ^ k else 0)
+        = cuccaro_target_val k q_start f' + (if f' (q_start + 2 * k + 1) then 2 ^ k else 0)
+      rw [ih (fun i hi => h i (by omega)), h k (by omega)]
+
+theorem cuccaro_read_val_congr (q_start : Nat) (f f' : Nat → Bool) :
+    ∀ bits, (∀ i, i < bits → f (q_start + 2 * i + 2) = f' (q_start + 2 * i + 2)) →
+      cuccaro_read_val bits q_start f = cuccaro_read_val bits q_start f' := by
+  intro bits
+  induction bits with
+  | zero => intro _; rfl
+  | succ k ih =>
+      intro h
+      show cuccaro_read_val k q_start f + (if f (q_start + 2 * k + 2) then 2 ^ k else 0)
+        = cuccaro_read_val k q_start f' + (if f' (q_start + 2 * k + 2) then 2 ^ k else 0)
+      rw [ih (fun i hi => h i (by omega)), h k (by omega)]
+
+/-! ## §5. The general single-gadget step -/
+
+private theorem mask_read_pos_ne (q_start i j : Nat) : q_start + 2 * i + 1 ≠ q_start + 2 * j + 2 := by omega
+
+/-- **★ General conditional-add step. ★**  For ANY clean-ancilla input `f` (read register and carry
+both zero) with the flag outside the workspace, the gadget adds `(if flag then N else 0)` to the
+target (mod `2^bits`), restores the read register and carry to zero, and preserves all positions
+outside the workspace. -/
+theorem condAdd_step (bits q_start N flagPos : Nat) (f : Nat → Bool)
+    (hN : N < 2 ^ bits)
+    (hread : ∀ j, j < bits → f (q_start + 2 * j + 2) = false)
+    (hcarry : f q_start = false)
+    (hdist : ∀ i, i < bits → flagPos ≠ q_start + 2 * i + 2)
+    (hout : flagPos < q_start ∨ q_start + 2 * bits + 1 ≤ flagPos) :
+    cuccaro_target_val bits q_start
+        (Gate.applyNat (sqir_conditionalAddConstGate bits q_start N flagPos) f)
+      = (cuccaro_target_val bits q_start f + (if f flagPos then N else 0)) % 2 ^ bits
+    ∧ (∀ j, j < bits →
+        Gate.applyNat (sqir_conditionalAddConstGate bits q_start N flagPos) f (q_start + 2 * j + 2)
+          = false)
+    ∧ Gate.applyNat (sqir_conditionalAddConstGate bits q_start N flagPos) f q_start = false
+    ∧ (∀ p, (p < q_start ∨ q_start + 2 * bits + 1 ≤ p) →
+        Gate.applyNat (sqir_conditionalAddConstGate bits q_start N flagPos) f p = f p) := by
+  have hPMother : ∀ (g : Nat → Bool) (p : Nat), (∀ i, i < bits → p ≠ q_start + 2 * i + 2) →
+      Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) g p = g p :=
+    fun g p hp => sqir_prepareMaskedConstRead_at_other bits q_start N flagPos p hp g
+  -- the gadget unfolds to PM ; A ; PM
+  have hgeq : Gate.applyNat (sqir_conditionalAddConstGate bits q_start N flagPos) f
+      = Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos)
+          (Gate.applyNat (cuccaro_n_bit_adder_full bits q_start)
+            (Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f)) := by
+    unfold sqir_conditionalAddConstGate
+    simp only [Gate.applyNat_seq]
+  -- stage-1 facts (g1 = applyNat PM f)
+  have hg1_read : ∀ j, j < bits →
+      Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f (q_start + 2 * j + 2)
+        = (f flagPos && N.testBit j) := by
+    intro j hj
+    rw [sqir_prepareMaskedConstRead_at_read bits q_start N flagPos j hj f hdist, hread j hj]
+    simp
+  have hg1_target : ∀ i, i < bits →
+      Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f (q_start + 2 * i + 1)
+        = f (q_start + 2 * i + 1) := fun i _ => hPMother f _ (fun k _ => mask_read_pos_ne q_start i k)
+  have hg1_carry : Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f q_start
+        = false := by
+    rw [hPMother f q_start (fun k _ => by omega), hcarry]
+  have hg1_flag : Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f flagPos
+        = f flagPos := hPMother f flagPos (fun k hk => by
+          rcases hout with h | h
+          · omega
+          · exact hdist k hk)
+  -- value of the read register after stage 1
+  have hg1_readval : cuccaro_read_val bits q_start
+        (Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f)
+        = (if f flagPos then N else 0) := by
+    by_cases hflag : f flagPos = true
+    · rw [cuccaro_read_val_eq_sum_when_bits_match bits q_start N _ (fun j hj => by
+            rw [hg1_read j hj, hflag]; simp), Nat.mod_eq_of_lt hN, if_pos hflag]
+    · rw [cuccaro_read_val_eq_sum_when_bits_match bits q_start 0 _ (fun j hj => by
+            rw [hg1_read j hj]; simp [hflag]), Nat.zero_mod]
+      simp [hflag]
+  -- abbreviations
+  set g1 := Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) f with hg1
+  set g2 := Gate.applyNat (cuccaro_n_bit_adder_full bits q_start) g1 with hg2
+  -- stage-2 facts
+  have hg2_read : ∀ j, j < bits → g2 (q_start + 2 * j + 2) = (f flagPos && N.testBit j) := by
+    intro j hj
+    rw [hg2, cuccaro_n_bit_adder_full_a_restored bits q_start g1 j hj]
+    exact hg1_read j hj
+  have hg2_carry : g2 q_start = false := by
+    rw [hg2, cuccaro_n_bit_adder_full_carry_in_restored bits q_start g1]
+    exact hg1_carry
+  have hg2_flag : g2 flagPos = f flagPos := by
+    rw [hg2]
+    rcases hout with h | h
+    · rw [cuccaro_n_bit_adder_full_frame_below bits q_start g1 flagPos h]; exact hg1_flag
+    · rw [cuccaro_n_bit_adder_full_frame_above bits q_start g1 flagPos h]; exact hg1_flag
+  have hg2_target : cuccaro_target_val bits q_start g2
+        = (cuccaro_target_val bits q_start f + (if f flagPos then N else 0)) % 2 ^ bits := by
+    rw [hg2, adder_target_val_general, hg1_carry, hg1_readval,
+        cuccaro_target_val_congr q_start g1 f bits (fun i hi => hg1_target i hi)]
+    simp
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · -- target value
+    rw [hgeq,
+        cuccaro_target_val_congr q_start
+          (Gate.applyNat (sqir_prepareMaskedConstRead bits q_start N flagPos) g2) g2 bits
+          (fun i _ => hPMother g2 _ (fun k _ => mask_read_pos_ne q_start i k))]
+    exact hg2_target
+  · -- read clean
+    intro j hj
+    rw [hgeq, sqir_prepareMaskedConstRead_at_read bits q_start N flagPos j hj g2 hdist,
+        hg2_read j hj, hg2_flag]
+    simp
+  · -- carry clean
+    rw [hgeq, hPMother g2 q_start (fun k _ => by omega)]
+    exact hg2_carry
+  · -- outside preserved
+    intro p hp
+    exact sqir_conditionalAddConstGate_preserves_outside bits q_start N flagPos p f
+      (fun i hi => by rcases hp with h | h
+                      · omega
+                      · omega) hp
+
+/-- **General unconditional add-constant step** (for the `2^(ℓ+m)` offset gadget). -/
+theorem addConst_step (bits q_start c : Nat) (f : Nat → Bool)
+    (hc : c < 2 ^ bits)
+    (hread : ∀ j, j < bits → f (q_start + 2 * j + 2) = false)
+    (hcarry : f q_start = false) :
+    cuccaro_target_val bits q_start (Gate.applyNat (cuccaro_addConstGate bits q_start c) f)
+      = (cuccaro_target_val bits q_start f + c) % 2 ^ bits
+    ∧ (∀ j, j < bits → Gate.applyNat (cuccaro_addConstGate bits q_start c) f (q_start + 2 * j + 2) = false)
+    ∧ Gate.applyNat (cuccaro_addConstGate bits q_start c) f q_start = false
+    ∧ (∀ p, (p < q_start ∨ q_start + 2 * bits + 1 ≤ p) →
+        Gate.applyNat (cuccaro_addConstGate bits q_start c) f p = f p) := by
+  have hPCRother : ∀ (g : Nat → Bool) (p : Nat), (∀ i, i < bits → p ≠ q_start + 2 * i + 2) →
+      Gate.applyNat (cuccaro_prepareConstRead bits q_start c) g p = g p :=
+    fun g p hp => cuccaro_prepareConstRead_at_other bits q_start c p hp g
+  have hgeq : Gate.applyNat (cuccaro_addConstGate bits q_start c) f
+      = Gate.applyNat (cuccaro_prepareConstRead bits q_start c)
+          (Gate.applyNat (cuccaro_n_bit_adder_full bits q_start)
+            (Gate.applyNat (cuccaro_prepareConstRead bits q_start c) f)) := by
+    unfold cuccaro_addConstGate; simp only [Gate.applyNat_seq]
+  have hg1_read : ∀ j, j < bits →
+      Gate.applyNat (cuccaro_prepareConstRead bits q_start c) f (q_start + 2 * j + 2) = c.testBit j := by
+    intro j hj; rw [cuccaro_prepareConstRead_at_read bits q_start c j hj f, hread j hj]; simp
+  have hg1_target : ∀ i, i < bits →
+      Gate.applyNat (cuccaro_prepareConstRead bits q_start c) f (q_start + 2 * i + 1)
+        = f (q_start + 2 * i + 1) := fun i _ => hPCRother f _ (fun k _ => mask_read_pos_ne q_start i k)
+  have hg1_carry : Gate.applyNat (cuccaro_prepareConstRead bits q_start c) f q_start = false := by
+    rw [hPCRother f q_start (fun k _ => by omega), hcarry]
+  have hg1_readval : cuccaro_read_val bits q_start
+        (Gate.applyNat (cuccaro_prepareConstRead bits q_start c) f) = c := by
+    rw [cuccaro_read_val_eq_sum_when_bits_match bits q_start c _ (fun j hj => hg1_read j hj),
+        Nat.mod_eq_of_lt hc]
+  set g1 := Gate.applyNat (cuccaro_prepareConstRead bits q_start c) f with hg1
+  set g2 := Gate.applyNat (cuccaro_n_bit_adder_full bits q_start) g1 with hg2
+  have hg2_read : ∀ j, j < bits → g2 (q_start + 2 * j + 2) = c.testBit j := by
+    intro j hj; rw [hg2, cuccaro_n_bit_adder_full_a_restored bits q_start g1 j hj]; exact hg1_read j hj
+  have hg2_carry : g2 q_start = false := by
+    rw [hg2, cuccaro_n_bit_adder_full_carry_in_restored bits q_start g1]; exact hg1_carry
+  have hg2_target : cuccaro_target_val bits q_start g2 = (cuccaro_target_val bits q_start f + c) % 2 ^ bits := by
+    rw [hg2, adder_target_val_general, hg1_carry, hg1_readval,
+        cuccaro_target_val_congr q_start g1 f bits (fun i hi => hg1_target i hi)]
+    simp
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [hgeq, cuccaro_target_val_congr q_start
+          (Gate.applyNat (cuccaro_prepareConstRead bits q_start c) g2) g2 bits
+          (fun i _ => hPCRother g2 _ (fun k _ => mask_read_pos_ne q_start i k))]
+    exact hg2_target
+  · intro j hj
+    rw [hgeq, cuccaro_prepareConstRead_at_read bits q_start c j hj g2, hg2_read j hj]; simp
+  · rw [hgeq, hPCRother g2 q_start (fun k _ => by omega)]; exact hg2_carry
+  · intro p hp
+    rw [hgeq, hPCRother g2 p (fun i _ => by rcases hp with h | h
+                                            · omega
+                                            · omega)]
+    rcases hp with h | h
+    · rw [hg2, cuccaro_n_bit_adder_full_frame_below bits q_start g1 p h, hg1,
+          hPCRother f p (fun i _ => by omega)]
+    · rw [hg2, cuccaro_n_bit_adder_full_frame_above bits q_start g1 p h, hg1,
+          hPCRother f p (fun i _ => by omega)]
+
+/-- **General conditional-sub step** (for the `− d·2^i` gadgets): subtracts `(if flag then N else 0)`
+mod `2^bits`, i.e. adds the two's complement `2^bits − N`. -/
+theorem condSub_step (bits q_start N flagPos : Nat) (f : Nat → Bool)
+    (hN0 : 0 < N) (hN : N ≤ 2 ^ bits)
+    (hread : ∀ j, j < bits → f (q_start + 2 * j + 2) = false)
+    (hcarry : f q_start = false)
+    (hdist : ∀ i, i < bits → flagPos ≠ q_start + 2 * i + 2)
+    (hout : flagPos < q_start ∨ q_start + 2 * bits + 1 ≤ flagPos) :
+    cuccaro_target_val bits q_start
+        (Gate.applyNat (sqir_conditionalSubConstGate bits q_start N flagPos) f)
+      = (cuccaro_target_val bits q_start f + (if f flagPos then 2 ^ bits - N else 0)) % 2 ^ bits
+    ∧ (∀ j, j < bits →
+        Gate.applyNat (sqir_conditionalSubConstGate bits q_start N flagPos) f (q_start + 2 * j + 2)
+          = false)
+    ∧ Gate.applyNat (sqir_conditionalSubConstGate bits q_start N flagPos) f q_start = false
+    ∧ (∀ p, (p < q_start ∨ q_start + 2 * bits + 1 ≤ p) →
+        Gate.applyNat (sqir_conditionalSubConstGate bits q_start N flagPos) f p = f p) := by
+  unfold sqir_conditionalSubConstGate
+  exact condAdd_step bits q_start (2 ^ bits - N) flagPos f (Nat.sub_lt (Nat.two_pow_pos bits) hN0)
+    hread hcarry hdist hout
+
+/-! ## §6. Accumulation fold over the gadget list -/
+
+/-- The ancilla (read register + carry) is all zero. -/
+def CleanState (bits q_start : Nat) (f : Nat → Bool) : Prop :=
+  (∀ j, j < bits → f (q_start + 2 * j + 2) = false) ∧ f q_start = false
+
+/-- A gadget `g` is a clean step with target-delta `δ`: on any clean state it adds `δ f` to the
+target (mod `2^bits`), keeps the ancilla clean, and preserves all positions outside the workspace. -/
+def CleanStep (bits q_start : Nat) (g : Gate) (δ : (Nat → Bool) → Nat) : Prop :=
+  ∀ f, CleanState bits q_start f →
+    (cuccaro_target_val bits q_start (Gate.applyNat g f)
+        = (cuccaro_target_val bits q_start f + δ f) % 2 ^ bits)
+    ∧ CleanState bits q_start (Gate.applyNat g f)
+    ∧ (∀ p, (p < q_start ∨ q_start + 2 * bits + 1 ≤ p) → Gate.applyNat g f p = f p)
+
+/-- `δ` depends only on the positions outside the workspace (where flag qubits live). -/
+def OutsideStable (bits q_start : Nat) (δ : (Nat → Bool) → Nat) : Prop :=
+  ∀ f f', (∀ p, (p < q_start ∨ q_start + 2 * bits + 1 ≤ p) → f p = f' p) → δ f = δ f'
+
+theorem condAdd_cleanStep (bits q_start N flagPos : Nat) (hN : N < 2 ^ bits)
+    (hdist : ∀ i, i < bits → flagPos ≠ q_start + 2 * i + 2)
+    (hout : flagPos < q_start ∨ q_start + 2 * bits + 1 ≤ flagPos) :
+    CleanStep bits q_start (sqir_conditionalAddConstGate bits q_start N flagPos)
+      (fun f => if f flagPos then N else 0) := by
+  intro f hf
+  obtain ⟨ht, hr, hc, ho⟩ := condAdd_step bits q_start N flagPos f hN hf.1 hf.2 hdist hout
+  exact ⟨ht, ⟨hr, hc⟩, ho⟩
+
+theorem condSub_cleanStep (bits q_start N flagPos : Nat) (hN0 : 0 < N) (hN : N ≤ 2 ^ bits)
+    (hdist : ∀ i, i < bits → flagPos ≠ q_start + 2 * i + 2)
+    (hout : flagPos < q_start ∨ q_start + 2 * bits + 1 ≤ flagPos) :
+    CleanStep bits q_start (sqir_conditionalSubConstGate bits q_start N flagPos)
+      (fun f => if f flagPos then 2 ^ bits - N else 0) := by
+  intro f hf
+  obtain ⟨ht, hr, hc, ho⟩ := condSub_step bits q_start N flagPos f hN0 hN hf.1 hf.2 hdist hout
+  exact ⟨ht, ⟨hr, hc⟩, ho⟩
+
+theorem addConst_cleanStep (bits q_start c : Nat) (hc : c < 2 ^ bits) :
+    CleanStep bits q_start (cuccaro_addConstGate bits q_start c) (fun _ => c) := by
+  intro f hf
+  obtain ⟨ht, hr, hc', ho⟩ := addConst_step bits q_start c f hc hf.1 hf.2
+  exact ⟨ht, ⟨hr, hc'⟩, ho⟩
+
+theorem condAdd_outsideStable (bits q_start N flagPos : Nat)
+    (hout : flagPos < q_start ∨ q_start + 2 * bits + 1 ≤ flagPos) :
+    OutsideStable bits q_start (fun f => if f flagPos then N else 0) := fun f f' h => by
+  show (if f flagPos then N else 0) = (if f' flagPos then N else 0); rw [h flagPos hout]
+
+theorem condSub_outsideStable (bits q_start N flagPos : Nat)
+    (hout : flagPos < q_start ∨ q_start + 2 * bits + 1 ≤ flagPos) :
+    OutsideStable bits q_start (fun f => if f flagPos then 2 ^ bits - N else 0) := fun f f' h => by
+  show (if f flagPos then 2 ^ bits - N else 0) = (if f' flagPos then 2 ^ bits - N else 0)
+  rw [h flagPos hout]
+
+theorem const_outsideStable (bits q_start c : Nat) :
+    OutsideStable bits q_start (fun _ => c) := fun _ _ _ => rfl
+
+/-- **★ The accumulation fold. ★**  Folding a list of clean steps (with outside-stable deltas) over a
+clean state adds the sum of the deltas to the target (mod `2^bits`), keeps the ancilla clean, and
+preserves the workspace exterior. -/
+theorem cleanStep_fold (bits q_start : Nat) :
+    ∀ (gds : List (Gate × ((Nat → Bool) → Nat))),
+      (∀ gd ∈ gds, CleanStep bits q_start gd.1 gd.2) →
+      (∀ gd ∈ gds, OutsideStable bits q_start gd.2) →
+      ∀ f, CleanState bits q_start f →
+        (cuccaro_target_val bits q_start
+            (Gate.applyNat ((gds.map Prod.fst).foldr Gate.seq Gate.I) f)
+          = (cuccaro_target_val bits q_start f + (gds.map (fun gd => gd.2 f)).sum) % 2 ^ bits)
+        ∧ CleanState bits q_start (Gate.applyNat ((gds.map Prod.fst).foldr Gate.seq Gate.I) f)
+        ∧ (∀ p, (p < q_start ∨ q_start + 2 * bits + 1 ≤ p) →
+            Gate.applyNat ((gds.map Prod.fst).foldr Gate.seq Gate.I) f p = f p) := by
+  intro gds
+  induction gds with
+  | nil =>
+      intro _ _ f hf
+      refine ⟨?_, hf, fun p _ => rfl⟩
+      simp only [List.map_nil, List.foldr_nil, List.sum_nil, Nat.add_zero]
+      show cuccaro_target_val bits q_start f = cuccaro_target_val bits q_start f % 2 ^ bits
+      rw [Nat.mod_eq_of_lt (cuccaro_target_val_lt bits q_start f)]
+  | cons gd rest ih =>
+      intro hstep hstable f hf
+      obtain ⟨hg_t, hg_clean, hg_out⟩ := hstep gd (List.mem_cons_self ..) f hf
+      obtain ⟨hr_t, hr_clean, hr_out⟩ :=
+        ih (fun g' hg' => hstep g' (List.mem_cons_of_mem _ hg'))
+           (fun g' hg' => hstable g' (List.mem_cons_of_mem _ hg'))
+           (Gate.applyNat gd.1 f) hg_clean
+      have hfold : Gate.applyNat (((gd :: rest).map Prod.fst).foldr Gate.seq Gate.I) f
+          = Gate.applyNat ((rest.map Prod.fst).foldr Gate.seq Gate.I) (Gate.applyNat gd.1 f) := by
+        show Gate.applyNat (Gate.seq gd.1 ((rest.map Prod.fst).foldr Gate.seq Gate.I)) f = _
+        rw [Gate.applyNat_seq]
+      refine ⟨?_, ?_, ?_⟩
+      · rw [hfold, hr_t, hg_t]
+        have hsum_eq : (rest.map (fun g' => g'.2 (Gate.applyNat gd.1 f))).sum
+            = (rest.map (fun g' => g'.2 f)).sum :=
+          congrArg List.sum (List.map_congr_left (fun g' hg' =>
+            hstable g' (List.mem_cons_of_mem _ hg') (Gate.applyNat gd.1 f) f hg_out))
+        rw [hsum_eq, Nat.mod_add_mod, List.map_cons, List.sum_cons]
+        congr 1; ring
+      · rw [hfold]; exact hr_clean
+      · intro p hp; rw [hfold, hr_out p hp, hg_out p hp]
+
 end FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect
 
 #verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.condAdd_commute_overlay
@@ -185,3 +496,7 @@ end FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect
 #verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.cuccaro_target_val_testBit
 #verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.cuccaro_read_val_testBit
 #verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.adder_target_val_general
+#verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.condAdd_step
+#verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.addConst_step
+#verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.condSub_step
+#verify_clean FormalRV.Audit.Gidney2025.EkeraHastadOracleCorrect.cleanStep_fold
