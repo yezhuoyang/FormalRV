@@ -231,7 +231,7 @@ private theorem targetComplement_wellTyped (n q_start dim : Nat)
   | succ k ih =>
     exact ⟨ih (by omega), (by omega : q_start + 2 * k + 1 < dim)⟩
 
-private theorem regCompareXor_wellTyped (bits q_start flagPos dim : Nat)
+theorem regCompareXor_wellTyped (bits q_start flagPos dim : Nat)
     (h_ws : q_start + 2 * bits + 1 ≤ dim) (h_flag : flagPos < dim)
     (h_ne : flagPos ≠ q_start + 2 * bits) :
     Gate.WellTyped dim (regCompareXor bits q_start flagPos) :=
@@ -241,7 +241,7 @@ private theorem regCompareXor_wellTyped (bits q_start flagPos dim : Nat)
    cuccaro_maj_chain_inv_wellTyped bits q_start dim h_ws,
    targetComplement_wellTyped bits q_start dim h_ws⟩
 
-private theorem modNReduceFlag_wellTyped (bits q_start N flagPos dim : Nat)
+theorem modNReduceFlag_wellTyped (bits q_start N flagPos dim : Nat)
     (h_ws : q_start + 2 * bits + 1 ≤ dim) (h_flag : flagPos < dim)
     (h_ne : flagPos ≠ q_start + 2 * bits)
     (h_add : ∀ i, i < bits → flagPos ≠ q_start + 2 * i + 2) :
@@ -352,7 +352,7 @@ inherited from the proven cascade engine `applyNat_cx_cascade_at/_frame`. -/
 def swapCascade (u v : Nat → Nat) (n : Nat) : Gate :=
   Gate.seq (Gate.seq (cxCascade u v n) (cxCascade v u n)) (cxCascade u v n)
 
-private theorem swapCascade_wellTyped (u v : Nat → Nat) (n dim : Nat)
+theorem swapCascade_wellTyped (u v : Nat → Nat) (n dim : Nat)
     (h0 : 0 < dim)
     (h : ∀ i, i < n → u i < dim ∧ v i < dim ∧ u i ≠ v i) :
     Gate.WellTyped dim (swapCascade u v n) :=
@@ -443,7 +443,7 @@ private theorem mulInputOf_lit (w bits numWin y p : Nat) (hp : p ≠ 0) :
 
 /-- A `ModNMulReady` state IS `mulInputOf` (function equality): the block
     and flag are clean, which is exactly what `mulInputOf` says there. -/
-private theorem modNMulReady_eq (w bits numWin y : Nat) (f : Nat → Bool)
+theorem modNMulReady_eq (w bits numWin y : Nat) (f : Nat → Bool)
     (h : ModNMulReady w bits numWin y f) :
     f = mulInputOf cuccaroAdder w bits numWin y := by
   obtain ⟨hF, hD, hC, hG, hV⟩ := h
@@ -487,7 +487,7 @@ def windowedEncodeOut (w bits : Nat) : Gate :=
 
 /-- **IN-adapter semantics**: `encodeDataZeroAnc bits (2w+2·bits+3) x` is
     mapped to the clean windowed input `mulInputOf cuccaroAdder`. -/
-private theorem windowedEncodeIn_apply (w bits numWin x : Nat)
+theorem windowedEncodeIn_apply (w bits numWin x : Nat)
     (hbits : numWin * w = bits) (hb1 : 1 ≤ bits) (hx : x < 2 ^ bits) :
     Gate.applyNat (windowedEncodeIn w bits)
         (encodeDataZeroAnc bits (2 * w + 2 * bits + 3) x)
@@ -567,7 +567,7 @@ private theorem windowedEncodeIn_apply (w bits numWin x : Nat)
 
 /-- **OUT-adapter semantics**: the clean windowed state `mulInputOf` with
     y-value `y` is mapped back to `encodeDataZeroAnc bits (2w+2·bits+3) y`. -/
-private theorem windowedEncodeOut_apply (w bits numWin y : Nat)
+theorem windowedEncodeOut_apply (w bits numWin y : Nat)
     (hbits : numWin * w = bits) (hb1 : 1 ≤ bits) (hy : y < 2 ^ bits) :
     Gate.applyNat (windowedEncodeOut w bits)
         (mulInputOf cuccaroAdder w bits numWin y)
@@ -807,5 +807,57 @@ theorem tcount_windowedModNEncodeGate (w bits N numWin c cinv : Nat) :
       = 2 * (numWin * (56 * w * 2 ^ w + 56 * bits))
   rw [tcount_swapCascade, tcount_windowedModNMulGate]
   simp [tcount]
+
+/-! ## §10. THE ONE-OBJECT CLOSURE — Shor success AND resource count on the SAME
+       per-iterate windowed gate (cf. the Standard `shor_resource_welded_one_object`).
+
+§8's `windowedModNMul_shor_correct` (the bound) and §9's `tcount_windowedModNEncodeGate` (the
+count) are stated SEPARATELY.  Here we bundle them into ONE theorem on a single syntactic object:
+the per-iterate gate `windowedModNEncodeGate w bits N numWin ((a^(2^i))%N) (modInv N (a^(2^i)))`,
+which — by definition of `toVerifiedModMulFamily` (`family i := Gate.toUCom (W.gate (a^(2^i)))`) and
+`windowedModNMultiplier.gate` — IS exactly what the Shor-bound family is `Gate.toUCom` of
+(`windowedFamily_iterate_gate`, by `rfl`).  Success and count ride the same gate, lift load-bearing. -/
+
+/-- **The Shor-bound family is, pointwise, `Gate.toUCom` of the counted gate** (`rfl`): the family
+    the bound rides and the gate `tcount_windowedModNEncodeGate` counts are one syntactic object. -/
+theorem windowedFamily_iterate_gate
+    (w bits numWin N a ainv0 : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits) (hb1 : 1 ≤ bits)
+    (hN1 : 1 < N) (hN2 : 2 * N ≤ 2 ^ bits) (h_inv0 : a * ainv0 % N = 1) (i : Nat) :
+    (windowedModNMultiplier_verifiedModMulFamily w bits numWin N a ainv0
+        hw hbits hb1 hN1 hN2 h_inv0).family i
+      = Gate.toUCom (bits + (2 * w + 2 * bits + 3))
+          (windowedModNEncodeGate w bits N numWin ((a ^ (2 ^ i)) % N) (modInv N (a ^ (2 ^ i)))) :=
+  rfl
+
+open scoped BigOperators in
+/-- **★ Windowed scheme — Shor success AND resource count on ONE syntactic gate. ★**  The windowed
+    (QROM-lookup, arbitrary window `w`) mod-N multiplier family simultaneously:
+      (i)  attains the canonical Shor success bound `≥ κ/(log₂N)⁴` (`windowedModNMul_shor_correct`);
+      (ii) has exact total Toffoli/T-count `m·(2·numWin·(56·w·2^w+56·bits))` over the `m`
+           order-finding iterates (`tcount_windowedModNEncodeGate`),
+    BOTH on the SAME per-iterate gate the bound's family is `Gate.toUCom` of
+    (`windowedFamily_iterate_gate`, `rfl`).  The windowed analogue of
+    `VerifiedShor.shor_resource_welded_one_object`; the resource is read off the same syntactic gate
+    that is proven to drive Shor to success. -/
+theorem windowed_shor_resource_welded_one_object
+    (w bits numWin N a ainv0 r m : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits) (hb1 : 1 ≤ bits)
+    (hN1 : 1 < N) (hN2 : 2 * N ≤ 2 ^ bits)
+    (h_inv0 : a * ainv0 % N = 1)
+    (h_setting : ShorSetting a r N m bits) :
+    probability_of_success a r N m bits (2 * w + 2 * bits + 3)
+        (windowedModNMultiplier_verifiedModMulFamily w bits numWin N a ainv0
+          hw hbits hb1 hN1 hN2 h_inv0).family
+      ≥ κ / (Nat.log2 N : ℝ) ^ 4
+    ∧ (∑ i ∈ Finset.range m,
+          tcount (windowedModNEncodeGate w bits N numWin
+            ((a ^ (2 ^ i)) % N) (modInv N (a ^ (2 ^ i)))))
+        = m * (2 * (numWin * (56 * w * 2 ^ w + 56 * bits))) := by
+  refine ⟨windowedModNMul_shor_correct w bits numWin N a ainv0 r m
+            hw hbits hb1 hN1 hN2 h_inv0 h_setting, ?_⟩
+  have h := Finset.sum_congr rfl (fun i (_ : i ∈ Finset.range m) =>
+      tcount_windowedModNEncodeGate w bits N numWin ((a ^ (2 ^ i)) % N) (modInv N (a ^ (2 ^ i))))
+  rw [h, Finset.sum_const, Finset.card_range, smul_eq_mul]
 
 end FormalRV.BQAlgo.WindowedModNShor

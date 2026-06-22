@@ -1,0 +1,182 @@
+The workflow's in-tree synthesis is still gated on one straggler doing a slow lake build, but I've already extracted all 7 maps + 23 adversarial verdicts (with live #print axioms results). That's the substance — here is the consolidated audit.
+
+---
+End-to-end Shor audit: four RSA-2048 resource-estimation papers
+
+Scope: GidneyEkerå 2021 (1905.09749, 20M qubits/8h), Gidney 2025 (2505.15917, <1M/<1wk), Cain–Xu 2026 (2603.28627, ~10k atoms), Pinnacle/Webster 2026 (2602.11457, <100k). (The other three Audit folders are out of scope: Babbush2026 = ECC discrete-log, Peng2022 = SQIR correctness reference, Xu2024 = FTQC architecture.)
+
+Methodology: every headline theorem was opened and the literal object inside probability_of_success / the resource count was checked, plus a live lake … #print axioms run, plus sorry/native_decide/free-hypothesis greps. No load-bearing sorry/native_decide/extra-axiom was found in any headline spine — the honesty problem is not fake proofs, it's what object the true theorems are about.
+
+Q1 — Are all arithmetic components ready and fully proved?
+
+Largely yes at the gadget level, with one crucial distinction (value+count on the same gate vs separate gates):
+
+┌─────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────┬──────────────────┐
+│                                Component                                │                         Status                          │      Object      │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Cuccaro / Gidney ripple / Gidney measured adders, Gidney-2025 mod-adder │ ✅ value+count, same object                             │ concrete Gate    │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ SQIR in-place modular multiplier (exact/generic)                        │ ✅ value+count, same                                    │ modmult_MCP_gate │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Real 4-T Gidney AND (built this session)                                │ ✅ value+count, same                                    │ Core/GidneyAND   │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ In-place mod-N windowed multiplier                                      │ ✅ value+count, same                                    │ EGate            │
+│ (measWindowedModNMulInPlace_verified)                                   │                                                         │                  │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Exact windowed mod-N multiplier windowedModNEncodeGate (bound-carrying) │ ✅ value+count, same                                    │ Gate             │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ CFS residueFold (Gidney2025/Pinnacle)                                   │ ✅ value+count, same                                    │ Gate             │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Count-optimal measured windowed modexp modExpAt (the 2.578e9 gate)      │ ⚠️ count proven; value on a different object            │ EGate            │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Unary QROM lookup; oblivious-carry runway adder                         │ ⚠️ value & count on separate files                      │ —                │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Modexp with quantum-selected exponent; QPE oracle family                │ ⚠️ value-only (value proven only for classical          │ —                │
+│                                                                         │ exponent)                                               │                  │
+├─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┼──────────────────┤
+│ Ekerå–Håstad short-DLP; PHASEUP (√-cost SELECT-SWAP)                    │ ❌ stub                                                 │ —                │
+└─────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────┴──────────────────┘
+
+So the building blocks are real and verified. The recurring gap is that the cost-optimal count and the value-correctness frequently sit on different syntactic objects.
+
+Q2 — Is Shor composed end-to-end on the literal cost-optimal object, with a following exact resource proof on that same object?
+
+No, for all four — there is a single, consistently-confirmed central seam: no theorem puts P(success) ≥ κ/(log₂N)⁴ on the literal cost-optimal measured gate and the paper's exact count on that same gate. (probability_of_success is typed Nat → BaseUCom — it can only hold a unitary family, so the measured EGate must be bridged.)
+
+- GidneyEkerå 2021 — partial, closest. Two REAL axiom-clean halves on different gates: the Shor bound rides the exact reversible multiplier (ge2021_exactMultiplier_shor_bound, and the measured capstones); the paper's 2,578,993,152 Toffoli count rides modExpAt (audit_toffoli_realized_by_circuit, verifiedToffoli_eq_composed_circuit — both REAL). The bridge ge2021_modExpAt_shor_succeeds runs the bound through modExpAt's literal block only given ModExpAtLayoutAdapter L — whose fields adaptOut_reads (provably unsatisfiable T-free: reading the canonical (a^{2^i}·x) mod N from the unreduced coset rep needs an in-register reduction) and block_wellTyped (provably false at numWin=1024) are free, never instantiated. Order-finding is standard QPE, not Ekerå–Håstad.
+- Cain–Xu 2026 — no. shor_on_LP_code rides a substituted generic SQIR Cuccaro multiplier, not the paper's windowed/measured gate; the RSA-scale 10⁹ Toffoli is a hardcoded literal in a decide-bracket, never derived. The real cost-optimal capstones exist in FormalRV/Shor but aren't imported into the CainXu audit.
+- Gidney 2025 — partial. cfs_shor_semantic_correctness_concrete is a conjunction across different objects: success on a substituted exact textbook multiplier, arithmetic on residueFold. The residueFold-as-QPE-oracle bridge is the openly-admitted open seam; EH success + Assumption1 (prime-set conjecture) are carried, never discharged.
+- Pinnacle — no. L1 only #checks the generic orderFindingSucceeds (free ModMulImpl, N=0 placeholder), never instantiated with a Pinnacle gate; the <100k-qubit headline is never proved (Verifier leaves it open); L3/SystemZones are comment stubs.
+
+The genuine bright spot (built this session, REAL/axiom-clean): the measured-uncompute capstones measWindowed_shor_resource_capstone / babbushMeasWindowed_shor_resource_capstone do weld success ∧ measured Toffoli count ∧ Gidney 4L−4 T, where egate_matches_rev is a genuinely discharged witness (not a free hypothesis) tying the measured gate to the bound on the encoded subspace. That's the strongest end-to-end artifact — but the bound still rides the reversible .family (pinned to the measured gate per-basis-state via the bridge, which is legitimate), and order-finding is still standard QPE.
+
+Common open links: ① bound on generic/exact, not the cost-optimal measured gate's own unitary; ② coset/residue arithmetic is non-canonical (coset rep ≥ N for GE2021/CainXu; truncated residue for Gidney2025/Pinnacle); ③ free hard-content hypotheses (block_matches_residue, ModExpAtLayoutAdapter.adaptOut_reads/block_wellTyped, CosetMarginalRelabel, wrapProb, EkeraDLPSuccess obls, Assumption1); ④ order-finding = standard single-register QPE, Ekerå–Håstad substituted; ⑤ wrap-probability is a free field, not a measure.
+
+Q3 — Consistency with the paper numbers?
+
+High on numbers, honest about gaps:
+- GE2021: 20M qubits reproduced (19,443,200 ≤ 20M, axiom-free); 2.578e9 Toffoli rfl-pinned ≤ paper magicBudget 2,622,824,448 (+1.67%). Caveat: the bound-carrying object's count is the un-optimized 56·w·2^w (Gray-code optimization not replayed into it); 8h vs verified 20.25h naive ceiling (2.5× pipelining unverified).
+- Gidney 2025: physical 897,864 < 1M, logical 1537 reproduced (axiom-free); 6.5e9 Toffoli reproduced to ~6% via a schedule tally whose per-op costs each = EGate.toffoli of a real gadget.
+- Cain–Xu 2026: ~10k qubits inside decide-bracket [4350, 14961]; per-gadget Toffoli match the paper exactly on faithful measured gadgets — but RSA-scale 10⁹ is a hardcoded literal, d=20 asserted.
+- Pinnacle: GB-code params [[510,16,24]] etc. match the paper exactly (its real verified strength) — but the <100k headline is unproved and the RSA-scale GB-code k is stubbed (only the toy [[72,12,6]] derived, via native_decide).
+
+native_decide (adds Lean.ofReduceBool) appears only in: Pinnacle L4 GB-code lemmas, CainXu CodeKDerived (off-build-path), GE2021 Verifier naive baselines, and smoke-test examples — not in any algorithm/arithmetic headline.
+
+Bottom line
+
+We can independently, axiom-cleanly verify (a) the Shor success bound κ/(log₂N)⁴ on a real exact/reversible windowed mod-N multiplier, and (b) the paper's exact resource count on the real cost-optimal measured circuit — but (a) and (b) are on different (though bridge-related) objects, and order-finding is standard QPE rather than each paper's actual scheme. No paper yet has end-to-end Shor correctness above the QEC level with a following exact resource proof on the same cost-optimal object. GE2021 is closest; the measured-uncompute capstones are the strongest weld.
+
+Highest-leverage gaps to close (in order):
+1. Weld success ∧ paper-count on one gate via the already-built bridge — the measured capstones nearly do this; extend so the count in the capstone is GE2021's modExpAt 2.578e9 (reconcile the windowed count with modExpAt), and import the capstones into the CainXu/Gidney2025 audits (they're currently unused there).
+2. The non-canonical-arithmetic reduction (block_matches_residue / an in-register modular reduce so adaptOut becomes possible) — this is the impossible-T-free obstruction at the heart of GE2021/CainXu.
+3. Ekerå–Håstad order-finding — currently substituted by standard QPE in all four.
+4. The free number-theoretic/probability obligations — Assumption1, wrapProb as a real measure, the Ekerå-2023 DLP lemmas.
+
+The workflow's own synthesis + completeness-critic will finish in the background shortly; if it surfaces anything beyond the above I'll flag it, but the maps + 23 live-verified verdicts already give the authoritative picture.
+
+
+
+
+Adversarial verification complete (5 agents, every #print axioms run live). Here's the honest verdict on which audit gaps the gcMul capstone closes — and, just as importantly, which it does not.
+
+Gap-by-gap closure map (independently verified)
+Audit gap	Verdict for gcMul	Evidence
+② non-canonical arithmetic ("coset-rep ≥ N… the impossible-T-free obstruction at the heart of GE2021/CainXu")	CLOSED (for this construction)	gcMulEncodeGate_apply outputs the canonical (a·x) mod N < N in-register — no coset rep, no adaptOut obligation at all. The %N reduction is T-costly and counted (the 3·(n+2)/window term), not claimed free. Contrast confirmed: gidneyRunwayMul_value outputs the unreduced sum < 2^bits, not < N.
+③ free hard-content hypotheses (adaptOut_reads, block_matches_residue, wrapProb, …)	CLOSED (own seam)	egate_matches_rev is a proven by-tactic, not a free field. The capstone's only hypotheses are 0<w, numWin·w=bits, 1<N, 2N≤2^bits, a·ainv0≡1, ShorSetting. None of the coset free-fields appear.
+gap-1 "weld success ∧ count on ONE gate"	half CLOSED	The capstone is a literal ∧ on the same gcMulEncodeGate.
+① bound on the cost-optimal measured gate's own unitary	PARTIAL / inherent	The bound rides the reversible gcRevFamily.family, bridged to the measured gate per-encoded-basis-state (x<N). Equivalent to a measured-gate bound only under QPE feeding clean |x⟩|0⟩. This is the same legitimate-but-scoped structure the audit credited to measWindowed — gcMul matches it, does not improve it (probability_of_success is typed over unitaries; a measured EGate has no unitary).
+④ Ekerå–Håstad order-finding	UNTOUCHED	gcMul is multiplier-side; order-finding is still standard single-register QPE. Orthogonal.
+⑤ wrapProb free field	AVOIDED	No runway-wrap on the canonical path.
+The two limitations I must flag honestly (the verifiers caught both as would-be overclaims)
+gcMul is a standalone parallel artifact, not a retroactive closure. grep FormalRV/Audit/ gcMul is empty — none of the four papers' theorems reference it. It does not close GE2021's adaptOut, CainXu's hardcoded count, Gidney 2025's residueFold-QPE, or Pinnacle. Saying it "closes the four-paper gaps" would be an overclaim.
+gcMul is not cost-optimal. Its keystone does a register modular-add in 3 measured adds (add + subtract-p + conditional-add-p), whereas the optimal register modular-add is 2 (add + conditional-subtract-p) — which is exactly Gidney 2025's addCost = 2·(r+1) = toffoli(gidneyModAddFixup). So gcMul's count is ~1.5× the adder-optimal and higher than the papers' figures, not a reproduction.
+Honest bottom line
+gcMul genuinely closes ② and ③ and welds success∧count on one gate — which is precisely the artifact the audit says no paper has (end-to-end success with a following exact count on the same canonical-arithmetic object). But it does so as a clean parallel exemplar, not by patching any paper; gaps ① and ④ are inherent/orthogonal and untouched.
+
+Two concrete things are genuinely closeable from here (both real work, different value):
+
+(a) Optimize the keystone to the 2-add register modular-add → gcMul becomes cost-optimal, matching Gidney 2025's adder model. Substantial re-proof (new keystone correctness + slack + WellTypedAt + re-derive the gcMul stack).
+(b) Import the capstone into the Gidney 2025 / CainXu audits as the canonical-arithmetic exemplar with an honest count-comparison (not a false identity to 6.5e9). Mechanical; addresses the audit's listed "import the capstones" item.
+Want me to pursue (a) cost-optimality, (b) the paper-audit import, or leave it as the verified standalone capstone? I won't claim a four-paper closure that the grep refutes.
+
+
+
+What is now CLOSED (proven, axiom‑clean)
+Cost‑optimality of the register modular‑add. The keystone gidneyModAddRegMeasured is the 2‑add version (biased lookup writes 2^(W+1)−(N−b) into the read register, so one gidneyAdderMeasured lands x+b−N (mod 2^W) directly). The old 3‑add construction is gone. Proven:
+
+toffoli_gidneyModAddRegMeasured = 2*(n+2) = Gidney‑2025's addCost (n+1)
+gcStep_eq_gidney2025_loopBody : toffoli(gcStep) = lookupCost w + addCost (n+1)
+gcMul_count_eq_gidney2025 : toffoli(gcMul) = numWin*(lookupCost + addCost)
+The count is now a proof obligation tied to the paper's own gadget figures, not a free‑floating formula.
+
+Gap ② — canonical in‑register arithmetic. gcMul_value_init proves the output is the canonical residue (a·x) mod N < N, in‑register, with no coset rep and no adaptOut readout adapter. The "non‑canonical arithmetic" obstruction is absent by construction, not patched.
+
+Gap ③ — no free hypotheses. gidney2025_cost_optimal_canonical_shor carries only honest premises (0<w, numWin*w=n+1, 1<N, 2N≤2^(n+1), a*ainv0%N=1, ShorSetting). No sorry, no native_decide, no axioms beyond {propext, Classical.choice, Quot.sound}.
+
+Gap‑1 — success ∧ count welded on ONE gate, and imported into the audit. gidney2025_cost_optimal_canonical_shor (in FormalRV/Audit/Gidney2025/GidneyCheapModMulConnection.lean, wired into the FormalRV.Audit.Gidney2025 umbrella, green) bundles all five facts on the same gcMul/gcRevFamily object. The earlier finding that gcMul was a "standalone parallel artifact" outside the audit tree is refuted — it now lives inside the Gidney‑2025 audit.
+
+What is genuinely NOT closeable by multiplier‑level work (do not overclaim)
+Gap ① — a bound on the measured gate's own unitary. This is structural, not laziness: probability_of_success is typed over unitary families (Nat → BaseUCom), and a measured EGate has no unitary. The honest resolution is the per‑encoded‑basis‑state bridge egate_matches_rev (genuinely discharged in the witness) — which is exactly the regime Shor's QPE runs in. This is a resolution, not a closure of the literal typing gap, and I won't claim otherwise.
+
+Gap ④ — Ekerå–Håstad order‑finding. A separate algorithm orthogonal to the multiplier. The multiplier work neither touches nor closes it.
+
+The four papers' OTHER‑circuit obligations. GE2021's modExpAt adaptOut/block_wellTyped, CainXu's hardcoded RSA‑scale count, Pinnacle's GB‑code k, and Assumption 1 are about different constructions/conjectures. The cost‑optimal canonical gcMul avoids these (by being canonical and self‑costed) rather than patching them. Scope here is the per‑multiplication cost in Gidney‑2025's terms (numWin·(lookupCost+addCost)), not the full 6.5×10⁹ modexp schedule total — that exponent‑loop sum is separately reproduced (~6%) by gidney2025_toffoli_mixed_actualP.
+
+Bottom line
+The genuinely multiplier‑closeable gaps — cost‑optimality, ②, ③, and gap‑1 — are now closed and axiom‑clean on a single success‑driving canonical circuit, and that circuit is imported into the Gidney‑2025 audit with its count proven equal to the paper's gadget model. The remaining items (① inherent typing, ④ orthogonal algorithm, the other‑circuit per‑paper obligations) are not things this work closes, and I'm not claiming a full four‑paper closure.
+
+One mechanical extension remains available if you want it: a CainXu audit connection (the audit's "import the capstones into CainXu") — though CainXu's per‑gadget cost model is murkier than Gidney‑2025's clean addCost match, so that import would be a weaker statement. Say the word and I'll do it; otherwise this phase is complete.
+
+
+
+(A) The EH circuit-semantic boundary
+
+Confirmed from the paper (1702.00249 §quantum-part, l.408–451): the EH circuit's Born probability of measuring (j,k,[e]g) is exactly (1/2^{2(2ℓ+m)})·|∑_{(a,b):a−bd=e} e^{2πi(aj+2^m bk)/2^{ℓ+m}}|², and the paper's steps 2–4 rewrite this into my ekera_lemma7 expression. Confirmed from the code: there is no EH two-register circuit object in the repo — only order-finding's single-register Shor_final_state/QPE_MMI_correct, my short_dlp_orbit_joint_eigen eigenstate, and the (idealized) ShortDLPPeakLaw.
+
+What I built (Audit/Gidney2025/EkeraEndToEnd.lean, axiom-clean, audit green):
+- ehProb = the paper's exact measurement-probability formula (fixed phase — not a cherry-pick).
+- ehProb_ge_of_good: a good pair has ehProb ≥ 2^{−(m+ℓ+2)} (my Lemma 7).
+- ehShor_per_run_ge_eighth: probability of some good pair in one run = ∑_{good j} ehProb(j,k_j) ≥ (#good)·2^{−(m+ℓ+2)} ≥ 2^{ℓ+m−1}·2^{−(m+ℓ+2)} = 1/8.
+- ehShor_endToEnd: that ≥1/8 conjoined with the deterministic factor recovery (ekera_recover_actual).
+
+Honest status of (A): not fully closed. Everything around the boundary is now proven on the paper's exact formula, reducing the boundary to one fact: ehProb = the physical Born amplitude of the EH circuit (the paper's steps 1–4 QFT-of-uniform-superposition identity). Discharging that requires building the EH 3-register QFT circuit + Born rule — a large construction comparable to the whole order-finding QPE machinery, which I could not complete this turn and did not fake. So: end-to-end EH Shor is now proven on the probability formula, with the single QFT-amplitude identity as the precisely-isolated remaining circuit step (the same boundary order-finding's Shor_final_state lives at).
+
+(B) Re-audit — what my number-theory/Ekerå work has closed
+
+The pasted audit's gaps split into a number-theory/probability lane (mine) and a multiplier/composition lane (the gcMul agent's). I can only vouch (with live #verify_clean) for mine:
+
+┌────────────────────────────────────┬───────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────┐
+│         Gap (pasted audit)         │       Lane        │                                         Status now                                          │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #4 order→factor reduction          │ NT (mine)         │ ✅ closed (ShorReduction.shor_classical_step_correct)                                       │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #4 ≥1/2 good-element bound         │ NT (mine)         │ ✅ closed (card_good_ge_half, semiprime/RSA)                                                │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #4 Assumption1                     │ NT (mine)         │ ✅ stated version discharged (Dirichlet) + faithful ℓ-bit version isolated as the real      │
+│                                    │                   │ conjecture                                                                                  │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #4 Ekerå-2023 DLP / Lemma 7        │ NT (mine)         │ ✅ Lemma 7 + count + per-run ≥1/8 + recovery proven end-to-end on the paper formula         │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Q1 "Ekerå–Håstad short-DLP ❌      │ (mine)            │ ✅ no longer a stub — full probability analysis proven                                      │
+│ stub"                              │                   │                                                                                             │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #3 EH order-finding (substituted   │ algo (mine,       │ ◐ probability analysis closed; circuit substitution = the (A) boundary, reduced to 1 QFT    │
+│ by std QPE)                        │ partial)          │ fact                                                                                        │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #4 wrapProb as a real measure      │ coset (other)     │ ⬜ open (GE2021 multiplier side, not mine)                                                  │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Q1 PHASEUP √-cost SELECT-SWAP stub │ resource (other)  │ ⬜ open (not mine)                                                                          │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #1 weld success∧count on one gate  │ multiplier        │ reported ✅ for Gidney2025 via gcMul (I did not re-verify)                                  │
+│                                    │ (other)           │                                                                                             │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ #2 non-canonical arithmetic        │ multiplier        │ reported ✅ for gcMul (canonical in-register) (not re-verified)                             │
+│                                    │ (other)           │                                                                                             │
+├────────────────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ① bound on the measured gate's own │ typing (inherent) │ ⬜ inherent — probability_of_success is typed over unitaries; resolved per-basis-state, not │
+│  unitary                           │                   │  literally closeable                                                                        │
+└────────────────────────────────────┴───────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Net: gap #4 (the free number-theoretic/probability obligations) is now largely closed by this session's work — the reduction, the ≥1/2 bound, Assumption1, and the Ekerå-2023 Lemma 7 / count / per-run ≥1/8 are all axiom-clean. Gap #3 (EH order-finding) is half-closed: the EH algorithm's correctness analysis is done; only the circuit substitution (the (A) boundary) remains. Gaps #1/#2 (multiplier welding + canonical arithmetic) are the gcMul agent's lane — I'm reporting their claimed closure but did not independently re-verify them this turn.
+
+The single biggest remaining item to truly "fully close end-to-end Shor with EH" is now unambiguous and isolated: build the EH two-register QFT circuit and prove ehProb = its Born probability. Want me to take that on next? It's a real multi-file construction (the EH oracle + two QFTs + Born rule, reusing the order-finding QFT machinery where possible), so I'd scope it as its own focused effort rather than rush it.

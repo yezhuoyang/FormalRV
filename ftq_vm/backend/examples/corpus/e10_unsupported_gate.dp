@@ -1,0 +1,3 @@
+DEVICE-PROGRAM 1.0;
+// e10_unsupported_gate {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  PHYS  gate2q             q[0],q[1] gate=SWAP

@@ -23,7 +23,7 @@
 import FormalRV.QEC.Logical
 import FormalRV.Shor.VerifiedShor
 import FormalRV.Arithmetic.GateToUCom
-import FormalRV.PPM.LogicalState
+import FormalRV.PPM.Semantics.LogicalState
 import FormalRV.Verifier.ProofGate
 
 namespace FormalRV.Verifier

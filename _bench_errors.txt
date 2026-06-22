@@ -1,0 +1,14 @@
+﻿_scratch_cczbench.lean:55:4: error: Tactic `simp` failed with a nested error:
+(deterministic) timeout at `whnf`, maximum number of heartbeats (1600000) has been reached
+
+Note: Use `set_option maxHeartbeats <num>` to set the limit.
+
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
+_scratch_cczbench.lean:36:13: warning: This simp argument is unused:
+  if_true
+
+Hint: Omit it from the simp argument list.
+  simp only [if_t̵r̵u̵e̵,̵ ̵i̵f_̵f̵alse, List.nil_append, List.append_nil,
+  ̵  ̵ ̵ ̵Bool.false_eq_true] at hd1 hd2 hd3
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`

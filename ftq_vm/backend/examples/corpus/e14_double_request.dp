@@ -1,0 +1,5 @@
+DEVICE-PROGRAM 1.0;
+// e14_double_request {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[2,3)us  SYS   request_ancilla    q[100]
+[4,5)us  PHYS  measure            q[100] basis=Z

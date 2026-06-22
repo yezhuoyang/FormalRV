@@ -24,7 +24,7 @@
   bound `phi_n_over_n_lowerbound_proved` — no Mertens, no axioms).  So the only
   remaining frontier is `R` — and `R` is the multiply→full-QPE lift, whose
   per-iterate arithmetic content is supplied (off wrap) by the coset multiplier's
-  exact decoded-value contract (`CosetEigenstate.CosetLayout.CosetMulFwdContract`),
+  exact decoded-value contract (`GidneyInPlace.CosetLayout.CosetMulFwdContract`),
   with the bottom-up `uc_eval`/`branchOf` composition through all `m` controlled
   iterates + the inverse QFT being the genuine remaining mathematical work.
 

@@ -1,0 +1,74 @@
+# A deliberately SMALL backend for the factory demos -- the numbers are
+# human-scale so every event is visible on the TUI timeline.  Strict
+# explicit-qubit discipline: qubits live in zones, factories have fixed
+# footprints.
+
+unit:
+  time: us
+
+name: demo_small
+description: >
+  Tiny backend for factory demos: a 4-qubit data zone, two stochastic T
+  factories with fixed 8-qubit footprints, a 12-token buffer, a 4-worker
+  decoder and a small measurement bus.
+
+zones:
+  dq:
+    kind: data_qubit
+    count: 4
+    description: data qubits the workload injects into
+
+  fab:
+    kind: factory_qubit
+    count: 16
+    description: the factory region (8 qubits per factory)
+
+resources:
+  correction_storage:
+    kind: classical_register
+    capacity: 8
+
+  measurement_bus:
+    kind: bus
+    capacity: 4
+
+  t_buffer:
+    kind: token_buffer
+    token_kind: TState
+    capacity: 12
+
+  decoder_pool:
+    kind: service
+    workers: 4
+    max_latency_us: 20
+    queue_capacity: 16
+    processing_time_us: 4
+
+qubit_touching_kinds: [magic_inject]
+
+factories:
+  F0:
+    kind: T_factory
+    produces: TState
+    duration_us: 50
+    success_probability: 0.85
+    footprint:
+      qubits: ["fab[0:8]"]
+    logical_slots: 8
+    max_parallel_batches: 1
+    auto_retry: false
+  F1:
+    kind: T_factory
+    produces: TState
+    duration_us: 50
+    success_probability: 0.85
+    footprint:
+      qubits: ["fab[8:16]"]
+    logical_slots: 8
+    max_parallel_batches: 1
+    auto_retry: false
+
+tokens:
+  TState:
+    initial_inventory: 2
+    ttl_us: 2000

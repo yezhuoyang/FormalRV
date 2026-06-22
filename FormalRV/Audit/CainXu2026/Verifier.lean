@@ -21,6 +21,10 @@
 import FormalRV.Audit.CainXu2026.L3_PPM
 import FormalRV.Audit.CainXu2026.L4_Code
 import FormalRV.Audit.CainXu2026.SystemZones
+import FormalRV.Audit.CainXu2026.L2_ArithmeticFaithful
+import FormalRV.Audit.CainXu2026.EndToEndQPE
+import FormalRV.Audit.CainXu2026.ResourceCheck
+import FormalRV.Audit.CainXu2026.PPMEndToEnd
 import FormalRV.QEC.LogicalMeasurementGeneral
 import FormalRV.Verifier
 
@@ -111,6 +115,44 @@ theorem qianxu_verified_upper_bound :
 
 end FormalRV.Audit.CainXu2026
 
+-- ✅ END-TO-END QPE / ORDER-FINDING CAPSTONE (arithmetic / logical-circuit object): the
+--    Babbush-measured windowed modexp (= cain-xu's imported Gidney arithmetic) drives Shor success
+--    ≥ κ/(log₂N)⁴, AND its whole-ladder assembled Toffoli count (and the 4×-rescaled Gidney T) is
+--    proven on the SAME real Gate by the independent tree-walk counter.  (Code-preservation is the
+--    SEPARATE modexp_preserves_code below, not conjoined — a Toffoli modexp is non-Clifford.)  Axiom-clean:
+-- ✅ THE SEMANTIC END-TO-END (circuit → FACTOR, before any count): the QPE order-finding circuit on
+--    the verified windowed modexp OUTPUTS A NONTRIVIAL FACTOR of N with prob ≥ κ/(log₂N)⁴ (∧ a factor
+--    exists) — vanilla order-finding, axiom-clean, NO QPE axiom, NO Ekerå/Assumption-1:
+#verify_clean FormalRV.Audit.CainXu2026.cainxu_qpe_factors_N
+#verify_clean FormalRV.Audit.CainXu2026.cainxu_modexp_endToEnd
+-- ✅ the paper's amortized runtime τ_Toff·n_Toff driven by the VERIFIED assembled ladder Toffoli count
+--    (n_Toff = the composed circuit's real count, not a paper literal):
+#verify_clean FormalRV.Audit.CainXu2026.cainxu_pbc_runtime_on_assembled_ladder
+-- ✅ ABOVE-PPM ARITHMETIC RESOURCE CHECKS (verified counts vs the paper's stated equations): the
+--    50/50 RSA lookup/adder split holds (~49/51) iff the window does a modular add; lookup overcounts
+--    by exactly 1 (merged-AND root); adder/ctrl-adder MATCH:
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.lookup_paper_overcounts_by_one
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.fifty_fifty_split_holds_for_modular_add
+-- ✅ REPORTED-VALUE SWEEP (every paper number vs its own formula): the amortized τ_Toff cells E11 exact,
+--    E12/E13 round cleanly, ONLY E10 is wrong (48≠43); the lp_20 rate cell rounds to 0.28 not 0.29; and
+--    ALL qubit zone-breakdowns + totals (9739/11033/11961/13255) reproduce EXACTLY (qubit arith clean):
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.cainxu_E10_tau_toff_inconsistent
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.cainxu_E11_tau_toff_consistent
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.cainxu_rate_lp20_rounds_to_28
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.cainxu_zone_breakdowns_match
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.cainxu_qubit_totals_match
+-- ✅ GADGET GROUNDING: the unary-lookup equation 2^q_a is REALISED by the faithful value-correct
+--    circuit (unaryQROMAt SELECTS the right word ∧ costs 2^q_a−1 = paper−1) — so QianXu is CONSERVATIVE,
+--    NOT over-optimistic, about how lookups compile:
+#verify_clean FormalRV.Audit.CainXu2026.ResourceCheck.cainxu_lookup_faithful_not_overoptimistic
+-- ✅ PPM-LEVEL END-TO-END: the windowed modexp Gate lowered to a magic-aware PPM program (Pauli-product
+--    measurements + one factory-DISTILLED |T⟩ per Toffoli) RUNS and its measured output decodes to
+--    (a·y) mod N — semantic correctness at the PPM layer; distilled-T demand = Toffoli count:
+#verify_clean FormalRV.Audit.CainXu2026.cainxu_modexp_ppm_realized
+-- ✅ the FAITHFUL per-gadget Toffoli equations on value-correct measured gadgets (now in the build + gate):
+#verify_clean FormalRV.Audit.CainXu2026.Faithful.cainxu_E3_adder_toffoli
+#verify_clean FormalRV.Audit.CainXu2026.Faithful.cainxu_E4_ctrl_adder_toffoli
+#verify_clean FormalRV.Audit.CainXu2026.Faithful.cainxu_E9_lookup_read_toffoli
 -- ✅ the verified resource UPPER BOUND (naive modexp-on-LP is correct ⇒ its cost bounds the real one):
 #verify_clean FormalRV.Audit.CainXu2026.qianxu_verified_upper_bound
 -- ✅ SOUNDNESS: the structural lower bounds never exceed the upper bound (qubits; time, all schedules):

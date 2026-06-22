@@ -1,0 +1,8 @@
+DEVICE-PROGRAM 1.0;
+// e16_slow_feedforward {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[2,3)us  PHYS  gate2q             q[50],q[100] gate=CNOT
+[3,4)us  PHYS  measure            q[100] basis=Z
+[4,5)us  SYS   decode_syndrome    round=0
+[5,10)us  SYS   pauli_frame_update corr=0

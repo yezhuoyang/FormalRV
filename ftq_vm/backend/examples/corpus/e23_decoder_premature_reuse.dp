@@ -1,0 +1,8 @@
+DEVICE-PROGRAM 1.0;
+// e23_decoder_premature_reuse {backend=strictdecode}  (PHYS = physical op, SYS = system call)
+[0,1)us  PHYS  measure            q[0] basis=Z
+[1,2)us  PHYS  measure            q[1] basis=Z
+[2,3)us  PHYS  measure            q[2] basis=Z
+[3,1003)us  SYS   decode_syndrome    round=0
+[3,1003)us  SYS   decode_syndrome    round=1
+[1002,2002)us  SYS   decode_syndrome    round=2

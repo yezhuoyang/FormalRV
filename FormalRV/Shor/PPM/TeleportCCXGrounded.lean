@@ -33,9 +33,9 @@
   No `sorry`, no `axiom`.
 -/
 
-import FormalRV.PPM.CircuitToPPMToffoliMagic
-import FormalRV.PPM.ToffoliFromCCZ
-import FormalRV.PPM.CCZGadgetTeleport
+import FormalRV.PPM.Magic.CircuitToPPMToffoliMagic
+import FormalRV.PPM.Rules.ToffoliFromCCZ
+import FormalRV.PPM.Magic.CCZGadgetTeleport
 
 namespace FormalRV.Shor.TeleportCCXGrounded
 
@@ -45,7 +45,7 @@ open FormalRV.Framework.CircuitToPPMToffoliMagic
 open FormalRV.Framework.ToffoliFromCCZ
 open FormalRV.Framework.EightTToCCZ
 open FormalRV.BQAlgo
-open FormalRV.PPM.CCZGadgetTeleport
+open FormalRV.PPM.Magic.CCZGadgetTeleport
 
 /-! ## §1. The local Boolean Toffoli action of `Gate.applyNat (CCX a b c)` -/
 

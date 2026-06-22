@@ -1,0 +1,4 @@
+DEVICE-PROGRAM 1.0;
+// e24_decode_before_measure {backend=std}  (PHYS = physical op, SYS = system call)
+[2,3)us  PHYS  measure            q[0] basis=Z
+[2,3)us  SYS   decode_syndrome    round=0

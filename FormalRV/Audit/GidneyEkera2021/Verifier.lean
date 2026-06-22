@@ -34,10 +34,10 @@
   No `sorry`, no new `axiom`.
 -/
 
-import FormalRV.System.NaiveUpperBound
-import FormalRV.LatticeSurgery.SurfaceSystemCompile
-import FormalRV.System.NaiveSchedule
-import FormalRV.System.Architecture
+import FormalRV.System.Bounds.NaiveUpperBound
+import FormalRV.System.Compile.SurfaceSystemCompile
+import FormalRV.System.Bounds.NaiveSchedule
+import FormalRV.System.Core.Architecture
 import FormalRV.Framework.PaperClaims
 import FormalRV.Audit.GidneyEkera2021.SystemZones
 import FormalRV.Verifier
@@ -45,8 +45,8 @@ import FormalRV.Verifier
 namespace FormalRV.Audit.GidneyEkera2021
 
 open FormalRV.System.NaiveUpperBound
-open FormalRV.LatticeSurgery.SurfaceSystemCompile
-open FormalRV.Framework.Architecture
+open FormalRV.System.SurfaceSystemCompile
+open FormalRV.System.Architecture
 open FormalRV.PaperClaims
 
 /-============================================================================

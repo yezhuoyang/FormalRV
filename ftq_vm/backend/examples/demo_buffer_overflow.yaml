@@ -1,0 +1,26 @@
+﻿# DEMO B: factories produce fine -- the T BUFFER is too small.
+#
+#   python -m ftq_vm run ftq_vm/backend/examples/demo_backend.yaml \
+#       ftq_vm/backend/examples/demo_buffer_overflow.yaml --out out/demoB
+#
+# Both factories run back-to-back (one TState every ~29.4us on average) but
+# the workload only consumes one every 150us.  Finished T states pile up in
+# the 12-token buffer until it overflows (TokenBufferOverflow).  A resource
+# estimate that only checks production >= consumption misses this entirely.
+
+program: demo_buffer_overflow
+description: healthy factories overflow an undersized T buffer
+
+ops:
+  - {id: run_F0, do: start_factory, factory: F0, at_us: 0,
+     repeat: {every_us: 50, until_us: 950}}
+  - {id: run_F1, do: start_factory, factory: F1, at_us: 0,
+     repeat: {every_us: 50, until_us: 950}}
+
+  - id: t_inject
+    do: magic_inject
+    at_us: 100
+    duration_us: 10
+    consume: TState
+    qubits: ["dq[0]","dq[1]"]
+    repeat: {every_us: 150, until_us: 970}  # far slower than production

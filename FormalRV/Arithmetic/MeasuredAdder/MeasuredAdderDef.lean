@@ -592,6 +592,30 @@ theorem gidneyAdderMeasured_boundedBy (n q_start : Nat) :
   · unfold adder_n_qubits
     exact Gate.boundedBy_mono (by omega) _ (final_cx_cascade_bounded (n + 2))
 
+/-- **TIGHT locality bound: the uncontrolled measured Gidney adder touches only indices
+`< 3*(n+2)`.**  The `adder_n_qubits (n+2) = 3*(n+2)+2` total leaves the two slack indices
+`3*(n+2)` and `3*(n+2)+1` UNTOUCHED — every gate references a read/target/carry index of bit
+`i ≤ n+1`, i.e. `≤ carry_idx (n+1) = 3*(n+1)+2 < 3*(n+2)`.  This tighter bound lets a caller frame
+those two slack indices (and anything above) with a single `EGate.boundedBy`-above argument. -/
+theorem gidneyAdderMeasured_boundedBy_tight (n q_start : Nat) :
+    EGate.boundedBy (3 * (n + 2)) (gidneyAdderMeasured (n + 2) q_start) := by
+  show EGate.boundedBy (3 * (n + 2))
+    (EGate.seq
+      (EGate.base (Gate.seq (gidney_adder_forward_faithful_full (n + 2))
+                            (gidney_final_cx_cascade (n + 2))))
+      (gidneyMeasFullReverse (n + 2)))
+  refine ⟨⟨?_, ?_⟩, ?_⟩
+  · show Gate.boundedBy (3 * (n + 2))
+      (Gate.seq (gidney_adder_forward_with_propagation (n + 1))
+                (gidney_adder_bit_step_faithful_last (n + 1)))
+    exact ⟨Gate.boundedBy_mono (by omega) _ (forward_with_propagation_bounded (n + 1)),
+           Gate.boundedBy_mono (by omega) _ (last_step_bounded (n + 1))⟩
+  · exact final_cx_cascade_bounded (n + 2)
+  · show EGate.boundedBy (3 * (n + 2))
+      (EGate.seq (gidneyMeasLastReverse (n + 1)) (gidneyMeasPropReverse (n + 1)))
+    exact ⟨EGate.boundedBy_mono (by omega) _ (measLastReverse_bounded (n + 1)),
+           EGate.boundedBy_mono (by omega) _ (measPropReverse_bounded (n + 1))⟩
+
 /-! ## §9. The controlled core: register layout, source register, and CCX mask.
 
 The control qubit lives at index `ctrl` and the addend `a` lives in a dedicated

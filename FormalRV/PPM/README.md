@@ -1,198 +1,414 @@
-# FormalRV.PPM
+# PPM — the Pauli-Product-Measurement layer
 
-The Pauli-product-measurement (PPM) layer of FormalRV. It builds the Pauli
-algebra from first principles, the Gottesman stabilizer-update semantics of a
-single PPM, a compiler lowering the arithmetic `Gate` IR into PPM programs, an
-honest magic-state-factory / Gidney measurement-AND model, and a matrix-level
-stabilizer-PVM / logical-state model. The layer sits *above* the QEC/backend
-SysCall layer and *below* the logical-circuit arithmetic correctness layer; it
-deliberately does not model decoders, code distance, or fault tolerance.
+Logical computation expressed as sequences of **Pauli-product measurements**
+(Litinski-style). It builds the Pauli algebra from first principles, the
+Gottesman stabilizer-update semantics of a single PPM, a compiler lowering the
+arithmetic `Gate` IR into PPM programs, an honest magic-state-factory / Gidney
+measurement-AND model, and a matrix-level stabilizer-PVM / logical-state model.
+The layer sits *above* the QEC/backend SysCall layer and *below* the
+logical-circuit arithmetic layer; it deliberately does not model decoders, code
+distance, or fault tolerance.
 
-## Layout
-- `PauliSemantics.lean` — first-principle decidable Pauli algebra (`Pauli`, `Phase`, multiplication, commutation) over n-qubit strings.
-- `PPM.lean` / `PauliOps.lean` — `PauliString` group ops, symplectic form, commutation lemmas; logical-operator declarations + syntactic measurement verifier.
-- `PPMOperational.lean` — `StabilizerState` + the Gottesman PPM update (`apply_PPM_pos/neg`) with post-condition theorems.
-- `LogicalState.lean` — `Pauli.toMatrix`/`PauliString.toMatrix`, stabilizer projector idempotence/orthogonality/resolution, pointwise-commutation ⇒ matrix-commutation.
-- `CircuitToPPMInterface/{CircuitToPPMInterfaceOverview,CircuitFragmentClassifierAndCompiler,EnrichedPPMStateAndIntegration,PPMBackendLoweringModel,SurgeryGadgetLoweringAndQECInstance,BackendCertificationAndTraceLowering,CircuitToPPMInterfaceModuleEnd}.lean` (+ umbrella `.lean`) — the arithmetic `Gate → PPMProgram` compiler and semantic-model interface.
-- `CircuitToPPMSemanticBridge.lean` — refines compiled PPM runs to `Gate.applyNat` Boolean correctness; transfers decoder postconditions down.
-- `CircuitToPPMObservationBridge.lean` — honest computational-basis reference model closing the ICX-fragment refinement with no external assumption.
-- `CircuitToPPMMagicFactory.lean` / `FactoryHierarchy.lean` — abstract T-factory contracts, magic tokens, atomic-factory vs 8T-to-CCZ specs.
-- `CircuitToPPMToffoliMagic.lean` — extended IR with a `teleportCCX` magic primitive (success-branch contract for Toffoli).
-- `CircuitToPPMFactoryProvision.lean` — provisioning + executability: a provisioned magic pool lets the compiled program run to completion.
-- `GidneyAND.lean` — Gidney measurement-based logical-AND (forward CCX, measurement-uncompute reverse).
-- `LayeredPPMQECInterface.lean` / `GE2021PPMSysInv.lean` — layering interface to the backend; a concrete 16-SysCall PPM block with derived resource numbers.
+The canonical front-end is **the PPM program syntax** (below): outcome-binding
+measurements `c2 = Measure X[0]Z[1]X[3]` plus explicit `if c2 == 1 then …`
+Pauli-frame corrections. Every higher-level logical program is to be compiled
+to this syntax with a correctness proof (the `Gate → PPMProg` compiler is the
+in-flight Phase D; see *Status* below).
 
-## Key definitions
-- `Pauli`, `Phase`, `Pauli.mul` (`PauliSemantics.lean`, `PPM.lean`) — single-qubit Pauli group with `{±1,±i}` phase tracking.
-- `PauliString` + `commutes` (`PPM.lean`) — n-qubit Paulis; commute iff anticommuting positions are even.
-- `StabilizerState`, `apply_PPM_pos/neg` (`PPMOperational.lean`) — stabilizer generators and the Gottesman measurement update.
-- `Pauli.toMatrix` / `PauliString.toMatrix` (`LogicalState.lean`) — complex-matrix interpretation via Kronecker product.
-- `PPMCommand`/`PPMProgram` and the `Gate → PPMProgram` compiler (`CircuitToPPMInterface/`) — the lowering target.
-- `TFactoryContract`, `MagicToken`, `MagicPPMCommand.teleportCCX` (`...MagicFactory.lean`, `...ToffoliMagic.lean`) — factory + Toffoli-teleportation interfaces.
-- `GidneyAND_forward`, `GidneyAND_reverse` (`GidneyAND.lean`) — the measurement-AND construction.
+## The PPM program syntax
 
-## Key theorems
-- `PPM_preserves_validity_*`, `PPM_Z*_on_*` (`PPMOperational.lean`) — Gottesman update preserves generator commutation / gives stated outcome on concrete states — **Verified** (concrete instances, `decide`).
-- `PauliString.toMatrix_projector_resolution`, `..._orthogonality`, `..._mul_self` (`LogicalState.lean`) — stabilizer ±1 projectors resolve identity, are orthogonal, and `P²=I` at matrix level — **Verified**.
-- `PauliString.toMatrix_comm_of_pointwise` (`LogicalState.lean`) — pointwise Pauli commutation implies matrix commutation — **Verified**.
-- `magicCompile_executable` / `compileToMagicPPM_run_observe` (`...FactoryProvision.lean`) — a sufficiently provisioned pool yields a successful run that observes `Gate.applyNat g` — **Verified** (modulo the `teleportCCX` contract).
-- `shor_arithmetic_applyNat_correctness_transfers_to_PPM` (`...SemanticBridge.lean`) — `Gate.applyNat` arithmetic postconditions transfer to the compiled PPM run — **Verified** for the ICX fragment; **Axiom** for CCX (exposed as `MagicInjectionObligations.CCX_ok` / `teleportCCXRel` contract, not proved).
-- `GidneyAND_reverse_tcount_eq_zero`, `tcount_GidneyAND_forward = 7` (`GidneyAND.lean`) — measurement reverse costs 0 Toffolis; forward costs 7 T — **Arithmetic-only** (no measurement-semantics equivalence proof yet).
+### Surface grammar
 
-## Status
-The Pauli algebra, the Gottesman PPM update on concrete states, and the matrix-level stabilizer-projector / commutation facts are **Verified** and `sorry`-free. The circuit-to-PPM compiler is **Verified** semantically for the ICX (Clifford-X/CX) fragment; Toffoli/CCZ magic injection is **Scaffolded** behind an explicitly named contract (`teleportCCXRel` / `CCX_ok`) that is assumed, not proved. Physical distillation, gate-teleportation circuits, the Gidney-AND measurement equivalence, QEC, and decoders are out of scope and remain unmodelled.
+A program is declared once as PPM (`ppm_program name { … }`); the instructions
+inside are bare. Grammar (`Syntax/Notation.lean`):
 
-## PPM visualization gallery
-
-Every PPM diagram in this README is rendered (Qiskit / matplotlib) from a program
-**emitted by the verified Lean** — in the Litinski lattice-surgery style: qubit wires,
-joint Pauli measurements as colour-coded box columns (`Z` green) joined by a bar,
-magic-T injections purple, deferred `X`-frames dashed, and a classical record lane of
-blue `mₖ` outcome bits.
-
-| Diagram | Shows |
-|---|---|
-| [`ppm_rules`](../../docs/diagrams/ppm_rules.png) | the two rewrite rules — commuting measurements reorder; measuring an anticommuting Pauli replaces the stabilizer (Gottesman) |
-| [`ppm_cx`](../../docs/diagrams/ppm_cx.png) | `CX` → joint `ZZ` measurement + `X`-frame, with outcome bit `m₀` on the record lane |
-| [`ppm_ccx`](../../docs/diagrams/ppm_ccx.png) | `CCX` → magic-T inject + joint `ZZZ` + `X`-frame |
-| [`ppm_seq`](../../docs/diagrams/ppm_seq.png) | `seq` → programs concatenate; records `m₀, m₁` |
-| [`ppm_adder3`](../../docs/diagrams/ppm_adder3.png) | full PPM program of the verified 3-bit Cuccaro adder — 42 commands, 6 magic-T |
-| [`ppm_modmult`](../../docs/diagrams/ppm_modmult.png) | full PPM program of `x ↦ 7x mod 15` — 248 commands, 32 magic-T, folded |
-
-Reproduce: `lake env lean --run scripts/EmitPPMQASM.lean` (T/CCZ gadgets) ·
-`lake env lean --run scripts/EmitAdderPPM.lean` (adder + multiplier PPM programs) ·
-`python PyCircuits/draw_ppm.py` (all PPM diagrams above).
-
-## Worked example — the T gate by magic-state teleportation
-
-![T-gadget teleportation](../../docs/diagrams/t_gadget.png)
-
-Emitted as OpenQASM 3 (`tGadgetQASM`): prepare `|T⟩ = T·H|0⟩` on the ancilla,
-`CX` data→ancilla, `Z`-measure the ancilla, and apply `S` to the data **iff the
-outcome is 1** (the red feed-forward box). `t_gadget_with_feedback`
-(`TGadgetTeleport.lean:60`, **Verified**, axiom-clean) proves that after the
-classically-controlled correction the data register holds `T|ψ⟩` for *both*
-outcomes — the byproduct differs only by the Born amplitude and the ancilla label.
-The companion CCZ gadget (`ccz_gadget.png`) is emitted and numerically cross-checked
-against a Qiskit density-matrix simulation (`PyCircuits/ppm_qasm_verification.py`).
-
-## Worked example — compiling Clifford+T to PPM (and how we prove it)
-
-The PPM layer turns a reversible `Gate` circuit into a stream of **Pauli-product
-measurements** — the operations a qLDPC / surface code performs natively via lattice
-surgery. `compileArithmeticGateToPPM` (`CircuitToPPMInterface/CircuitFragmentClassifierAndCompiler.lean:159`) does it
-gate-by-gate:
-
-```lean
-def compileArithmeticGateToPPM : Gate → PPMProgram
-  | .I         => []
-  | .X q       => [.applyFrameUpdate [q]]                              -- deferred Pauli frame
-  | .CX c t    => [.measurePauliKind .Z [c, t], .applyFrameUpdate [t]] -- joint ZZ measurement
-  | .CCX a b t => [.useMagicT t, .measurePauliKind .Z [a, b, t], .applyFrameUpdate [t]]
-  | .seq g₁ g₂ => compileArithmeticGateToPPM g₁ ++ compileArithmeticGateToPPM g₂
+```
+factor   ::=  X[n] | Y[n] | Z[n]                      -- Pauli on qubit n
+product  ::=  factor+                                 -- e.g. X[0]Z[1]X[3]
+stmt     ::=  cᵢ = Measure product                    -- outcome-binding PPM
+           |  frame product                           -- unconditional frame update
+           |  if cᵢ (^^ cⱼ)* == 1 then product else skip
+           |  if cᵢ (^^ cⱼ)* == 1 then product else product
+           |  useT[q]                                 -- consume one T state on qubit q
+           |  useCCZ[a,b,c]                           -- consume one CCZ state on a,b,c
+program  ::=  ppm_program name { stmt (; stmt)* }     -- command: def name : PPMProg := …
+           |  ppm! { stmt (; stmt)* }                 -- term form, for inline use
 ```
 
-Drawn in the Litinski PPM calculus (qubit wires; each measurement a column of Pauli
-boxes joined by a bar, `Z` green; magic-T injection purple; deferred X-frames dashed):
+Conditions are the **XOR-parity of bound outcome slots** — `if c0 ^^ c2 == 1`
+covers both single-outcome corrections and the multi-outcome parity
+corrections lattice surgery needs. The notation is a paper-thin macro: it
+elaborates to a plain syntax tree and is never load-bearing (round-trip `rfl`
+smokes in `Syntax/Notation.lean` §4).
 
-<p align="center"><img src="../../docs/diagrams/ppm_cx.png" width="430" alt="CNOT compiled to PPM">&nbsp;<img src="../../docs/diagrams/ppm_ccx.png" width="520" alt="Toffoli compiled to PPM"></p>
+### The IR (`Syntax/Program.lean` — the leaf, **zero imports**)
 
-The blue `mₖ` boxes on the classical lane `c` are the **measurement record**: each
-joint Pauli measurement lands one outcome bit, and the deferred `X`-frames are exactly
-the Pauli corrections those recorded bits control. A `seq` simply concatenates the
-programs ([`ppm_seq.png`](../../docs/diagrams/ppm_seq.png)).
+A sparse Pauli product lists its non-identity factors in strictly increasing
+qubit order (identity factors are unrepresentable by construction):
 
-**Scaling to a full gadget.** Running the *same* compiler on the verified 3-bit
-Cuccaro adder (`cuccaro_n_bit_adder_full 3 0`, emitted from Lean by
-`scripts/EmitAdderPPM.lean`) gives a **complete 42-command PPM program with 6
-magic-T injections** — and the forward-MAJ → reverse-UMA structure of the adder is
-visible as the climb-then-descend of the joint measurements:
+```lean
+/-- A non-identity single-qubit Pauli kind (sparse products never mention `I`). -/
+inductive PKind where
+  | x | y | z
 
-<p align="center"><img src="../../docs/diagrams/ppm_adder3.png" width="980" alt="3-bit Cuccaro adder compiled to a full PPM program"></p>
+/-- One factor of a sparse Pauli product: `X[3]` = `⟨3, .x⟩`. -/
+structure PFactor where
+  qubit : Nat
+  kind  : PKind
 
-And the modular multiplier `x ↦ 7x mod 15` (`modmult_const_gate 2 15 7`) compiles
-to a **248-command PPM program with 32 magic-T injections** (its 32 Toffolis), folded
-into rows:
+/-- A sparse logical Pauli product, e.g. `X[0]Z[1]X[3]`. -/
+abbrev PauliProduct := List PFactor
 
-<p align="center"><img src="../../docs/diagrams/ppm_modmult.png" width="960" alt="modular multiplier compiled to a full PPM program"></p>
+/-- Strictly-increasing qubit indices (canonical sparse representation). -/
+def sortedStrict : PauliProduct → Bool
+  | []           => true
+  | [_]          => true
+  | a :: b :: t  => decide (a.qubit < b.qubit) && sortedStrict (b :: t)
 
-Regenerate everything with `lake env lean --run scripts/EmitAdderPPM.lean` then
-`python PyCircuits/draw_ppm.py`.
+/-- SPACE of a product: the largest qubit index it touches, plus one. -/
+def PauliProduct.width : PauliProduct → Nat
+  | []      => 0
+  | f :: t  => max (f.qubit + 1) (PauliProduct.width t)
+```
 
-**How we prove it — a three-layer refinement** (each layer isolates one source of
-complexity, so the non-Clifford obligation is explicit, not buried):
+Statements and programs (`CVar := Nat` is a classical outcome slot,
+pretty-printed `c0, c1, …`):
 
-1. **Structural compilation** — `compileArithmeticGateToPPM_sound_from_primitives`
-   (`CircuitFragmentClassifierAndCompiler.lean:327`, **Verified**) reduces correctness to five per-gate obligations
-   by induction on the `Gate` IR; the `seq` case uses `PPMProgramRel_append`
-   (program concatenation mirrors semantic composition).
-2. **ICX semantic model** — for the Clifford `{I, X, CX}` fragment,
-   `compileICXGateToPPM_sound_from_cxMacro` (`CircuitFragmentClassifierAndCompiler.lean:1367`, **Verified**) proves
-   the compiled commands match the Gottesman measurement + Pauli-frame transitions on
-   a `LogicalPPMState` (stabilizer · frame · magic-counter).
-3. **Transfer to Boolean output** —
-   `shor_arithmetic_ICX_correctness_transfers_to_PPM_no_reflect_hyp`
-   (`CircuitToPPMSemanticBridge.lean:534`, **Verified**) carries `Gate.applyNat`
-   decoder-level correctness through to the observed PPM output bits.
+```lean
+inductive PPMStmt where
+  /-- `c<dst> = Measure P` — measure the Pauli product `P`, binding the ±1
+  outcome to classical slot `dst`. -/
+  | measure (dst : CVar) (P : PauliProduct)
+  /-- `frame P` — unconditional Pauli-frame update by `P`. -/
+  | frame (P : PauliProduct)
+  /-- `if c_{i₁} ^^ … ^^ c_{iₖ} == 1 then thn else els` — conditional
+  Pauli-frame correction on the XOR-parity of the listed outcomes
+  (`els = []` renders as `skip`). -/
+  | correct (parity : List CVar) (thn els : PauliProduct)
+  /-- `useT[q]` — inject (consume) one T magic state on logical qubit `q`. -/
+  | useT (q : Nat)
+  /-- `useCCZ[a,b,c]` — inject one CCZ magic state on logical qubits `a,b,c`. -/
+  | useCCZ (a b c : Nat)
 
-**Honest scope:** the `CCX`/Toffoli `useMagicT` command is *resource accounting* (one
-T token); its semantic magic-injection correctness is the explicitly-**assumed**
-`MagicInjectionObligations.CCX_ok` / `teleportCCXRel` contract — Scaffolded, not
-proved. `magicCompile_executable_ICX` (`CircuitToPPMFactoryProvision.lean:214`) proves
-only that a pool of ≥ `shorMagicDemand g` certified T-tokens lets the compiled program
-*run to completion*.
+/-- A PPM program: a list of statements, executed in order. -/
+abbrev PPMProg := List PPMStmt
+```
 
-### PPM rewrite rules (the calculus)
+Well-formedness is decidable: slots bind **sequentially** from `c0`, every
+correction references only already-bound outcomes, every product is canonical
+and nonempty, CCZ targets are distinct:
 
-PPM circuits are simplified by two rules, both backed by FormalRV's Pauli algebra
-and Gottesman update — drawn here in the same lattice-surgery style:
+```lean
+def PPMStmt.binds : PPMStmt → Nat
+  | .measure .. => 1
+  | _           => 0
 
-<p align="center"><img src="../../docs/diagrams/ppm_rules.png" width="900" alt="PPM rewrite rules"></p>
+def PPMStmt.wfAt (bound : Nat) : PPMStmt → Bool
+  | .measure dst P       => decide (dst = bound) && sortedStrict P && !P.isEmpty
+  | .frame P             => sortedStrict P && !P.isEmpty
+  | .correct par thn els =>
+      !par.isEmpty && par.all (fun c => decide (c < bound))
+        && sortedStrict thn && !thn.isEmpty && sortedStrict els
+  | .useT _              => true
+  | .useCCZ a b c        => decide (a ≠ b) && decide (a ≠ c) && decide (b ≠ c)
 
-- **(a) Commuting measurements reorder.** `commutes p q` (`PPM.lean:109`) is `true`
-  iff the two Pauli products share an *even* number of anticommuting sites (e.g.
-  `Z⊗Z` and `X⊗X`); `commutes_self` / `commutes_I_*` are the base lemmas. Commuting
-  PPMs swap freely.
-- **(b) Measuring an anticommuting Pauli replaces the stabilizer.** `apply_PPM_pos` /
-  `apply_PPM_neg` (`PPMOperational.lean:104`) are the Gottesman update: a measured `P`
-  anticommuting with a generator replaces it (measuring `Z` on `|+⟩` turns stabilizer
-  `X` into `Z`, `PPM_Z_on_plus_pos`), and the generator set stays commuting
-  (`PPM_preserves_validity_plus_Z`).
+def PPMProg.wfFrom : Nat → PPMProg → Bool
+  | _,     []     => true
+  | bound, s :: p => s.wfAt bound && PPMProg.wfFrom (bound + s.binds) p
 
-These are the FormalRV-verified core of the Litinski PPM calculus — the
-Pauli-commutation and measurement-update rules — checked by `decide` on concrete
-states (a full π/8-rotation-pushing calculus is not formalised).
+def PPMProg.wf (p : PPMProg) : Bool := PPMProg.wfFrom 0 p
+```
 
-### More small examples
+The honest SPACE readouts are structural walks over the same tree:
+`PPMProg.width` (qubits touched — magic injections count) and
+`PPMProg.cwidth` (classical outcome slots bound). Append laws
+(`wfFrom_append`, `width_append`, `cwidth_append`) make programs composable.
 
-2. **CCZ teleportation gadget** (`ccz_gadget.qasm`, diagram
-   [`ccz_gadget.png`](../../docs/diagrams/ccz_gadget.png)) — prepare `|CCZ⟩` on three
-   ancillas, a transversal CNOT chain, three Z-measurements, then the `CZ`/`Z`
-   feed-forward corrections. `ccz_teleport_outcome_000` (`CCZGadgetTeleport.lean:127`,
-   **Verified**) proves the `|000⟩` branch lands `CCZ|ψ⟩` at amplitude `1/(2√2)`; the
-   full feed-forward gadget is emitted and cross-checked by Qiskit simulation (the
-   other 7 outcome branches are not state-vector-proved — honest scope).
-3. **A Gottesman PPM update** — measuring `Z` on `|+⟩`: `PPM_preserves_validity_plus_Z`
-   (`PPMOperational.lean:189`, **Verified** by `decide`) shows `apply_PPM_pos` keeps
-   the stabilizer-generator set commuting through the measurement. This is the
-   stabilizer-frame bookkeeping behind every logical measurement.
+## The semantics
 
-## Essential proof techniques
+### Frame algebra (`Syntax/PauliAlgebra.lean`)
 
-- **Outcome-by-outcome state vectors.** For each measurement result `b` the proof
-  computes the projected post-measurement state, its Born amplitude, and the Clifford
-  correction that erases the branch dependence — `t_teleport_outcome_0/1` discharge
-  the two T-gadget branches by `fin_cases` over `Fin 4` and ring algebra. For CCZ,
-  `cnotChain_mul_apply` turns the transversal CNOT chain into an index *permutation*,
-  so the 6-qubit `|000⟩`-outcome branch is handled by Kronecker decomposition rather
-  than a `Fin 64` case split.
-- **Stabilizer PVM as algebra.** The `±1` Pauli projectors `(1±P)/2` are proven
-  idempotent, orthogonal, and resolving identity purely by ring normalisation (using
-  `P²=I`), and pointwise Pauli commutation is lifted to matrix commutation by list
-  induction (`toMatrix_comm_of_pointwise`) — the algebraic backbone of the Gottesman
-  measurement update.
+A Pauli frame is a Pauli operator *up to global phase*, so the product of two
+sparse products is a **sorted merge** — factors on distinct qubits interleave,
+factors on the same qubit combine, equal kinds cancel (sparse products never
+mention identity):
 
-Honest scope: the T gadget and the CCZ `|000⟩` branch are state-vector **Verified**;
-the other 7 CCZ branches and the full Toffoli magic injection (`teleportCCXRel` /
-`CCX_ok`) are an explicitly *assumed* contract, and distillation/decoders are out of
-scope.
+```lean
+/-- Phase-free product of two non-identity Pauli kinds: equal kinds cancel to
+identity (`none`); distinct kinds give the third (`X·Y ~ Z` up to phase). -/
+def PKind.mulK : PKind → PKind → Option PKind
+  | .x, .x => none | .y, .y => none | .z, .z => none
+  | .x, .y => some .z | .y, .x => some .z
+  | .x, .z => some .y | .z, .x => some .y
+  | .y, .z => some .x | .z, .y => some .x
+
+def mulF : PauliProduct → PauliProduct → PauliProduct
+  | [], Q => Q
+  | P, [] => P
+  | a :: P, b :: Q =>
+      if a.qubit < b.qubit then a :: mulF P (b :: Q)
+      else if b.qubit < a.qubit then b :: mulF (a :: P) Q
+      else
+        match PKind.mulK a.kind b.kind with
+        | none   => mulF P Q
+        | some k => ⟨a.qubit, k⟩ :: mulF P Q
+```
+
+Proven (axiom-clean, `[propext, Quot.sound]`):
+
+```lean
+theorem mulF_self   (P : PauliProduct) : mulF P P = []          -- involution: P is its own inverse
+theorem mulF_sorted (P Q) : sortedStrict P → sortedStrict Q → sortedStrict (mulF P Q)
+theorem mulF_width  (P Q) : (mulF P Q).width ≤ max P.width Q.width
+```
+
+so the frame the executor accumulates is always a canonical sparse product on
+the program's own qubits.
+
+### Operational semantics (`Semantics/ProgramSemantics.lean`)
+
+Defined **by reuse** of the already-proven machinery: a sparse product is sent
+through the dense bridge into the existing Gottesman stabilizer update
+(`apply_PPM_pos/neg`, `Semantics/PPMOperational.lean`); corrections fold into
+the frame via `mulF`. Measurement outcomes are nondeterministic, so a run is
+parametrized by an outcome stream `ω : Nat → Bool` (slot index ↦ outcome) —
+the standard branch-explicit treatment.
+
+```lean
+/-- Sparse → dense: `X[0]Z[1]X[3]` at width `n` becomes the positive-phase
+dense string `X Z I X I …` the proven Gottesman update consumes. -/
+def PauliProduct.toDense (n : Nat) (P : PauliProduct) : PauliString :=
+  ⟨Phase.plus, (List.range n).map (fun i =>
+      match P.lookupK i with
+      | some k => k.toPauli
+      | none   => Pauli.I)⟩
+
+/-- The operational state of a PPM-program run. -/
+structure ExecState where
+  stab     : StabilizerState   -- the (reused) Gottesman stabilizer
+  outs     : List Bool         -- outcome trace: outs[i] = outcome of slot cᵢ
+  frame    : PauliProduct      -- the accumulated Pauli frame
+  magicT   : Nat               -- magic audit
+  magicCCZ : Nat
+
+/-- XOR-parity of the listed outcome slots. -/
+def xorParity (outs : List Bool) (par : List CVar) : Bool :=
+  par.foldl (fun acc c => acc ^^ outs.getD c false) false
+
+def stepStmt (n : Nat) (outcome : Bool) (st : ExecState) : PPMStmt → ExecState
+  | .measure _ P =>
+      let dense := P.toDense n
+      { st with
+          stab := if outcome then apply_PPM_neg st.stab dense
+                  else apply_PPM_pos st.stab dense
+          outs := st.outs ++ [outcome] }
+  | .frame P => { st with frame := mulF st.frame P }
+  | .correct par thn els =>
+      if xorParity st.outs par then { st with frame := mulF st.frame thn }
+      else { st with frame := mulF st.frame els }
+  | .useT _ => { st with magicT := st.magicT + 1 }
+  | .useCCZ _ _ _ => { st with magicCCZ := st.magicCCZ + 1 }
+
+/-- Run a program at width `n` under outcome stream `ω`. -/
+def run (n : Nat) (ω : Nat → Bool) : ExecState → PPMProg → ExecState
+  | st, []     => st
+  | st, s :: p => run n ω (stepStmt n (ω st.outs.length) st s) p
+```
+
+**Semantics ↔ resource reconciliation** (proven for *every* outcome stream and
+start state) — the independent `Resource/` counters provably predict what an
+execution does:
+
+```lean
+theorem run_append      : run n ω st (p ++ q) = run n ω (run n ω st p) q
+theorem run_outs_length : (run n ω st p).outs.length = st.outs.length + countMeas p
+theorem run_magicT      : (run n ω st p).magicT   = st.magicT   + countMagicT p
+theorem run_magicCCZ    : (run n ω st p).magicCCZ = st.magicCCZ + countMagicCCZ p
+```
+
+### Resource counters (`FormalRV/Resource/PPMCount.lean` — top-level `Resource/`, *outside* this folder by the layering rule)
+
+The counters import **only** the leaf IR — never a semantics, compiler, or
+gadget builder — so no proof can fudge a count; a skeptic can `#eval` them on
+any constructed program without reading a proof:
+
+```lean
+def countMeas     : PPMProg → Nat   -- Pauli-product measurements (dominant cost unit)
+def countCorrect  : PPMProg → Nat   -- conditional-correction statements
+def countMagicT   : PPMProg → Nat   -- T states consumed
+def countMagicCCZ : PPMProg → Nat   -- CCZ states consumed
+def countMagic    (p : PPMProg) : Nat := countMagicT p + countMagicCCZ p
+```
+
+with append laws for all of them and `cwidth_eq_countMeas` (the IR's classical
+width and the counter are two independent walks, reconciled by proof).
+
+## Example programs (with PPM diagrams)
+
+Diagram conventions: time flows left to right; a vertical box is **one joint
+Pauli-product measurement** with its tensor factor written on each wire it
+touches; `─▶ cᵢ` binds the outcome; `[P if …]` is a conditional Pauli-frame
+correction; `◆|T⟩` marks magic-state injection (`useT`).
+
+### 1. T gate by magic-state teleportation (`tTeleportSkeleton`, `Syntax/Notation.lean`)
+
+```lean
+ppm_program tTeleportSkeleton {
+  useT[1];
+  c0 = Measure Z[0]Z[1];
+  if c0 == 1 then X[1] else skip
+}
+```
+
+```
+                     ╔═══╗
+q0 (data) ───────────╢ Z ╟───────────────────────
+                     ║   ║──▶ c0
+q1 ───◆|T⟩───────────╢ Z ╟───────[X if c0 = 1]───
+                     ╚═══╝
+      useT[1]    c0 = Measure Z[0]Z[1]
+```
+
+Machine-checked facts, all `decide`/`rfl` (`Syntax/Notation.lean` §4; the
+executor facts are the `Semantics/ProgramSemantics.lean` §5 smokes, which state
+the same program as its raw statement list):
+
+```lean
+example : tTeleportSkeleton.wf     = true := by decide
+example : tTeleportSkeleton.width  = 2    := by decide   -- qubits
+example : tTeleportSkeleton.cwidth = 1    := by decide   -- outcome slots
+
+-- the executor consumes exactly one T state, records exactly one outcome:
+example : (run 2 (fun _ => false) (ExecState.init []) tTeleportSkeleton).magicT = 1
+example : (run 2 (fun _ => true)  (ExecState.init []) tTeleportSkeleton).outs = [true]
+```
+
+### 2. Parity-conditioned correction across two measurements
+
+The multi-outcome form lattice surgery needs — the correction fires on
+`c0 ^^ c1`, with both branches explicit:
+
+```lean
+ppm! { c0 = Measure X[0]X[1];
+       c1 = Measure Z[1]Z[2];
+       if c0 ^^ c1 == 1 then Z[0] else X[2];
+       useT[2] }
+```
+
+```
+        ╔═══╗
+q0 ─────╢ X ╟──────────────────[Z if p = 1]──────────
+        ║   ║──▶ c0   ╔═══╗
+q1 ─────╢ X ╟─────────╢ Z ╟──────────────────────────
+        ╚═══╝         ║   ║──▶ c1
+q2 ───────────────────╢ Z ╟────[X if p = 0]───◆|T⟩───
+                      ╚═══╝
+                                      p := c0 ^^ c1
+```
+
+The notation is nothing but the data tree (a `rfl` smoke in
+`Syntax/Notation.lean`):
+
+```lean
+example :
+    (ppm! { c0 = Measure X[0]X[1];
+            c1 = Measure Z[1]Z[2];
+            if c0 ^^ c1 == 1 then Z[0] else X[2];
+            useT[2] })
+      = [PPMStmt.measure 0 [⟨0, .x⟩, ⟨1, .x⟩],
+         PPMStmt.measure 1 [⟨1, .z⟩, ⟨2, .z⟩],
+         PPMStmt.correct [0, 1] [⟨0, .z⟩] [⟨2, .x⟩],
+         PPMStmt.useT 2] := rfl
+```
+
+so a skeptic can `#eval countMeas`, `#eval PPMProg.width`, `#eval PPMProg.wf`,
+or `#eval (run …)` on it directly — no proofs required to audit the numbers.
+
+### Status of the program layer (2026-06-10)
+
+Done and green: the IR + notation + decidable well-formedness; the frame
+algebra with canonicality (`mulF_self/sorted/width`); the stabilizer-level
+executor by reuse of the proven Gottesman update; the independent counters
+with the semantics↔resource reconciliation theorems. In flight (Phase C/D):
+the frame-soundness theorem (deferred ≡ applied corrections), the semantic
+retrofit of the teleport gadgets onto `tTeleportSkeleton`-style programs (the
+*Skeleton* suffix is honest — the state-vector proof currently lives in
+`Magic/MagicStateTeleport.lean` against the old formulation), the [[4,2,2]]
+schedule **with** corrections, and the `Gate → PPMProg` compiler with
+`compilePPM_correct` (the keystone: every higher-level logical program lands
+in this syntax with a correctness proof).
+
+## The hierarchy (restructured 2026-06-10; was 48 flat files)
+
+| Folder | Concern | Key contents |
+|---|---|---|
+| `Syntax/` | **The PPM IR** — data only | `Program.lean` (**the PPM program IR**, zero imports), `Notation.lean` (`ppm_program` command + pretty-printer), `PauliAlgebra.lean` (frame algebra `mulF` + canonicality), `Core.lean` (Pauli, PauliString, PPM, the [[4,2,2]] schedule objects), `PauliSemantics.lean` (decidable Pauli algebra), `PauliOps.lean` (logical-operator claims + syntactic verifier) |
+| `Semantics/` | What programs *mean* | `ProgramSemantics.lean` (**the program executor**, by reuse), `PPMDenote.lean` (state-vector denotation + PVM laws), `PPMOperational.lean` (Gottesman update), `LogicalState.lean` (matrix model), `PPMSemanticsGeneral.lean`, `StabilizerBasisBridge.lean`, `GadgetChannel.lean`, and the observation/semantic bridges to `Gate.applyNat` |
+| `Rules/` | Rewrite laws | `CliffordConj.lean` / `CliffordPPMRules.lean` (Clifford conjugation of PPMs), `PPMUpdateInvariants.lean`, `EightTToCCZScheme.lean`, `ToffoliFromCCZ.lean`, `ZXSpiderFusion.lean`, `ZXStabilizer.lean` |
+| `Compiler/` | Circuit → PPM lowering | `CircuitFragmentClassifierAndCompiler.lean` (`compileArithmeticGateToPPM`), `PPMCompilerCorrectness.lean`, `StabProgram.lean`, `ToffoliScheme(+Discharge).lean`, surgery-gadget / backend trace lowering |
+| `Magic/` | Magic states | T/CCZ teleportation gadgets (proven at state-vector level), `GidneyAND.lean`, `CircuitToPPMMagicFactory.lean`, `CircuitToPPMToffoliMagic.lean` |
+| `Resource/` | **Counters + anchored counts** | `PPMResourceCount.lean`, `CircuitToPPMResource.lean` (`numMeas`/`numTMagic`/`numCCZMagic` over compiled programs), `GateToPPMResource.lean`, `ModMultPPMResource.lean` — the program-IR counters (`countMeas` …) live at top-level `FormalRV/Resource/PPMCount.lean` by the layering rule |
+| `QECBridge/` | PPM ↔ QEC interfaces | `LayeredPPMQECInterface.lean`, `FactoryHierarchy.lean`, `CircuitToPPMFactoryProvision.lean` |
+| `Pipeline/` | End-to-end assemblies | `PPMShorPipeline.lean` (success-probability transfer), `GE2021PPMSysInv.lean` (paper instantiation, derived numbers) |
+| `Codegen/` | Text emission | `PPMToQASM.lean` |
+
+Layering: `Syntax < Semantics < Rules < Compiler < Magic < Resource < QECBridge < Pipeline`.
+Two back-compat stubs (`PPM/GE2021PPMSysInv.lean`, `PPM/PPMToQASM.lean`)
+re-export moved modules for in-flight importers; remove after migration.
+
+## Key definitions
+
+- `PPMStmt` / `PPMProg` + `PPMProg.wf` (`Syntax/Program.lean`) — **the PPM program IR** (above).
+- `mulF` + `mulF_self/sorted/width` (`Syntax/PauliAlgebra.lean`) — the Pauli-frame algebra.
+- `run` / `stepStmt` / `ExecState` (`Semantics/ProgramSemantics.lean`) — the program executor.
+- `Pauli`, `Phase`, `Pauli.mul` (`Syntax/`) — single-qubit Pauli group with `{±1,±i}` phase tracking.
+- `PauliString` + `commutes` (`Syntax/Core.lean`) — n-qubit Paulis; commute iff anticommuting positions are even.
+- `StabilizerState`, `apply_PPM_pos/neg` (`Semantics/PPMOperational.lean`) — the Gottesman measurement update.
+- `Pauli.toMatrix` / `PauliString.toMatrix` (`Semantics/LogicalState.lean`) — complex-matrix interpretation.
+- `PPMCommand`/`PPMProgram` and the `Gate → PPMProgram` compiler (`Compiler/`) — the (old-IR) lowering target.
+- `TFactoryContract`, `MagicToken`, `teleportCCX` (`Magic/`) — factory + Toffoli-teleportation interfaces.
+- `GidneyAND_forward/reverse` (`Magic/GidneyAND.lean`) — the measurement-AND construction.
+
+## Resource honesty (audited 2026-06-10, all 48 files)
+
+PPM resource counting follows the project triple — concrete syntactic object +
+semantic proof + an independent counter walking **that same object**:
+
+- The program-IR counters (`countMeas`, `countCorrect`, `countMagicT/CCZ`,
+  `FormalRV/Resource/PPMCount.lean`) import ONLY the leaf IR, and the
+  reconciliation theorems (`run_outs_length`, `run_magicT`, `run_magicCCZ`)
+  prove they predict every execution trace.
+- The old-IR counters (`numMeas`, `numTMagic`, `numCCZMagic`,
+  `ppmProgramResourceSummary`, `magicRequestCount`, `count_measure`) are
+  **structural walks** over the PPM IR / compiled program lists — no asserted
+  constants anywhere in the layer.
+- Anchored instances close by `decide` on **compiled** programs:
+  `numCCZMagic (circuitToPPM 8 shor15Modmult) = 27`, `numMeas … = 81 (= 27 × 3)`,
+  and the Gidney adder's `verified_adder_end_to_end` (semantic correctness **and**
+  `numCCZMagic = 2(n+2)` about one Gate term — the full triple).
+- `shorMagicDemand_eq_ccxCount` proves demand = the gate's CCX count by induction.
+- `Pipeline/GE2021PPMSysInv` is **anti-spreadsheet**: wallclock / peak-qubits /
+  distinct-qubits are `foldl`-derived from the actual SysCall schedule and
+  `decide`-checked — never typed-in numbers.
+
+## Honesty boundaries (open, explicitly fenced — do NOT cite as verified)
+
+1. **The [[4,2,2]] surgery schedule is a syntactic placeholder, not a logical
+   CNOT.** `Syntax/Core.lean` documents (with out-of-band Qiskit evidence) that
+   all 5 PPMs commute with all 8 logicals, so the schedule's logical action is
+   identity-like; the *emergent-CNOT* semantics is an open obligation.
+   `Semantics/LogicalState.lean`'s `Code4Code4_surgery_implements_logical_CNOT`
+   currently holds by `rfl` over placeholder (identity) semantics — structurally
+   committed, operationally empty. (The program-syntax retrofit WITH
+   corrections — Phase C — is the designated fix.)
+2. **CCX/Toffoli magic injection** is an interface obligation (`teleportCCXRel`,
+   `MagicInjectionObligations.CCX_ok`) — discharged structurally, not derived
+   from Clifford+T teleportation; the CCZ teleport gadget is proven only on the
+   `000` outcome branch.
+3. **Backend alignment parameters** (`backendSummary`, `qecSpecsLowerToSchedule`,
+   `specMatch`, `qecRel`) are caller-supplied: the trace lowering is
+   observational (right syscalls at right qubits), not QEC-semantic.
+4. `Resource/ModMultPPMResource` exposes **bounds (≤)**, not equalities, where
+   the source T-count is a sizing bound; flagged in-file.
+5. `Magic/GidneyAND`: the `reverse_tcount = 0` is arithmetic-only (no
+   measurement-semantics equivalence proof yet).

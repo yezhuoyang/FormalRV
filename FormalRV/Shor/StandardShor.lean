@@ -31,10 +31,7 @@ import FormalRV.Shor.OrderFinding.SuccessSensitivity
 import FormalRV.Shor.PostQFT.PostQFTCompletion
 import FormalRV.Shor.VerifiedShor.ControlledModAddLayer
 import FormalRV.Arithmetic.Cuccaro.CuccaroFull
-import FormalRV.LatticeSurgery.SurgeryDemoCNOT
-import FormalRV.LatticeSurgery.SurfaceShorPPMEndToEnd
-import FormalRV.LatticeSurgery.SurfaceShorFullStack
-
+import FormalRV.QEC.LatticeSurgery.SurgeryDemoCNOT
 namespace FormalRV.StandardShor
 
 /-! ### Step 1 — the algorithm succeeds (✅ verified, N-parametric) -/
@@ -57,12 +54,6 @@ alias surfaceCnotVerifies := FormalRV.LatticeSurgery.SurgeryDemoCNOT.surface3_cn
 /-- A logical Toffoli = a verified |C̄CZ̄⟩ magic injection on the surface code. -/
 alias surfaceToffoliInjectionVerifies := FormalRV.LatticeSurgery.SurgeryDemoCNOT.surface3_ccx_injection_verifies
 
-/-! ### Step 4 — end to end on the surface code (✅ verified) -/
-/-- The Shor PPM program is physically realized as a surface-code surgery schedule. -/
-alias surfaceShorEndToEnd := FormalRV.LatticeSurgery.SurfaceShorPPMEndToEnd.surface_shor_ppm_physically_realized
-/-- The full surface-code schedule reduces the stabilizer state (whole-stack check). -/
-alias surfaceFullStack := FormalRV.LatticeSurgery.SurfaceShorFullStack.surface_schedule_full_stack
-
 end FormalRV.StandardShor
 
 /-! ## The curated baseline, type-checked (a reader confirms these on build) -/
@@ -72,5 +63,3 @@ end FormalRV.StandardShor
 #check @FormalRV.StandardShor.cuccaroAdderCorrect
 #check @FormalRV.StandardShor.surfaceCnotVerifies
 #check @FormalRV.StandardShor.surfaceToffoliInjectionVerifies
-#check @FormalRV.StandardShor.surfaceShorEndToEnd
-#check @FormalRV.StandardShor.surfaceFullStack

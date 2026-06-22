@@ -1,0 +1,47 @@
+# Backend for the gate-level demo: hardware-specific gate times and finite
+# control parallelism.
+#
+# Gate times are HARDWARE FACTS: an op whose do: matches a gate kind gets
+# its duration from this table (a schedule claiming a different duration is
+# rejected).  Parallelism caps model finite control electronics -- a finite
+# FPGA cannot drive gates on a million qubits at once; in neutral atoms the
+# cap is the number of AODs and the optical-lattice sites each one forms.
+# Omit the caps and parallelism is unconstrained: the user models the
+# bottleneck only if their hardware has one.
+
+unit:
+  time: us
+
+name: demo_gates
+description: >
+  Gate-level backend: a 12-qubit register, hardware gate times (H 100us,
+  CNOT 1000us, measure 5000us), a global 4-channel control cap (FPGA), a
+  2-at-a-time CNOT cap (AOD), and 2 readout lines.
+
+zones:
+  q:
+    kind: data_qubit
+    count: 12
+
+resources:
+  readout_lines:
+    kind: control_line
+    capacity: 2
+    description: simultaneous measurement readout lines
+
+# ---- the hardware gate table -------------------------------------------
+gates:
+  H:
+    duration_us: 100
+    qubits: 1
+  CNOT:
+    duration_us: 1000
+    qubits: 2
+    max_parallel: 2            # e.g. one AOD pair: at most 2 CNOTs at once
+  measure:
+    duration_us: 5000
+    qubits: 1
+    uses: {readout_lines: 1}   # each measurement holds a readout line
+
+# at most 4 gate-level operations of ANY kind at once (the finite FPGA)
+max_parallel_gates: 4

@@ -7,16 +7,27 @@ latency, decoder-feedback ordering, factory throughput). It also provides
 code-aware logical layouts and **parametric soundness lemmas** that lift a
 single-body check to an `n`-fold compressed repeat without expanding it.
 
-## Layout
-- `Architecture.lean` — `Zone`/`Channel`/`SysCall` IR, `Prop`-level verification predicates, occupancy/discard state machines, magic-state cost specs, logical↔physical layout bridge; neutral-atom / ion / superconducting instantiations (cited values).
-- `ScheduleInvariantsExplicit.lean` — decidable `Bool` checkers for the four qianxu invariants (I1 capacity, I2 exclusivity, I3 latency/speed, I4 throughput) over a `ZonedArch`.
-- `SystemInvariantStrengthening.lean` — strengthened checkers fixing two checker gaps: `operation_capacity_ok` (per-kind concurrency caps) and `feedback_after_decode_ok` (decoder→Pauli ordering); bundles `all_invariants_strict_ok` and its slot-capacity/freshness extensions.
-- `SystemChecker.lean` — honest audit of the older bundle: tiny `native_decide` counterexamples documenting five categories the checker is silent on, plus positive controls it correctly rejects.
-- `CodedLayout.lean` — `CodedLogicalLayout` binding logical qubits to `[[n,k,d]]` QEC code blocks with a consistency predicate.
-- `CompressedRepeatSoundness.lean` — shift/append/sequence/repeat invariance lemmas pushing toward parametric symbolic-repeat soundness.
-- `AdderSystem.lean` — concrete 48-SysCall adder-skeleton instance certified by the strict bundle (gap-reporting demo, not arithmetic correctness).
-- `LayeredArtifactInterface.lean` — multi-layer artifact/certificate interface so Lean- or Python-generated schedules target the same checkers.
-- `HardwareErrorParams.lean` — implementer-supplied per-SysCall error-rate inputs (ppm) consumed by inter-layer error budgeting.
+## Layout (post 2026-06-11 reorg — see `VM_AUDIT.md` §4 for rationale)
+
+| folder | contents |
+|---|---|
+| `Core/` | `Architecture.lean` (`Zone`/`Channel`/`SysCall` IR, `Prop`-level predicates, occupancy/discard state machines, magic-state cost specs, logical↔physical bridge; neutral-atom / ion / superconducting instantiations), `CodedLayout.lean` (`CodedLogicalLayout` + `syscall_acts_on`), `ScheduleCombinators.lean` (pure `List SysCall` combinators: shift / seq / par and lemmas) |
+| `Invariants/` | `ScheduleInvariantsExplicit.lean` (decidable I1–I4 over a `ZonedArch`), `InvariantFramework.lean`, `SystemInvariantStrengthening.lean` (`operation_capacity_ok`, `feedback_after_decode_ok`, slot-capacity, ancilla-freshness; `all_invariants_strict_ok` bundles) |
+| `Checkers/` | `SystemChecker.lean` (honest gap audit: `native_decide` counterexamples for the categories the checker is silent on), `FaultTolerantSchedule.lean` |
+| `DeviceLane/` | `DeviceSchedule.lean` (the parallel `DeviceOp` engine), `RoutingResourceModel.lean`, `DependencyGraph.lean` |
+| `Decoder/` | `DecoderBacklogModel.lean` (provisioned/under-provisioned dichotomy — quantitatively validated by the FTQ-VM), `DecodeLatencySensitivity.lean`, `ReactionLimitedRuntime.lean`, `SyndromeMeasurementLatency.lean`, `ResourceAuditGaps.lean` |
+| `Magic/` | `MagicStateReadiness.lean`, `MagicScheduleComplete.lean` |
+| `Bounds/` | `ScheduleLowerBound.lean`, `NaiveSchedule.lean`, `NaiveUpperBound.lean`, `ScheduleBounds.lean`, `HardwareSensitivity.lean`, `ScheduleAdvance.lean` |
+| `Compile/` | `LatticeSurgeryPPMContract.lean` (umbrella) → `PPMScheduleContract.lean` (the durable cert structures + validator) + `PPMContractInstances.lean` (worked PPM-block instances); `SurgeryGadgetToSysCalls.lean`, `SurfaceSystemCompile.lean`, `SurfaceShorFullSchedule.lean` |
+| `Artifacts/` | `LayeredArtifactInterface.lean` (umbrella) → `LayeredArtifactCore.lean` (multi-layer artifact/certificate interface — the landing zone for the FTQ-VM `certificate.json` checker) + `CompressedSchedule.lean` (the compressed-schedule algebra + symbolic checker); `CompressedRepeatSoundness.lean` (umbrella) → `CompressedRepeat/` (ShiftInvariance, FeedbackAfterDecode, FreshnessSoundness, ExclusivitySeq, CapacitySeq, InvariantChains, SymbolicRepeatSoundness, CertificateSoundness, AdderRegressions) |
+| `Examples/` | `SystemInvariantExamples.lean` (the five worked PASS/FAIL programs), `AdderSystem.lean` (48-SysCall adder-skeleton instance), `ParallelismVerification.lean`, `CostModelWeightDemo.lean`, `ConcreteMachineFeasibility.lean` |
+| `Params/` | **`HardwareCatalog.lean` — THE single file where every hardware assumption / architecture parameter set is defined**: the unified `HardwareSpec` record, derivations to every checker input (`toZonedArch` / `toOpCap` / `toSlotCap` / `toAncillaModel` / `toGateTable`) and to the FTQ-VM backend JSON (`toBackendJson`), the generic verdict `checkScheduleOn`, all catalog entries, reconfigurability theorems (same schedule, different specs, different verdicts — `parallel_fails_on_adder_d3` / `parallel_ok_on_dualRail`), and `rfl` theorems pinning every legacy scattered record to its catalog entry. Configure new machines HERE. Also: `HardwareParams.lean` (legacy-record reconciliation), `RSA2048.lean` (the canonical GE2021/RSA-2048 workload constants), `ZoneBudget.lean` |
+| root | `FTFramework.lean` (the single coherent entry point / facade), `README.md`, `VM_AUDIT.md` |
+
+> All declared namespaces are normalized to `FormalRV.System.*` (2026-06-11).  The split
+> umbrellas keep the original module names re-exporting their pieces, so downstream imports
+> are unaffected; fully-qualified names did not change in the splits.
+> `StabilizerScheduleVerify` (pure stabilizer-semantics content) now lives in `FormalRV/QEC/`.
 
 ## Key definitions
 - `Architecture` / `SysCall` (`Architecture.lean`) — cross-platform zones+channels and the explicit schedulable-operation IR (gates, transit, measure, decode, Pauli-frame update).
@@ -51,8 +62,8 @@ DEVICE-PROGRAM 1.0;
 // Toffoli-via-magic-state-teleportation  (PHYS = physical op, SYS = system call)
 [0,12)us  SYS   request_magic      factory=3
 [12,13)us  PHYS  transit            q[100] via channel=1
-[13,14)us  PHYS  gate2q             q[0],q[100] gate=0
-[14,15)us  PHYS  measure            q[100] basis=0
+[13,14)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[14,15)us  PHYS  measure            q[100] basis=Z
 [15,16)us  SYS   decode_syndrome    round=7
 [16,17)us  SYS   pauli_frame_update corr=7
 
@@ -69,10 +80,10 @@ DEVICE-PROGRAM 1.0;
 [0,12)us  SYS   request_magic      factory=4
 [12,13)us  PHYS  transit            q[100] via channel=1
 [12,13)us  PHYS  transit            q[102] via channel=2
-[13,14)us  PHYS  gate2q             q[0],q[100] gate=0
-[13,14)us  PHYS  gate2q             q[2],q[102] gate=0
-[14,15)us  PHYS  measure            q[100] basis=0
-[14,15)us  PHYS  measure            q[102] basis=0
+[13,14)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[13,14)us  PHYS  gate2q             q[2],q[102] gate=CNOT
+[14,15)us  PHYS  measure            q[100] basis=Z
+[14,15)us  PHYS  measure            q[102] basis=Z
 [15,16)us  SYS   decode_syndrome    round=8
 -- 6 physical ops, 3 system calls
 ```
@@ -81,6 +92,16 @@ Run both with `lake env lean FormalRV/Codegen/SysCallEmit.lean`.  `physCount` / 
 two categories.  Rendering is a syntactic serialization; the schedule's *meaning* (timing, the
 produce-before-consume wait, the I1–I4 invariants, space-time conflict-freedom) is what
 `DeviceSchedule.lean` / `ScheduleInvariantsExplicit.lean` verify.
+
+**DEVICE-PROGRAM is the shared Lean ↔ FTQ-VM syntax.**  Lean also PARSES it back
+(`Codegen/DeviceProgramParse.lean`: `.dp` text → `List SysCall`, plus the shared backend JSON →
+`ZonedArch`/capacity models), and the FTQ-VM loads the same files natively — so one schedule file
+is checked by both the decidable invariant bundle and the discrete-event VM.  Worked cross-checked
+instance: the d=3 surface-code 2-bit-adder surgery schedule
+(`scripts/EmitAdderDeviceProgram.lean` emits `ftq_vm/backend/examples/adder_d3{,_bad}.dp` from the
+schedule objects certified by `Example/Adder2EndToEnd.schedule_fits` and
+`AdderSystem.bad_parallel_adder_schedule_rejected`; `scripts/CheckDeviceProgram.lean` re-checks the
+files in Lean — round-trip exact, verdicts PASS/FAIL matching the VM's on the same files).
 
 ## Checking system invariants — four worked examples
 
@@ -120,13 +141,13 @@ ancilla (100) but never overlap in time** (`[0,4)` then `[10,14)`).
 ```
 DEVICE-PROGRAM 1.0;
 // PASS-1 sequential PPM pair  (PHYS = physical op, SYS = system call)
-[0,1)us    SYS   request_ancilla    zone=1
-[1,2)us    PHYS  gate2q             q[0],q[100] gate=0
-[2,3)us    PHYS  measure            q[100] basis=0
+[0,1)us    SYS   request_ancilla    q[100]
+[1,2)us    PHYS  gate2q             q[0],q[100] gate=CNOT
+[2,3)us    PHYS  measure            q[100] basis=Z
 [3,4)us    SYS   decode_syndrome    round=0
-[10,11)us  SYS   request_ancilla    zone=1
-[11,12)us  PHYS  gate2q             q[50],q[100] gate=0
-[12,13)us  PHYS  measure            q[100] basis=0
+[10,11)us  SYS   request_ancilla    q[100]
+[11,12)us  PHYS  gate2q             q[50],q[100] gate=CNOT
+[12,13)us  PHYS  measure            q[100] basis=Z
 [13,14)us  SYS   decode_syndrome    round=1
 ```
 **Why it passes** (`passSequential_ok`): every atom (0, 50, 100) is inside a zone (I1); the two
@@ -139,17 +160,17 @@ Both PPMs run **concurrently in `[0,4)`** but on **different** ancillas (100 vs 
 ```
 DEVICE-PROGRAM 1.0;
 // PASS-2 parallel distinct ancillas  (PHYS = physical op, SYS = system call)
-[0,1)us  SYS   request_ancilla    zone=1
-[1,2)us  PHYS  gate2q             q[0],q[100] gate=0
-[2,3)us  PHYS  measure            q[100] basis=0
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[2,3)us  PHYS  measure            q[100] basis=Z
 [3,4)us  SYS   decode_syndrome    round=0
-[0,1)us  SYS   request_ancilla    zone=1
-[1,2)us  PHYS  gate2q             q[1],q[101] gate=0
-[2,3)us  PHYS  measure            q[101] basis=0
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[1],q[101] gate=CNOT
+[2,3)us  PHYS  measure            q[101] basis=Z
 [3,4)us  SYS   decode_syndrome    round=1
 ```
-**Why it passes** (`passParallelDistinct_ok`): the two joint gates overlap in time (real
-parallelism — `passParallelDistinct_overlaps`), but I2 only forbids overlapping ops on the **same**
+**Why it passes** (`passParallelDistinct_ok`): the two joint gates overlap in time (real parallelism; the half-open interval arithmetic is pinned by
+`passParallelDistinct_overlaps`), but I2 only forbids overlapping ops on the **same**
 atom; here the atom sets `{0,100}` and `{1,101}` are disjoint, so exclusivity holds.
 
 ### ❌ FAIL ① — parallel PPM pair aliasing one ancilla (violates I2)
@@ -158,13 +179,13 @@ Same timing as PASS ②, but **both** PPMs use ancilla **100**.
 ```
 DEVICE-PROGRAM 1.0;
 // FAIL-1 parallel ancilla aliasing (I2)  (PHYS = physical op, SYS = system call)
-[0,1)us  SYS   request_ancilla    zone=1
-[1,2)us  PHYS  gate2q             q[0],q[100] gate=0     ← touches atom 100 in [1,2)
-[2,3)us  PHYS  measure            q[100] basis=0
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT     ← touches atom 100 in [1,2)
+[2,3)us  PHYS  measure            q[100] basis=Z
 [3,4)us  SYS   decode_syndrome    round=0
-[0,1)us  SYS   request_ancilla    zone=1
-[1,2)us  PHYS  gate2q             q[1],q[100] gate=0     ← ALSO touches atom 100 in [1,2)
-[2,3)us  PHYS  measure            q[100] basis=0
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[1],q[100] gate=CNOT     ← ALSO touches atom 100 in [1,2)
+[2,3)us  PHYS  measure            q[100] basis=Z
 [3,4)us  SYS   decode_syndrome    round=1
 ```
 **Why it fails** (`failAlias_fails`, `failAlias_exclusivity_false`): the two `gate2q`s both touch
@@ -194,8 +215,8 @@ A gate → measure → **20 µs decode**, against the architecture's 10 µs reac
 ```
 DEVICE-PROGRAM 1.0;
 // FAIL-3 decode slower than reaction budget (I3 decoder)  (PHYS = physical op, SYS = system call)
-[0,1)us   PHYS  gate2q             q[0],q[100] gate=0
-[1,2)us   PHYS  measure            q[100] basis=0
+[0,1)us   PHYS  gate2q             q[0],q[100] gate=CNOT
+[1,2)us   PHYS  measure            q[100] basis=Z
 [2,22)us  SYS   decode_syndrome    round=0     (20 us > 10 us reaction budget)
 ```
 **Why it fails** (`failDecodeSlow_fails`): `ZonedArch` carries a `t_react_us` field and
@@ -253,7 +274,7 @@ Each `Zone` has a `role` (Memory / Processor / Ancilla / Factory / Routing), a
 `capacity`, and an average routing time; each `Channel` carries a `kind`
 (`AncillaSupply` / `MagicSupply` / `MemoryLoad` / `InterRouting`), a latency, a
 bandwidth, and a per-transit fidelity. The diagram is the literal `neutral_atom_mini`
-instance (`Architecture.lean:856`): a 21-qubit Processor fed by a 100-qubit Memory,
+instance (`Core/Architecture.lean`): a 21-qubit Processor fed by a 100-qubit Memory,
 a 10-qubit Ancilla zone, and a 5-qubit Factory, each over a 15 µs / 99.9% channel.
 Sibling instances `trapped_ion_mini` and `superconducting_mini` fill the *same shape*
 with Quantinuum-H1 and Sycamore-class numbers.
@@ -273,14 +294,14 @@ resource number is *computed by `foldl`/`filter` over the list*, not typed in:
 The strict bundle conjoins capacity, exclusivity, latency, throughput,
 **operation-capacity** (per-kind concurrency caps), **feedback-after-decode**
 ordering, slot-capacity, and ancilla-freshness. `adder_n1_strict_system_ok`
-(`AdderSystem.lean:156`, **Verified** by `native_decide`) proves the schedule above
+(`Examples/AdderSystem.lean`, **Verified** by `native_decide`) proves the schedule above
 passes `all_invariants_strict_with_slot_capacity_and_freshness_ok` under a realistic
 cap model (`max_gate2q_active = 1`, decoder bank 4).
 
 ### 4. Checking the invariants — reject (and a capacity lower bound)
 
 Run the *same* checker on a schedule that fires two PPM blocks in parallel:
-`bad_parallel_adder_schedule_rejected` (`AdderSystem.lean:354`, `native_decide`)
+`bad_parallel_adder_schedule_rejected` (`Examples/AdderSystem.lean`, `native_decide`)
 proves it returns **`false`** — two simultaneous `Gate2q`s exceed
 `max_gate2q_active = 1`. The framework also pins a schedule-independent floor: any
 schedule emitting 18 `Gate2q`s one-at-a-time needs `≥ ⌈18/1⌉·1 = 18 µs`, so an
@@ -293,7 +314,7 @@ formally contradicted by its own capacity assumptions.
 
 ![scheduling invariants](../../docs/diagrams/scheduling_invariants.png)
 
-*Left:* `scheduleFootprint_replicate` (`LatticeSurgery/ScheduleEmit.lean:66`,
+*Left:* `scheduleFootprint_replicate` (`QEC/LatticeSurgery/ScheduleEmit.lean`,
 **Verified**) — a schedule of `n` surgery merges occupies exactly `28·n` physical
 qubits (`28 = merged_n + |hx| + |hz|`). *Right:* instantiating the verified
 `surfaceModel` resource formula with Gidney–Ekerå 2021's own inputs (`2.7×10⁹`
@@ -318,7 +339,7 @@ The Gantt above is the verified 16-µs PPM block
   request re-allocates it `Live`. `ancilla_freshness_ok` rejects use-before-reset,
   reuse-without-reset, and dangling-`Live` schedules.
 - **T-states.** `RequestMagicState factory_zone` draws a `|T⟩`/`|CCZ⟩` from a Factory
-  zone; `MagicStateSpec` (`Architecture.lean:548`) carries the factory's qubit cost,
+  zone; `MagicStateSpec` (`Core/Architecture.lean`) carries the factory's qubit cost,
   production time, success rate, and output fidelity, and `capacity_ok` bounds the
   per-zone request count. (This block makes no magic requests — the Factory zone of the
   [zone design](#worked-examples) sits idle here.)
@@ -335,7 +356,7 @@ values (cited from hardware papers), and factory distillation correctness is ass
 ## Essential proof techniques
 
 - **A ∀-size feasibility ceiling by induction.** `naivePeak_le_footprint`
-  (`NaiveUpperBound.lean:86`) proves the one-Toffoli-at-a-time schedule's peak qubit
+  (`Bounds/NaiveUpperBound.lean`) proves the one-Toffoli-at-a-time schedule's peak qubit
   demand never exceeds the static footprint, by a one-line induction on the step
   count (`max footprint (≤footprint) = footprint`) — so the bound holds for *every*
   problem size, not just the concrete instance.

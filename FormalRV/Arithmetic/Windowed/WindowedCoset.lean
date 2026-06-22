@@ -437,4 +437,34 @@ theorem ObliviousCarryRunway.toffoli_eq_verified (R : ObliviousCarryRunway) :
       = toffoliCount (windowedMulCircuit R.w (R.n + R.pad) R.a R.numWin) := by
   rw [R.toffoli_matches_padded, cosetPadding_toffoli]
 
+/-! ## §6. THE COMBINED COSET CAPSTONE — one syntactic circuit, both faces. -/
+
+/-- **Logical-level verification of the windowed COSET multiplier, bundled.**
+    The SINGLE syntactic circuit `windowedMulCircuit w (n+pad) a numWin` (a `Gate` —
+    the optimal-count Cuccaro windowed multiplier on the padded coset register,
+    `bits = n + pad`) carries BOTH faces at once, for the SAME object:
+
+      1. SEMANTIC CORRECTNESS on the actual syntactic structure — run via
+         `Gate.applyNat` on the clean encoded input, its accumulator read modulo
+         `N` (`cosetValue`) is the true modular product `(a·y) mod N`, under the
+         no-wrap fit `a·y < 2^(n+pad)` (the coset/runway padding guarantee — the
+         honest precondition of the approximate-encoding coset representation);
+      2. RESOURCE — the closed-form Toffoli count `numWin·(4·w·2^w + 2·n + 2·pad)`,
+         counted by walking the SAME `Gate` (`toffoliCount`, no `native_decide`).
+
+    This is the coset analogue of `WindowedModExpValue.windowedModNExpInPlace_verified`:
+    one concrete circuit, semantic correctness AND a resource count, kernel-clean. -/
+theorem windowedCoset_verified (w n pad a numWin N y : Nat)
+    (hw : 0 < w) (hy : y < 2 ^ (w * numWin)) (hnowrap : a * y < 2 ^ (n + pad)) :
+    cosetValue N
+        (decodeAccOf cuccaroAdder
+          (Gate.applyNat (windowedMulCircuit w (n + pad) a numWin)
+            (mulInputOf cuccaroAdder w (n + pad) numWin y)) (1 + 2 * w) (n + pad))
+        = (a * y) % N
+    ∧ toffoliCount (windowedMulCircuit w (n + pad) a numWin)
+        = numWin * (4 * w * 2 ^ w + 2 * n + 2 * pad) :=
+  ⟨cosetValue_of_isCosetRep
+     (windowedCosetMul_correct_cuccaro w (n + pad) a numWin N y hw hy hnowrap),
+   cosetPadding_toffoli w n pad a numWin⟩
+
 end FormalRV.Shor.WindowedCoset

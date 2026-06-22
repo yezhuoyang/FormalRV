@@ -1,0 +1,4 @@
+DEVICE-PROGRAM 1.0;
+// e08_use_before_request {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  PHYS  gate2q             q[0],q[100] gate=CNOT
+[1,2)us  PHYS  measure            q[100] basis=Z

@@ -7,7 +7,7 @@
   system arithmetic to replace modular arithmetic over N with modular arithmetic
   over a set of primes P each of size polylog(N)."  So Pinnacle's arithmetic =
   Gidney-2025's CFS approximate-residue engine, which is ALREADY VERIFIED in
-  `FormalRV.Audit.Gidney2025.CFS.*` (axiom-clean).  This file WIRES that verified
+  `FormalRV.Shor.CFS.*` (axiom-clean).  This file WIRES that verified
   engine in as Pinnacle's arithmetic audit (it was previously a bare stub).
 
   WHAT THE PAPER'S ARITHMETIC NEEDS, and the verified object that supplies it:
@@ -37,11 +37,11 @@
   ABOVE the arithmetic (OUT OF SCOPE here): the headline <100k-physical-qubit figure
   rests on the generalised-bicycle qLDPC code-layer obligations (separate roadmap).
 -/
-import FormalRV.Audit.Gidney2025.CFS.ResidueNumberSystem
-import FormalRV.Audit.Gidney2025.CFS.ResidueArith
-import FormalRV.Audit.Gidney2025.CFS.ResidueCircuit
-import FormalRV.Audit.Gidney2025.CFS.CRTBasis
-import FormalRV.Audit.Gidney2025.CFS.TruncatedAccumulation
+import FormalRV.Shor.CFS.ResidueNumberSystem
+import FormalRV.Shor.CFS.ResidueArith
+import FormalRV.Shor.CFS.ResidueCircuit
+import FormalRV.Shor.CFS.CRTBasis
+import FormalRV.Shor.CFS.TruncatedAccumulation
 import FormalRV.Audit.Pinnacle.ParallelReduction
 
 namespace FormalRV.Audit.Pinnacle.L2_Arithmetic

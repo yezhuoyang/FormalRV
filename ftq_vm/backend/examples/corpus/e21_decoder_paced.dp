@@ -1,0 +1,14 @@
+DEVICE-PROGRAM 1.0;
+// e21_decoder_paced {backend=strictdecode}  (PHYS = physical op, SYS = system call)
+[0,1)us  PHYS  measure            q[0] basis=Z
+[1,2)us  PHYS  measure            q[1] basis=Z
+[2,3)us  PHYS  measure            q[2] basis=Z
+[3,4)us  PHYS  measure            q[3] basis=Z
+[4,5)us  PHYS  measure            q[4] basis=Z
+[5,6)us  PHYS  measure            q[5] basis=Z
+[6,1006)us  SYS   decode_syndrome    round=0
+[6,1006)us  SYS   decode_syndrome    round=1
+[1006,2006)us  SYS   decode_syndrome    round=2
+[1006,2006)us  SYS   decode_syndrome    round=3
+[2006,3006)us  SYS   decode_syndrome    round=4
+[2006,3006)us  SYS   decode_syndrome    round=5

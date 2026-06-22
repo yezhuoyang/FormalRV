@@ -1,0 +1,245 @@
+/-
+  FormalRV.System.Invariants.InvariantFramework — EXTENSIBLE SPACE-TIME
+  INVARIANT FRAMEWORK (namespace `FormalRV.System.InvariantFramework`).
+
+  Part of the unified FT-scheduling framework — see `FormalRV.System.FTFramework` for the single
+  entry point.  This is the `SysCall`-side extensible invariant checker; its `DeviceOp` sibling is
+  `FormalRV.System.DeviceSchedule.scheduleValid`.  Connected at the umbrella, not merged.
+
+  The fixed resources are qubits/atoms (space), classical compute, and time; a
+  schedule makes claims on them.  Every system invariant is a space-time
+  PROPOSITION over these resources — a `SpaceTimeInvariant` (named decidable
+  predicate on `SystemCtx`).  They live in an OPEN list checked uniformly by
+  `checkAll`; `checkAll_snoc`/`checkAll_mono` prove that appending an invariant
+  ANDs in its check WITHOUT affecting the others, so a future FT-OS author
+  extends coverage by appending one instance — never editing existing
+  invariants.  The standard scheduling rules (capacity = ancilla, exclusivity,
+  latency/speed = routing, throughput = T-factory, decoder) are instances
+  (`baseInvariants`); `neutralAtomRigidMoveInv` shows the framework captures
+  INSTRUCTION-LEVEL hardware limits too (neutral-atom rigid parallel movement —
+  time-overlapping atom moves must share a displacement).
+  FTSchedule.ft_ok is recoverable as `checkAll baseInvariants c &&
+  distance_adequate`.
+
+  No Mathlib.  Pure List / Bool / Nat + `decide`.  No `sorry`, no `axiom`,
+  no `admit`.
+-/
+import FormalRV.System.Invariants.ScheduleInvariantsExplicit
+
+namespace FormalRV.System.InvariantFramework
+
+open FormalRV.System.Architecture FormalRV.System.ScheduleInv
+
+/-! ## (1) The fixed resources + the schedule context -/
+
+/-- A qubit-TRANSPORT resource usage (hardware-neutral): qubit `id` moves from
+    `fromPos` to `toPos` over [begin_us, end_us).  Positions are layout coords
+    (row, col).  How transport is physically realised — neutral-atom AOD shuttle,
+    superconducting SWAP routing, ion-shuttle — is a HARDWARE-SPECIFIC invariant,
+    not part of this generic event. -/
+structure Transport where
+  id       : Nat
+  fromPos  : Nat × Nat
+  toPos    : Nat × Nat
+  begin_us : Nat
+  end_us   : Nat
+deriving Repr, DecidableEq
+
+/-- The fixed resources + schedule a system invariant is a proposition about:
+    the zoned architecture (qubit/atom slots in space + timing params), the
+    syscall schedule (resource claims in space-time), the atom-move schedule,
+    and the throughput/decoder window parameters. -/
+structure SystemCtx where
+  arch           : ZonedArch
+  sched          : List SysCall
+  moves          : List Transport
+  window_us      : Nat
+  max_per_window : Nat
+  t_react_us     : Nat
+  distance_fn    : Nat → Nat
+
+/-! ## (2) The space-time invariant abstraction + the uniform mechanical check -/
+
+/-- A space-time proposition over the fixed resources: a named decidable
+    predicate on the system context. -/
+structure SpaceTimeInvariant where
+  name  : String
+  check : SystemCtx → Bool
+
+/-- Mechanical uniform check: every invariant in the (open) list holds. -/
+def checkAll (invs : List SpaceTimeInvariant) (c : SystemCtx) : Bool :=
+  invs.all (fun inv => inv.check c)
+
+/-! ## (3) Extensibility theorems — appending an invariant ANDs in its check
+    WITHOUT affecting the others.  These three are the load-bearing
+    "open framework" theorems. -/
+
+theorem checkAll_append (a b : List SpaceTimeInvariant) (c : SystemCtx) :
+    checkAll (a ++ b) c = (checkAll a c && checkAll b c) := by
+  simp [checkAll, List.all_append]
+
+theorem checkAll_snoc (invs : List SpaceTimeInvariant) (inv : SpaceTimeInvariant)
+    (c : SystemCtx) :
+    checkAll (invs ++ [inv]) c = (checkAll invs c && inv.check c) := by
+  simp [checkAll, List.all_append]
+
+/-- Monotonicity: extending the invariant set can only restrict — a schedule
+    valid under more invariants is valid under fewer.  So adding invariants
+    never breaks an existing guarantee. -/
+theorem checkAll_mono (invs extra : List SpaceTimeInvariant) (c : SystemCtx)
+    (h : checkAll (invs ++ extra) c = true) : checkAll invs c = true := by
+  rw [checkAll_append] at h; exact (Bool.and_eq_true_iff.mp h).1
+
+/-! ## (4) The existing invariants as instances (wrap the decidable checks) -/
+
+def capacityInv : SpaceTimeInvariant :=
+  { name := "capacity (ancilla/zone slots)",
+    check := fun c => capacity_in_arch_ok c.arch c.sched
+                      && capacity_per_cycle_ok c.arch c.sched }
+
+def exclusivityInv : SpaceTimeInvariant :=
+  { name := "exclusivity (no shared slot)", check := fun c => exclusivity_ok c.sched }
+
+def latencyInv : SpaceTimeInvariant :=
+  { name := "latency/speed (routing)",
+    check := fun c => latency_speed_ok c.arch.t_cycle_us c.arch.v_max_um_per_us
+                        c.distance_fn c.sched }
+
+def throughputInv : SpaceTimeInvariant :=
+  { name := "throughput (T-factory)",
+    check := fun c => window_throughput_ok c.sched c.window_us c.max_per_window }
+
+def decoderInv : SpaceTimeInvariant :=
+  { name := "decoder reaction-time", check := fun c => decoder_react_ok c.t_react_us c.sched }
+
+/-- The standard scheduling rules as a base set.  `checkAll baseInvariants c`
+    is the schedulability core of `FTSchedule.ft_ok` minus distance adequacy. -/
+def baseInvariants : List SpaceTimeInvariant :=
+  [capacityInv, exclusivityInv, latencyInv, throughputInv, decoderInv]
+
+/-! ## (5) HARDWARE-SPECIFIC INVARIANT INSTANCES
+
+    The core above (`baseInvariants`, `SysCall`, the resource model) is
+    HARDWARE-NEUTRAL — it holds for superconducting, trapped-ion, or neutral-atom
+    surface-code machines alike (surface-code lattice surgery is implemented on
+    BOTH neutral-atom and superconducting hardware).  A platform's PHYSICAL limits
+    enter ONLY as a pluggable `SpaceTimeInvariant` named for that platform
+    (`neutralAtom…`, `superconducting…`), composed in via `checkAll_snoc` without
+    touching the core.  The first such instance:
+
+    Neutral-atom AOD movement: qubits sit in a lattice and a parallel AOD move
+    shifts a whole row/column rigidly, so qubits transported in time-overlapping
+    steps must share the SAME displacement ("same pace").  A neutral-atom-only
+    instruction-level limit.  (A superconducting analogue would instead forbid
+    `Transport` events altogether — fixed coupling, route by SWAP — and live in a
+    `superconductingFixedCouplingInv`.) -/
+
+/-- Two moves overlap in time. -/
+def movesOverlap (a b : Transport) : Bool :=
+  decide (a.begin_us < b.end_us) && decide (b.begin_us < a.end_us)
+
+/-- Equal displacement (Nat-safe via cross-addition, avoiding subtraction):
+    (to-from) of a equals (to-from) of b in both coordinates. -/
+def sameDisplacement (a b : Transport) : Bool :=
+  decide (a.toPos.1 + b.fromPos.1 = b.toPos.1 + a.fromPos.1) &&
+  decide (a.toPos.2 + b.fromPos.2 = b.toPos.2 + a.fromPos.2)
+
+/-- Neutral-atom parallel-move constraint: any two time-overlapping atom moves
+    must have the same displacement (rigid lattice translation — "same pace").
+    An INSTRUCTION-LEVEL hardware limit, expressed as a space-time invariant. -/
+def neutralAtomRigidMoveInv : SpaceTimeInvariant :=
+  { name := "neutral-atom rigid parallel move (same pace)",
+    check := fun c => c.moves.all (fun a => c.moves.all (fun b =>
+      ! movesOverlap a b || sameDisplacement a b)) }
+
+/-- Superconducting fixed-coupling constraint: superconducting qubits have FIXED
+    nearest-neighbour coupling and do NOT physically move — routing is done by
+    SWAP gates, not by transporting qubits.  So a superconducting schedule carries
+    NO `Transport` events.  A superconducting-only instruction-level limit, the
+    sibling of `neutralAtomRigidMoveInv`; both compose onto the SAME hardware-
+    neutral `baseInvariants`.  (Surface-code lattice surgery runs on both platforms.) -/
+def superconductingFixedCouplingInv : SpaceTimeInvariant :=
+  { name := "superconducting fixed coupling (no physical transport)",
+    check := fun c => c.moves.isEmpty }
+
+/-! ## (6) WORKED INSTANCE + tests
+
+    `demoArch` / `demoDist` / `demoSched` below are DELIBERATE LOCAL COPIES of
+    `FTSchedule.demoArch` / `demoDist` / `demoSched` from
+    `System/Checkers/FaultTolerantSchedule.lean` — duplicated rather than
+    imported so neither checker file depends on the other; keep them in sync
+    by hand.  That file proves the same data (with `window_us = 1000`,
+    `max_per_window = 1`, `t_react_us = 10`) passes `all_invariants_ok` +
+    `decoder_react_ok`, so all five base invariants hold here.  The atom-move
+    list is two coherent parallel moves (both displacement (0,+1), overlapping
+    in [0,10)), so `neutralAtomRigidMoveInv` also holds. -/
+
+/-- Worked-instance architecture (local copy of `FTSchedule.demoArch`). -/
+def demoArch : ZonedArch :=
+  { zones :=
+      [ { name := "Data",      site_lo := 0,  site_hi := 10 }
+      , { name := "Workspace", site_lo := 10, site_hi := 20 }
+      , { name := "Factory",   site_lo := 20, site_hi := 30 }
+      , { name := "Routing",   site_lo := 30, site_hi := 40 } ]
+    total_sites := 40
+    t_cycle_us  := 100
+    v_max_um_per_us := 5
+    t_react_us := 10 }
+
+/-- Route distance function: every channel covers 30 µm (local copy of
+    `FTSchedule.demoDist`). -/
+def demoDist : Nat → Nat := fun _ => 30
+
+/-- Worked-instance schedule (local copy of `FTSchedule.demoSched`). -/
+def demoSched : List SysCall :=
+  [ { kind := SysCallKind.RequestMagicState 2,   begin_us := 0,  end_us := 10 }
+  , { kind := SysCallKind.RequestFreshAncilla 1, begin_us := 0,  end_us := 10 }
+  , { kind := SysCallKind.TransitQubit 30 0,     begin_us := 10, end_us := 20 }
+  , { kind := SysCallKind.DecodeSyndrome 0,      begin_us := 20, end_us := 25 }
+  , { kind := SysCallKind.Measure 5 0,           begin_us := 30, end_us := 35 }
+  , { kind := SysCallKind.Gate2q 1 2 0,          begin_us := 40, end_us := 45 } ]
+
+/-- Two COHERENT parallel atom moves: both displace by (0,+1) (one lattice site
+    rightward), both running over [0,10) — a legal rigid translation. -/
+def demoMoves : List Transport :=
+  [ { id := 0, fromPos := (0,0), toPos := (0,1), begin_us := 0, end_us := 10 }
+  , { id := 1, fromPos := (1,0), toPos := (1,1), begin_us := 0, end_us := 10 } ]
+
+/-- The worked system context. -/
+def demoCtx : SystemCtx :=
+  { arch := demoArch, sched := demoSched, moves := demoMoves,
+    window_us := 1000, max_per_window := 1, t_react_us := 10, distance_fn := demoDist }
+
+-- The base invariants hold (mechanical check of the standard scheduling rules):
+example : checkAll baseInvariants demoCtx = true := by decide
+
+-- Extending with the neutral-atom constraint: adding it ANDs in, base
+-- unaffected (this is `checkAll_snoc` instantiated at the worked context):
+example : checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) demoCtx
+        = (checkAll baseInvariants demoCtx && neutralAtomRigidMoveInv.check demoCtx) :=
+  checkAll_snoc baseInvariants neutralAtomRigidMoveInv demoCtx
+
+-- POSITIVE: two coherent parallel moves (same displacement, overlapping) pass:
+example : neutralAtomRigidMoveInv.check demoCtx = true := by decide
+
+-- The full extended set still passes on the coherent context:
+example : checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) demoCtx = true := by decide
+
+/-- NEGATIVE: two overlapping moves with DIFFERENT displacement.  Move 0
+    displaces (0,+1); move 1 displaces (+1,0); both run over [0,10), so they
+    overlap with unequal displacement — a non-rigid (illegal) parallel move. -/
+def badMoveCtx : SystemCtx := { demoCtx with moves :=
+  [ { id := 0, fromPos := (0,0), toPos := (0,1), begin_us := 0, end_us := 10 }
+  , { id := 1, fromPos := (1,0), toPos := (2,0), begin_us := 0, end_us := 10 } ] }
+
+-- The new invariant alone rejects the bad move set:
+example : neutralAtomRigidMoveInv.check badMoveCtx = false := by decide
+
+-- Hence the extended set fails on the bad context:
+example : checkAll (baseInvariants ++ [neutralAtomRigidMoveInv]) badMoveCtx = false := by decide
+
+-- ... and the base invariants STILL pass on badMoveCtx (only the new
+-- constraint fails — invariants do not interfere with each other):
+example : checkAll baseInvariants badMoveCtx = true := by decide
+
+end FormalRV.System.InvariantFramework

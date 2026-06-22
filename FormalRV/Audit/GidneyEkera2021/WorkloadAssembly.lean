@@ -41,8 +41,8 @@
 
 import FormalRV.Audit.GidneyEkera2021.Verifier
 import FormalRV.Audit.GidneyEkera2021.SystemZones
-import FormalRV.System.MagicScheduleComplete
-import FormalRV.System.NaiveUpperBound
+import FormalRV.System.Magic.MagicScheduleComplete
+import FormalRV.System.Bounds.NaiveUpperBound
 import FormalRV.Arithmetic.Windowed.WindowedCostModel
 import FormalRV.Shor.MeasUncomputeAt
 import FormalRV.Shor.WindowedComposedCost

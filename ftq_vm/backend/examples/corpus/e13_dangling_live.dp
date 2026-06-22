@@ -1,0 +1,4 @@
+DEVICE-PROGRAM 1.0;
+// e13_dangling_live {backend=std}  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_ancilla    q[100]
+[1,2)us  PHYS  gate2q             q[0],q[100] gate=CNOT

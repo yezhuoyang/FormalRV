@@ -1,0 +1,32 @@
+{
+  "unit": {"time": "us"},
+  "name": "ge2021_logical",
+  "description": "GENERATED from FormalRV/System/Params/HardwareCatalog.lean — configure there, not here.",
+  "zones": {
+    "data": {"kind": "data_qubit", "count": 6200, "site_lo": 0},
+    "bus": {"kind": "helper_qubit", "count": 6200, "site_lo": 6200, "reset_required": true, "start_dirty": true, "reset_kinds": ["request_ancilla"], "dirty_kinds": ["measure"], "min_reset_us": 1},
+    "factory": {"kind": "factory_qubit", "count": 1093, "site_lo": 12400}
+  },
+  "resources": {
+    "decoder_pool": {"kind": "service", "workers": 62000, "max_latency_us": 10, "queue_capacity": 62000, "processing_time_us": 1}
+  },
+  "tokens": {
+    "MagicState": {"initial_inventory": 2}
+  },
+  "throughput_caps": [
+    {"id": "syndrome_stream", "op_kinds": ["measure"], "weight_per_op": 728, "window_us": 1000, "max_weight": 4513600000, "unit": "bits"}
+  ],
+  "gates": {
+    "CNOT": {"duration_us": 1, "qubits": 2, "max_parallel": 6200},
+    "H": {"duration_us": 1, "qubits": 1, "max_parallel": 6200},
+    "measure": {"duration_us": 1, "qubits": 1, "max_parallel": 6200},
+    "request_ancilla": {"duration_us": 1, "qubits": 1, "max_parallel": 100}
+  },
+  "x-lean": {
+    "t_cycle_us": 1, "v_max_um_per_us": 1,
+    "window_us": 12000, "max_per_window": 1093,
+    "magic_period_us": 12000, "magic_per_period": 1093,
+    "max_feedback_active": 6200, "max_magic_req_active": 1093,
+    "max_fresh_ancilla_active": 6200, "max_transit_active": 100
+  }
+}

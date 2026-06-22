@@ -16,7 +16,7 @@
   This file verifies the paper's INTERNAL ARITHMETIC consistency (its component
   tallies add up to its stated totals — the SystemZones `decide` theorems) and
   the SEMANTIC CORE of the algorithm's novel content (the CFS residue-arithmetic
-  engine, proved bottom-up and axiom-clean in `FormalRV.Audit.Gidney2025.CFS`).  It is NOT a
+  engine, proved bottom-up and axiom-clean in `FormalRV.Shor.CFS`).  It is NOT a
   closed whole-circuit semantic theorem that the circuit factors RSA-2048.
 
   Chosen parameters (grid-scan-selected, minimizing `q³·t`; main.tex:1006–1037):
@@ -37,8 +37,8 @@
         `< |P|·ℓ·2^{-f}` (eq:modevbound);
     (5) `CFS.ModularDeviation.modDev_triangle/modDev_chain` — the paper's `Δ_N`
         metric is a pseudometric accumulating linearly over an op chain;
-    (6) `CFS.Assumptions.Assumption1` — the one genuine conjecture, a `Prop`,
-        never asserted.
+    (6) `CFS.Assumptions.SmallPrimeRNSModulusExists` — the one genuine conjecture
+        (the `ℓ`-bit prime set), a `Prop`, never asserted.
 
   HONEST caveats on the RESOURCE numbers:
     * active-hot logical `131` and loop4 peak `1409` are paper-stated LITERALS
@@ -56,8 +56,8 @@
   No `sorry`, no new `axiom`.
 -/
 import FormalRV.Audit.Gidney2025.SystemZones
-import FormalRV.Audit.Gidney2025.CFS.EkeraHastad
-import FormalRV.Audit.Gidney2025.CFS.Assumptions
+import FormalRV.Shor.CFS.EkeraHastad
+import FormalRV.Shor.CFS.Assumptions
 import FormalRV.Verifier
 
 namespace FormalRV.Audit.Gidney2025
@@ -83,4 +83,4 @@ end FormalRV.Audit.Gidney2025
 -- ✅ CAPSTONE: resource footprint reproduced + under budget + logical count reconciles:
 #verify_clean FormalRV.Audit.Gidney2025.gidney2025_resource_reproduced
 -- ⬜ the one conjecture, stated as a Prop and NEVER asserted:
-#check @FormalRV.CFS.Assumption1
+#check @FormalRV.CFS.SmallPrimeRNSModulusExists

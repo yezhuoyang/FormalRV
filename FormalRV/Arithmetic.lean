@@ -14,6 +14,8 @@ import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRDirtyFlag
 import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRModAdd
 import FormalRV.Arithmetic.Cuccaro.CuccaroSQIRStyle
 import FormalRV.Arithmetic.Cuccaro.CuccaroSubConst
+import FormalRV.Arithmetic.Cuccaro.CuccaroUComBridge
+import FormalRV.Arithmetic.Cuccaro.CuccaroVariantsResource
 import FormalRV.Arithmetic.GateToUCom
 import FormalRV.Arithmetic.MCPBridge
 import FormalRV.Arithmetic.ModularAdder

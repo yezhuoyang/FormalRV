@@ -199,4 +199,50 @@ theorem windowedModNExp_value (w bits numWin N wE nE a ainv e : Nat)
   have hval_lt : a ^ e % N < N := Nat.mod_lt _ hN_pos
   exact modNMulReady_decode w bits numWin (a ^ e % N) N _ hbits hN_le hval_lt h
 
+/-! ## §5. RESOURCE: the closed-form Toffoli count of the SAME syntactic circuit.
+
+`windowedModNExpInPlace` is the `nE`-fold seq of `windowedModNMulInPlace`, whose
+per-round T-count is `2·numWin·(56·w·2^w + 56·bits)` (two mod-N passes + the
+T-free swap).  The chain T-count is `nE` times that; dividing by 7 (T per
+Toffoli) gives the Toffoli count below — derived by walking the ACTUAL `Gate`
+structure (`tcount`), constant-independent, no `native_decide`. -/
+
+/-- **Closed-form Toffoli count of the windowed modular-exponentiation `Gate`.**
+    `nE · numWin · (16·w·2^w + 16·bits)` Toffolis — `nE` exponent rounds, each an
+    in-place mod-N multiply (two `2·numWin·(8·w·2^w + 8·bits)`-Toffoli mod-N
+    passes plus the Toffoli-free accumulator swap). -/
+theorem toffoli_windowedModNExpInPlace (w bits numWin N wE nE a ainv e : Nat) :
+    toffoliCount (windowedModNExpInPlace w bits numWin N wE nE a ainv e)
+      = nE * numWin * (16 * w * 2 ^ w + 16 * bits) := by
+  unfold windowedModNExpInPlace
+  rw [toffoliCount, tcount_windowedModNMulInPlaceSeq,
+      show nE * (2 * (numWin * (56 * w * 2 ^ w + 56 * bits)))
+          = nE * numWin * (16 * w * 2 ^ w + 16 * bits) * 7 by ring,
+      Nat.mul_div_cancel _ (by norm_num)]
+
+/-! ## §6. THE COMBINED CAPSTONE — one syntactic circuit, both faces. -/
+
+/-- **Logical-level verification of the windowed modular exponentiator, bundled.**
+    The SINGLE syntactic circuit `windowedModNExpInPlace` (a `Gate`) carries BOTH:
+
+      1. SEMANTIC CORRECTNESS on the actual syntactic structure — run via
+         `Gate.applyNat` on the clean encoded input (`y = 1`), its result register
+         decodes to `a^e mod N` (the true modular-exponentiation value, mod `N`);
+      2. RESOURCE — the closed-form Toffoli count `nE·numWin·(16·w·2^w + 16·bits)`,
+         counted by walking the same `Gate`.
+
+    One statement, the same circuit object, all parameters, kernel-clean. -/
+theorem windowedModNExpInPlace_verified (w bits numWin N wE nE a ainv e : Nat)
+    (hw : 0 < w) (hbits : numWin * w = bits)
+    (hN1 : 1 < N) (hN2 : 2 * N ≤ 2 ^ bits)
+    (he : e < (2 ^ wE) ^ nE) (hinv : a * ainv % N = 1) :
+    decodeReg (fun i => 1 + 2 * w + (2 * bits + 1) + i) bits
+        (Gate.applyNat (windowedModNExpInPlace w bits numWin N wE nE a ainv e)
+          (mulInputOf cuccaroAdder w bits numWin 1))
+      = a ^ e % N
+    ∧ toffoliCount (windowedModNExpInPlace w bits numWin N wE nE a ainv e)
+        = nE * numWin * (16 * w * 2 ^ w + 16 * bits) :=
+  ⟨windowedModNExp_value w bits numWin N wE nE a ainv e hw hbits hN1 hN2 he hinv,
+   toffoli_windowedModNExpInPlace w bits numWin N wE nE a ainv e⟩
+
 end FormalRV.Shor.WindowedModExpValue

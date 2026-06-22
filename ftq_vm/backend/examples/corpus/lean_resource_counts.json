@@ -1,0 +1,7 @@
+{
+  "qec_compiled": {"wallclock_us": 44, "busy_us": 44, "syscall_count": 44, "gate1q": 0, "gate2q": 10, "measure": 10, "transit": 0, "fresh_ancilla": 10, "magic_req": 1, "decode": 8, "feedback": 5, "qubit_footprint": 5, "peak_sites": 2, "sites": [0, 1, 2, 100, 101]},
+  "e01_clean": {"wallclock_us": 6, "busy_us": 6, "syscall_count": 6, "gate1q": 0, "gate2q": 2, "measure": 1, "transit": 0, "fresh_ancilla": 1, "magic_req": 0, "decode": 1, "feedback": 1, "qubit_footprint": 3, "peak_sites": 2, "sites": [0, 50, 100]},
+  "e19_syndrome_flood": {"wallclock_us": 1177, "busy_us": 816, "syscall_count": 816, "gate1q": 0, "gate2q": 0, "measure": 768, "transit": 0, "fresh_ancilla": 0, "magic_req": 0, "decode": 48, "feedback": 0, "qubit_footprint": 16, "peak_sites": 16, "sites": [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]},
+  "e21_decoder_paced": {"wallclock_us": 3006, "busy_us": 6006, "syscall_count": 12, "gate1q": 0, "gate2q": 0, "measure": 6, "transit": 0, "fresh_ancilla": 0, "magic_req": 0, "decode": 6, "feedback": 0, "qubit_footprint": 6, "peak_sites": 1, "sites": [0, 1, 2, 3, 4, 5]},
+  "adder_d3": {"wallclock_us": 192, "busy_us": 192, "syscall_count": 192, "gate1q": 0, "gate2q": 72, "measure": 36, "transit": 0, "fresh_ancilla": 36, "magic_req": 0, "decode": 36, "feedback": 12, "qubit_footprint": 3, "peak_sites": 2, "sites": [0, 50, 100]}
+}

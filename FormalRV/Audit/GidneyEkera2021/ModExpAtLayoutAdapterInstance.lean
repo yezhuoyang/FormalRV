@@ -30,9 +30,10 @@
     `ShorModExpAt.ModExpAtLayoutAdapter` from the proven IN-side PLUS the two named
     residual fields supplied as explicit hypotheses (see below).  Feeding it through
     `ShorModExpAt.ge2021_modExpAt_shor_succeeds` gives
-    `ge2021_modExpAt_shor_succeeds_unconditional`: the Shor bound through the literal
-    count gate, whose remaining hypotheses are ONLY `ShorSetting` + sizing + no-wrap
-    + the two named residual obligations.
+    `ge2021_modExpAt_shor_succeeds_given_out_readout`: the Shor bound through the literal
+    count gate, conditional on the carried OUT read-out correctness — its remaining
+    hypotheses are `ShorSetting` + sizing + no-wrap + the two named residual obligations
+    (the IN-side scatter is fully discharged; the OUT read-out is the named hypothesis).
 
   ────────────────────────────────────────────────────────────────────────────
   THE TWO RESIDUAL FIELDS — why they are NOT discharged here (honest frontier)
@@ -479,7 +480,7 @@ def ge2021_modExpAtLayoutAdapter
   adaptOut_reads := hadaptOut_reads
 
 /-! ## §3. THE HEADLINE — the Shor bound through `modExpAt`'s LITERAL block,
-       UNCONDITIONAL modulo `ShorSetting` + sizing + no-wrap + the two residuals. -/
+       conditional on `ShorSetting` + sizing + no-wrap + the two residuals (incl. OUT read-out). -/
 
 /-- **★ THE BOUND THROUGH THE LITERAL COUNT GATE, via the assembled adapter ★.**  Feed
     `ge2021_modExpAtLayoutAdapter` (proven IN-side + the two named residual
@@ -489,7 +490,7 @@ def ge2021_modExpAtLayoutAdapter
     The remaining hypotheses are EXACTLY `ShorSetting` + the sizing constraints + the
     no-wrap condition + the two residual fields (`hfit`/`hblockWT`/the OUT read-out) —
     the IN-side scatter is fully discharged. -/
-theorem ge2021_modExpAt_shor_succeeds_unconditional
+theorem ge2021_modExpAt_shor_succeeds_given_out_readout
     {w bits numWin N a ainv0 r m q_start : Nat} {Tfam : Nat → Nat → Nat → Nat}
     (hw : 0 < w) (hq : 0 < q_start)
     (hbits : numWin * w = bits) (hb1 : 1 ≤ bits)

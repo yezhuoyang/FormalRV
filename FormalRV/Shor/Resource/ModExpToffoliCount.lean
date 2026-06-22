@@ -50,13 +50,13 @@
 
   No `sorry`, no new `axiom`.
 -/
-import FormalRV.PPM.CircuitToPPMResource
+import FormalRV.PPM.Resource.CircuitToPPMResource
 import FormalRV.Arithmetic.RippleCarryAdder.RippleCarryAdderForwardAndCost
 
 namespace FormalRV.Shor.ModExpToffoliCount
 
-open FormalRV.PPM.CircuitToPPMResource
-open FormalRV.PPM.PPMResourceCount
+open FormalRV.PPM.Resource.CircuitToPPMResource
+open FormalRV.PPM.Resource.PPMResourceCount
 open FormalRV.BQAlgo
 open FormalRV.Framework.Gate
 

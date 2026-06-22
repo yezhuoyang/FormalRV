@@ -1,0 +1,4 @@
+DEVICE-PROGRAM 1.0;
+// e25_magic_unprepared {backend=magicscarce}  (PHYS = physical op, SYS = system call)
+[0,1)us  SYS   request_magic      factory=0
+[5,6)us  SYS   request_magic      factory=1

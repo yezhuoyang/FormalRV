@@ -25,3 +25,9 @@ __pycache__/
 
 # Cloned arXiv LaTeX sources of audited papers (not part of the repo)
 Library/
+
+# Large generated circuit-matrix dumps / compile logs / scratch (not source — too big for GitHub)
+/PyCircuits/
+/out/
+_ccz_compile.txt
+_scratch_*.lean

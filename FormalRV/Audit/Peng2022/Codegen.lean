@@ -25,22 +25,14 @@
     • system          — one surgery gadget → Stim + its footprint  distance-3
 -/
 
-import FormalRV.Shor.PPM.ShorEmit
 import FormalRV.Codegen.GateQasm
 import FormalRV.PPM.PPMToQASM
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.Instances
 import FormalRV.QEC.CodeDimension
-import FormalRV.LatticeSurgery.ScheduleEmit
-import FormalRV.LatticeSurgery.SurgeryDemoSurface
-
+import FormalRV.QEC.LatticeSurgery.ScheduleEmit
+import FormalRV.QEC.LatticeSurgery.SurgeryDemoSurface
 namespace FormalRV.Audit.Peng2022
-
-/-! ## L1 — Peng's CORE: the verified Shor order-finding circuit (Stim).
-    A readable PREFIX (first 2 modular-mult merges) of the N=15, a=7 instance; the
-    FULL circuit is `emitShor 15 7` (large).  THIS is Peng's contribution — the
-    machine-checked Shor algorithm whose success bound is verified in L1. -/
-#eval FormalRV.Shor.ShorEmit.emitShorPrefix 15 7 2
 
 /-! ## L2 — arithmetic: a representative gate emitted to OpenQASM (Clifford+T).
     A Toffoli (CCX) on qubits 0,1,2 over a 3-qubit register.  Peng's arithmetic is

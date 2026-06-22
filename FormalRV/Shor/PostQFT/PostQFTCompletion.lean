@@ -2,6 +2,10 @@ import FormalRV.QPE.PhaseKickback
 import FormalRV.QPE.QPEAmplitude
 import FormalRV.QFT.IQFTDefinitions
 import FormalRV.QFT.IQFTRecursiveArbitrary
+-- QPE-on-modmult-eigenstate theorems relocated here (2026-06-10) out of
+-- IQFTRecursiveArbitrary: `QPE_var_lsb_on_modmult_eigenstate`,
+-- `orbit_decomposition_combined_matrix`, etc.
+import FormalRV.Shor.PostQFT.QPEModmultEigenstate
 
 namespace FormalRV.SQIRPort
 open FormalRV.Framework

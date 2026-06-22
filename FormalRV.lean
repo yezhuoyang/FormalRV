@@ -16,15 +16,22 @@ import FormalRV.Core
 import FormalRV.Arithmetic
 -- L1 algorithm: Shor order finding + QPE.
 import FormalRV.Shor
+-- Classical number theory: the order→factoring reduction that makes Shor actually factor.
+import FormalRV.NumberTheory
 -- Quantum phase estimation + quantum Fourier transform (general; siblings of Shor).
 import FormalRV.QPE
 import FormalRV.QFT
+-- Separate, independent resource-counting system (Time: gates/depth; Space: qubits).
+import FormalRV.Resource
 -- L4 QEC codes.
 import FormalRV.QEC
+-- Pauli-rotation IR: circuits → ±{π, π/2, π/4, π/8} rotations → parallel layers → PPM.
+import FormalRV.PauliRotation
 -- L3 Pauli-product measurement + magic factories.
 import FormalRV.PPM
+-- Lowering the measurement-augmented IR (EGate, Gidney/Berry measured uncompute) to PPM.
+import FormalRV.Shor.EGatePPMLowering
 -- Lattice surgery.
-import FormalRV.LatticeSurgery
 -- System invariants / scheduling / architecture.
 import FormalRV.System
 -- The four inter-layer contract interfaces.

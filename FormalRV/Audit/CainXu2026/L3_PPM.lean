@@ -16,9 +16,9 @@
   the any-length modexp).
 -/
 import FormalRV.QEC.LogicalFinder
-import FormalRV.LatticeSurgery.SurgeryCorrect
-import FormalRV.LatticeSurgery.SurgeryReadout
-import FormalRV.LatticeSurgery.LDPCSurgery
+import FormalRV.QEC.LatticeSurgery.SurgeryCorrect
+import FormalRV.QEC.LatticeSurgery.SurgeryReadout
+import FormalRV.QEC.LatticeSurgery.LDPCSurgery
 import FormalRV.Verifier
 
 namespace FormalRV.Audit.CainXu2026

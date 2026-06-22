@@ -20,15 +20,17 @@ demonstrated as **feasible ceilings** under the paper's own parameters — not a
 | L2 arithmetic | [`L2_Arithmetic.lean`](L2_Arithmetic.lean) | ✅ shared verified Cuccaro adder |
 | L3 PPM | [`L3_PPM.lean`](L3_PPM.lean) | ✅ shared verified surface-code surgery (one logical PPM) |
 | L4 code | [`L4_Code.lean`](L4_Code.lean) | ⬜ recorded rotated surface code d=27 (parity matrices not constructed) |
-| Verifier | [`Verifier.lean`](Verifier.lean) | ✅ CAPSTONE (axiom-free): 19.44 M ≤ 20 M; 8 h sits 2–3× UNDER the verified time ceiling |
+| Verifier | [`Verifier.lean`](Verifier.lean) | ➗ **arithmetic-only** numeric ceiling (axiom-free `decide`): `gidney_ekera_2021_reproduced` checks 19.44 M ≤ 20 M and 8 h ≤ the time ceiling — a NUMERIC reproduction of the paper's tally, NOT a semantic device-correctness proof. The ✅ SEMANTIC content (realized circuit = paper formula by theorem, value witnesses) is in `WorkloadAssembly.lean` (next row). |
 | Workload assembly | [`WorkloadAssembly.lean`](WorkloadAssembly.lean) | ✅ literal = paper formula = realized circuit, BY THEOREM (axiom-free): `2,622,824,448` = `WindowedCostModel.toffoliCount 2048 3072 11`; circuit `modExpAt` realizes `2,578,993,152` with the gap exactly `43,831,296` = +1 rounding + runway folding; `n_toff = 2.7×10⁹` is a sound ceiling on all three; per-lookup row `5205 + 1 = 5206`; value-semantics witness. ✅ **§5–§7 (this session):** qubit width `6162` verified circuit `+27` = paper `6189` (`audit_qubit_count_realized_by_circuit`); modexp value `a^e mod N` on TRUE N (`audit_modexp_value_witness`); optimal-count multiplier mod-N correct in coset rep under no-wrap (`audit_optimal_count_is_modN_correct`), residual = probabilistic `CosetDeviationBound`. Honest-gap ledger |
 | Codegen | [`Codegen.lean`](Codegen.lean) | emits the ACTUAL construction at each level via the general emitters (small reps; GE2021 params noted in comments) |
 
 ## Our approach
 A finite zoned architecture machine-checks the reported 20 M as a real budget (over-budget schedules
 are rejected); a verified surface-code area/time law (proven `∀ model`) reproduces the headline:
-qubits 19.44 M = 6200 · 2·1568 ≤ 20 M, time ceiling ~20.25 h (naive sequential). The capstone
-`gidney_ekera_2021_reproduced` is **axiom-free**.
+qubits 19.44 M = 6200 · 2·1568 ≤ 20 M, time ceiling ~20.25 h (naive sequential). The reproduction
+`gidney_ekera_2021_reproduced` is **axiom-free but arithmetic-only** — a `decide` numeric ceiling over
+the area/time formulas, NOT a semantic device proof; the semantic realization (circuit = formula by
+theorem) lives in `WorkloadAssembly.lean`.
 
 ## Where each headline number comes from TODAY (honest sourcing)
 

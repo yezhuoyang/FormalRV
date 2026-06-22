@@ -5,6 +5,7 @@ import FormalRV.Core.CliffordTRotations
 import FormalRV.Core.DensitySem
 import FormalRV.Core.Gate
 import FormalRV.Core.GateDecompositions
+import FormalRV.Core.GidneyAND
 import FormalRV.Core.GateQASM
 import FormalRV.Core.NDSem
 import FormalRV.Core.PadAction

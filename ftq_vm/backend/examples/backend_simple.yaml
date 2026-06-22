@@ -1,0 +1,130 @@
+# A simple abstract fault-tolerant quantum backend -- STRICT explicit-qubit
+# discipline.
+#
+# Qubits are never fungible: every qubit lives in a zone and becomes an
+# explicit capacity-1 resource (data[0], data[1], ...).  Every op that
+# touches qubits must name exactly which ones (qubits: ["data[3]", ...]);
+# factories occupy an exact fixed footprint.  Non-qubit resources (buses,
+# classical storage, decoder service) remain abstract capacity pools.
+#
+# All times are integer MICROSECONDS; every time field carries the _us suffix.
+
+unit:
+  time: us
+
+name: simple_ftqc
+description: >
+  Abstract FTQC backend with explicit qubit zones: a data-qubit zone, a
+  syndrome-qubit zone, four stochastic T-state factories with fixed
+  footprints in the magic zone, output ports, a bounded T buffer, classical
+  correction storage, a measurement bus and a finite decoder pool.
+
+zones:
+  data:
+    kind: data_qubit
+    count: 64
+    description: logical data qubits
+
+  syndrome:
+    kind: syndrome_qubit
+    count: 16
+    description: syndrome-extraction qubits
+
+  magic:
+    kind: factory_qubit
+    count: 72
+    description: the magic-state factory region (18 qubits per factory)
+
+  tport:
+    kind: output_port
+    count: 4
+    description: T-state output ports, one per factory
+
+resources:
+  correction_storage:
+    kind: classical_register
+    capacity: 256
+    description: classical storage for pending Pauli-frame corrections
+
+  measurement_bus:
+    kind: bus
+    capacity: 64
+    description: simultaneous logical measurement channels
+
+  t_buffer:
+    kind: token_buffer
+    token_kind: TState
+    capacity: 512
+    description: the T-state buffer holds at most this many
+
+  decoder_pool:
+    kind: service
+    workers: 256
+    max_latency_us: 10
+    queue_capacity: 100000
+    processing_time_us: 2      # default per-job decode time
+    description: decoding workers; every syndrome job must finish in time
+
+# ops of these kinds MUST list explicit qubits or the program is invalid
+qubit_touching_kinds: [magic_inject, syndrome_round, logical_measure]
+
+factories:
+  # Four identical T factories.  Each run takes 50us, occupies its EXACT
+  # 18-qubit footprint in the magic zone exclusively, and succeeds with
+  # probability 0.9 (seeded, reproducible).  A successful run emits one
+  # TState through the factory's output port at the end of the run.
+  # physical_qubits is a statistics annotation only -- execution reserves
+  # the explicit footprint, never a fungible charge.
+  F0:
+    kind: T_factory
+    produces: TState
+    duration_us: 50
+    success_probability: 0.9
+    footprint:
+      qubits: ["magic[0:18]"]
+      output_ports: ["tport[0]"]
+    physical_qubits: 20000
+    logical_slots: 18
+    max_parallel_batches: 1
+    auto_retry: false
+  F1:
+    kind: T_factory
+    produces: TState
+    duration_us: 50
+    success_probability: 0.9
+    footprint:
+      qubits: ["magic[18:36]"]
+      output_ports: ["tport[1]"]
+    physical_qubits: 20000
+    logical_slots: 18
+    max_parallel_batches: 1
+    auto_retry: false
+  F2:
+    kind: T_factory
+    produces: TState
+    duration_us: 50
+    success_probability: 0.9
+    footprint:
+      qubits: ["magic[36:54]"]
+      output_ports: ["tport[2]"]
+    physical_qubits: 20000
+    logical_slots: 18
+    max_parallel_batches: 1
+    auto_retry: false
+  F3:
+    kind: T_factory
+    produces: TState
+    duration_us: 50
+    success_probability: 0.9
+    footprint:
+      qubits: ["magic[54:72]"]
+      output_ports: ["tport[3]"]
+    physical_qubits: 20000
+    logical_slots: 18
+    max_parallel_batches: 1
+    auto_retry: false
+
+tokens:
+  TState:
+    initial_inventory: 8       # pre-distilled before the program starts
+    ttl_us: 10000              # consumable for this long after production

@@ -18,7 +18,7 @@
   of the framework consumes.
 -/
 import FormalRV.Arithmetic.Windowed.WindowedCircuit
-import FormalRV.PPM.CircuitToPPMFactoryProvision
+import FormalRV.PPM.QECBridge.CircuitToPPMFactoryProvision
 
 namespace FormalRV.Shor.WindowedPPM
 

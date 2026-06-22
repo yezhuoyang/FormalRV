@@ -28,26 +28,27 @@
   No `sorry`, no new `axiom`.
 -/
 
-import FormalRV.LatticeSurgery.SurfaceShorFullSchedule
-import FormalRV.System.NaiveUpperBound
-import FormalRV.System.DecoderBacklogModel
+import FormalRV.System.DeviceLane.DependencyGraph
+import FormalRV.System.Bounds.NaiveUpperBound
+import FormalRV.System.Params.RSA2048
+import FormalRV.System.Params.HardwareCatalog
+import FormalRV.System.Decoder.DecoderBacklogModel
 import FormalRV.Framework.PaperClaims
 import FormalRV.Arithmetic.Windowed.WindowedCostModel
 import FormalRV.Shor.WindowedShorPPMFactoryE2E
-import FormalRV.System.DeviceSchedule
-import FormalRV.System.MagicScheduleComplete
+import FormalRV.System.DeviceLane.DeviceSchedule
+import FormalRV.System.Magic.MagicScheduleComplete
 import FormalRV.Audit.GidneyEkera2021.L4_Code
 import FormalRV.Verifier
 
 namespace FormalRV.Audit.GidneyEkera2021
 
 open FormalRV.Framework
-open FormalRV.Framework.Architecture
-open FormalRV.Framework.InvariantFramework
-open FormalRV.Framework.ScheduleInv
+open FormalRV.System.Architecture
+open FormalRV.System.InvariantFramework
+open FormalRV.System.ScheduleInv
 open FormalRV.Framework.CircuitToPPMFactoryProvision
 open FormalRV.System.DependencyGraph
-open FormalRV.LatticeSurgery.SurfaceShorFullSchedule
 open FormalRV.System.DecoderBacklogModel
 open FormalRV.PaperClaims
 
@@ -58,11 +59,13 @@ open FormalRV.PaperClaims
 
 /-! ## (1) GE2021 hardware + architecture parameters (cited) -/
 
-def ge2021_distance        : Nat := 27
-def ge2021_tile_qubits     : Nat := 1568          -- 2(d+1)² at d = 27
-def ge2021_logical_qubits  : Nat := 6200          -- Ekerå–Håstad abstract qubits
-def ge2021_cycle_us        : Nat := 1
-def ge2021_total_budget    : Nat := 20_000_000    -- reported title figure
+/- The canonical paper constants live in `System/Params/RSA2048.lean`
+   (single-source rule); these are aliases. -/
+abbrev ge2021_distance        : Nat := FormalRV.System.RSA2048.distance
+abbrev ge2021_tile_qubits     : Nat := FormalRV.System.RSA2048.tileQubits
+abbrev ge2021_logical_qubits  : Nat := FormalRV.System.RSA2048.patches
+abbrev ge2021_cycle_us        : Nat := FormalRV.System.RSA2048.cycleUs
+abbrev ge2021_total_budget    : Nat := FormalRV.System.RSA2048.physicalBudget
 
 /-- Computation zone size: every data logical qubit as a distance-27 tile. -/
 def ge2021_computation_size : Nat := ge2021_logical_qubits * ge2021_tile_qubits  -- 9_721_600
@@ -105,24 +108,11 @@ theorem data_block_fits :
 theorem budget_matches_reproduction :
     ge2021Arch.total_sites = FormalRV.System.NaiveUpperBound.ge2021_reported_qubits := by decide
 
-/-! ## (4) The Shor schedule FITS the finite zones, passing resource + causality
-
-    Reuse the detailed two-Toffoli surface-code schedule (`shorSched`/`shorDeps`),
-    now placed on the FINITE GE2021 architecture: its qubit claims lie inside the
-    Computation zone, so the capacity invariant (against finite zones) holds. -/
-
-def ge2021Ctx : SystemCtx :=
-  { arch := ge2021Arch, sched := shorSched, moves := [],
-    window_us := 26, max_per_window := 1, t_react_us := 10, distance_fn := fun _ => 1 }
-
-/-- **(A) Resource conflict-freedom on the FINITE GE2021 hardware**: every qubit
-    the schedule claims lies inside a finite zone, no zone is over-capacity,
-    throughput and decoder hold. -/
-theorem ge2021Ctx_resource_ok : checkAll baseInvariants ge2021Ctx = true := by decide
-
-/-- **(A) ∧ (B): resource AND causality on the finite GE2021 architecture.** -/
-theorem ge2021Ctx_fully_valid :
-    checkAll (baseInvariants ++ [causalityInv shorDeps]) ge2021Ctx = true := by decide
+/-- **The hardware catalog's GE2021 machine IS this audited architecture**
+    (single-source rule: configuring `HardwareCatalog.ge2021_physical`
+    configures the audit). -/
+theorem catalog_ge2021_arch_eq :
+    FormalRV.System.HardwareCatalog.ge2021_physical.toZonedArch = ge2021Arch := rfl
 
 /-! ## (5) FINITENESS BITES — a claim beyond the 20 M architecture is rejected -/
 
@@ -130,7 +120,10 @@ theorem ge2021Ctx_fully_valid :
     architecture — lies in NO zone. -/
 def ge2021_overflow_sched : List SysCall :=
   [ { kind := SysCallKind.Measure 25_000_000 0, begin_us := 0, end_us := 10 } ]
-def ge2021_overflow_ctx : SystemCtx := { ge2021Ctx with sched := ge2021_overflow_sched }
+def ge2021_overflow_ctx : SystemCtx :=
+  { arch := ge2021Arch, sched := ge2021_overflow_sched, moves := [],
+    window_us := 26, max_per_window := 1, t_react_us := 10,
+    distance_fn := fun _ => 1 }
 
 /-- **The finite capacity invariant REJECTS it** — the hardware has only 20 M
     qubits, so a claim on qubit 25 M fails.  Resource bounds are real, not
@@ -154,33 +147,48 @@ def decoderBacklogInv (patches decodeLatency lanes : Nat) : SpaceTimeInvariant :
 /-- GE2021 decode load: 6200 patches, 10-cycle (10 µs) decode latency. -/
 def ge2021DecoderInv (lanes : Nat) : SpaceTimeInvariant := decoderBacklogInv 6200 10 lanes
 
-/-- **Provisioned (62 000 lanes): the full check passes** — resource (A) ∧ causality
-    (B) ∧ decoder throughput, all on `ge2021Ctx`. -/
+/-- A minimal in-zone probe context on the finite GE2021 architecture (one
+    syndrome measurement inside the Computation zone).  The decoder-backlog
+    invariant is context-independent, so this carrier exists only to run it
+    through `checkAll` alongside the resource invariants.  (The legacy
+    hand-written Shor schedule that used to sit here was removed; the real
+    carrier will be the compiled PPM → surgery → SysCall schedule.) -/
+def ge2021_probe_ctx : SystemCtx :=
+  { arch := ge2021Arch, sched :=
+      [ { kind := SysCallKind.Measure 5 0, begin_us := 0, end_us := 10 } ],
+    moves := [], window_us := 26, max_per_window := 1, t_react_us := 10,
+    distance_fn := fun _ => 1 }
+
+theorem ge2021_probe_resource_ok :
+    checkAll baseInvariants ge2021_probe_ctx = true := by decide
+
+/-- **Provisioned (62 000 lanes): the unified check passes** — resource (A) ∧
+    decoder throughput on the finite GE2021 architecture. -/
 theorem ge2021_fully_valid_with_decoder :
-    checkAll (baseInvariants ++ [causalityInv shorDeps, ge2021DecoderInv 62_000]) ge2021Ctx = true := by
+    checkAll (baseInvariants ++ [ge2021DecoderInv 62_000]) ge2021_probe_ctx = true := by
   decide
 
 /-- **Under-provisioned (6200 lanes, one per patch): the unified check REJECTS** —
     the decoder fabric cannot keep up, so the schedule is invalid even though the
-    qubits fit and causality holds. -/
+    qubits fit. -/
 theorem ge2021_underprovisioned_decoder_rejected :
-    checkAll (baseInvariants ++ [ge2021DecoderInv 6200]) ge2021Ctx = false := by
+    checkAll (baseInvariants ++ [ge2021DecoderInv 6200]) ge2021_probe_ctx = false := by
   decide
 
 /-- …and it is SPECIFICALLY the decoder that fails: resource (A) still holds on the
     very same context (the classical decode fabric is the binding constraint, not
     the 20 M qubits). -/
 theorem ge2021_decoder_is_the_culprit :
-    checkAll baseInvariants ge2021Ctx = true
-    ∧ (ge2021DecoderInv 6200).check ge2021Ctx = false := by
-  exact ⟨ge2021Ctx_resource_ok, by decide⟩
+    checkAll baseInvariants ge2021_probe_ctx = true
+    ∧ (ge2021DecoderInv 6200).check ge2021_probe_ctx = false := by
+  exact ⟨ge2021_probe_resource_ok, by decide⟩
 
 /-- The provisioning threshold composes cleanly (extensibility): adding the decoder
     invariant ANDs in its check without disturbing the others. -/
 theorem decoder_inv_composes (lanes : Nat) :
-    checkAll (baseInvariants ++ [ge2021DecoderInv lanes]) ge2021Ctx
-      = (checkAll baseInvariants ge2021Ctx && (ge2021DecoderInv lanes).check ge2021Ctx) :=
-  checkAll_snoc baseInvariants (ge2021DecoderInv lanes) ge2021Ctx
+    checkAll (baseInvariants ++ [ge2021DecoderInv lanes]) ge2021_probe_ctx
+      = (checkAll baseInvariants ge2021_probe_ctx && (ge2021DecoderInv lanes).check ge2021_probe_ctx) :=
+  checkAll_snoc baseInvariants (ge2021DecoderInv lanes) ge2021_probe_ctx
 
 /-============================================================================
   PART C — Surface-code PHYSICAL resource bridge (patch formula → qubits → time)
@@ -389,8 +397,6 @@ end FormalRV.Audit.GidneyEkera2021
 
 -- ✅ the two zones exactly partition the 20,000,000 budget:
 #verify_clean FormalRV.Audit.GidneyEkera2021.zones_partition_budget
--- ✅ the full Shor schedule fits + resource ∧ causality both hold on the finite architecture:
-#verify_clean FormalRV.Audit.GidneyEkera2021.ge2021Ctx_fully_valid
 -- ✅ decoder fabric is a real constraint (provisioned passes; under-provisioned is rejected):
 #verify_clean FormalRV.Audit.GidneyEkera2021.ge2021_fully_valid_with_decoder
 -- (the over-budget / under-provisioned REJECTIONS — the bound bites, not advisory:)

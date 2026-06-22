@@ -9,6 +9,7 @@ import FormalRV.Arithmetic.Windowed.WindowedWidth
 import FormalRV.Arithmetic.Windowed.WindowedExpStep
 import FormalRV.Arithmetic.Windowed.WindowedGrayLookup
 import FormalRV.Arithmetic.Windowed.WindowedInPlace
+import FormalRV.Arithmetic.Windowed.WindowedExpInPlaceCount
 import FormalRV.Arithmetic.Windowed.WindowedModN
 import FormalRV.Arithmetic.Windowed.WindowedModNInPlace
 import FormalRV.Arithmetic.Windowed.WindowedExpInPlaceQ

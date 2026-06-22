@@ -5,10 +5,9 @@
     `lake env lean --run scripts/EmitSurgeryStim.lean`
   Output: Example/neutral_atom/surface3_xx_merge.stim
 -/
-import FormalRV.LatticeSurgery.StimEmit
-import FormalRV.LatticeSurgery.SurgeryDemoMerge
-import FormalRV.LatticeSurgery.SurgeryDemoCNOT
-
+import FormalRV.QEC.LatticeSurgery.StimEmit
+import FormalRV.QEC.LatticeSurgery.SurgeryDemoMerge
+import FormalRV.QEC.LatticeSurgery.SurgeryDemoCNOT
 open FormalRV.LatticeSurgery.StimEmit
 open FormalRV.Framework.LDPC
 open FormalRV.LatticeSurgery.SurgeryDemoMerge

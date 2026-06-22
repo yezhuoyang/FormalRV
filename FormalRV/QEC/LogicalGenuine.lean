@@ -20,8 +20,7 @@
 
 import FormalRV.QEC.GF2Linearity
 import FormalRV.QEC.LogicalMeasurementGeneral
-import FormalRV.LatticeSurgery.SurgeryReadout
-
+import FormalRV.QEC.LatticeSurgery.SurgeryReadout
 namespace FormalRV.QEC.LogicalGenuine
 
 open FormalRV.Framework.LDPC

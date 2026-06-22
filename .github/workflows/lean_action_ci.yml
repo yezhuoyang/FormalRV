@@ -11,4 +11,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+      - name: Layering check (QEC demand layer never imports System/Shor/Audit)
+        run: python3 scripts/check_layering.py
       - uses: leanprover/lean-action@v1
