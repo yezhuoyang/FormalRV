@@ -11,6 +11,8 @@
   routine aggregator.) -/
 import FormalRV.Shor.MeasUncompute
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.Shor.MeasUncomputeExec
 
 open FormalRV.Framework FormalRV.Framework.Gate FormalRV.BQAlgo
@@ -32,11 +34,11 @@ def runQROM (T : Nat → Nat) (a : Nat) : Nat :=
   decOut (EGate.applyNat (unaryQROM 3 T 1 3 5 2 0 0) (inp a))
 
 -- The unary-iteration QROM reads `T[a]` for every `w=2` address (table `T = id`):
-example : runQROM (fun v => v) 0 = 0 := by native_decide
-example : runQROM (fun v => v) 1 = 1 := by native_decide
-example : runQROM (fun v => v) 2 = 2 := by native_decide
-example : runQROM (fun v => v) 3 = 3 := by native_decide
+example : runQROM (fun v => v) 0 = 0 := by decide
+example : runQROM (fun v => v) 1 = 1 := by decide
+example : runQROM (fun v => v) 2 = 2 := by decide
+example : runQROM (fun v => v) 3 = 3 := by decide
 -- and for a different table `T v = 5v mod 8`:
-example : runQROM (fun v => 5 * v % 8) 3 = 15 % 8 := by native_decide
+example : runQROM (fun v => 5 * v % 8) 3 = 15 % 8 := by decide
 
 end FormalRV.Shor.MeasUncomputeExec
