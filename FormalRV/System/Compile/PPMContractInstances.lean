@@ -33,6 +33,8 @@ import FormalRV.System.Compile.PPMScheduleContract
 import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 import FormalRV.PPM.GE2021PPMSysInv
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.LatticeSurgeryPPMContract
 
 open FormalRV.Framework
@@ -123,26 +125,26 @@ def ppm_pair_sequential_syscalls : List SysCall :=
 
 theorem ppm_pair_sequential_capacity_in_arch_ok :
     capacity_in_arch_ok ppm_pair_arch ppm_pair_sequential_syscalls = true := by
-  native_decide
+  decide
 
 theorem ppm_pair_sequential_exclusivity_ok :
-    exclusivity_ok ppm_pair_sequential_syscalls = true := by native_decide
+    exclusivity_ok ppm_pair_sequential_syscalls = true := by decide
 
 theorem ppm_pair_sequential_feedback_latency_ok :
     feedback_latency_ok ppm_pair_arch.t_cycle_us ppm_pair_sequential_syscalls = true := by
-  native_decide
+  decide
 
 theorem ppm_pair_sequential_decoder_react_ok :
-    decoder_react_ok 10 ppm_pair_sequential_syscalls = true := by native_decide
+    decoder_react_ok 10 ppm_pair_sequential_syscalls = true := by decide
 
 theorem ppm_pair_sequential_throughput_ok :
     window_throughput_ok ppm_pair_sequential_syscalls 1000 1000 = true := by
-  native_decide
+  decide
 
 theorem ppm_pair_sequential_all_invariants_ok :
     all_invariants_ok ppm_pair_arch ppm_pair_sequential_syscalls 1000 1000
       (fun _ => 0) = true := by
-  native_decide
+  decide
 
 /-- **Parallel-distinct pair**: PPM A and PPM B run in the SAME
     time window [0, 4), but use DISTINCT ancillas (100 and 101).
@@ -154,12 +156,12 @@ def ppm_pair_parallel_distinct_syscalls : List SysCall :=
 
 theorem ppm_pair_parallel_distinct_exclusivity_ok :
     exclusivity_ok ppm_pair_parallel_distinct_syscalls = true := by
-  native_decide
+  decide
 
 theorem ppm_pair_parallel_distinct_all_invariants_ok :
     all_invariants_ok ppm_pair_arch ppm_pair_parallel_distinct_syscalls 1000 1000
       (fun _ => 0) = true := by
-  native_decide
+  decide
 
 /-- **Parallel-aliasing pair (BAD)**: PPM A and PPM B both use
     ancilla 100 in the SAME time window.  Their Gate2qs both claim
@@ -170,7 +172,7 @@ def ppm_pair_parallel_alias_syscalls : List SysCall :=
 
 theorem ppm_pair_parallel_alias_exclusivity_fails :
     exclusivity_ok ppm_pair_parallel_alias_syscalls = false := by
-  native_decide
+  decide
 
 /-- Failure isolation: the aliasing pair fails ONLY I2.  I1, I3,
     I4 still pass.  This is exactly what the paper claims I2
@@ -182,7 +184,7 @@ theorem ppm_pair_parallel_alias_fails_only_exclusivity :
   ∧ decoder_react_ok 10 ppm_pair_parallel_alias_syscalls = true
   ∧ window_throughput_ok ppm_pair_parallel_alias_syscalls 1000 1000 = true
   ∧ exclusivity_ok ppm_pair_parallel_alias_syscalls = false := by
-  refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> native_decide
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> decide
 
 /-! ## §4. I1 capacity counterexample
 
@@ -200,7 +202,7 @@ def capacity_bad_schedule : List SysCall :=
 
 theorem capacity_bad_oversubscription_fails :
     capacity_in_arch_ok ppm_pair_arch capacity_bad_schedule = false := by
-  native_decide
+  decide
 
 theorem capacity_bad_fails_only_capacity :
     capacity_in_arch_ok ppm_pair_arch capacity_bad_schedule = false
@@ -208,7 +210,7 @@ theorem capacity_bad_fails_only_capacity :
   ∧ feedback_latency_ok ppm_pair_arch.t_cycle_us capacity_bad_schedule = true
   ∧ decoder_react_ok 10 capacity_bad_schedule = true
   ∧ window_throughput_ok capacity_bad_schedule 1000 1000 = true := by
-  refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> native_decide
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> decide
 
 /-! ## §5. I3 feedback-latency counterexample
 
@@ -223,7 +225,7 @@ def feedback_bad_slow_schedule : List SysCall :=
 
 theorem feedback_bad_latency_fails :
     feedback_latency_ok ppm_pair_arch.t_cycle_us feedback_bad_slow_schedule = false := by
-  native_decide
+  decide
 
 theorem feedback_bad_fails_only_feedback_latency :
     capacity_in_arch_ok ppm_pair_arch feedback_bad_slow_schedule = true
@@ -231,7 +233,7 @@ theorem feedback_bad_fails_only_feedback_latency :
   ∧ decoder_react_ok 10 feedback_bad_slow_schedule = true
   ∧ window_throughput_ok feedback_bad_slow_schedule 1000 1000 = true
   ∧ feedback_latency_ok ppm_pair_arch.t_cycle_us feedback_bad_slow_schedule = false := by
-  refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> native_decide
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩ <;> decide
 
 
 /-- POSITIVE: two `RequestMagicState` calls overlapping in time
@@ -245,7 +247,7 @@ def magic_factory_distinct_schedule : List SysCall :=
 
 theorem magic_factory_distinct_ports_ok :
     factory_exclusivity_ok magic_factory_distinct_schedule = true := by
-  native_decide
+  decide
 
 /-- NEGATIVE: two `RequestMagicState` calls overlapping in time
     AND targeting the SAME factory zone (3).  Both claim port 203
@@ -258,14 +260,14 @@ def magic_factory_same_port_schedule : List SysCall :=
 
 theorem magic_factory_same_port_fails :
     factory_exclusivity_ok magic_factory_same_port_schedule = false := by
-  native_decide
+  decide
 
 /-- The same-port schedule's standard `exclusivity_ok` still
     PASSES — confirming the gap that the strengthening closes.
     `syscall_acts_on` returns `[]` for `RequestMagicState`, so
     the standard check is vacuous. -/
 theorem magic_factory_same_port_passes_standard_exclusivity :
-    exclusivity_ok magic_factory_same_port_schedule = true := by native_decide
+    exclusivity_ok magic_factory_same_port_schedule = true := by decide
 
 /-! ## §7. Bookkeeping: derived per-cert wallclock + qubit counters -/
 
@@ -275,14 +277,14 @@ def ppm_pair_sequential_wallclock_us : Nat :=
   ppm_pair_sequential_syscalls.foldl (fun acc sc => Nat.max acc sc.end_us) 0
 
 theorem ppm_pair_sequential_wallclock_value :
-    ppm_pair_sequential_wallclock_us = 14 := by native_decide
+    ppm_pair_sequential_wallclock_us = 14 := by decide
 
 /-- Parallel-distinct pair's wallclock = 4 µs (both PPMs end at 4). -/
 def ppm_pair_parallel_distinct_wallclock_us : Nat :=
   ppm_pair_parallel_distinct_syscalls.foldl (fun acc sc => Nat.max acc sc.end_us) 0
 
 theorem ppm_pair_parallel_distinct_wallclock_value :
-    ppm_pair_parallel_distinct_wallclock_us = 4 := by native_decide
+    ppm_pair_parallel_distinct_wallclock_us = 4 := by decide
 
 
 /-! ## §8. Mapping to the paper
@@ -323,13 +325,13 @@ theorem ppm_pair_parallel_distinct_wallclock_value :
     check. -/
 theorem exclusivity_with_factory_ports_detects_same_port :
     exclusivity_with_factory_ports_ok magic_factory_same_port_schedule = false := by
-  native_decide
+  decide
 
 /-- The distinct-ports good schedule passes the strengthened
     exclusivity check. -/
 theorem exclusivity_with_factory_ports_accepts_distinct_ports :
     exclusivity_with_factory_ports_ok magic_factory_distinct_schedule = true := by
-  native_decide
+  decide
 
 
 /-! ## §12. Good-schedule instantiations of the strengthened cert -/
@@ -338,7 +340,7 @@ theorem exclusivity_with_factory_ports_accepts_distinct_ports :
        factory_exclusivity_ok is vacuously true -/
 
 theorem ge2021_ppm_block_factory_exclusivity_ok :
-    factory_exclusivity_ok ppm_block_syscalls = true := by native_decide
+    factory_exclusivity_ok ppm_block_syscalls = true := by decide
 
 def ge2021_ppm_schedule_cert_with_factory_ports : PPMScheduleCertWithFactoryPorts :=
   { arch                := ge2021_ppm_arch
@@ -372,23 +374,23 @@ theorem ge2021_ppm_schedule_cert_with_factory_ports_all_ok :
 /-! ### §12.b PPM-pair sequential schedule -/
 
 theorem ppm_pair_sequential_factory_exclusivity_ok :
-    factory_exclusivity_ok ppm_pair_sequential_syscalls = true := by native_decide
+    factory_exclusivity_ok ppm_pair_sequential_syscalls = true := by decide
 
 theorem ppm_pair_sequential_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok
         ppm_pair_arch ppm_pair_sequential_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ### §12.c PPM-pair parallel-distinct schedule -/
 
 theorem ppm_pair_parallel_distinct_factory_exclusivity_ok :
     factory_exclusivity_ok ppm_pair_parallel_distinct_syscalls = true := by
-  native_decide
+  decide
 
 theorem ppm_pair_parallel_distinct_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok
         ppm_pair_arch ppm_pair_parallel_distinct_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ## §13. Failure-isolation for factory-port conflict
 
@@ -422,7 +424,7 @@ theorem magic_factory_same_port_fails_strengthened_bundle :
     all_invariants_with_factory_ports_ok
         magic_factory_arch magic_factory_same_port_schedule
         10 15 2 = false := by
-  native_decide
+  decide
 
 /-- **Failure isolation**: the same-port conflict fails ONLY the
     factory-exclusivity check.  All other six constituent
@@ -440,14 +442,14 @@ theorem magic_factory_same_port_fails_only_factory_exclusivity :
       magic_factory_same_port_schedule = true
   ∧ decoder_react_ok 10 magic_factory_same_port_schedule = true
   ∧ window_throughput_ok magic_factory_same_port_schedule 15 2 = true := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> native_decide
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> decide
 
 /-- Headline-comparison theorem: standard `all_invariants_ok` also
     misses the same-port conflict at `(window_us = 15,
     max_per_window = 2)`. -/
 theorem magic_factory_same_port_passes_standard_bundle :
     all_invariants_ok magic_factory_arch magic_factory_same_port_schedule
-        15 2 (fun _ => 0) = true := by native_decide
+        15 2 (fun _ => 0) = true := by decide
 
 /-- The standard bundle passes; the strengthened bundle fails. -/
 theorem magic_factory_same_port_standard_vs_strengthened :
@@ -456,7 +458,7 @@ theorem magic_factory_same_port_standard_vs_strengthened :
   ∧ all_invariants_with_factory_ports_ok
         magic_factory_arch magic_factory_same_port_schedule
         10 15 2 = false := by
-  refine ⟨?_, ?_⟩ <;> native_decide
+  refine ⟨?_, ?_⟩ <;> decide
 
 /-! ## §14. Per-cycle capacity counterexample — STRUCTURAL LIMITATION
 
@@ -516,13 +518,13 @@ def per_cycle_three_active_schedule : List SysCall :=
     atom-range-equals-capacity zone. -/
 theorem per_cycle_three_active_capacity_passes :
     capacity_per_cycle_ok ppm_pair_arch per_cycle_three_active_schedule = true := by
-  native_decide
+  decide
 
 /-- And exclusivity ALSO passes (distinct atoms, but overlapping
     times) — confirming that an isolated `capacity_per_cycle`
     failure is unreachable in the current model. -/
 theorem per_cycle_three_active_exclusivity_passes :
-    exclusivity_ok per_cycle_three_active_schedule = true := by native_decide
+    exclusivity_ok per_cycle_three_active_schedule = true := by decide
 
 
 /-! ## §18. Composition theorems for the existing PPM pairs
@@ -546,7 +548,7 @@ theorem seq_ppm_pair_cert_exists :
   obtain ⟨cert, h1, h2, _, _, _, h6⟩ :=
     mkPPMScheduleCertWithFactoryPorts_of_valid
       ppm_pair_arch ppm_pair_sequential_syscalls 10 1000 1000
-      (by native_decide)
+      (by decide)
   exact ⟨cert, h1, h2, h6⟩
 
 /-- **Parallel-distinct PPM-pair cert exists**. -/
@@ -558,7 +560,7 @@ theorem par_ppm_pair_distinct_cert_exists :
   obtain ⟨cert, h1, h2, _, _, _, h6⟩ :=
     mkPPMScheduleCertWithFactoryPorts_of_valid
       ppm_pair_arch ppm_pair_parallel_distinct_syscalls 10 1000 1000
-      (by native_decide)
+      (by decide)
   exact ⟨cert, h1, h2, h6⟩
 
 /-- **Parallel-aliasing PPM-pair is REJECTED at the validator
@@ -567,7 +569,7 @@ theorem par_ppm_pair_distinct_cert_exists :
 theorem validate_parallel_alias_false :
     validateScheduleWithFactoryPorts
         ppm_pair_arch ppm_pair_parallel_alias_syscalls 10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-! ## §19. Compositions using the new combinators
 
@@ -598,7 +600,7 @@ def seq_compose_AB : List SysCall :=
 theorem seq_compose_AB_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok
         ppm_pair_arch seq_compose_AB 10 1000 1000 = true := by
-  native_decide
+  decide
 
 
 /-- **Parallel composition of A and B (distinct ancillas)**:
@@ -609,7 +611,7 @@ def par_compose_AB_distinct : List SysCall :=
 theorem par_compose_AB_distinct_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok
         ppm_pair_arch par_compose_AB_distinct 10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-- **Parallel composition of A and B (same ancilla)**: REJECTED
     by exclusivity, since both Gate2qs at [1, 2) claim site 100.
@@ -621,7 +623,7 @@ def par_compose_AB_alias : List SysCall :=
 theorem par_compose_AB_alias_rejected :
     validateScheduleWithFactoryPorts
         ppm_pair_arch par_compose_AB_alias 10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-! ## §20. Three-PPM compositions
 
@@ -640,7 +642,7 @@ def ppm_triple_sequential_syscalls : List SysCall :=
 theorem ppm_triple_sequential_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok
         ppm_pair_arch ppm_triple_sequential_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 
 /-- **3-PPM parallel-distinct**: A, B, C all at t=0..4 using
@@ -654,7 +656,7 @@ def ppm_triple_parallel_distinct_syscalls : List SysCall :=
 theorem ppm_triple_parallel_distinct_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok
         ppm_pair_arch ppm_triple_parallel_distinct_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 
 /-- Worked applications of the compose-many theorems on the 3-PPM
@@ -673,7 +675,7 @@ theorem ppm_triple_sequential_cert_exists :
   obtain ⟨cert, h1, h2, _⟩ :=
     composeSeqSchedulesWithFactoryPorts_of_valid ppm_triple_ctx
       [ppm_compose_A, ppm_compose_B_distinct_anc, ppm_compose_C_distinct_anc]
-      (by native_decide)
+      (by decide)
   exact ⟨cert, h1, h2⟩
 
 theorem ppm_triple_parallel_distinct_cert_exists :
@@ -683,7 +685,7 @@ theorem ppm_triple_parallel_distinct_cert_exists :
   obtain ⟨cert, h1, h2, _⟩ :=
     composeParSchedulesWithFactoryPorts_of_valid ppm_triple_ctx
       [ppm_compose_A, ppm_compose_B_distinct_anc, ppm_compose_C_distinct_anc]
-      (by native_decide)
+      (by decide)
   exact ⟨cert, h1, h2⟩
 
 /-! ## §22. Correct compositional principle (documented)

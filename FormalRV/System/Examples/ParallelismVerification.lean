@@ -44,6 +44,8 @@
 -/
 import FormalRV.System.Invariants.InvariantFramework
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ParallelismVerification
 
 open FormalRV.System.Architecture FormalRV.System.ScheduleInv

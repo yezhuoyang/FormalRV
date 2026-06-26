@@ -37,6 +37,34 @@
 
 -- ── THE headline theorem (transitively builds the live proof closure) ─────────────
 import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayShorCapstone
+-- ── The coset bound against the EXPLICIT Shor floor κ/(log₂N)⁴ (Shor_correct_var weld) ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayShorUnconditional
+-- ── A concrete exact ModMulImpl multiplier at the coset dimension (w ≥ 2) ──
+import FormalRV.Shor.GidneyInPlace.Capstone.IdealResidueOracle
+-- ── Route B′: the residue↔runway intertwining from canonical-only data (weakened hf_residue) ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2ResidueEmbedCanonical
+-- ── Route B′: the coset κ-floor capstone from canonical-only residue data ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayShorCanonical
+-- ── Route B′ step 2: idealResidueFamily discharges the canonical capstone's hf_res_can ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayShorClosure
+-- ── Route B′ step 2d: coset-machine final state is sub-unit (discharges hnormP/hnormI) ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayShorNorms
+-- ── Route B′ ideal-runway-oracle effort: a verified reversible divide-by-N (E2RunwayDivider) + exact
+--    mod-mult (E2RunwayResidueMul) compose into the clean-ancilla guarded-shift gate (E2RunwayGuardedShift);
+--    E2RunwayReduction reduces the UNCONDITIONAL bound to one obligation (a gate with gateToPerm = idealPerm)
+--    + the route-S column-identity reduction. ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayReduction
+-- ── GENERIC reversible-permutation synthesis (the route that realizes the ideal runway oracle): clean
+--    multi-controlled-X (E2RunwaySynthMCX) → transposition gate (E2RunwaySynthSwap) → permGate σ via
+--    Mathlib's swap factorization (E2RunwaySynthPerm) → the runway gate = permGate of resShiftPerm on the
+--    a-block + its route-S column identity (E2RunwaySynthRunwayGate). ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwaySynthRunwayGate
+-- ── ★ THE FULLY-UNCONDITIONAL coset/runway Shor bound: physRunwayOracle ≥ κ/(log₂N)⁴ − 2m√(8·numWin/2^cm),
+--    NO abstract oracle hypothesis, NO cm≤2w-3 constraint — only standard parameters (w ≥ 2) + a·ainv0 ≡ 1. ──
+import FormalRV.Shor.GidneyInPlace.Capstone.E2RunwayShorFinal
+-- ── The runway INPUT is a genuine state-prep CIRCUIT: uc_eval(E2runwayInitPrep, a concrete X+interior-npar_H circuit)
+--    · |0…0⟩ = E2runwayInit (no abstract input). Chain: RunwayPrepCore → SubBlock → Full → Close → Done. ──
+import FormalRV.Shor.GidneyInPlace.Capstone.RunwayPrepDone
 
 -- ── Public component contracts (the Spec layer) ──────────────────────────────────
 import FormalRV.Shor.GidneyInPlace.Gate.Spec.UCEvalBridge

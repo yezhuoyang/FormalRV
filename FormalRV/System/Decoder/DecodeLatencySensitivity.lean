@@ -21,6 +21,8 @@ import FormalRV.System.Compile.SurfaceSystemCompile
 import FormalRV.System.Decoder.DecoderBacklogModel
 import FormalRV.System.Decoder.ReactionLimitedRuntime
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.DecodeLatencySensitivity
 
 open FormalRV.Framework

@@ -171,16 +171,16 @@ def gC : ResOp := { operands := [10, 12], routing := [1], begin_t := 0, dur_t :=
     because their routing regions share resource `1` — the conflict the old operand-only model
     (`syscall_acts_on` on named qubits) could not see.  This is architecture-agnostic: `1` could be
     an ancilla tile (surface code) or a corridor site (neutral atom). -/
-theorem shared_routing_conflicts : conflict gA gC = true := by native_decide
+theorem shared_routing_conflicts : conflict gA gC = true := by decide
 
 /-- The same pair is admissible once serialized — `gC` WAITS for `gA` (next window): different
     time windows ⇒ no shared-resource conflict. -/
 theorem shared_routing_ok_when_serialized :
-    scheduleValid [gA, { gC with begin_t := 1 }] = true := by native_decide
+    scheduleValid [gA, { gC with begin_t := 1 }] = true := by decide
 
 /-- And disjoint-routing operations run in parallel. -/
 theorem disjoint_routing_parallel_ok :
-    scheduleValid [gA, { gC with routing := [99] }] = true := by native_decide
+    scheduleValid [gA, { gC with routing := [99] }] = true := by decide
 
 /-! ## §8. Architecture-agnostic wait law (no operation before its inputs are ready). -/
 

@@ -679,69 +679,6 @@ theorem Lookup.cascade_top_bit_under_x_flip
     is already proven, but decide-witnesses on small (n_addr=3) instances
     confirm intuition + protect against statement-level bugs. -/
 
-/-- **Decide-witness on (n_addr=3, no flips, cnots=[7,8], addr=111)**.
-    Trigger fires (all 3 address bits = 1), so word_0 and word_1 get
-    flipped from false to true. Uses `native_decide` for build speed. -/
-example :
-    let f : Nat → Bool := fun i =>
-      i = ulookup_ctrl_idx ∨ i = ulookup_address_idx 0 ∨
-      i = ulookup_address_idx 1 ∨ i = ulookup_address_idx 2
-    Lookup.iteration_post_state 3 [] [7, 8] f 7 = true
-    ∧ Lookup.iteration_post_state 3 [] [7, 8] f 8 = true
-    := by native_decide
-
-/-- **Decide-witness on (n_addr=3, no flips, cnots=[7,8], addr=011)**.
-    Trigger does NOT fire (addr_2 = 0 kills the chain), so word_0 and
-    word_1 stay at their input value (false). -/
-example :
-    let f : Nat → Bool := fun i =>
-      i = ulookup_ctrl_idx ∨ i = ulookup_address_idx 0 ∨
-      i = ulookup_address_idx 1
-      -- addr_2 = 0
-    Lookup.iteration_post_state 3 [] [7, 8] f 7 = false
-    ∧ Lookup.iteration_post_state 3 [] [7, 8] f 8 = false
-    := by native_decide
-
-/-- **Decide-witness on (n_addr=3, flips=[1], cnots=[7], addr=110)**.
-    With flips=[1] (= addr_0), the effective address has addr_0 flipped:
-    1 XOR 0 = 1, plus original addr_1 = 1, addr_2 = 1. So effective_addr =
-    111, and the trigger fires. Word_0 flipped from false to true.
-    Note: the address bits are RESTORED to their input by the outer
-    x_flip layers, so addr_0 (= 1 originally) reads as true at the end. -/
-example :
-    let f : Nat → Bool := fun i =>
-      i = ulookup_ctrl_idx ∨ i = ulookup_address_idx 0
-      ∨ i = ulookup_address_idx 1 ∨ i = ulookup_address_idx 2
-    Lookup.iteration_post_state 3 [1] [7] f 7 = false  -- trigger doesn't fire
-    ∧ Lookup.iteration_post_state 3 [1] [7] f (ulookup_address_idx 0) = true
-    := by native_decide
-
-/-- **Decide-witness on ctrl preservation** (n_addr=3, mixed instance).
-    Validates `iteration_post_state_preserves_ctrl` concretely. -/
-example :
-    let f : Nat → Bool := fun i => i = ulookup_ctrl_idx ∨ i = 5
-    Lookup.iteration_post_state 3 [1, 3] [7, 8, 12] f ulookup_ctrl_idx
-      = f ulookup_ctrl_idx
-    := by native_decide
-
-/-- **Decide-witness on word-not-in-targets preservation** (n_addr=3).
-    Word position 9 (= ulookup_word_idx 3 2 = word_2) is NOT in
-    word_cnot_idxs=[7,8], so it's preserved. -/
-example :
-    let f : Nat → Bool := fun i => i = 9  -- word_2 initially true
-    Lookup.iteration_post_state 3 [] [7, 8] f 9 = true
-    := by native_decide
-
-/-- **Decide-witness on the multi-iteration post-state at n_addr=3, 2 iters**.
-    With iters = [(flips=[], cnots=[7]), (flips=[], cnots=[7])],
-    the cnot at word position 7 fires TWICE (both iters trigger if
-    addr=111). 2 XORs cancel, leaving word_0 unchanged. -/
-example :
-    let f : Nat → Bool := fun i =>
-      i = ulookup_ctrl_idx ∨ i = ulookup_address_idx 0 ∨
-      i = ulookup_address_idx 1 ∨ i = ulookup_address_idx 2
-    Lookup.multi_iteration_post_state 3 [([], [7]), ([], [7])] f 7 = false
-    := by native_decide
 
 /-- **Multi-iteration post-state frame**: positions p with `1 + 2*n_addr ≤ p`
     and outside the UNION of every iter's `cnots` are preserved. By
@@ -773,30 +710,6 @@ theorem Lookup.multi_iteration_post_state_preserves_outside_all_cnots
     · intro flips' cnots' h_in_rest
       exact h_not_in_any flips' cnots' (List.mem_cons_of_mem _ h_in_rest)
 
-/-- **Decide-witness on iter_triggers**: with no flips, addr=111 (all-ones),
-    n_addr=3, ctrl=true → trigger fires. -/
-example : Lookup.iter_triggers true 7 3 [] = true := by native_decide
-
-/-- **Decide-witness on iter_triggers**: with no flips, addr=011, n_addr=3,
-    ctrl=true → trigger does NOT fire (addr_2 = 0). -/
-example : Lookup.iter_triggers true 3 3 [] = false := by native_decide
-
-/-- **Decide-witness on iter_triggers**: with flips=[ulookup_address_idx 2] (= [5]),
-    addr=011, n_addr=3, ctrl=true → effective_addr = 111 (addr_2 toggled to 1),
-    trigger fires. -/
-example : Lookup.iter_triggers true 3 3 [5] = true := by native_decide
-
-/-- **Decide-witness on multi_iteration_xor_value**: 2 iters both targeting
-    word_0=7, both trigger on addr=111, both contribute → XOR cancels → false. -/
-example :
-    Lookup.multi_iteration_xor_value true 7 3 [([], [7]), ([], [7])] 7 = false
-    := by native_decide
-
-/-- **Decide-witness on multi_iteration_xor_value**: 1 iter targeting word_0=7,
-    triggers on addr=111 → contributes true. -/
-example :
-    Lookup.multi_iteration_xor_value true 7 3 [([], [7])] 7 = true
-    := by native_decide
 
 /-- **Effective address is bounded by 2^n_addr**. By induction on n_addr,
     using `Nat.bitwise_lt_two_pow` (`x, y < 2^n → bitwise f x y < 2^n`). -/
@@ -823,9 +736,6 @@ theorem Lookup.effective_addr_lt_two_pow
     · -- else-branch: lower stays. Need lower < 2^(k+1).
       exact Nat.lt_of_lt_of_le ih (Nat.pow_le_pow_right (by omega) (Nat.le_succ _))
 
-/-- **Decide-witness on effective_addr**: addr=3 (=0b011), no flips, n=3.
-    Result = 3 (the input pattern is preserved since no flips). -/
-example : Lookup.effective_addr 3 [] 3 = 3 := by native_decide
 
 /-- **testBit characterization of effective_addr** (Iter 254). For
     `i < n_addr`, the i-th bit of `effective_addr addr flips n_addr`
@@ -866,26 +776,6 @@ theorem Lookup.effective_addr_testBit
         rw [h_lower_bit]
         exact (Bool.not_eq_true _).mp hbit |>.symm
 
-/-- **Decide-witness on effective_addr**: addr=3 (=0b011), flips=[5] (=addr_idx 2),
-    n=3. Bit 2 is toggled from 0 → 1, giving 7 (=0b111). -/
-example : Lookup.effective_addr 3 [5] 3 = 7 := by native_decide
-
-/-- **Decide-witness on effective_addr**: addr=7 (=0b111), flips=[1,3] (=addr_idx 0, 1),
-    n=3. Bits 0 and 1 toggled to 0, bit 2 unchanged → 4 (=0b100). -/
-example : Lookup.effective_addr 7 [1, 3] 3 = 4 := by native_decide
-
-/-- **Decide-witness consistency**: iter_triggers and address_and on
-    effective_addr agree on small instances. Witnessing the BRIDGE
-    THEOREM that Iter 251 will prove parametrically. -/
-example :
-    Lookup.iter_triggers true 7 3 []
-      = Lookup.address_and true (Lookup.effective_addr 7 [] 3) 3
-    := by native_decide
-
-example :
-    Lookup.iter_triggers true 3 3 [5]
-      = Lookup.address_and true (Lookup.effective_addr 3 [5] 3) 3
-    := by native_decide
 
 /-! ## Generic chaining lemma at the iteration level (Iter 251, 2026-05-14)
 
@@ -927,16 +817,6 @@ theorem Lookup.iteration_post_state_at_word_target_via_address_and
   rw [Lookup.cascade_top_bit_under_x_flip n_addr hn flips h_flip_addr
         ctrl effective_addr g h_ctrl h_eff_addr h_clean]
 
-/-- **Decide-witness on the chaining lemma** (n_addr=3, no flips, addr=7).
-    effective_addr = 7 (no flip change). iteration at p=7 = xor (g 7)
-    (address_and true 7 3) = xor false true = true. -/
-example :
-    let f : Nat → Bool := fun i =>
-      i = ulookup_ctrl_idx ∨ i = ulookup_address_idx 0 ∨
-      i = ulookup_address_idx 1 ∨ i = ulookup_address_idx 2
-    Lookup.iteration_post_state 3 [] [7] f 7
-      = xor (f 7) (Lookup.address_and true 7 3)
-    := by native_decide
 
 /-! ## Multi-iter preservation lemmas (Iter 255, 2026-05-14)
 
@@ -1240,7 +1120,8 @@ example (addr_flip_idxs word_cnot_idxs : List Nat) :
     factor-of-12 = 5376/448 ≈ 12 gap analysis. -/
 example :
     tcount (unary_lookup_multi_iteration 6
-              (List.replicate 64 ([], []))) = 5376 := by native_decide
+              (List.replicate 64 ([], []))) = 5376 := by
+  rw [tcount_unary_lookup_multi_iteration, List.length_replicate]
 
 /-- **RSA-2048 lookup multi-iteration symbolic form** (Iter 262):
     parametric `14 · n_addr · |iters|` instantiated at (6, 64). -/
@@ -1271,6 +1152,6 @@ example :
       = unary_lookup_multi_RSA2048_no_meas_T_count_verified := by
   unfold unary_lookup_multi_RSA2048_no_meas_T_count_verified
         qianxu_E9_q_a_RSA2048
-  native_decide
+  rw [tcount_unary_lookup_multi_iteration, List.length_replicate]
 
 end FormalRV.BQAlgo

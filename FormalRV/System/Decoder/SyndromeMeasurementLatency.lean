@@ -16,6 +16,8 @@
 -/
 
 import FormalRV.System.Compile.SurfaceSystemCompile
+
+set_option maxRecDepth 8000
 namespace FormalRV.System.SyndromeMeasurementLatency
 
 open FormalRV.Framework

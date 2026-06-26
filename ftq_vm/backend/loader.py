@@ -79,11 +79,28 @@ _OP_KNOWN_KEYS = {
 }
 
 
-def _load_raw(path: Union[str, Path]) -> Any:
-    path = Path(path)
+def _read_text_or_raise(path: Path) -> str:
+    """Read a file as UTF-8, converting filesystem errors into ``LoadError``.
+
+    Guards the failure modes that otherwise escape ``read_text`` as a raw
+    traceback: a path that does not exist, a path that exists but is a
+    directory (e.g. a stray ``\\`` argument, which resolves to the drive root
+    on Windows), an unreadable file, or non-UTF-8 bytes.  Callers convert
+    ``LoadError`` into the CLI's documented exit code 2.
+    """
     if not path.exists():
         raise LoadError(f"file not found: {path}")
-    text = path.read_text(encoding="utf-8")
+    if path.is_dir():
+        raise LoadError(f"expected a file but found a directory: {path}")
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise LoadError(f"could not read {path}: {exc}") from exc
+
+
+def _load_raw(path: Union[str, Path]) -> Any:
+    path = Path(path)
+    text = _read_text_or_raise(path)
     try:
         if path.suffix.lower() == ".json":
             return json.loads(text)
@@ -91,6 +108,8 @@ def _load_raw(path: Union[str, Path]) -> Any:
         return yaml.safe_load(text)
     except (yaml.YAMLError, json.JSONDecodeError) as exc:
         raise LoadError(f"could not parse {path}: {exc}") from exc
+    except RecursionError as exc:
+        raise LoadError(f"{path}: input is nested too deeply to parse") from exc
 
 
 def _validation_message(exc: ValidationError, what: str, source: str) -> str:
@@ -133,6 +152,18 @@ def _reject_legacy_time_keys(obj: Any, source: str, path: str = "") -> None:
 # --------------------------------------------------------------------------
 
 
+def _require_mapping(value: Any, what: str, source: str) -> dict:
+    """``value`` must be a YAML/JSON mapping (or absent -> empty).  A scalar or
+    list here would otherwise crash later as a raw ``.items()`` / ``dict()``
+    AttributeError/TypeError; turn it into a clean LoadError instead."""
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise LoadError(f"{source}: {what} must be a mapping, got "
+                        f"{type(value).__name__}")
+    return value
+
+
 def backend_from_obj(raw: Any, source: str = "backend config") -> BackendConfig:
     if not isinstance(raw, dict):
         raise LoadError(f"{source} must be a mapping at top level")
@@ -142,12 +173,14 @@ def backend_from_obj(raw: Any, source: str = "backend config") -> BackendConfig:
     resources: list[dict] = []
     services: list[dict] = []
     token_buffer_capacity: dict[str, int] = {}
-    default_latencies: dict[str, int] = dict(raw.get("default_latencies_us", {}) or {})
+    default_latencies: dict[str, int] = dict(
+        _require_mapping(raw.get("default_latencies_us"), "'default_latencies_us'", source))
 
     raw_resources = raw.get("resources", {}) or {}
     if isinstance(raw_resources, list):
         raise LoadError(f"{source}: 'resources' must be a mapping of id -> spec "
                         f"(e.g. measurement_bus: {{kind: bus, capacity: 64}})")
+    raw_resources = _require_mapping(raw_resources, "'resources'", source)
     for rid, spec in raw_resources.items():
         if not isinstance(spec, dict):
             raise LoadError(f"{source}: resource {rid!r} must be a mapping")
@@ -174,14 +207,14 @@ def backend_from_obj(raw: Any, source: str = "backend config") -> BackendConfig:
             resources.append({"id": rid, **spec})
 
     zones: list[dict] = []
-    for zid, spec in (raw.get("zones", {}) or {}).items():
+    for zid, spec in _require_mapping(raw.get("zones"), "'zones'", source).items():
         if not isinstance(spec, dict):
             raise LoadError(f"{source}: zone {zid!r} must be a mapping "
                             f"(e.g. data: {{kind: data_qubit, count: 49}})")
         zones.append({"id": zid, **spec})
 
     gates: list[dict] = []
-    for gkind, spec in (raw.get("gates", {}) or {}).items():
+    for gkind, spec in _require_mapping(raw.get("gates"), "'gates'", source).items():
         if not isinstance(spec, dict) or "duration_us" not in spec:
             raise LoadError(
                 f"{source}: gate {gkind!r} must be a mapping with duration_us "
@@ -190,7 +223,7 @@ def backend_from_obj(raw: Any, source: str = "backend config") -> BackendConfig:
         gates.append({"kind": gkind, **spec})
 
     factories: list[dict] = []
-    raw_factories = raw.get("factories", {}) or {}
+    raw_factories = _require_mapping(raw.get("factories"), "'factories'", source)
     for fid, spec in raw_factories.items():
         if not isinstance(spec, dict):
             raise LoadError(f"{source}: factory {fid!r} must be a mapping")
@@ -206,7 +239,7 @@ def backend_from_obj(raw: Any, source: str = "backend config") -> BackendConfig:
 
     token_initial_inventory: dict[str, int] = {}
     token_ttl: dict[str, int] = {}
-    for kind, spec in (raw.get("tokens", {}) or {}).items():
+    for kind, spec in _require_mapping(raw.get("tokens"), "'tokens'", source).items():
         if not isinstance(spec, dict):
             raise LoadError(f"{source}: tokens.{kind} must be a mapping")
         if "initial_inventory" in spec:
@@ -439,7 +472,13 @@ def _expand_repeat(entry: dict, op_label: str, source: str) -> list[dict]:
     until = repeat["until_us"]
     if not isinstance(every, int) or every < 1:
         raise LoadError(f"{source}: op {op_label}: repeat.every_us must be >= 1")
+    if not isinstance(until, int):
+        raise LoadError(f"{source}: op {op_label}: repeat.until_us must be an "
+                        f"integer (got {until!r})")
     base_at = entry.get("at_us", 0)
+    if not isinstance(base_at, int):
+        raise LoadError(f"{source}: op {op_label}: at_us must be an integer "
+                        f"(got {base_at!r})")
     instances = []
     k = 0
     while base_at + k * every <= until:
@@ -490,7 +529,8 @@ def program_from_obj(raw: Any, backend: BackendConfig | None = None,
         if "at_us" not in entry:
             raise LoadError(f"{source}: op {op_id}: missing 'at_us' start time")
 
-        metadata = dict(entry.pop("metadata", {}) or {})
+        metadata = dict(_require_mapping(entry.pop("metadata", None),
+                                         f"op {op_id}: 'metadata'", source))
         for key in list(entry.keys()):
             if key not in _OP_KNOWN_KEYS:
                 metadata[key] = entry.pop(key)
@@ -589,18 +629,17 @@ def program_from_obj(raw: Any, backend: BackendConfig | None = None,
 def load_program(path: Union[str, Path],
                  backend: BackendConfig | None = None) -> Program:
     path = Path(path)
-    if path.exists():
-        text = path.read_text(encoding="utf-8")
-        from .device_program import (DeviceProgramError, is_device_program,
-                                     load_device_program)
-        if path.suffix.lower() == ".dp" or is_device_program(text):
-            if backend is None:
-                raise LoadError(f"{path}: DEVICE-PROGRAM files need the backend "
-                                f"(site map + gate table) to load")
-            try:
-                return load_device_program(text, backend, str(path))
-            except DeviceProgramError as exc:
-                raise LoadError(str(exc)) from exc
+    text = _read_text_or_raise(path)
+    from .device_program import (DeviceProgramError, is_device_program,
+                                 load_device_program)
+    if path.suffix.lower() == ".dp" or is_device_program(text):
+        if backend is None:
+            raise LoadError(f"{path}: DEVICE-PROGRAM files need the backend "
+                            f"(site map + gate table) to load")
+        try:
+            return load_device_program(text, backend, str(path))
+        except DeviceProgramError as exc:
+            raise LoadError(str(exc)) from exc
     return program_from_obj(_load_raw(path), backend, str(path))
 
 

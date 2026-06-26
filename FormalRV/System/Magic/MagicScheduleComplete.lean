@@ -28,6 +28,8 @@
 import FormalRV.System.Magic.MagicStateReadiness
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.MagicScheduleComplete
 
 open FormalRV.System.Architecture
@@ -96,11 +98,11 @@ def consumerMagicReady (sched : Schedule) (consumeBegin magicQubit : Nat) : Bool
 /-- **Premature consumption is caught at the SysCall level.**  A gate that fires at 5000 µs — before
     the CCZ is produced (12000 µs) and routed (+15 µs) — is NOT magic-ready: it must WAIT. -/
 theorem consume_too_early_not_ready :
-    consumerMagicReady (fullMagicGateSchedule 5000) 5000 100 = false := by native_decide
+    consumerMagicReady (fullMagicGateSchedule 5000) 5000 100 = false := by decide
 
 /-- A gate that waits until 12015 µs (production + routing complete) IS magic-ready. -/
 theorem consume_after_wait_ready :
-    consumerMagicReady (fullMagicGateSchedule 12015) 12015 100 = true := by native_decide
+    consumerMagicReady (fullMagicGateSchedule 12015) 12015 100 = true := by decide
 
 /-! ## §3. Whole-circuit runtime: max(logical depth, magic pipeline) — wait on the slower. -/
 
@@ -141,8 +143,8 @@ def rsa2048_magic_budget : Nat := FormalRV.System.RSA2048.magicBudget
 def rsa2048_factories    : Nat := factoriesNeeded rsa2048_magic_budget 28800000000 ccz_spec_qianxu
 def rsa2048_factory_qubits : Nat := factoryFootprint rsa2048_factories ccz_spec_qianxu
 
-theorem rsa2048_factories_value : rsa2048_factories = 1093 := by native_decide
-theorem rsa2048_factory_qubits_value : rsa2048_factory_qubits = 2803545 := by native_decide
+theorem rsa2048_factories_value : rsa2048_factories = 1093 := by decide
+theorem rsa2048_factory_qubits_value : rsa2048_factory_qubits = 2803545 := by decide
 
 /-- **★ Whole-device schedule bundle for windowed RSA-2048 at GE2021 hardware ★.**  Simultaneously:
 

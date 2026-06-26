@@ -34,6 +34,8 @@ import FormalRV.System.Bounds.ScheduleLowerBound
 import FormalRV.System.DeviceLane.DeviceSchedule
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ScheduleAdvance
 
 open FormalRV.System.DeviceSchedule
@@ -52,12 +54,12 @@ def parallelTwoFactories : DSchedule :=
 def parDev : Device :=
   { totalResources := 1000, nDecoders := 1, reactionTime := 2, codeCycleUs := 1, d := 27 }
 
-theorem parallelTwoFactories_valid : scheduleValid parDev parallelTwoFactories = true := by native_decide
+theorem parallelTwoFactories_valid : scheduleValid parDev parallelTwoFactories = true := by decide
 
 /-- Both factories overlap in time (genuine parallelism) yet do not conflict. -/
 theorem parallelTwoFactories_parallel :
     opsTimeOverlap parallelTwoFactories[0]! parallelTwoFactories[1]! = true
-    ∧ conflictFree parallelTwoFactories = true := by native_decide
+    ∧ conflictFree parallelTwoFactories = true := by decide
 
 /-- **★ Parallel factories hit the paper's runtime ★** — with `F = 1093` CCZ factories, the magic
     supply for the windowed RSA-2048 budget is `≤ 8 hours` (`28 795 884 000 µs`), versus the naive
@@ -65,12 +67,12 @@ theorem parallelTwoFactories_parallel :
 theorem parallel_1093_within_8h :
     magicSupplyTimeUs 2622824448 1093 ccz_spec_qianxu ≤ 8 * 3600000000
     ∧ 7 * 3600000000 ≤ magicSupplyTimeUs 2622824448 1093 ccz_spec_qianxu := by
-  refine ⟨by native_decide, by native_decide⟩
+  refine ⟨by decide, by decide⟩
 
 /-- Speedup over the naive serial baseline (F = 1): the 1093-factory supply is `> 1000×` faster. -/
 theorem parallel_speedup :
     1000 * magicSupplyTimeUs 2622824448 1093 ccz_spec_qianxu
-      ≤ magicSupplyTimeUs 2622824448 1 ccz_spec_qianxu := by native_decide
+      ≤ magicSupplyTimeUs 2622824448 1 ccz_spec_qianxu := by decide
 
 /-! ## §2. The WALL: cannot beat the spacetime floor. -/
 
@@ -85,7 +87,7 @@ theorem parallel_supply_above_floor :
     -- the 1093-factory magic supply, as qubit·µs over the data+factory device, is ≥ the floor
     ScheduleLowerBound.rsa2048_floor_qubit_us
       ≤ (9633792 + 1093 * 2565) * magicSupplyTimeUs 2622824448 1093 ccz_spec_qianxu := by
-  native_decide
+  decide
 
 /-! ## §3. Other papers: the framework is parametric. -/
 
@@ -97,7 +99,7 @@ theorem parallel_supply_above_floor :
 def babbush_ecc256_floor_qubit_hours : Nat :=
   (90000000 * (RSA2048.cczFactoryQubits * RSA2048.cczWindowUs)) / 3600000000
 
-theorem babbush_ecc256_floor_value : babbush_ecc256_floor_qubit_hours = 769500 := by native_decide
+theorem babbush_ecc256_floor_value : babbush_ecc256_floor_qubit_hours = 769500 := by decide
 
 /-- The naive serial baseline applies to ANY Toffoli count `K`: runtime `= K · 12054 µs`
     (12 000 µs CCZ window + 27 µs teleport + 27 µs decode at d=27; derived as
@@ -106,6 +108,6 @@ theorem babbush_ecc256_floor_value : babbush_ecc256_floor_qubit_hours = 769500 :
     construction (500 000 qubits, ~20 min) beats by exploiting parallelism, exactly as for RSA. -/
 def naiveSerialHours (K : Nat) : Nat := K * 12054 / 3600000000
 
-theorem babbush_ecc256_naive_hours : naiveSerialHours 90000000 = 301 := by native_decide
+theorem babbush_ecc256_naive_hours : naiveSerialHours 90000000 = 301 := by decide
 
 end FormalRV.System.ScheduleAdvance

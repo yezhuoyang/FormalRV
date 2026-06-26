@@ -24,6 +24,8 @@ import FormalRV.QEC.Instances
 import FormalRV.QEC.Addressing
 import FormalRV.QEC.GateSyndromeWorkedExample
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.CostModelWeightDemo
 
 open FormalRV.Framework.Resource FormalRV.QEC FormalRV.QEC.Instances

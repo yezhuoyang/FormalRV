@@ -20,6 +20,8 @@
 -/
 import FormalRV.System.Invariants.InvariantFramework
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.DependencyGraph
 
 open FormalRV.System.Architecture FormalRV.System.InvariantFramework

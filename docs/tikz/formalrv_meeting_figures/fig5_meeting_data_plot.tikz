@@ -1,0 +1,59 @@
+% Figure 5: compact data/plot for meeting delivery.
+\begin{tikzpicture}[x=1cm,y=1cm,font=\sffamily]
+  \node[frvTitle] at (8.0,7.25)
+    {Meeting-ready evidence: concrete numbers tied to formal artifacts};
+  \node[frvNote] at (8.0,6.86)
+    {Numbers below are anchored in the repository: PaperClaims, Example/Adder2EndToEnd, and FTQ-VM resource counts.};
+
+  \node[frvPanel, minimum width=7.25cm, minimum height=5.55cm, fill=white] at (3.90,3.75) {};
+  \node[frvPanel, minimum width=7.25cm, minimum height=5.55cm, fill=white] at (12.10,3.75) {};
+
+  \node[frvSubTitle] at (3.90,6.10) {Audit signal: arithmetic gap};
+  \node[frvNote] at (3.90,5.75) {Cain-Xu E10 amortized $\tau_{\mathrm{Toff}}$ in units of $\tau_s$};
+
+  % Left chart: bars scaled as value * 0.095 cm.
+  \draw[frvMuted, line width=0.45pt] (1.45,2.05) -- (1.45,5.12);
+  \foreach \y/\lab in {2.05/0,2.90/20,3.75/40,4.60/60}
+    {
+      \draw[frvMuted, line width=0.35pt] (1.38,\y) -- (1.52,\y);
+      \node[frvNote, anchor=east] at (1.30,\y) {\lab};
+    }
+  \fill[frvOrange!75] (2.10,2.05) rectangle (3.70,4.09);
+  \fill[frvBlue!82] (4.25,2.05) rectangle (5.85,4.33);
+  \node[frvSubTitle, text=frvOrange] at (2.90,4.34) {43};
+  \node[frvSubTitle, text=frvBlue] at (5.05,4.58) {48};
+  \node[frvNote] at (2.90,1.72) {paper};
+  \node[frvNote] at (5.05,1.72) {formal recompute};
+  \node[frvWarnBox, text width=5.05cm, minimum height=0.75cm] at (3.92,1.06)
+    {$0.5\cdot25+0.5\cdot71=48$, not 43 \quad (11.6\% low)};
+
+  \node[frvSubTitle] at (12.10,6.10) {End-to-end slice: 2-bit adder};
+  \node[frvNote] at (12.10,5.75) {Verified system schedule on the default d=3 architecture};
+
+  % Right chart: bars scaled as microseconds * 0.026 cm.
+  \node[frvNote, anchor=east] at (9.05,4.96) {optimistic};
+  \fill[frvRed!70] (9.20,4.77) rectangle (9.23,5.15);
+  \node[frvNote, anchor=west] at (9.35,4.96) {1 $\mu$s claim};
+
+  \node[frvNote, anchor=east] at (9.05,3.88) {capacity floor};
+  \fill[frvOrange!78] (9.20,3.69) rectangle (11.07,4.07);
+  \node[frvSubTitle, text=frvOrange, anchor=west] at (11.18,3.88) {$\geq 72\,\mu$s};
+
+  \node[frvNote, anchor=east] at (9.05,2.80) {verified schedule};
+  \fill[frvBlue!82] (9.20,2.61) rectangle (14.19,2.99);
+  \node[frvSubTitle, text=frvBlue, anchor=west] at (14.30,2.80) {$192\,\mu$s};
+
+  \draw[frvMuted, line width=0.45pt] (9.20,2.20) -- (14.40,2.20);
+  \foreach \x/\lab in {9.20/0,10.50/50,11.80/100,13.10/150,14.40/200}
+    {
+      \draw[frvMuted, line width=0.35pt] (\x,2.13) -- (\x,2.27);
+      \node[frvNote] at (\x,1.93) {\lab};
+    }
+  \node[frvNote] at (11.80,1.55) {microseconds};
+  \node[frvGoodBox, text width=5.75cm, minimum height=0.75cm] at (12.10,1.06)
+    {192 SysCalls, 72 Gate2q merges, schedule fits by \texttt{schedule\_fits}.};
+
+  \node[frvPanel, minimum width=14.60cm, minimum height=0.88cm, fill=frvGray!70] at (8.0,-0.34) {};
+  \node[frvNote, text width=13.85cm] at (8.0,-0.34)
+    {Takeaway for the next meeting: the project already produces small but concrete audit facts; the next scale step is to attach the same certificate pattern to larger Shor schedules.};
+\end{tikzpicture}

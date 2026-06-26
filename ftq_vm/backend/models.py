@@ -320,6 +320,18 @@ class GateSpec(BaseModel):
     max_parallel: Optional[int] = Field(default=None, ge=1)
     description: Optional[str] = None
 
+    @model_validator(mode="after")
+    def _check_uses(self) -> "GateSpec":
+        # Each amount becomes a ResourceUse(amount=..., ge=1) when the gate is
+        # lowered (gates.py); reject non-positive amounts here so a bad backend
+        # is a clean load error rather than a pydantic crash inside the engine.
+        bad = {r: a for r, a in self.uses.items() if a < 1}
+        if bad:
+            raise ValueError(
+                f"gate {self.kind!r}: every entry in 'uses' must be a positive "
+                f"amount (>= 1); got {bad}")
+        return self
+
     def parallel_resource(self) -> str:
         return f"gate.{self.kind}.parallel"
 

@@ -40,6 +40,8 @@ import FormalRV.Framework.CostModel
 import FormalRV.System.Invariants.InvariantFramework
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.NaiveUpperBound
 
 open FormalRV.Framework FormalRV.Framework.Resource FormalRV.System.InvariantFramework

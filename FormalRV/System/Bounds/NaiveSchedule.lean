@@ -21,6 +21,8 @@
 import FormalRV.System.DeviceLane.DeviceSchedule
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.NaiveSchedule
 
 open FormalRV.System.DeviceSchedule
@@ -246,7 +248,7 @@ theorem naiveFrom_total_order (s M : Nat) (o1 o2 : DeviceOp)
     `7 868 473 344` ops. -/
 def rsa2048_opCount : Nat := 3 * RSA2048.magicBudget
 
-theorem rsa2048_opCount_value : rsa2048_opCount = 7868473344 := by native_decide
+theorem rsa2048_opCount_value : rsa2048_opCount = 7868473344 := by decide
 
 /-- **★ The full ~8×10⁹-operation RSA-2048 device schedule is VALID ★** — defined recursively as
     `naiveSchedule rsa2048_opCount` (never enumerated) and proven valid by the parametric headline,

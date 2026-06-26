@@ -20,6 +20,8 @@ import FormalRV.System.Bounds.ScheduleBounds
 import FormalRV.System.Bounds.HardwareSensitivity
 import FormalRV.System.Checkers.FaultTolerantSchedule
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.FTFramework
 
 open FormalRV.System.DeviceSchedule

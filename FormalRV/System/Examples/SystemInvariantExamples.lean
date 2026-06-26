@@ -14,6 +14,8 @@
 import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.SystemInvariantExamples
 
 open FormalRV.System.ScheduleInv
@@ -50,29 +52,29 @@ def ppm (start data anc dec : Nat) : List SysCall :=
 def passSequential : List SysCall := ppm 0 0 100 0 ++ ppm 10 50 100 1
 
 theorem passSequential_ok : all_invariants_ok demoArch passSequential winUs maxPerWin noDist = true := by
-  native_decide
+  decide
 
 /-! ## PASS ② — parallel PPM pair on DISTINCT ancillas (concurrent, disjoint atoms). -/
 
 def passParallelDistinct : List SysCall := ppm 0 0 100 0 ++ ppm 0 1 101 1
 
 theorem passParallelDistinct_ok :
-    all_invariants_ok demoArch passParallelDistinct winUs maxPerWin noDist = true := by native_decide
+    all_invariants_ok demoArch passParallelDistinct winUs maxPerWin noDist = true := by decide
 
 /-- Pins the interval arithmetic only: `[1,2)` overlaps itself.  The statement does NOT
     reference the schedule — both PPMs' joint gates occupy `[1,2)` by construction of
     `passParallelDistinct` (`ppm start …` places the `Gate2q` in `[start+1, start+2)` and
     both PPMs start at 0), so this is the overlap fact that construction instantiates. -/
-theorem passParallelDistinct_overlaps : intervals_overlap 1 2 1 2 = true := by native_decide
+theorem passParallelDistinct_overlaps : intervals_overlap 1 2 1 2 = true := by decide
 
 /-! ## FAIL ① — parallel PPM pair ALIASING one ancilla (violates I2 exclusivity). -/
 
 def failAlias : List SysCall := ppm 0 0 100 0 ++ ppm 0 1 100 1
 
 theorem failAlias_fails : all_invariants_ok demoArch failAlias winUs maxPerWin noDist = false := by
-  native_decide
-theorem failAlias_exclusivity_false : exclusivity_ok failAlias = false := by native_decide
-theorem failAlias_capacity_true : capacity_in_arch_ok demoArch failAlias = true := by native_decide
+  decide
+theorem failAlias_exclusivity_false : exclusivity_ok failAlias = false := by decide
+theorem failAlias_capacity_true : capacity_in_arch_ok demoArch failAlias = true := by decide
 
 /-! ## FAIL ② — two magic requests in one factory window (violates I4 throughput). -/
 
@@ -81,12 +83,12 @@ def failThroughput : List SysCall :=
     { kind := SysCallKind.RequestMagicState 200, begin_us := 100, end_us := 12100 } ]
 
 theorem failThroughput_fails :
-    all_invariants_ok demoArch failThroughput winUs maxPerWin noDist = false := by native_decide
+    all_invariants_ok demoArch failThroughput winUs maxPerWin noDist = false := by decide
 theorem failThroughput_window_false : window_throughput_ok failThroughput winUs maxPerWin = false := by
-  native_decide
+  decide
 theorem failThroughput_others_true :
     (capacity_in_arch_ok demoArch failThroughput && exclusivity_ok failThroughput) = true := by
-  native_decide
+  decide
 
 /-! ## FAIL ③ — a decode slower than the reaction budget (violates I3 decoder-reaction).
 
@@ -100,12 +102,12 @@ def failDecodeSlow : List SysCall :=
 
 /-- The headline bundle REJECTS the too-slow decode (decoder reaction is enforced). -/
 theorem failDecodeSlow_fails :
-    all_invariants_ok demoArch failDecodeSlow winUs maxPerWin noDist = false := by native_decide
+    all_invariants_ok demoArch failDecodeSlow winUs maxPerWin noDist = false := by decide
 /-- The specific failing component is I3 decoder-reaction; I1/I2/I4 still hold. -/
 theorem failDecodeSlow_decoder_react_false :
-    decoder_react_ok demoArch.t_react_us failDecodeSlow = false := by native_decide
+    decoder_react_ok demoArch.t_react_us failDecodeSlow = false := by decide
 theorem failDecodeSlow_others_true :
     (capacity_in_arch_ok demoArch failDecodeSlow && exclusivity_ok failDecodeSlow
-      && window_throughput_ok failDecodeSlow winUs maxPerWin) = true := by native_decide
+      && window_throughput_ok failDecodeSlow winUs maxPerWin) = true := by decide
 
 end FormalRV.System.SystemInvariantExamples

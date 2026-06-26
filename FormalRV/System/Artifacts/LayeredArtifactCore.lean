@@ -36,6 +36,8 @@ import FormalRV.System.Compile.LatticeSurgeryPPMContract
 import FormalRV.System.Invariants.SystemInvariantStrengthening
 import FormalRV.System.Examples.AdderSystem
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.LayeredArtifactInterface
 
 open FormalRV.Framework
@@ -323,7 +325,7 @@ def python_generated_adder_example : ExternalScheduleCertificate :=
 theorem python_generated_adder_example_checked :
     external_schedule_strict_ok
         adder_n1_system_models python_generated_adder_example = true := by
-  native_decide
+  decide
 
 /-- A bad external certificate: same `syscalls` as the good
     one, but the producer LIES — claims wallclock = 1.  Lean
@@ -343,7 +345,7 @@ def python_bad_wallclock_example : ExternalScheduleCertificate :=
 theorem python_bad_wallclock_example_rejected :
     external_schedule_strict_ok
         adder_n1_system_models python_bad_wallclock_example = false := by
-  native_decide
+  decide
 
 /-- Another bad external cert: claimed Gate2q count
     falsified to 1.  Reuses the same syscalls and accurate
@@ -361,6 +363,6 @@ def python_bad_gate2q_example : ExternalScheduleCertificate :=
 theorem python_bad_gate2q_example_rejected :
     external_schedule_strict_ok
         adder_n1_system_models python_bad_gate2q_example = false := by
-  native_decide
+  decide
 
 end FormalRV.System.LayeredArtifactInterface

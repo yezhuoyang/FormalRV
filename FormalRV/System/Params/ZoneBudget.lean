@@ -18,6 +18,8 @@
 
 import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ZoneBudget
 
 open FormalRV.System.ScheduleInv

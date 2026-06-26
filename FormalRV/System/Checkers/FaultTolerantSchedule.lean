@@ -54,6 +54,8 @@ import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 import FormalRV.System.Checkers.SystemChecker
 import FormalRV.Resource.SysCallCount
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.FTSchedule
 
 open FormalRV.System.Architecture FormalRV.System.ScheduleInv

@@ -21,6 +21,8 @@
 import FormalRV.System.Invariants.InvariantFramework
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ConcreteMachineFeasibility
 
 open FormalRV.System.Architecture

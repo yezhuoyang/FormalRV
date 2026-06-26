@@ -34,6 +34,8 @@ import Mathlib.Tactic.GCongr
 import FormalRV.System.Bounds.ScheduleLowerBound
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.HardwareSensitivity
 
 /-! ## §1. The four floors as numeric functions of the hardware parameters. -/
@@ -134,14 +136,14 @@ theorem both_papers :
     ∧ magicFloorN gidney2025_K gidney2025.fq gidney2025.prod 3600000000 = 55575000
     ∧ physQubitsN 6189 ge2021.d = 9704352
     ∧ physQubitsN 6189 gidney2025.d = 8367528 := by
-  refine ⟨by native_decide, by native_decide, by native_decide, by native_decide⟩
+  refine ⟨by decide, by decide, by decide, by decide⟩
 
 /-- **Cross-reference (dedup):** the magic-state floor computed here for GE2021 is the SAME number
     as `ScheduleLowerBound.rsa2048_floor_qubit_hours` — the two "22 425 149 qubit-hours" literals are
     proven equal rather than independently asserted. -/
 theorem magicFloor_matches_rsa2048 :
     magicFloorN ge2021_K ge2021.fq ge2021.prod 3600000000
-      = ScheduleLowerBound.rsa2048_floor_qubit_hours := by native_decide
+      = ScheduleLowerBound.rsa2048_floor_qubit_hours := by decide
 
 /-! ### Sensitivity coverage (documentation).
 

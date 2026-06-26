@@ -41,6 +41,8 @@
 -/
 import FormalRV.Core.Basic
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.Architecture
 
 /-! ## Zones -/

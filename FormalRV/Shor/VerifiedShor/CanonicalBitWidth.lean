@@ -1,5 +1,5 @@
 import FormalRV.Arithmetic.ModMult
-import FormalRV.Shor.VerifiedShor.CircuitSizingStub
+import FormalRV.Shor.VerifiedShor.ShorSettingLemmas
 
 namespace VerifiedShor
 namespace CircuitSizing

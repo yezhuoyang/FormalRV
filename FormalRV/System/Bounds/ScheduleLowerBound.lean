@@ -21,6 +21,8 @@ import Mathlib.Order.Interval.Finset.Nat
 import FormalRV.System.DeviceLane.DeviceSchedule
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ScheduleLowerBound
 
 open FormalRV.System.DeviceSchedule
@@ -169,7 +171,7 @@ def rsa2048_floor_qubit_us : Nat :=
 /-- The floor in qubit·HOURS (÷ 3.6×10⁹ µs/h) ≈ `2.24×10⁷`. -/
 def rsa2048_floor_qubit_hours : Nat := rsa2048_floor_qubit_us / 3600000000
 
-theorem rsa2048_floor_value : rsa2048_floor_qubit_hours = 22425149 := by native_decide
+theorem rsa2048_floor_value : rsa2048_floor_qubit_hours = 22425149 := by decide
 
 /-- **The paper sits between 7× and 8× above the floor; the naive baseline between 3773× and 3774×.**
     Comparison inputs: paper spacetime = `20 000 000` qubits × `8` h (the GE2021 headline); naive
@@ -183,6 +185,6 @@ theorem rsa2048_floor_gaps :
     ∧ 20000000 * 8 ≤ 8 * rsa2048_floor_qubit_hours
     ∧ 3773 * rsa2048_floor_qubit_hours ≤ 9636357 * 8782
     ∧ 9636357 * 8782 ≤ 3774 * rsa2048_floor_qubit_hours := by
-  refine ⟨by native_decide, by native_decide, by native_decide, by native_decide⟩
+  refine ⟨by decide, by decide, by decide, by decide⟩
 
 end FormalRV.System.ScheduleLowerBound

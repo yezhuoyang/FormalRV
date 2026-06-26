@@ -50,6 +50,8 @@ import FormalRV.System.Params.RSA2048
 import FormalRV.System.Magic.MagicScheduleComplete
 import FormalRV.PPM.Resource.CircuitToPPMResource
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.Compose.VerifiedWorkloadBridge
 
 open FormalRV.Framework
@@ -102,7 +104,7 @@ theorem magicBudget_is_paper_formula :
     the System's provisioning budget is a verified upper bound on the actual composed circuit's
     Toffoli count, so any provisioning sized for `magicBudget` covers the verified circuit. -/
 theorem verifiedToffoli_le_magicBudget :
-    verifiedToffoli ≤ FormalRV.System.RSA2048.magicBudget := by native_decide
+    verifiedToffoli ≤ FormalRV.System.RSA2048.magicBudget := by decide
 
 /-- The composed circuit's Toffoli count, for any `W`/`T`, is within the System magic budget. -/
 theorem composed_circuit_within_budget (W : Nat) (T : Nat → Nat) :
@@ -130,12 +132,12 @@ def verifiedFactoriesNeeded : Nat :=
   FormalRV.System.MagicStateReadiness.factoriesNeeded verifiedToffoli 28800000000 ccz_spec_qianxu
 
 /-- The composed-circuit-tight factory count is `1075` (vs the paper-budget `1093`). -/
-theorem verifiedFactoriesNeeded_value : verifiedFactoriesNeeded = 1075 := by native_decide
+theorem verifiedFactoriesNeeded_value : verifiedFactoriesNeeded = 1075 := by decide
 
 /-- The tight provisioning fits inside the provisioned `1093` factories
     (`Params/RSA2048.factoriesNeeded`): the device as built covers the verified circuit. -/
 theorem verifiedFactories_le_provisioned :
-    verifiedFactoriesNeeded ≤ FormalRV.System.RSA2048.factoriesNeeded := by native_decide
+    verifiedFactoriesNeeded ≤ FormalRV.System.RSA2048.factoriesNeeded := by decide
 
 /-! ## §4. Seam 3 — the circuit's count drives the depth; the magic hypothesis is DISCHARGED. -/
 
@@ -144,7 +146,7 @@ theorem verifiedFactories_le_provisioned :
 def reactionLimitedDepthUs : Nat := verifiedToffoli * FormalRV.System.RSA2048.reactionUs
 
 /-- The depth in µs: `2 578 993 152 · 10 = 25 789 931 520 µs ≈ 7.16 h`. -/
-theorem reactionLimitedDepthUs_value : reactionLimitedDepthUs = 25789931520 := by native_decide
+theorem reactionLimitedDepthUs_value : reactionLimitedDepthUs = 25789931520 := by decide
 
 /-- **★ Seam 3 closed ★** — at the REAL factory count `F = 1093`, the circuit-derived depth
     is below the magic-supply pipeline (`12015 + ⌈K/1093⌉·12000`).  This is the hypothesis the
@@ -152,7 +154,7 @@ theorem reactionLimitedDepthUs_value : reactionLimitedDepthUs = 25789931520 := b
 theorem depth_below_magic_pipeline :
     reactionLimitedDepthUs ≤
       deliveryLatency ccz_spec_qianxu 15
-        + magicSupplyTimeUs verifiedToffoli 1093 ccz_spec_qianxu := by native_decide
+        + magicSupplyTimeUs verifiedToffoli 1093 ccz_spec_qianxu := by decide
 
 /-- **★ The concrete whole-circuit runtime ★**, at the real `F = 1093` factories and the
     circuit-derived depth — NO free `logicalDepthUs`, NO undischarged hypothesis.  The runtime
