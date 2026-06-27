@@ -40,6 +40,8 @@
 import FormalRV.System.Examples.ParallelismVerification
 import FormalRV.QEC.FrontendAlgebraic
 import FormalRV.QEC.LatticeSurgery.SurfaceShorResourceCount
+
+set_option maxRecDepth 8000
 namespace FormalRV.System.SurfaceSystemCompile
 
 open FormalRV.Framework.Resource

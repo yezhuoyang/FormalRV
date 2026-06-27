@@ -1,0 +1,194 @@
+% Figure 1: combined comparison between manual resource estimates and FormalRV.
+% Import with: \resizebox{\linewidth}{!}{\input{docs/tikz/formalrv_meeting_figures/fig1_abstract_gap.tikz}}
+\begin{tikzpicture}[
+  x=1cm,y=1cm,font=\sffamily,
+  columnPanel/.style={frvPanel, minimum width=6.90cm, minimum height=9.30cm},
+  headerBox/.style={draw=frvGrid, fill=white, line width=0.55pt, rounded corners=3pt,
+    minimum width=6.32cm, minimum height=1.16cm, inner sep=2pt},
+  rowBox/.style={draw=frvGrid, fill=white, line width=0.62pt, rounded corners=3pt,
+    minimum width=6.32cm, minimum height=1.18cm, inner sep=2pt, align=left},
+  bridgeBox/.style={draw=frvMuted!70, fill=frvGray!86, line width=0.58pt,
+    rounded corners=2pt, font=\sffamily\tiny, text=frvInk, align=center,
+    text width=1.74cm, minimum width=1.92cm, minimum height=0.92cm,
+    inner sep=1.2pt},
+  cellText/.style={font=\sffamily\scriptsize, text=frvInk, align=left},
+  smallLine/.style={font=\sffamily\tiny, text=frvMuted, align=left},
+  gapReason/.style={draw=frvRed!70, fill=white, line width=0.48pt,
+    rounded corners=1.6pt, font=\sffamily\fontsize{5.3}{5.7}\selectfont,
+    text=frvRed, align=center, text width=1.52cm,
+    minimum height=0.30cm, inner xsep=1.0pt, inner ysep=0.8pt},
+  noGapReason/.style={draw=frvGreen!72, fill=white, line width=0.48pt,
+    rounded corners=1.6pt, font=\sffamily\fontsize{5.3}{5.7}\selectfont,
+    text=frvGreen, align=center, text width=1.52cm,
+    minimum height=0.30cm, inner xsep=1.0pt, inner ysep=0.8pt},
+  gapTag/.style={draw=frvRed, fill=frvRed, rounded corners=1pt,
+    font=\sffamily\bfseries\fontsize{4.6}{4.8}\selectfont, text=white,
+    inner xsep=1.8pt, inner ysep=0.4pt},
+  noGapTag/.style={draw=frvGreen, fill=frvGreen, rounded corners=1pt,
+    font=\sffamily\bfseries\fontsize{4.6}{4.8}\selectfont, text=white,
+    inner xsep=1.8pt, inner ysep=0.4pt}
+]
+  \node[frvTitle] at (8.6,10.25)
+    {Manual estimates vs. machine-checked FormalRV};
+  \node[frvNote] at (8.6,9.83)
+    {Formal semantics and system constraints are verified before resource bounds are claimed.};
+
+  \node[columnPanel, fill=frvRedLight!32] at (4.12,4.70) {};
+  \node[columnPanel, fill=frvGreenLight!40] at (13.08,4.70) {};
+
+  % Column headers with compact cartoon assets.
+  \node[headerBox, draw=frvRed!55, fill=white] (manualHeader) at (4.12,8.95) {};
+  \node[inner sep=0pt, anchor=west] at (1.06,8.95)
+    {\includegraphics[width=1.42cm,height=0.74cm,keepaspectratio]{assets/manual_check.png}};
+  \node[font=\sffamily\bfseries\scriptsize, text=frvRed, anchor=west, align=left,
+    text width=4.28cm] at (2.66,9.15)
+    {Manual resource estimation};
+  \node[smallLine, anchor=west, text width=4.25cm] at (2.66,8.84)
+    {Manually checked by human review.};
+
+  \node[headerBox, draw=frvGreen!65, fill=white] (machineHeader) at (13.08,8.95) {};
+  \node[inner sep=0pt, anchor=west] at (10.12,8.95)
+    {\includegraphics[width=1.12cm,height=0.92cm,keepaspectratio]{assets/machine_check.png}};
+  \node[font=\sffamily\bfseries\scriptsize, text=frvGreen, anchor=west, align=left,
+    text width=4.30cm] at (11.44,9.15)
+    {Formal resource verification};
+  \node[smallLine, anchor=west, text width=4.30cm] at (11.44,8.84)
+    {Machine checked by Lean proofs and VM contracts.};
+
+  % Downward process arrows in the two side gutters.
+  \draw[-{Stealth[length=4.2mm,width=3.6mm]}, draw=frvRed!72, line width=1.65pt,
+    dash pattern=on 5pt off 3.2pt, line cap=round]
+    (7.38,8.15) -- (7.38,0.84);
+  \node[fill=white, inner sep=1.7pt, rotate=90,
+    font=\sffamily\bfseries\fontsize{8.1}{8.5}\selectfont, text=frvRed!88]
+    at (7.38,4.50) {Manual / partial / incomplete};
+  \draw[-{Stealth[length=4.2mm,width=3.6mm]}, draw=frvGreen!78, line width=1.65pt]
+    (9.82,8.15) -- (9.82,0.84);
+  \node[fill=white, inner sep=1.7pt, rotate=90,
+    font=\sffamily\bfseries\fontsize{8.1}{8.5}\selectfont, text=frvGreen!88]
+    at (9.82,4.50) {Automatic / verified / complete};
+
+  % Center bridge: a compact compilation pipeline between the two comparison
+  % columns.  The bottom row makes the final trust claim explicit.
+  \node[frvPanel, fill=frvGray!55, draw=frvGrid, minimum width=2.26cm,
+    minimum height=8.06cm] at (8.6,4.42) {};
+  \node[font=\sffamily\bfseries\tiny, text=frvMuted, fill=white, inner sep=1pt]
+    at (8.6,8.35) {compilation bridge};
+  \draw[-{Stealth[length=2.0mm,width=1.6mm]}, draw=frvMuted, line width=0.75pt]
+    (8.6,8.12) -- (8.6,0.74);
+
+  \node[bridgeBox] at (8.6,7.70)
+    {{\bfseries Arithmetic}\\[-1pt]Cuccaro adder\\[-1pt]Coset arithmetic};
+  \node[bridgeBox] at (8.6,6.10)
+    {{\bfseries PPR/PPM}\\[-1pt]rotations\\[-1pt]measurements\\[-1pt]frames};
+  \node[bridgeBox] at (8.6,4.50)
+    {{\bfseries QEC}\\[-1pt]Surface code\\[-1pt]LP code};
+  \node[bridgeBox] at (8.6,2.90)
+    {{\bfseries System}\\[-1pt]finite services\\[-1pt]zone design\\[-1pt]route / decode};
+  \node[bridgeBox] at (8.6,1.30)
+    {{\bfseries Hardware}\\[-1pt]trapped ion\\[-1pt]neutral atom\\[-1pt]superconducting\\[-1pt]qubits};
+
+  % Arithmetic and algorithm semantics.
+  \node[rowBox, draw=frvRed!58, fill=frvRedLight!48] (oldSem) at (4.12,7.70) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (1.48,7.99)
+    {{\bfseries Algorithmic gadgets correctness}\\[-1pt]
+    {\tiny Gadget extrapolation and manual proof review.}};
+  \node[rowBox, draw=frvGreen!65, fill=frvGreenLight!55] (newSem) at (13.08,7.70) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (10.60,7.99)
+    {{\bfseries Full semantic Correctness}\\[-1pt]
+    {\tiny Full Shor semantics checked by the Lean kernel.}};
+
+  % Pauli-product rotations, PPM lowering, and frame updates.
+  \node[rowBox, draw=frvRed!58, fill=frvRedLight!48] (oldComp) at (4.12,6.10) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (1.48,6.39)
+    {{\bfseries Manual PPR/PPM lowering}\\[-1pt]
+    {\tiny Rotations, measurements, and frames audited by hand.}};
+  \node[rowBox, draw=frvGreen!65, fill=frvGreenLight!55] (newComp) at (13.08,6.10) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (10.60,6.39)
+    {{\bfseries Verified PPR/PPM contracts}\\[-1pt]
+    {\tiny Magic, measurement, and frame obligations checked.}};
+
+  % QEC and surgery mapping.
+  \node[rowBox, draw=frvRed!58, fill=frvRedLight!48] (oldQec) at (4.12,4.50) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (1.48,4.79)
+    {{\bfseries Informal QEC/surgery mapping}\\[-1pt]
+    {\tiny Code mappings and extraction costs remain implicit.}};
+  \node[rowBox, draw=frvGreen!65, fill=frvGreenLight!55] (newQec) at (13.08,4.50) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (10.60,4.79)
+    {{\bfseries Formal QEC/surgery abstraction}\\[-1pt]
+    {\tiny Logical measurement resources are explicit.}};
+
+  % System layer: finite hardware services and scheduling constraints.
+  \node[rowBox, draw=frvRed!58, fill=frvRedLight!48] (oldSys) at (4.12,2.90) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (1.48,3.19)
+    {{\bfseries Idealized system layer}\\[-1pt]
+    {\tiny Finite services are ignored or approximated.}};
+  \node[rowBox, draw=frvGreen!65, fill=frvGreenLight!55] (newSys) at (13.08,2.90) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (10.60,3.19)
+    {{\bfseries System VM with finite services}\\[-1pt]
+    {\tiny Queues, bandwidth, and contention are checked.}};
+
+  % Final resource conclusion.
+  \node[rowBox, draw=frvRed!58, fill=frvRedLight!48] (oldRes) at (4.12,1.30) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (1.48,1.59)
+    {{\bfseries Hardware execution conclusion}\\[-1pt]
+    {\tiny Estimate may hide under-counted system resources.}};
+  \node[rowBox, draw=frvGreen!65, fill=frvGreenLight!55] (newRes) at (13.08,1.30) {};
+  \node[cellText, anchor=west, text width=5.42cm] at (10.60,1.59)
+    {{\bfseries Trusted Hardware execution conclusion}\\[-1pt]
+    {\tiny Certified resource bound after end-to-end verification.}};
+
+  % Per-row manual/machine indicators.
+  \foreach \y in {7.70,6.10,4.50,2.90,1.30} {
+    \node[circle, draw=frvRed, fill=white, line width=0.72pt, minimum size=0.36cm, inner sep=0pt] at (1.16,\y+0.07) {};
+    \draw[frvRed,line width=0.95pt] (1.05,\y-0.04) -- (1.27,\y+0.18);
+    \draw[frvRed,line width=0.95pt] (1.05,\y+0.18) -- (1.27,\y-0.04);
+    \node[circle, draw=frvGreen, fill=white, line width=0.72pt, minimum size=0.36cm, inner sep=0pt] at (10.28,\y+0.07) {};
+    \draw[frvGreen,line width=0.95pt] (10.16,\y+0.06) -- (10.24,\y-0.03) -- (10.42,\y+0.19);
+  }
+
+  % Gap taxonomy: reasons inside small boxes, with attached Gap/No Gap tags.
+  \node[gapReason, text width=3.40cm] (gSem) at (3.84,7.36) {full Shor semantics};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gSem.north west) {Gap};
+  \node[noGapReason, text width=3.50cm] (nSem) at (12.98,7.36) {kernel-checked semantics};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nSem.north west) {No Gap};
+
+  \node[gapReason] (gAnc) at (2.85,5.76) {ancilla qubit cost};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gAnc.north west) {Gap};
+  \node[gapReason] (gFrame) at (4.70,5.76) {frame adaptivity};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gFrame.north west) {Gap};
+  \node[noGapReason] (nAnc) at (11.45,5.76) {ancilla counted};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nAnc.north west) {No Gap};
+  \node[noGapReason] (nFrame) at (13.25,5.76) {frame checked};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nFrame.north west) {No Gap};
+
+  \node[gapReason] (gQec) at (2.85,4.16) {wrong QEC comp.};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gQec.north west) {Gap};
+  \node[gapReason] (gExt) at (4.70,4.16) {extraction rounds};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gExt.north west) {Gap};
+  \node[noGapReason] (nQec) at (11.45,4.16) {QEC contract};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nQec.north west) {No Gap};
+  \node[noGapReason] (nExt) at (13.25,4.16) {extraction cost};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nExt.north west) {No Gap};
+
+  \node[gapReason, text width=1.28cm] (gRoute) at (2.55,2.56) {qubit routing};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gRoute.north west) {Gap};
+  \node[gapReason, text width=1.48cm] (gSyn) at (4.18,2.56) {syndrome data tx};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gSyn.north west) {Gap};
+  \node[gapReason, text width=1.30cm] (gDec) at (5.92,2.56) {finite decoder};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gDec.north west) {Gap};
+  \node[noGapReason, text width=1.34cm] (nRoute) at (11.25,2.56) {routed schedule};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nRoute.north west) {No Gap};
+  \node[noGapReason, text width=1.50cm] (nSyn) at (13.02,2.56) {syndrome bandwidth};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nSyn.north west) {No Gap};
+  \node[noGapReason, text width=1.34cm] (nDec) at (14.86,2.56) {decoder queue};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nDec.north west) {No Gap};
+
+  \node[gapReason, text width=3.40cm] (gRes) at (3.84,0.96) {resource under-estimate};
+  \node[gapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]gRes.north west) {Gap};
+  \node[noGapReason, text width=3.50cm] (nRes) at (12.98,0.96) {checked resource certificate};
+  \node[noGapTag, anchor=south west] at ([xshift=0.02cm,yshift=-0.02cm]nRes.north west) {No Gap};
+
+  \node[frvNote, text width=15.0cm] at (8.6,0.18)
+    {2048-bit RSA can be broken on superconducting qubits with 1 million qubits in 1 week (Gidney 2025, arXiv:2505.15917).};
+\end{tikzpicture}

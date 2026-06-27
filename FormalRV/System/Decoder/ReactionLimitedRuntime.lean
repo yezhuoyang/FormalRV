@@ -28,6 +28,8 @@
 import FormalRV.Shor.Resource.ShorFullMachineRequirement
 import FormalRV.System.Params.RSA2048
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ReactionLimitedRuntime
 
 /-! ## §1. The two cost models, side by side (tenths-of-µs) -/

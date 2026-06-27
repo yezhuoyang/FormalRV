@@ -21,6 +21,8 @@
 
 import FormalRV.System.Invariants.InvariantFramework
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.ResourceAuditGaps
 
 open FormalRV.System.InvariantFramework

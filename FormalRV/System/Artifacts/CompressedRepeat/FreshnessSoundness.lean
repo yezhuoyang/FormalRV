@@ -22,6 +22,8 @@
 import FormalRV.System.Artifacts.LayeredArtifactInterface
 import FormalRV.System.Artifacts.CompressedRepeat.ShiftInvariance
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.CompressedRepeatSoundness
 
 open FormalRV.Framework

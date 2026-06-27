@@ -275,7 +275,7 @@ theorem compile_basic_ppm_all_invariants_ok :
         ge2021_ppm_arch
         (compileSurgeryGadgetToSysCalls ge2021_basic_ppm_gadget_spec)
         10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ## §4. Existence theorem: compiled stream → strengthened cert -/
 
@@ -367,7 +367,7 @@ def surgery_ppm_B_alias : SchedulableSurgeryGadget :=
 theorem surgery_ppm_A_all_invariants_ok :
     all_invariants_with_factory_ports_ok ge2021_ppm_arch
         (compileSurgeryGadgetToSysCalls surgery_ppm_A) 10 1000 1000 = true := by
-  native_decide
+  decide
 
 theorem surgery_good_cert_exists :
     ∃ cert : PPMScheduleCertWithFactoryPorts,
@@ -414,7 +414,7 @@ def surgery_pair_parallel_alias_syscalls : List SysCall :=
 theorem surgery_pair_parallel_alias_rejected :
     validateScheduleWithFactoryPorts
         surgery_arch surgery_pair_parallel_alias_syscalls 10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-! ### §6.b Parallel-distinct ACCEPTED -/
 
@@ -426,7 +426,7 @@ def surgery_pair_parallel_distinct_syscalls : List SysCall :=
 theorem surgery_pair_parallel_distinct_all_invariants_ok :
     all_invariants_with_factory_ports_ok surgery_arch
         surgery_pair_parallel_distinct_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 theorem surgery_pair_parallel_distinct_cert_exists :
     ∃ cert : PPMScheduleCertWithFactoryPorts,
@@ -453,7 +453,7 @@ def surgery_triple_sequential_syscalls : List SysCall :=
 theorem surgery_triple_sequential_all_invariants_ok :
     all_invariants_with_factory_ports_ok surgery_arch
         surgery_triple_sequential_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 theorem surgery_triple_sequential_cert_exists :
     ∃ cert : PPMScheduleCertWithFactoryPorts,
@@ -484,10 +484,11 @@ theorem surgery_triple_wallclock_is_derived :
 /-- Concrete wallclock values for the good gadget and triple. -/
 theorem surgery_good_wallclock_value :
     scheduleWallclockUs (compileSurgeryGadgetToSysCalls surgery_ppm_A) = 16 := by
-  native_decide
+  decide
 
+set_option maxRecDepth 4000 in
 theorem surgery_triple_wallclock_value :
-    scheduleWallclockUs surgery_triple_sequential_syscalls = 48 := by native_decide
+    scheduleWallclockUs surgery_triple_sequential_syscalls = 48 := by decide
   -- 3 sequential gadgets, each wallclock 16 µs, no overlap.
 
 /-! ## §9. Topology-aware compiler
@@ -702,7 +703,7 @@ def topology_demo_gadget : SurgeryGadget :=
     on the small finite structure. -/
 theorem topology_demo_gadget_verifies :
     SurgeryGadget.verify_surgery_gadget topology_demo_gadget = true := by
-  native_decide
+  decide
 
 /-- The demo schedulable wrapper: data sites 0/1, ancilla sites
     100/101, start at t=0, decoder base 0. -/
@@ -730,7 +731,7 @@ theorem topology_demo_round_length :
     2 rounds × 6 per-round = 12, plus 1 PauliFrameUpdate. -/
 theorem topology_demo_total_syscalls :
     (compileTopologySurgeryToSysCalls topology_demo).length = 13 := by
-  native_decide
+  decide
 
 /-- The topology-compiled demo stream passes the strengthened
     system-layer invariant bundle on the larger surgery
@@ -738,7 +739,7 @@ theorem topology_demo_total_syscalls :
 theorem topology_demo_all_invariants_with_factory_ports_ok :
     all_invariants_with_factory_ports_ok surgery_arch
         (compileTopologySurgeryToSysCalls topology_demo) 10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-- Existence of a strengthened cert for the topology-compiled
     demo schedule. -/
@@ -761,7 +762,7 @@ theorem topology_demo_wallclock_is_derived :
 /-- Concrete wallclock value: 6 µs × 2 rounds + 1 µs PauliFrameUpdate = 13. -/
 theorem topology_demo_wallclock_value :
     scheduleWallclockUs (compileTopologySurgeryToSysCalls topology_demo) = 13 := by
-  native_decide
+  decide
 
 /-! ## §11. Combined qLDPC + system-invariant verifier
 
@@ -795,7 +796,7 @@ def verify_surgery_gadget_with_schedule
 theorem topology_demo_combined_verifies :
     verify_surgery_gadget_with_schedule
       topology_demo surgery_arch 10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ## §12. Parallel-aliasing rejection at the topology layer -/
 
@@ -821,7 +822,7 @@ def topology_pair_alias_syscalls : List SysCall :=
 theorem topology_pair_alias_rejected :
     validateScheduleWithFactoryPorts
         surgery_arch topology_pair_alias_syscalls 10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-- A topology-schedulable gadget with DISTINCT ancilla sites
     from `topology_demo`: parallel composition is admissible. -/
@@ -840,7 +841,7 @@ def topology_pair_distinct_syscalls : List SysCall :=
 theorem topology_pair_distinct_all_invariants_ok :
     all_invariants_with_factory_ports_ok surgery_arch
         topology_pair_distinct_syscalls 10 1000 1000 = true := by
-  native_decide
+  decide
 
 theorem topology_pair_distinct_cert_exists :
     ∃ cert : PPMScheduleCertWithFactoryPorts,
@@ -1112,7 +1113,7 @@ theorem topology_steane_x_combined_verifies :
       topology_steane_x topology_demo_arch
       topology_demo_t_react_us topology_demo_window_us
       topology_demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-- **Corpus instantiation of the bundled contract theorem.** -/
 theorem topology_steane_x_sound :
@@ -1160,6 +1161,6 @@ theorem topology_alias_pair_system_not_ok :
         topology_demo_arch topology_pair_alias_syscalls
         topology_demo_t_react_us topology_demo_window_us
         topology_demo_max_per_window = false := by
-  native_decide
+  decide
 
 end FormalRV.System.SurgeryGadgetToSysCalls

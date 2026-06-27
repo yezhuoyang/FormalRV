@@ -41,6 +41,8 @@ import FormalRV.System.Magic.MagicScheduleComplete
 import FormalRV.Audit.GidneyEkera2021.L4_Code
 import FormalRV.Verifier
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.Audit.GidneyEkera2021
 
 open FormalRV.Framework
@@ -291,7 +293,7 @@ theorem ge2021_arch_cycle_matches_hw :
     decidable contract; this validates the pattern at the paper hardware parameters.) -/
 theorem windowed_magic_schedule_invariants_ge2021 :
     all_invariants_ok ge2021_arch (factoryRequestSchedule 0 2 16) 1000 1000 (fun _ => 0) = true := by
-  native_decide
+  decide
 
 /-============================================================================
   PART D — End-to-end DEVICE schedule (the five "tricky" concerns)
@@ -324,7 +326,7 @@ def shorFragment : DSchedule :=
 /-- **★ The Shor fragment is a VALID device schedule ★** — all five concerns hold at once:
     space-time conflict-freedom, the produce→teleport WAIT, capacity, the decoder queue, and the
     reaction bound. -/
-theorem shorFragment_valid : scheduleValid dev shorFragment = true := by native_decide
+theorem shorFragment_valid : scheduleValid dev shorFragment = true := by decide
 
 /-! ## §D.2. Parallelism is genuinely exercised (not serialized). -/
 
@@ -334,32 +336,32 @@ theorem shorFragment_valid : scheduleValid dev shorFragment = true := by native_
 theorem shorFragment_parallel :
     (opsTimeOverlap shorFragment[0]! shorFragment[1]! = true)        -- preps overlap in time
     ∧ (opsTimeOverlap shorFragment[2]! shorFragment[3]! = true)      -- teleports overlap in time
-    ∧ conflictFree shorFragment = true := by native_decide
+    ∧ conflictFree shorFragment = true := by decide
 
 /-! ## §D.3. Each of the five concerns is REJECTED when violated. -/
 
 /-- (2) Teleporting before the magic is ready (`begin_t = 5 < 12`) violates the WAIT (deps). -/
 theorem reject_consume_before_ready :
     scheduleValid dev
-      (shorFragment.set 2 { shorFragment[2]! with begin_t := 5 }) = false := by native_decide
+      (shorFragment.set 2 { shorFragment[2]! with begin_t := 5 }) = false := by decide
 
 /-- (4) Routing the second teleport through ancilla `10` (already used by the first) creates a
     space-time conflict and is rejected. -/
 theorem reject_overlapping_ancilla :
     scheduleValid dev
       (shorFragment.set 3 { shorFragment[3]! with footprint := [2, 102, 10] }) = false := by
-  native_decide
+  decide
 
 /-- (3) A second decoder pass overlapping the first exceeds the single-decoder queue. -/
 theorem reject_decoder_oversubscribed :
     scheduleValid dev
       (shorFragment ++ [{ id := 6, kind := OpKind.decode, footprint := [21],
-                          begin_t := 39, dur_t := 1, deps := [3, 4] }]) = false := by native_decide
+                          begin_t := 39, dur_t := 1, deps := [3, 4] }]) = false := by decide
 
 /-- (3) A decode taking longer than the reaction bound (`dur_t = 5 > 2`) is rejected. -/
 theorem reject_reaction_exceeded :
     scheduleValid dev
-      (shorFragment.set 4 { shorFragment[4]! with dur_t := 5 }) = false := by native_decide
+      (shorFragment.set 4 { shorFragment[4]! with dur_t := 5 }) = false := by decide
 
 /-! ## §D.4. Surface-code placement invariant: no physical qubit moves. -/
 
@@ -369,7 +371,7 @@ theorem reject_reaction_exceeded :
 theorem shorFragment_preserves_placement (p0 : Placement) :
     evolvePlacement shorFragment p0 = p0 := by
   apply evolvePlacement_static
-  native_decide
+  decide
 
 /-! ## §D.5. Connection to the verified Gidney–Ekerå resource numbers. -/
 
@@ -378,7 +380,7 @@ def magicOpCount (sched : DSchedule) : Nat :=
   (sched.filter (fun o => match o.kind with | OpKind.prepMagic => true | _ => false)).length
 
 /-- The fragment prepares 2 magic states (one per teleport). -/
-theorem shorFragment_magicOpCount : magicOpCount shorFragment = 2 := by native_decide
+theorem shorFragment_magicOpCount : magicOpCount shorFragment = 2 := by decide
 
 /-- **The fragment scales to the full RSA-2048 computation.**  A full windowed-Shor device schedule
     repeats this prepare→teleport→decode pattern once per Toffoli, so its magic-op count is the

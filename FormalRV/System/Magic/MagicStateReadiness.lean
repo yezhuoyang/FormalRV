@@ -22,6 +22,8 @@
 -/
 import FormalRV.System.Core.Architecture
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.MagicStateReadiness
 
 open FormalRV.System.Architecture
@@ -87,13 +89,13 @@ def ccz_delivery_demo : Schedule := magicDelivery 3 1 100 0 ccz_spec_qianxu 15
 
 /-- **WAIT, demonstrated.**  A consumer that wants the CCZ at `t = 5000 µs` finds it NOT ready —
     production alone takes 12000 µs.  The circuit must stall. -/
-theorem ccz_not_ready_at_5000 : magicReadyAt ccz_delivery_demo 5000 = false := by native_decide
+theorem ccz_not_ready_at_5000 : magicReadyAt ccz_delivery_demo 5000 = false := by decide
 
 /-- It is still not ready one tick before the full delivery latency … -/
-theorem ccz_not_ready_at_12014 : magicReadyAt ccz_delivery_demo 12014 = false := by native_decide
+theorem ccz_not_ready_at_12014 : magicReadyAt ccz_delivery_demo 12014 = false := by decide
 
 /-- … and becomes ready exactly at `12015 µs` (12000 production + 15 routing). -/
-theorem ccz_ready_at_12015 : magicReadyAt ccz_delivery_demo 12015 = true := by native_decide
+theorem ccz_ready_at_12015 : magicReadyAt ccz_delivery_demo 12015 = true := by decide
 
 /-! ## §4. Factory qubit footprint. -/
 
@@ -106,13 +108,13 @@ def footprintFits (n cap : Nat) (spec : MagicStateSpec) : Bool :=
   decide (factoryFootprint n spec ≤ cap)
 
 /-- One CCZ production occupies 2565 physical qubits. -/
-theorem ccz_footprint_one : factoryFootprint 1 ccz_spec_qianxu = 2565 := by native_decide
+theorem ccz_footprint_one : factoryFootprint 1 ccz_spec_qianxu = 2565 := by decide
 
 /-- **Footprint over-subscription, demonstrated.**  Three concurrent CCZ productions need 7695
     qubits and do NOT fit a 5000-qubit Factory zone; one does. -/
 theorem ccz_footprint_oversubscription :
     footprintFits 1 5000 ccz_spec_qianxu = true
-    ∧ footprintFits 3 5000 ccz_spec_qianxu = false := by native_decide
+    ∧ footprintFits 3 5000 ccz_spec_qianxu = false := by decide
 
 /-! ## §5. Throughput → factory count → factory qubit share (the magic bottleneck).
 
@@ -141,6 +143,6 @@ def factoryQubitShare (K budgetUs : Nat) (spec : MagicStateSpec) : Nat :=
     qubit share for the 8-hour budget (1093 factories, 2 803 545 qubits) are pinned in
     `Magic/MagicScheduleComplete` (`rsa2048_factories_value`, `rsa2048_factory_qubits_value`). -/
 theorem windowed_single_factory_is_magic_limited :
-    8 * 3600000000 < magicSupplyTimeUs 2622824448 1 ccz_spec_qianxu := by native_decide
+    8 * 3600000000 < magicSupplyTimeUs 2622824448 1 ccz_spec_qianxu := by decide
 
 end FormalRV.System.MagicStateReadiness

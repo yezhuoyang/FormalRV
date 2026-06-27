@@ -31,6 +31,8 @@ import FormalRV.Shor.WindowedShorConnection
 import FormalRV.PPM.QECBridge.CircuitToPPMFactoryProvision
 import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.Shor.WindowedShorPPMFactoryE2E
 
 open FormalRV.Framework
@@ -156,6 +158,6 @@ theorem windowed_factory_requests_all_magic
     one request per window.  So the windowed circuit's magic demand schedules feasibly on the
     surface-code factory, end of chain. -/
 theorem windowed_magic_requests_pass_surgery_throughput :
-    window_throughput_ok (factoryRequestSchedule 3 2 8) 2 1 = true := by native_decide
+    window_throughput_ok (factoryRequestSchedule 3 2 8) 2 1 = true := by decide
 
 end FormalRV.Shor.WindowedShorPPMFactoryE2E

@@ -9,3 +9,11 @@ version = "git#v4.29.1"
 
 [[lean_lib]]
 name = "FormalRV"
+# MEMORY SAFETY (machine: 64 GB; crashed twice from Lean OOM). Two independent caps:
+#  (1) per-process: each `lean` worker ABORTS (clean build error, not a crash) at 8 GB. Normal
+#      (split) files use ~1-2 GB; this catches runaways and flags files that need splitting.
+#  (2) parallelism: ALWAYS build with `lake build -j 1 …`. `lake` otherwise spawns ~#cores (12)
+#      `lean` PROCESSES at once; 12 × multi-GB = OOM regardless of -M or LEAN_NUM_THREADS (which
+#      only caps threads WITHIN a process, not the process count). With `-j 1` the peak is one
+#      process ≤ 8 GB. NEVER run `lake build` without `-j 1` (or at most `-j 2`) on this machine.
+moreLeanArgs = ["-M", "8000"]

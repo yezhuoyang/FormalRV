@@ -1,0 +1,71 @@
+% Figure 4: mapping FT-VM system calls onto concrete hardware backends.
+\begin{tikzpicture}[x=1cm,y=1cm,font=\sffamily]
+  \node[frvTitle] at (8.0,7.70)
+    {Grounding system calls in physical execution backends};
+  \node[frvNote] at (8.0,7.30)
+    {The same verified schedule is checked against backend contracts for movement, routing, factories, decoders, and finite parallelism.};
+
+  \node[frvPurpleBox, text width=13.20cm, minimum height=0.78cm] (dp) at (8.0,6.45)
+    {\texttt{DEVICE-PROGRAM}: timed SysCalls \quad
+     \texttt{gate2q}, \texttt{measure}, \texttt{request\_magic}, \texttt{route\_qubit}, \texttt{decode}, \texttt{frame\_update}};
+
+  \node[frvPanel, minimum width=14.70cm, minimum height=0.98cm, fill=frvGray!65] at (8.0,5.40) {};
+  \node[frvSmallBox, text width=2.40cm, fill=white] (b1) at (1.75,5.40) {gate table\\[-1pt]\scriptsize duration, arity};
+  \node[frvSmallBox, text width=2.40cm, fill=white] (b2) at (4.45,5.40) {routing contract\\[-1pt]\scriptsize channels, swaps};
+  \node[frvSmallBox, text width=2.40cm, fill=white] (b3) at (7.15,5.40) {factory contract\\[-1pt]\scriptsize tokens, ports};
+  \node[frvSmallBox, text width=2.40cm, fill=white] (b4) at (9.85,5.40) {decoder service\\[-1pt]\scriptsize workers, queues};
+  \node[frvSmallBox, text width=2.40cm, fill=white] (b5) at (12.55,5.40) {syndrome link\\[-1pt]\scriptsize bandwidth};
+  \node[frvSmallBox, text width=1.58cm, fill=white] (b6) at (14.75,5.40) {caps\\[-1pt]\scriptsize parallel};
+  \draw[frvSoftArrow] (dp.south) -- (8.0,5.90);
+
+  \node[frvPanel, minimum width=7.35cm, minimum height=4.02cm, fill=frvGreenLight!38]
+    at (4.05,2.88) {};
+  \node[frvPanel, minimum width=7.35cm, minimum height=4.02cm, fill=frvBlueLight!42]
+    at (11.95,2.88) {};
+
+  \node[frvSubTitle, text=frvGreen] at (4.05,4.52)
+    {Neutral-atom backend};
+  \node[frvSubTitle, text=frvBlue] at (11.95,4.52)
+    {Planar/superconducting backend};
+
+  % Neutral atom zones
+  \node[frvSmallBox, text width=1.55cm, minimum height=0.72cm, fill=white] (mem)
+    at (1.65,3.75) {Memory\\zone};
+  \node[frvSmallBox, text width=1.75cm, minimum height=0.72cm, fill=white] (proc)
+    at (4.05,3.75) {Processor\\zone};
+  \node[frvSmallBox, text width=1.55cm, minimum height=0.72cm, fill=white] (anc)
+    at (6.30,3.75) {Ancilla\\supply};
+  \node[frvSmallBox, text width=1.55cm, minimum height=0.72cm, fill=white] (fac)
+    at (4.05,2.00) {Factory\\zone};
+
+  \foreach \x/\y in {1.08/3.22,1.38/3.22,1.68/3.22,1.98/3.22,2.28/3.22,
+                    1.08/2.92,1.38/2.92,1.68/2.92,1.98/2.92,2.28/2.92,
+                    3.45/3.22,3.75/3.22,4.05/3.22,4.35/3.22,4.65/3.22,
+                    3.45/2.92,3.75/2.92,4.05/2.92,4.35/2.92,4.65/2.92,
+                    5.85/3.22,6.15/3.22,6.45/3.22,6.75/3.22,
+                    3.55/1.50,3.85/1.50,4.15/1.50,4.45/1.50}
+    \fill[frvGreen] (\x,\y) circle (0.055);
+  \draw[frvArrow, draw=frvGreen] (mem) -- node[above, frvNote, yshift=1pt] {move} (proc);
+  \draw[frvArrow, draw=frvGreen] (anc) -- node[above, frvNote, yshift=1pt] {pickup} (proc);
+  \draw[frvArrow, draw=frvGreen] (fac) -- node[right, frvNote] {magic} (proc);
+  \node[frvSmallBox, text width=5.65cm, fill=white] at (4.05,0.95)
+    {Atom movement, Rydberg gates, measurement, reset, and factory-token transfer.};
+
+  % Planar backend grid
+  \draw[step=0.45cm, color=frvGrid, line width=0.45pt] (9.25,2.00) grid (14.55,3.80);
+  \foreach \x in {9.25,10.15,11.05,11.95,12.85,13.75,14.55}
+    \foreach \y in {2.00,2.90,3.80}
+      \fill[frvBlue] (\x,\y) circle (0.065);
+  \foreach \x in {9.70,10.60,11.50,12.40,13.30,14.20}
+    \foreach \y in {2.45,3.35}
+      \fill[frvPurple] (\x,\y) circle (0.055);
+  \draw[frvArrow, draw=frvBlue] (9.25,4.05) -- node[above, frvNote] {route by swaps or surgery bus} (14.55,4.05);
+  \node[frvSmallBox, text width=2.05cm, fill=white] at (9.95,1.38) {patch grid};
+  \node[frvSmallBox, text width=2.05cm, fill=white] at (12.00,1.38) {couplers};
+  \node[frvSmallBox, text width=2.05cm, fill=white] at (14.05,1.38) {readout};
+  \node[frvSmallBox, text width=5.65cm, fill=white] at (11.95,0.95)
+    {Reservations for patches, couplers, readout lines, decoder lanes, and magic ports.};
+
+  \node[frvWarnBox, text width=14.20cm, minimum height=0.82cm] at (8.0,-0.10)
+    {System-aware resource estimation asks: which calls can truly overlap on this backend, and which serialize because a real service is finite?};
+\end{tikzpicture}

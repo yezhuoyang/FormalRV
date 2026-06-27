@@ -6,7 +6,6 @@ import FormalRV.Shor.VerifiedShor.VerifiedShorTheorem
 import FormalRV.Shor.VerifiedShor.ModExpWelded
 import FormalRV.Shor.VerifiedShor.ShorSettingCircuitSizing
 import FormalRV.Shor.VerifiedShor.ShorSettingLemmas
-import FormalRV.Shor.VerifiedShor.CircuitSizingStub
 import FormalRV.Shor.VerifiedShor.CanonicalBitWidth
 import FormalRV.Shor.VerifiedShor.ModularMultiplicationGates
 import FormalRV.Shor.VerifiedShor.ShorSuccessProbabilityTheorems

@@ -6,6 +6,20 @@ Rigorous structure (semantic first, resource next); [`Verifier.lean`](Verifier.l
 `#verify_clean` on the ✅ theorems (a `sorry`/native axiom would fail the build). The 8 h / 20 M are
 demonstrated as **feasible ceilings** under the paper's own parameters — not asserted.
 
+> **The verified resource result (read this).** The Toffoli-count statement the audit stands behind
+> is the **same-object weld** `ModExpAtSameObjectWeld.ge2021_oracle_correct_AND_counted_AND_bound`:
+> for ONE syntactic gate `G` (the measured windowed modular multiplier), it proves —*on the identical
+> gate*— (1) oracle correctness `G(x) = (a^(2^i)·x) mod N`, (2) the Toffoli count
+> `2·numWin·(4w·2^w + 8bits)`, and (3) the Shor bound `≥ κ/(log₂N)⁴`. A resource number is attached
+> only to a gate whose semantics **and** success are proven.
+>
+> The paper's headline **`2.58×10⁹` / `2.7×10⁹` Toffoli figures are an *un-welded paper-reproduction*:**
+> they are the count of the *stacked* `modExpAt` term, whose only proven value is one inner
+> multiply-add block's coset value — they are **not** welded to the full-modexp value (proven on a
+> *different*, reused-register object) nor to the success bound. They reproduce the paper's accounting
+> (checked internally consistent), but are **not** a count on the verified oracle. Do not read them as
+> such.
+
 ## Settings a reader should check match the paper
 - distance d = 27; per-logical tile 2·(d+1)² = 1568; logical qubits = 6200 (Ekerå–Håstad windowed)
 - total budget 20,000,000 (Computation 9.72 M + Factory 10.28 M); cycle 1 µs; Toffoli count 2.7×10⁹
@@ -38,7 +52,8 @@ theorem) lives in `WorkloadAssembly.lean`.
 |---|---|---|
 | **20,000,000 qubits** | `ge2021_reported_qubits` (`System/NaiveUpperBound.lean`) | paper LITERAL; checked against the **verified area formula** `ge2021_naive.qubits = 19,443,200 = 6200·(2·1568) ≤ 20 M` (`ge2021_qubits_derived`, `ge2021_qubits_reproduce_reported`, [`Verifier.lean`](Verifier.lean)) |
 | **8 hours** | `ge2021_reported_time_us_tenths = 288×10⁹` tenths-µs (`System/NaiveUpperBound.lean`) | paper LITERAL; shown 2–3× UNDER the **verified** naive-sequential ceiling `2.7×10⁹ · 27 · 1 µs ≈ 20.25 h` (`ge2021_time_ceiling`, `ge2021_time_gap_2_to_3x`) — the factor is pipelining, the GAP below |
-| **2.7×10⁹ Toffolis** | `ge2021_work.n_toff` (`System/NaiveUpperBound.lean`) | paper LITERAL as input to the zone/time layers; independently, the paper's own cost **FORMULA** is verified exactly at RSA-2048: `503808·5206 = 2,622,824,448` (`WindowedCostModel.toffoliCount_rsa2048`), and a composed **CIRCUIT** realizes `2,578,993,152` with the residual exactly named (+1 rounding + runway folding = 1.67%; `WindowedComposedCost.rsa2048_head_to_head`, `rsa2048_circuit_matches_model`); the COUNTED arithmetic is value-correct — it computes `a^e mod N` on the TRUE modulus (`WorkloadAssembly.audit_modexp_value_witness` → `WindowedModExpValue.windowedModNExp_value`), and the optimal-count mod-`2^bits` multiplier is mod-N correct in the coset rep under no-wrap (`audit_optimal_count_is_modN_correct` → `WindowedCoset.windowedCosetMul_correct`) |
+| **Verified resource (the result we stand behind)** | `ModExpAtSameObjectWeld.ge2021_oracle_correct_AND_counted_AND_bound` | ✅ **SAME-OBJECT WELD**: for ONE gate `G = measWindowedModNEncodeGate` (the measured windowed mod-multiplier), all three on the IDENTICAL term — (1) oracle correctness `G(x)=(a^(2^i)·x) mod N`, (2) Toffoli count `2·numWin·(4w·2^w+8bits)`, (3) Shor bound `≥ κ/(log₂N)⁴`. The count rides a gate whose semantics **and** success are proven |
+| **2.58×10⁹ / 2.7×10⁹ Toffolis** | `ge2021_work.n_toff`; `WorkloadAssembly.audit_toffoli_realized_by_circuit` | ⚠️ **UN-WELDED PAPER-REPRODUCTION FIGURE** (NOT a count on the verified oracle). The paper's cost **FORMULA** is verified exactly (`503808·5206 = 2,622,824,448`, `WindowedCostModel.toffoliCount_rsa2048`) and the *stacked* `modExpAt` **CIRCUIT** has count `2,578,993,152` (residual `+1 rounding + runway folding = 1.67%`). HONEST SCOPE: this number is on the STACKED `modExpAt`, whose **only** proven value is one INNER multiply-add block's coset value (`ShorComposed.countOptimal_value_and_count_rsa2048`). The full modexp value `a^e mod N` is proven on a **DIFFERENT** (reused-register) object (`WindowedModExpValue.windowedModNExp_value`), and the success bound rides **yet another** gate. So `2.58×10⁹` reproduces the paper's accounting but is **not** welded to verified oracle semantics — use the SAME-OBJECT WELD row above for the verified resource |
 | **6200 logical qubits** | `ge2021_work.n_logical` / `SystemZones.ge2021_logical_qubits` | paper LITERAL (Tab. 1, Ekerå–Håstad windowed); now reconciled to a **VERIFIED circuit width** (`WorkloadAssembly.audit_qubit_count_realized_by_circuit`, axiom-free): the literal `6200 = paperWidthFigure 2048 11 (= 6189) + 11` (abstract rounding), and the reused-register windowed-modexp circuit width read off the `Gate`-IR is `6162`, with `6162 + 27 = 6189` — the `+27` is the named coset/runway padding delta (`WindowedWidthAudit.verified_vs_paper_rsa2048`, `verified_width_rsa2048`) |
 | **9,633,792 data qubits** | `MagicScheduleComplete.rsa2048_data_qubits` | reconciled to the SystemZones derivation `3n × 2(d+1)²` at d=27 (`WorkloadAssembly.audit_data_qubit_literal_eq_derived`, axiom-free) |
 | **d = 27, tile 2(d+1)² = 1568** | `ge2021_code` ([`L4_Code.lean`](L4_Code.lean)) | paper formula RECORDED; the distance-27 code itself is a real verified construction `[[1405, 1, 27]]` (`ge2021_distance_is_verified_code`, [`Verifier.lean`](Verifier.lean)), but the rotated-patch parity matrices are not constructed (L4 GAP) |

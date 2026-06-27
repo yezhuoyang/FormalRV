@@ -1,0 +1,267 @@
+% Figure 3: layered Lean workflow with an aligned 2-bit Cuccaro example trace.
+% The final theorem is reached only after the end-to-end layer contracts discharge.
+\definecolor{frv3Ink}{HTML}{1E2428}
+\definecolor{frv3Slate}{HTML}{56616D}
+\definecolor{frv3Line}{HTML}{CBD5D9}
+\definecolor{frv3Paper}{HTML}{FAFBF7}
+\definecolor{frv3Teal}{HTML}{007C89}
+\definecolor{frv3TealLight}{HTML}{E7F7F6}
+\definecolor{frv3Amber}{HTML}{B66A00}
+\definecolor{frv3AmberLight}{HTML}{FFF4DF}
+\definecolor{frv3Plum}{HTML}{7A3E8E}
+\definecolor{frv3PlumLight}{HTML}{F5EAF8}
+\definecolor{frv3Coral}{HTML}{C94A38}
+\definecolor{frv3CoralLight}{HTML}{FDEDEA}
+
+\begin{tikzpicture}[
+  x=1cm,y=1cm,font=\sffamily,
+  panel/.style={draw=frv3Line, fill=frv3Paper, line width=0.75pt, rounded corners=4pt, inner sep=0pt},
+  layerBox/.style={draw=frv3Amber, fill=frv3AmberLight, line width=0.8pt, rounded corners=3pt,
+    align=center, inner sep=4pt, text width=3.55cm, minimum height=0.72cm,
+    font=\sffamily\scriptsize},
+  certBox/.style={draw=frv3Teal, fill=frv3TealLight, line width=0.75pt, rounded corners=3pt,
+    align=center, inner sep=4pt, text width=3.02cm, minimum height=0.78cm,
+    font=\sffamily\scriptsize},
+  theoremBox/.style={draw=frv3Plum, fill=frv3PlumLight, line width=0.85pt, rounded corners=3pt,
+    align=left, inner sep=5pt, text width=3.02cm, minimum height=1.58cm,
+    font=\sffamily\tiny},
+  exPanel/.style={draw=frv3Line, fill=white, line width=0.65pt, rounded corners=4pt, inner sep=0pt},
+  rowTag/.style={draw=frv3Amber, fill=white, line width=0.7pt, rounded corners=2pt,
+    align=center, inner sep=1.5pt, text=frv3Amber, font=\sffamily\bfseries\tiny},
+  chip/.style={draw=frv3Line, fill=white, line width=0.55pt, rounded corners=2pt,
+    align=center, inner sep=2pt, font=\sffamily\tiny},
+  phaseTab/.style={line width=0.42pt, rounded corners=0.8pt, inner sep=0.25pt,
+    minimum width=0.18cm, minimum height=0.22cm, font=\sffamily\tiny,
+    align=center, anchor=west},
+  dotGate/.pic={\fill[frv3Teal] (0,0) circle (0.034);},
+  plusGate/.pic={
+    \draw[frv3Teal,line width=0.55pt] (0,0) circle (0.077);
+    \draw[frv3Teal,line width=0.55pt] (-0.077,0) -- (0.077,0);
+    \draw[frv3Teal,line width=0.55pt] (0,-0.077) -- (0,0.077);}
+]
+  \node[font=\sffamily\bfseries\Large, text=frv3Ink, align=center] at (8.8,13.25)
+    {End-to-end verification path with one concrete running example};
+  \node[font=\sffamily\scriptsize, text=frv3Slate, align=center] at (8.8,12.83)
+    {The workflow must pass through every verified layer before the final Lean theorem and resource bounds are claimed.};
+
+  % --- Three main columns -------------------------------------------------
+  \node[panel, minimum width=3.60cm, minimum height=11.75cm, fill=frv3TealLight!42]
+    at (2.05,6.75) {};
+  \node[panel, minimum width=4.20cm, minimum height=11.75cm, fill=frv3AmberLight!38]
+    at (6.05,6.75) {};
+  \node[panel, minimum width=9.65cm, minimum height=11.75cm, fill=white]
+    at (12.82,6.75) {};
+
+  \node[font=\sffamily\bfseries\small, text=frv3Teal] at (2.05,12.02)
+    {Proof target};
+  \node[font=\sffamily\bfseries\small, text=frv3Amber] at (6.05,12.02)
+    {Verified workflow};
+  \node[font=\sffamily\bfseries\small, text=frv3Teal] at (12.82,12.02)
+    {Concrete 2-bit Cuccaro trace at each layer};
+
+  % --- Left column: target reached at the end -----------------------------
+  \node[certBox] (sem) at (2.05,10.82)
+    {Semantic obligations\\[-1pt]{\tiny program behavior, not just counts}};
+  \node[certBox] (res) at (2.05,8.85)
+    {Resource obligations\\[-1pt]{\tiny time, qubits, service capacities}};
+  \node[certBox] (sched) at (2.05,6.88)
+    {Schedule obligations\\[-1pt]{\tiny exclusivity, causality, finite queues}};
+
+  \node[theoremBox] (finalthm) at (2.05,3.30)
+    {\textbf{Final Lean theorem}\\[1pt]
+     \texttt{ft\_shor\_system\_correct}\\[2pt]
+     semantic correctness\\
+     $\land$ runtime $\leq T_{\mathrm{bound}}$\\
+     $\land$ qubits $\leq Q_{\mathrm{bound}}$\\
+     $\land$ checked schedule};
+  \node[font=\sffamily\tiny, text=frv3Slate, align=center, text width=3.02cm]
+    at (2.05,1.75)
+    {Conclusion is available only after all layer contracts are discharged.};
+
+  \draw[-{Stealth[length=1.9mm,width=1.35mm]}, line width=0.62pt, draw=frv3Teal]
+    (2.05,10.18) -- (2.05,9.49);
+  \draw[-{Stealth[length=1.9mm,width=1.35mm]}, line width=0.62pt, draw=frv3Teal]
+    (2.05,8.21) -- (2.05,7.52);
+  \draw[-{Stealth[length=2.0mm,width=1.4mm]}, line width=0.62pt, draw=frv3Teal]
+    (2.05,6.16) -- (2.05,4.38);
+
+  % --- Middle column: verified workflow ----------------------------------
+  \node[layerBox] (l1) at (6.05,11.06)
+    {L1 reversible arithmetic\\[-1pt]{\tiny adder, lookup, modular multiply}};
+  \node[layerBox] (l2) at (6.05,9.10)
+    {L2 Pauli-product rotation\\[-1pt]{\tiny magic states and rotation gadgets}};
+  \node[layerBox] (l3) at (6.05,7.14)
+    {L3 concrete PPM and frame update\\[-1pt]{\tiny measurement bits drive virtual Paulis}};
+  \node[layerBox, draw=frv3Teal, fill=frv3TealLight] (l4) at (6.05,5.18)
+    {L4 QEC code and surgery\\[-1pt]{\tiny logical patches, merge/split, syndrome rounds}};
+  \node[layerBox, draw=frv3Plum, fill=frv3PlumLight] (l5) at (6.05,3.22)
+    {L5 verified system-call trace\\[-1pt]{\tiny finite services, timing, routing, exclusivity}};
+
+  \foreach \a/\b/\c in {l1/l2/frv3Amber,l2/l3/frv3Amber,l3/l4/frv3Teal,l4/l5/frv3Plum} {
+    \draw[-{Stealth[length=3.8mm,width=3.3mm]}, line width=1.55pt, draw=\c] (\a) -- (\b);
+  }
+
+  \draw[-{Stealth[length=4.0mm,width=3.4mm]}, line width=1.7pt, draw=frv3Plum]
+    (l5.west) .. controls (4.42,2.78) and (3.72,2.84) .. (finalthm.east);
+
+  % --- Right row A: concrete Cuccaro circuit ------------------------------
+  \node[exPanel, minimum width=9.05cm, minimum height=2.72cm] at (12.82,10.32) {};
+  \node[rowTag] at (8.48,11.45) {A};
+  \node[font=\sffamily\tiny, text=frv3Ink, anchor=west, align=left, text width=8.18cm] at (8.84,11.45)
+    {Logical 2-bit Cuccaro adder: MAJ then UMA};
+  \begin{scope}[shift={(8.70,9.66)}, x=1cm, y=1cm]
+    \foreach \yy/\lab in {0.92/$c_{in}$,0.68/$b_0$,0.44/$a_0$,0.20/$b_1$,-0.04/$a_1$} {
+      \node[font=\sffamily\tiny, anchor=east, text=frv3Ink] at (0.42,\yy) {\lab};
+      \draw[frv3Ink,line width=0.45pt] (0.53,\yy) -- (8.35,\yy);
+    }
+    \draw[frv3Coral,dashed,line width=0.6pt] (4.08,-0.14) -- (4.08,1.02);
+    \node[font=\sffamily\tiny, text=frv3Coral] at (2.30,-0.26) {MAJ};
+    \node[font=\sffamily\tiny, text=frv3Coral] at (5.92,-0.26) {UMA};
+
+    \foreach \x/\yA/\yB in {1.10/0.44/0.68,1.70/0.44/0.92,2.30/-0.04/0.20,2.88/-0.04/0.44,4.92/-0.04/0.44,5.55/-0.04/0.20,6.80/0.44/0.92,7.42/0.44/0.68} {
+      \draw[frv3Teal,line width=0.58pt] (\x,\yA) -- (\x,\yB);
+      \pic at (\x,\yA) {dotGate}; \pic at (\x,\yB) {plusGate};
+    }
+    \foreach \x/\ya/\yb/\yc in {3.42/0.44/0.68/0.92,6.18/0.44/0.68/0.92} {
+      \draw[frv3Teal,line width=0.58pt] (\x,\ya) -- (\x,\yc);
+      \pic at (\x,\ya) {plusGate}; \pic at (\x,\yb) {dotGate}; \pic at (\x,\yc) {dotGate};
+    }
+  \end{scope}
+
+  % --- Right row B: Pauli rotations are rewritten as equivalent PPM --------
+  \node[exPanel, minimum width=9.05cm, minimum height=2.38cm] at (12.82,7.66) {};
+  \node[rowTag] at (8.48,8.63) {B};
+  \node[font=\sffamily\tiny, text=frv3Ink, anchor=west, align=left, text width=8.18cm] at (8.84,8.63)
+    {Pauli-product rotation rewritten as equivalent PPM + frame update};
+  \begin{scope}[shift={(8.70,6.65)}, x=1cm, y=1cm]
+    \node[font=\sffamily\bfseries\tiny, text=frv3Amber] at (1.88,1.68)
+      {Pauli-product rotations};
+    \node[font=\sffamily\bfseries\tiny, text=frv3Teal] at (6.58,1.76)
+      {Lowered PPM blocks with fresh ancillas};
+
+    % Left mini-diagram: two Pauli-product rotations, each touching all
+    % four wires in parallel.
+    \foreach \yy/\lab in {1.20/$|q_1\rangle$,0.90/$|q_2\rangle$,0.60/$|q_3\rangle$,0.30/$|q_4\rangle$} {
+      \node[font=\sffamily\tiny, anchor=east, text=frv3Ink] at (0.56,\yy) {\lab};
+      \draw[frv3Ink,line width=0.44pt] (0.66,\yy) -- (3.34,\yy);
+    }
+    \node[draw=frv3Teal, fill=frv3TealLight, line width=0.72pt, minimum width=0.50cm,
+      minimum height=1.14cm] (pprA) at (1.36,0.75) {};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (1.36,1.20) {$X$};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (1.36,0.90) {$Z$};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (1.36,0.60) {$Y$};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (1.36,0.30) {$1$};
+    \node[phaseTab, draw=frv3Teal, fill=frv3TealLight] at ([yshift=-0.15cm]pprA.east)
+      {$\scriptscriptstyle\frac{\pi}{8}$};
+
+    \node[draw=frv3Amber, fill=frv3AmberLight, line width=0.72pt, minimum width=0.50cm,
+      minimum height=1.14cm] (pprB) at (2.56,0.75) {};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (2.56,1.20) {$Z$};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (2.56,0.90) {$X$};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (2.56,0.60) {$1$};
+    \node[font=\sffamily\scriptsize, text=frv3Ink] at (2.56,0.30) {$Y$};
+    \node[phaseTab, draw=frv3Amber, fill=frv3AmberLight] at ([yshift=-0.15cm]pprB.east)
+      {$\scriptscriptstyle\frac{\pi}{4}$};
+
+    \node[font=\sffamily\bfseries\scriptsize, text=frv3Slate] at (4.16,0.76)
+      {$\Longleftrightarrow$};
+
+    % Right mini-diagram: figure-level lowering.  Each displayed PPR becomes
+    % one joint PPM with a prepared ancilla state.  Ancilla discard/readout and
+    % conditional frame bookkeeping are elided to keep the message readable.
+    \foreach \yy/\lab in {1.30/$q_1$,1.08/$q_2$,0.86/$q_3$,0.64/$q_4$,0.28/$\ket{T}$,-0.04/$\ket{Y}$} {
+      \node[font=\sffamily\tiny, anchor=east, text=frv3Ink] at (4.98,\yy) {\lab};
+      \draw[frv3Ink,line width=0.42pt] (5.08,\yy) -- (8.28,\yy);
+    }
+
+    \node[draw=frv3Teal, fill=frv3TealLight, line width=0.72pt, minimum width=0.38cm,
+      minimum height=0.86cm] (ppmTdata) at (5.68,0.97) {};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (5.68,1.30) {$X$};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (5.68,1.08) {$Z$};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (5.68,0.86) {$Y$};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (5.68,0.64) {$1$};
+    \node[draw=frv3Teal, fill=frv3TealLight, line width=0.72pt, minimum width=0.30cm,
+      minimum height=0.24cm, font=\sffamily\tiny] (ppmTZ) at (5.68,0.28) {$Z$};
+    \draw[frv3Teal,line width=0.65pt] (ppmTdata.south) -- (ppmTZ.north);
+    \node[font=\sffamily\tiny, text=frv3Teal] at (5.68,1.47) {$m_0$};
+
+    \node[draw=frv3Amber, fill=frv3AmberLight, line width=0.72pt, minimum width=0.38cm,
+      minimum height=0.86cm] (ppmYdata) at (7.18,0.97) {};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (7.18,1.30) {$Z$};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (7.18,1.08) {$X$};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (7.18,0.86) {$1$};
+    \node[font=\sffamily\tiny, text=frv3Ink] at (7.18,0.64) {$Y$};
+    \node[draw=frv3Amber, fill=frv3AmberLight, line width=0.72pt, minimum width=0.30cm,
+      minimum height=0.24cm, font=\sffamily\tiny] (ppmYZ) at (7.18,-0.04) {$Z$};
+    \draw[frv3Amber,line width=0.65pt] (ppmYdata.south) -- (ppmYZ.north);
+    \node[font=\sffamily\tiny, text=frv3Amber] at (7.18,1.47) {$m_1$};
+  \end{scope}
+
+  % --- Right row C: 3D lattice surgery sketch -----------------------------
+  \node[exPanel, minimum width=9.05cm, minimum height=2.18cm] at (12.82,5.05) {};
+  \node[rowTag, draw=frv3Teal, text=frv3Teal] at (8.48,5.98) {C};
+  \node[font=\sffamily\tiny, text=frv3Ink, anchor=west, align=left, text width=8.18cm] at (8.84,5.98)
+    {QEC layer: 3D lattice-surgery volume implementing the same PPM};
+  \begin{scope}[shift={(8.86,4.34)}, x=1cm, y=1cm]
+    \draw[frv3Slate,-{Stealth[length=1.8mm,width=1.5mm]},line width=0.55pt] (0.10,0.03) -- (0.10,1.02);
+    \node[font=\sffamily\tiny, text=frv3Slate, rotate=90] at (-0.10,0.54) {time};
+    \foreach \x/\fillc/\lab in {
+      0.72/frv3TealLight/data,
+      2.02/frv3AmberLight/merge,
+      3.32/frv3PlumLight/measure,
+      4.62/frv3AmberLight/split,
+      5.92/frv3TealLight/data} {
+      \filldraw[draw=frv3Teal, fill=\fillc, line width=0.62pt]
+        (\x,0.05) -- ++(0.88,0.16) -- ++(0,0.68) -- ++(-0.88,-0.16) -- cycle;
+      \filldraw[draw=frv3Line, fill=white, opacity=0.75]
+        (\x+0.12,0.18) -- ++(0.60,0.11) -- ++(0,0.42) -- ++(-0.60,-0.11) -- cycle;
+      \foreach \dx in {0.25,0.45,0.65} {
+        \foreach \dy in {0.28,0.44,0.60} {
+          \fill[frv3Slate] (\x+\dx,\dy) circle (0.010);
+        }
+      }
+      \node[font=\sffamily\tiny, text=frv3Slate] at (\x+0.44,-0.12) {\lab};
+    }
+    \foreach \x in {1.62,2.92,4.22,5.52} {
+      \draw[-{Stealth[length=3.0mm,width=2.6mm]}, line width=1.15pt, draw=frv3Teal]
+        (\x,0.47) -- ++(0.28,0);
+    }
+  \end{scope}
+
+  % --- Right row D: expanded system schedule ------------------------------
+  \node[exPanel, minimum width=9.05cm, minimum height=2.16cm] at (12.82,2.58) {};
+  \node[rowTag, draw=frv3Plum, text=frv3Plum] at (8.48,3.52) {D};
+  \node[font=\sffamily\tiny, text=frv3Ink, anchor=west, align=left, text width=8.18cm] at (8.84,3.52)
+    {Verified system-call schedule: dependencies avoid text and lanes show finite services};
+  \begin{scope}[shift={(8.74,1.72)}, x=1cm, y=1cm]
+    \foreach \yy/\lab/\col in {1.03/Factory/frv3Amber,0.74/Ancilla/frv3Teal,0.45/Surgery/frv3Ink,0.16/Decoder/frv3Plum} {
+      \node[font=\sffamily\tiny, text=\col, anchor=east] at (0.80,\yy) {\lab};
+      \draw[frv3Line,line width=0.35pt] (0.92,\yy) -- (8.35,\yy);
+    }
+    \foreach \x in {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0} {
+      \draw[frv3Line,line width=0.22pt] (\x,0.02) -- (\x,1.14);
+    }
+    \node[chip, draw=frv3Amber, fill=frv3AmberLight, text width=0.72cm] (magic) at (1.58,1.03) {magic};
+    \node[chip, draw=frv3Teal, fill=frv3TealLight, text width=0.68cm] (anc) at (2.82,0.74) {ancilla};
+    \node[chip, draw=frv3Teal, fill=frv3TealLight, text width=0.80cm] (route) at (3.95,0.45) {route};
+    \node[chip, draw=frv3Ink, fill=white, text width=0.78cm] (ppmcall) at (4.98,0.45) {PPM};
+    \node[chip, draw=frv3Plum, fill=frv3PlumLight, text width=0.70cm] (dec) at (5.90,0.16) {decode};
+    \node[chip, draw=frv3Plum, fill=frv3PlumLight, text width=0.76cm] (framecall) at (7.05,0.45) {frame};
+
+    \draw[-{Stealth[length=2.2mm,width=1.8mm]}, draw=frv3Slate, line width=0.70pt]
+      (magic.south east) .. controls (2.10,0.88) and (2.25,0.80) .. (anc.west);
+    \draw[-{Stealth[length=2.2mm,width=1.8mm]}, draw=frv3Slate, line width=0.70pt]
+      (anc.south east) .. controls (3.25,0.62) and (3.35,0.51) .. (route.west);
+    \draw[-{Stealth[length=2.2mm,width=1.8mm]}, draw=frv3Slate, line width=0.70pt]
+      (route.east) -- (ppmcall.west);
+    \draw[-{Stealth[length=2.2mm,width=1.8mm]}, draw=frv3Slate, line width=0.70pt]
+      (ppmcall.south east) .. controls (5.35,0.28) and (5.45,0.20) .. (dec.west);
+    \draw[-{Stealth[length=2.2mm,width=1.8mm]}, draw=frv3Slate, line width=0.70pt]
+      (dec.north east) .. controls (6.35,0.34) and (6.55,0.42) .. (framecall.west);
+  \end{scope}
+
+  \node[draw=frv3Coral, fill=frv3CoralLight, line width=0.8pt, rounded corners=3pt,
+    align=center, text width=8.55cm, minimum height=0.62cm, font=\sffamily\scriptsize]
+    at (12.82,0.92)
+    {Only this end-to-end trace exposes factory supply, decoder service, routing bandwidth, and qubit exclusivity as checkable constraints.};
+\end{tikzpicture}

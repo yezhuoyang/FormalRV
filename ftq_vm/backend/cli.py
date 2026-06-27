@@ -7,13 +7,15 @@
 
 ``run`` writes ``trace.json``, ``stats.json`` and ``certificate.json`` to the
 output directory and prints a colorful Rich summary.  Exit codes: 0 = pass,
-1 = constraint violations found, 2 = could not load the inputs.
+1 = constraint violations found, 2 = could not load the inputs,
+3 = unexpected internal error (set ``FTQVM_DEBUG=1`` to re-raise the traceback).
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -29,7 +31,12 @@ DEFAULT_ERROR_PRINT_LIMIT = 8
 
 
 def _write_outputs(result: RunResult, out_dir: Path) -> dict[str, Path]:
-    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    except (FileExistsError, NotADirectoryError, OSError) as exc:
+        raise LoadError(
+            f"could not create output directory {out_dir} "
+            f"(--out must name a directory, not an existing file): {exc}") from exc
     paths = {
         "trace": out_dir / "trace.json",
         "stats": out_dir / "stats.json",
@@ -154,4 +161,16 @@ def main(argv: list[str] | None = None) -> int:
     _force_utf8_output()
     parser = build_parser()
     args = parser.parse_args(argv)
-    return args.func(args)
+    try:
+        return args.func(args)
+    except LoadError as exc:
+        # Backstop: any command that did not already convert a load failure
+        # still honors the documented "could not load the inputs" contract.
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001 - never dump a traceback at the CLI boundary
+        if os.environ.get("FTQVM_DEBUG"):
+            raise
+        print(f"internal error: {type(exc).__name__}: {exc}\n"
+              f"(set FTQVM_DEBUG=1 to see the full traceback)", file=sys.stderr)
+        return 3

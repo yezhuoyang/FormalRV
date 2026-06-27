@@ -26,6 +26,8 @@ import FormalRV.Framework.ResourceBounds
 import FormalRV.System.DeviceLane.DependencyGraph
 import FormalRV.Audit.CainXu2026.Hardware
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.Audit.CainXu2026
 
 open FormalRV.Framework FormalRV.Qualtran
@@ -74,8 +76,8 @@ framework can carry real parity-check matrix rows. -/
 def bb_first_x_check : List Bool :=
   makeRow [1, 2, 18, 75, 78, 84] 144
 
-example : bb_first_x_check.length = 144 := by native_decide
-example : (bb_first_x_check.filter id).length = 6 := by native_decide
+example : bb_first_x_check.length = 144 := by decide
+example : (bb_first_x_check.filter id).length = 6 := by decide
 
 /-============================================================================
   PART B — bb18 [[248,10,18]] derived-k.

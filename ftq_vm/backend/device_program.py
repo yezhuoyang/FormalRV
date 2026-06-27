@@ -120,6 +120,14 @@ def _qref(token: str, lineno: int) -> int:
     return int(m.group(1))
 
 
+def _arg(args: list[str], i: int, lineno: int, what: str) -> str:
+    """Positional arg with an arity check: a missing arg is a clean SYNTAX
+    rejection (DeviceProgramError) rather than a raw IndexError traceback."""
+    if i >= len(args):
+        raise DeviceProgramError(f"line {lineno}: missing argument: {what}")
+    return args[i]
+
+
 class _SiteMap:
     """Global Lean site numbers <-> explicit VM zone qubits."""
 
@@ -286,17 +294,22 @@ def load_device_program(text: str, backend: BackendConfig,
                      "produces": [], "service": [], "metadata": {"line": lineno}}
 
         if op_name == "gate1q":
-            site = _qref(args[0], lineno)
-            gname = _kv_name(args[1], "gate", lineno)
+            site = _qref(_arg(args, 0, lineno, "q[<site>]"), lineno)
+            gname = _kv_name(_arg(args, 1, lineno, "gate=<NAME>"), "gate", lineno)
             supported_gate(gname, 1, lineno)
             doc["kind"] = gname
             doc["id"] = f"l{lineno}_{gname}"
             doc["uses"] = [ResourceUse(resource=sitemap.ref(site, lineno),
                                        mode=UseMode.exclusive)]
         elif op_name == "gate2q":
-            a_str, b_str = args[0].split(",", 1)
+            pair = _arg(args, 0, lineno, "q[i],q[j]")
+            if "," not in pair:
+                raise DeviceProgramError(
+                    f"line {lineno}: gate2q needs a qubit pair q[i],q[j], "
+                    f"got {pair!r}")
+            a_str, b_str = pair.split(",", 1)
             sa, sb = _qref(a_str, lineno), _qref(b_str, lineno)
-            gname = _kv_name(args[1], "gate", lineno)
+            gname = _kv_name(_arg(args, 1, lineno, "gate=<NAME>"), "gate", lineno)
             supported_gate(gname, 2, lineno)
             doc["kind"] = gname
             doc["id"] = f"l{lineno}_{gname}"
@@ -305,8 +318,8 @@ def load_device_program(text: str, backend: BackendConfig,
                            ResourceUse(resource=sitemap.ref(sb, lineno),
                                        mode=UseMode.exclusive)]
         elif op_name == "measure":
-            site = _qref(args[0], lineno)
-            basis = _kv_name(args[1], "basis", lineno)
+            site = _qref(_arg(args, 0, lineno, "q[<site>]"), lineno)
+            basis = _kv_name(_arg(args, 1, lineno, "basis=<Z|X|Y>"), "basis", lineno)
             if basis not in BASIS_NAMES:
                 raise DeviceProgramError(
                     f"line {lineno}: unknown basis {basis!r} (named bases: "
@@ -319,7 +332,7 @@ def load_device_program(text: str, backend: BackendConfig,
             # data at its completion; decodes consume it (I6.a)
             doc["produces"] = [{"kind": "syndrome"}]
         elif op_name == "transit":
-            site = _qref(args[0], lineno)
+            site = _qref(_arg(args, 0, lineno, "q[<site>]"), lineno)
             if len(args) < 3 or args[1] != "via":
                 raise DeviceProgramError(f"line {lineno}: transit needs 'via channel=<c>'")
             chan = _kv_num(args[2], "channel", lineno)
@@ -331,15 +344,16 @@ def load_device_program(text: str, backend: BackendConfig,
                 doc["uses"].append(ResourceUse(resource=chan_res))
         elif op_name == "request_ancilla":
             # the request names its EXACT qubit — no fungible zone form
-            site = _qref(args[0], lineno)
+            site = _qref(_arg(args, 0, lineno, "q[<site>]"), lineno)
             supported_gate("request_ancilla", 1, lineno)
             doc["uses"] = [ResourceUse(resource=sitemap.ref(site, lineno),
                                        mode=UseMode.exclusive)]
         elif op_name == "request_magic":
-            doc["metadata"]["factory"] = _kv_num(args[0], "factory", lineno)
+            doc["metadata"]["factory"] = _kv_num(
+                _arg(args, 0, lineno, "factory=<n>"), "factory", lineno)
             doc["consumes"] = [{"kind": "MagicState"}]
         elif op_name == "decode_syndrome":
-            rnd = _kv_num(args[0], "round", lineno)
+            rnd = _kv_num(_arg(args, 0, lineno, "round=<n>"), "round", lineno)
             doc["metadata"]["round"] = rnd
             if decoder is None:
                 raise DeviceProgramError(
@@ -352,7 +366,7 @@ def load_device_program(text: str, backend: BackendConfig,
                                "processing_time_us": duration,
                                "result_token": f"decode{rnd}"}]
         elif op_name == "pauli_frame_update":
-            corr = _kv_num(args[0], "corr", lineno)
+            corr = _kv_num(_arg(args, 0, lineno, "corr=<n>"), "corr", lineno)
             doc["metadata"]["corr"] = corr
             doc["consumes"] = [{"kind": f"decode{corr}"}]
         else:

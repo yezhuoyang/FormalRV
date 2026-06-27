@@ -1,0 +1,43 @@
+% Shared preamble for the FormalRV TikZ figures.
+% In a paper preamble, include this once before \begin{document}.
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds,decorations.pathreplacing}
+\providecommand{\ket}[1]{|#1\rangle}
+
+\definecolor{frvInk}{HTML}{18202B}
+\definecolor{frvMuted}{HTML}{596579}
+\definecolor{frvBlue}{HTML}{1D4E89}
+\definecolor{frvBlueLight}{HTML}{E8F1FB}
+\definecolor{frvGreen}{HTML}{1F7A4D}
+\definecolor{frvGreenLight}{HTML}{EAF7EF}
+\definecolor{frvOrange}{HTML}{D66B1F}
+\definecolor{frvOrangeLight}{HTML}{FFF0E3}
+\definecolor{frvRed}{HTML}{B3261E}
+\definecolor{frvRedLight}{HTML}{FDEDEC}
+\definecolor{frvPurple}{HTML}{6750A4}
+\definecolor{frvPurpleLight}{HTML}{F1ECFA}
+\definecolor{frvGray}{HTML}{EEF1F5}
+\definecolor{frvGrid}{HTML}{D7DDE8}
+
+\tikzset{
+  frvArrow/.style={-{Stealth[length=2.1mm,width=1.7mm]}, line width=0.7pt, draw=frvInk},
+  frvWideArrow/.style={-{Stealth[length=3.6mm,width=3.2mm]}, line width=1.55pt, draw=frvInk},
+  frvWideSoftArrow/.style={-{Stealth[length=3.4mm,width=3.0mm]}, line width=1.35pt, draw=frvMuted},
+  frvSoftArrow/.style={-{Stealth[length=2.0mm,width=1.5mm]}, line width=0.65pt, draw=frvMuted},
+  frvDashedArrow/.style={-{Stealth[length=2.0mm,width=1.5mm]}, line width=0.65pt, draw=frvRed, dashed},
+  frvPanel/.style={draw=frvGrid, fill=white, line width=0.75pt, rounded corners=4pt, inner sep=0pt},
+  frvBox/.style={draw=frvInk, fill=white, line width=0.65pt, rounded corners=3pt,
+                 align=center, inner sep=4pt, font=\sffamily\small},
+  frvSmallBox/.style={draw=frvGrid, fill=white, line width=0.55pt, rounded corners=2pt,
+                      align=center, inner sep=3pt, font=\sffamily\scriptsize},
+  frvGoodBox/.style={frvBox, draw=frvGreen, fill=frvGreenLight},
+  frvWarnBox/.style={frvBox, draw=frvRed, fill=frvRedLight},
+  frvBlueBox/.style={frvBox, draw=frvBlue, fill=frvBlueLight},
+  frvOrangeBox/.style={frvBox, draw=frvOrange, fill=frvOrangeLight},
+  frvPurpleBox/.style={frvBox, draw=frvPurple, fill=frvPurpleLight},
+  frvTitle/.style={font=\sffamily\bfseries\large, text=frvInk, align=center},
+  frvSubTitle/.style={font=\sffamily\bfseries\small, text=frvInk, align=center},
+  frvNote/.style={font=\sffamily\scriptsize, text=frvMuted, align=center}
+}

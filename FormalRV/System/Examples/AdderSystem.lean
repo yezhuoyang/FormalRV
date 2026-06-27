@@ -36,6 +36,8 @@
 
 import FormalRV.System.Invariants.SystemInvariantStrengthening
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.AdderSystem
 
 open FormalRV.Framework
@@ -144,7 +146,7 @@ theorem adder_n1_strict_system_ok :
         adder_demo_t_react_us
         adder_demo_window_us
         adder_demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ## §4. Derived resources
 
@@ -182,31 +184,31 @@ def adder_n1_fresh_ancilla_count : Nat :=
 /-- Wallclock value: 48 µs.  Three sequential PPM blocks at
     16 µs each. -/
 theorem adder_n1_wallclock_value :
-    adder_n1_wallclock_us = 48 := by native_decide
+    adder_n1_wallclock_us = 48 := by decide
 
 /-- 48 SysCalls total. -/
 theorem adder_n1_syscall_count_value :
-    adder_n1_syscall_count = 48 := by native_decide
+    adder_n1_syscall_count = 48 := by decide
 
 /-- 18 Gate2qs: 6 per PPM × 3 PPMs. -/
 theorem adder_n1_gate2q_count_value :
-    adder_n1_gate2q_count = 18 := by native_decide
+    adder_n1_gate2q_count = 18 := by decide
 
 /-- 9 Measures: 3 per PPM × 3 PPMs. -/
 theorem adder_n1_measure_count_value :
-    adder_n1_measure_count = 9 := by native_decide
+    adder_n1_measure_count = 9 := by decide
 
 /-- 9 DecodeSyndromes: 3 per PPM × 3 PPMs. -/
 theorem adder_n1_decode_count_value :
-    adder_n1_decode_count = 9 := by native_decide
+    adder_n1_decode_count = 9 := by decide
 
 /-- 3 PauliFrameUpdates: 1 per PPM × 3 PPMs. -/
 theorem adder_n1_feedback_count_value :
-    adder_n1_feedback_count = 3 := by native_decide
+    adder_n1_feedback_count = 3 := by decide
 
 /-- 9 RequestFreshAncillas: 3 per PPM × 3 PPMs. -/
 theorem adder_n1_fresh_ancilla_count_value :
-    adder_n1_fresh_ancilla_count = 9 := by native_decide
+    adder_n1_fresh_ancilla_count = 9 := by decide
 
 /-! ## §5. Paper-style claim schema
 
@@ -251,13 +253,13 @@ def optimistic_parallel_adder_claim : AdderSystemClaim :=
 theorem optimistic_adder_claim_underestimates_verified_schedule :
     optimistic_parallel_adder_claim.claimed_wallclock_us
       < adder_n1_wallclock_us := by
-  native_decide
+  decide
 
 /-- Gate2q-count gap. -/
 theorem optimistic_adder_claim_understates_verified_gate2qs :
     optimistic_parallel_adder_claim.claimed_gate2q_count
       < adder_n1_gate2q_count := by
-  native_decide
+  decide
 
 /-! ## §7. Capacity lower-bound formula
 
@@ -288,7 +290,7 @@ theorem adder_n1_gate2q_capacity_lower_bound_value :
     gate2q_capacity_lower_bound_us
         adder_n1_gate2q_count
         adder_demo_opCap.max_gate2q_active
-        1 = 18 := by native_decide
+        1 = 18 := by decide
 
 /-- **Capacity lower-bound gap**: the optimistic claim's 1 µs is
     formally below the 18 µs capacity floor computed under the
@@ -304,7 +306,7 @@ theorem optimistic_adder_claim_below_gate2q_capacity_lower_bound :
           adder_n1_gate2q_count
           adder_demo_opCap.max_gate2q_active
           1 := by
-  native_decide
+  decide
 
 /-! ## §8. Rejected bad adder schedule
 
@@ -335,7 +337,7 @@ theorem bad_parallel_adder_schedule_rejected :
         adder_demo_t_react_us
         adder_demo_window_us
         adder_demo_max_per_window = false := by
-  native_decide
+  decide
 
 /-! ## §9. Semantic correctness connection — honest report
 
@@ -362,6 +364,6 @@ theorem bad_parallel_adder_schedule_rejected :
     correspond to the 3 stabilizer-extraction rounds that a
     single Cuccaro-style MAJ/UNMAJ gadget would consume.  No
     semantic claim. -/
-example : adder_n1_syscalls.length = 3 * 16 := by native_decide
+example : adder_n1_syscalls.length = 3 * 16 := by decide
 
 end FormalRV.System.AdderSystem

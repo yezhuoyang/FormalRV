@@ -42,6 +42,8 @@ import FormalRV.Framework.PaperClaims
 import FormalRV.Audit.GidneyEkera2021.SystemZones
 import FormalRV.Verifier
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.Audit.GidneyEkera2021
 
 open FormalRV.System.NaiveUpperBound
@@ -118,19 +120,19 @@ def toffoliCount : Nat := 2622824448
 /-- Per-Toffoli serial wall-time (µs): CCZ production + teleport surgery (d=27 cycles) + decode. -/
 def perToffoliUs : Nat := ccz_spec_qianxu.production_us + 27 + 27
 
-theorem perToffoliUs_value : perToffoliUs = 12054 := by native_decide
+theorem perToffoliUs_value : perToffoliUs = 12054 := by decide
 
 /-- Naive serial runtime (µs), hours. -/
 def naiveWallclockUs : Nat := toffoliCount * perToffoliUs
 def naiveWallclockHours : Nat := naiveWallclockUs / 3600000000
 
-theorem naiveWallclockHours_value : naiveWallclockHours = 8782 := by native_decide
+theorem naiveWallclockHours_value : naiveWallclockHours = 8782 := by decide
 
 /-- Naive qubits: the full data register plus ONE magic-state factory. -/
 def naiveQubits : Nat :=
   windowedPhysicalDataQubits_rsa2048 + ccz_spec_qianxu.factory_qubits
 
-theorem naiveQubits_value : naiveQubits = 9636357 := by native_decide
+theorem naiveQubits_value : naiveQubits = 9636357 := by decide
 
 /-! ### Gap to the Gidney–Ekerå paper (20 000 000 qubits, 8 hours). -/
 
@@ -139,13 +141,13 @@ theorem naiveQubits_value : naiveQubits = 9636357 := by native_decide
     naive baseline does not — serial magic production is the entire gap. -/
 theorem time_gap :
     1097 * gidney_ekera_2021_rsa2048_wallclock_hours ≤ naiveWallclockHours
-    ∧ naiveWallclockHours ≤ 1098 * gidney_ekera_2021_rsa2048_wallclock_hours := by native_decide
+    ∧ naiveWallclockHours ≤ 1098 * gidney_ekera_2021_rsa2048_wallclock_hours := by decide
 
 /-- **QUBIT GAP ≈ 0.48×.**  The naive baseline uses FEWER than half the paper's qubits — it has no
     factory farm (one factory) and minimal routing; the data register dominates. -/
 theorem qubit_gap :
     naiveQubits < gidney_ekera_2021_rsa2048_physical_qubits
-    ∧ 2 * naiveQubits ≤ gidney_ekera_2021_rsa2048_physical_qubits := by native_decide
+    ∧ 2 * naiveQubits ≤ gidney_ekera_2021_rsa2048_physical_qubits := by decide
 
 /-- **SPACETIME GAP ≈ 529×.**  In qubit·hours the naive baseline is ~529× worse than the paper —
     the price of a fully-serial, provably-correct schedule (all the loss is in time, from serial
@@ -155,7 +157,7 @@ theorem spacetime_gap :
         ≤ naiveQubits * naiveWallclockHours
     ∧ naiveQubits * naiveWallclockHours
         ≤ 530 * (gidney_ekera_2021_rsa2048_physical_qubits * gidney_ekera_2021_rsa2048_wallclock_hours) := by
-  native_decide
+  decide
 
 end FormalRV.Audit.GidneyEkera2021
 

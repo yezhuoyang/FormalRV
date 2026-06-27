@@ -58,6 +58,8 @@ import FormalRV.System.Compile.LatticeSurgeryPPMContract
 import FormalRV.System.Compile.SurgeryGadgetToSysCalls
 import FormalRV.System.Checkers.SystemChecker
 
+set_option maxRecDepth 8000
+
 namespace FormalRV.System.SystemInvariantStrengthening
 
 open FormalRV.Framework
@@ -266,7 +268,7 @@ def operation_capacity_good_schedule : List SysCall :=
 theorem operation_capacity_good_ok :
     operation_capacity_ok demo_operation_cap
         operation_capacity_good_schedule = true := by
-  native_decide
+  decide
 
 /-! ### §7.b Negative operation-capacity example -/
 
@@ -283,7 +285,7 @@ def operation_capacity_bad_parallel_gates : List SysCall :=
 theorem operation_capacity_bad_parallel_gates_fails :
     operation_capacity_ok demo_operation_cap
         operation_capacity_bad_parallel_gates = false := by
-  native_decide
+  decide
 
 /-! ### §7.c Failure-isolation theorem (key contribution)
 
@@ -296,7 +298,7 @@ theorem operation_capacity_bad_parallel_gates_old_bundle_passes :
     all_invariants_with_factory_ports_ok
         demo_arch operation_capacity_bad_parallel_gates
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ## §8. Feedback-after-decode examples -/
 
@@ -311,7 +313,7 @@ def feedback_after_decode_good_schedule : List SysCall :=
 
 theorem feedback_after_decode_good_ok :
     feedback_after_decode_ok feedback_after_decode_good_schedule = true := by
-  native_decide
+  decide
 
 /-- **Review fix verified**: the review's
     `decoder_dependency_violator` (PauliFrameUpdate at t=0
@@ -319,7 +321,7 @@ theorem feedback_after_decode_good_ok :
     by `feedback_after_decode_ok`. -/
 theorem decoder_dependency_violator_now_rejected :
     feedback_after_decode_ok decoder_dependency_violator = false := by
-  native_decide
+  decide
 
 /-- A schedule with PauliFrameUpdate referencing a channel id
     that has NO matching DecodeSyndrome anywhere — also
@@ -332,7 +334,7 @@ def feedback_orphan_schedule : List SysCall :=
 
 theorem feedback_orphan_rejected :
     feedback_after_decode_ok feedback_orphan_schedule = false := by
-  native_decide
+  decide
 
 /-! ## §9. Strict-bundle isolation theorems
 
@@ -344,13 +346,13 @@ theorem strict_rejects_operation_capacity_bad :
     all_invariants_strict_ok demo_arch demo_operation_cap
         operation_capacity_bad_parallel_gates
         demo_t_react demo_window demo_max_per_window = false := by
-  native_decide
+  decide
 
 theorem strict_rejects_decoder_dependency_violator :
     all_invariants_strict_ok demo_arch demo_operation_cap
         decoder_dependency_violator
         demo_t_react demo_window demo_max_per_window = false := by
-  native_decide
+  decide
 
 /-! ### §9.a Strict bundle still accepts a known-good schedule
 
@@ -371,7 +373,7 @@ theorem strict_accepts_surgery_ppm_A :
     all_invariants_strict_ok demo_arch demo_operation_cap
         (compileSurgeryGadgetToSysCalls surgery_ppm_A)
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ## §10. Regression cross-references for the remaining open gaps
 
@@ -432,7 +434,7 @@ theorem strict_still_accepts_routing_lane_violator :
     all_invariants_strict_ok demo_arch high_parallel_operation_cap
         routing_lane_violator
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-- **Isolation**: the plain strict bundle accepts
     `freshness_use_before_reset` — it has no lifecycle state
@@ -442,7 +444,7 @@ theorem strict_still_accepts_freshness_use_before_reset :
     all_invariants_strict_ok demo_arch demo_operation_cap
         freshness_use_before_reset
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-- **Open-gap regression**: the strict bundle still accepts
     `magic_no_startup_prefix` (window throughput is aggregate,
@@ -451,7 +453,7 @@ theorem strict_still_accepts_magic_no_startup_prefix :
     all_invariants_strict_ok demo_arch demo_operation_cap
         magic_no_startup_prefix
         demo_t_react demo_window 1 = true := by
-  native_decide
+  decide
 
 /-! ## §11. Slot-capacity model
 
@@ -577,7 +579,7 @@ def slot_capacity_good_schedule : List SysCall :=
 theorem slot_capacity_good_ok :
     slot_capacity_ok slot_capacity_demo_model
         slot_capacity_good_schedule = true := by
-  native_decide
+  decide
 
 /-! ### §12.b Negative example: 3 active sites in the data zone
 
@@ -595,7 +597,7 @@ def slot_capacity_bad_three_active_sites : List SysCall :=
 theorem slot_capacity_bad_three_active_sites_fails :
     slot_capacity_ok slot_capacity_demo_model
         slot_capacity_bad_three_active_sites = false := by
-  native_decide
+  decide
 
 /-! ### §12.c The bad schedule passes the OLD checks
 
@@ -605,21 +607,21 @@ theorem slot_capacity_bad_three_active_sites_fails :
 theorem slot_capacity_bad_old_capacity_passes :
     capacity_in_arch_ok slot_capacity_demo_arch
         slot_capacity_bad_three_active_sites = true := by
-  native_decide
+  decide
 
 theorem slot_capacity_bad_capacity_per_cycle_passes :
     capacity_per_cycle_ok slot_capacity_demo_arch
         slot_capacity_bad_three_active_sites = true := by
-  native_decide
+  decide
 
 theorem slot_capacity_bad_exclusivity_passes :
     exclusivity_ok slot_capacity_bad_three_active_sites = true := by
-  native_decide
+  decide
 
 theorem slot_capacity_bad_operation_capacity_passes :
     operation_capacity_ok high_parallel_operation_cap
         slot_capacity_bad_three_active_sites = true := by
-  native_decide
+  decide
 
 /-! ## §13. Strict bundle with slot capacity
 
@@ -650,7 +652,7 @@ theorem strict_with_slot_capacity_rejects_bad_three_active_sites :
         slot_capacity_demo_model
         slot_capacity_bad_three_active_sites
         demo_t_react demo_window demo_max_per_window = false := by
-  native_decide
+  decide
 
 /-- **The PREVIOUS strict bundle ACCEPTS the bad slot-capacity
     schedule** — formal evidence that slot capacity is a
@@ -661,7 +663,7 @@ theorem strict_without_slot_capacity_accepts_bad_three_active_sites :
         high_parallel_operation_cap
         slot_capacity_bad_three_active_sites
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ### §13.b Good schedule preservation
 
@@ -685,7 +687,7 @@ theorem strict_with_slot_capacity_accepts_surgery_ppm_A :
         surgery_arch demo_operation_cap generous_slot_capacity_model
         (compileSurgeryGadgetToSysCalls surgery_ppm_A)
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ## §14. Ancilla freshness / reset lifecycle
 
@@ -898,7 +900,7 @@ def demo_ancilla_model : AncillaModel :=
 theorem freshness_use_before_reset_now_rejected :
     ancilla_freshness_ok demo_ancilla_model
         freshness_use_before_reset = false := by
-  native_decide
+  decide
 
 /-- **Review fix verified**: `freshness_reuse_without_reset`
     (one allocation, two Gate2qs, no Measure) is now
@@ -907,7 +909,7 @@ theorem freshness_use_before_reset_now_rejected :
 theorem freshness_reuse_without_reset_now_rejected :
     ancilla_freshness_ok demo_ancilla_model
         freshness_reuse_without_reset = false := by
-  native_decide
+  decide
 
 /-! ### §15.b Additional negative examples (post-measure reuse,
        orphan measure, double allocation) -/
@@ -925,7 +927,7 @@ def freshness_reuse_after_measure : List SysCall :=
 theorem freshness_reuse_after_measure_rejected :
     ancilla_freshness_ok demo_ancilla_model
         freshness_reuse_after_measure = false := by
-  native_decide
+  decide
 
 /-- Orphan Measure: ancilla site 100 is measured with no
     prior `RequestFreshAncilla`.  Rejected. -/
@@ -935,7 +937,7 @@ def freshness_orphan_measure : List SysCall :=
 theorem freshness_orphan_measure_rejected :
     ancilla_freshness_ok demo_ancilla_model
         freshness_orphan_measure = false := by
-  native_decide
+  decide
 
 /-- Double allocation: two `RequestFreshAncilla 100` calls on
     the SAME explicit site with no intervening Measure — the
@@ -952,7 +954,7 @@ def freshness_double_alloc : List SysCall :=
 theorem freshness_double_alloc_rejected :
     ancilla_freshness_ok freshness_one_slot_model
         freshness_double_alloc = false := by
-  native_decide
+  decide
 
 /-! ### §15.c Positive examples -/
 
@@ -966,7 +968,7 @@ def freshness_good_short : List SysCall :=
 theorem freshness_good_short_ok :
     ancilla_freshness_ok demo_ancilla_model
         freshness_good_short = true := by
-  native_decide
+  decide
 
 /-- **The simple compiler's basic PPM output stays
     accepted**: every round emits Request → Live, two
@@ -976,7 +978,7 @@ theorem freshness_good_short_ok :
 theorem ancilla_freshness_accepts_surgery_ppm_A :
     ancilla_freshness_ok demo_ancilla_model
         (compileSurgeryGadgetToSysCalls surgery_ppm_A) = true := by
-  native_decide
+  decide
 
 /-! ## §16. Strict bundle with freshness
 
@@ -1006,21 +1008,21 @@ theorem strict_with_freshness_rejects_use_before_reset :
         demo_arch demo_operation_cap generous_slot_capacity_model
         demo_ancilla_model freshness_use_before_reset
         demo_t_react demo_window demo_max_per_window = false := by
-  native_decide
+  decide
 
 theorem strict_with_freshness_rejects_reuse_without_reset :
     all_invariants_strict_with_slot_capacity_and_freshness_ok
         demo_arch demo_operation_cap generous_slot_capacity_model
         demo_ancilla_model freshness_reuse_without_reset
         demo_t_react demo_window demo_max_per_window = false := by
-  native_decide
+  decide
 
 theorem strict_with_freshness_rejects_reuse_after_measure :
     all_invariants_strict_with_slot_capacity_and_freshness_ok
         demo_arch demo_operation_cap generous_slot_capacity_model
         demo_ancilla_model freshness_reuse_after_measure
         demo_t_react demo_window demo_max_per_window = false := by
-  native_decide
+  decide
 
 /-! ### §16.b The previous strict-with-slot-capacity bundle
        ACCEPTS these schedules (formal isolation) -/
@@ -1030,14 +1032,14 @@ theorem strict_with_slot_capacity_accepts_freshness_use_before_reset :
         demo_arch demo_operation_cap generous_slot_capacity_model
         freshness_use_before_reset
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 theorem strict_with_slot_capacity_accepts_freshness_reuse_without_reset :
     all_invariants_strict_with_slot_capacity_ok
         demo_arch demo_operation_cap generous_slot_capacity_model
         freshness_reuse_without_reset
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ### §16.c Good compiled schedule still passes -/
 
@@ -1047,7 +1049,7 @@ theorem strict_with_freshness_accepts_surgery_ppm_A :
         demo_ancilla_model
         (compileSurgeryGadgetToSysCalls surgery_ppm_A)
         demo_t_react demo_window demo_max_per_window = true := by
-  native_decide
+  decide
 
 /-! ## §17. Boundary notes
 

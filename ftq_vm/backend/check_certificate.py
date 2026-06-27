@@ -44,6 +44,29 @@ SUPPORTED_FORMAT = "ftqvm-certificate"
 SUPPORTED_VERSION = 2
 
 
+class CertLoadError(Exception):
+    """The certificate file could not be read or parsed as JSON."""
+
+
+def _load_cert(path: str):
+    """Read and JSON-parse a certificate file, turning every filesystem/parse
+    failure into a clean :class:`CertLoadError` (kept stdlib-only so this
+    checker stays independent of the loader, mirroring the Lean predicate)."""
+    p = Path(path)
+    if not p.exists():
+        raise CertLoadError(f"file not found: {p}")
+    if p.is_dir():
+        raise CertLoadError(f"expected a file but found a directory: {p}")
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CertLoadError(f"could not read {p}: {exc}") from exc
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise CertLoadError(f"{p}: not valid JSON: {exc}") from exc
+
+
 def _check_structure(cert: dict, defects: list[str]) -> None:
     if cert.get("format") != SUPPORTED_FORMAT:
         defects.append(f"format is {cert.get('format')!r}, expected {SUPPORTED_FORMAT!r}")
@@ -313,41 +336,56 @@ def check_certificate(cert: dict) -> tuple[bool, list[str], list[str]]:
     defects: list[str] = []
     violations: list[str] = []
 
-    _check_structure(cert, defects)
-    ops = _check_ops(cert, defects)
-    _check_dependencies(ops, violations)
-    _check_resources(cert, defects, violations)
-    _check_tokens(cert, defects, violations)
-    job_productions: Counter = Counter()
-    _check_services(cert, defects, violations, job_productions)
+    if not isinstance(cert, dict):
+        return False, [f"certificate is not a JSON object (got "
+                       f"{type(cert).__name__})"], []
 
-    verdict = cert.get("verdict")
-    claimed_errors = cert.get("errors", [])
-    if verdict == "pass":
-        # a pass certificate must also be *closed*: every declaration realized
-        _check_use_declarations(cert, defects)
-        _check_token_declarations(cert, defects, job_productions)
-        _check_service_declarations(cert, defects)
-        if claimed_errors:
-            defects.append(f"verdict is 'pass' but {len(claimed_errors)} errors are claimed")
-        valid = not defects and not violations
-    elif verdict == "fail":
-        if not claimed_errors:
-            defects.append("verdict is 'fail' but no errors are claimed")
-        valid = not defects
-    else:
-        defects.append(f"unknown verdict {verdict!r}")
+    try:
+        _check_structure(cert, defects)
+        ops = _check_ops(cert, defects)
+        _check_dependencies(ops, violations)
+        _check_resources(cert, defects, violations)
+        _check_tokens(cert, defects, violations)
+        job_productions: Counter = Counter()
+        _check_services(cert, defects, violations, job_productions)
+
+        verdict = cert.get("verdict")
+        claimed_errors = cert.get("errors", [])
+        if verdict == "pass":
+            # a pass certificate must also be *closed*: every declaration realized
+            _check_use_declarations(cert, defects)
+            _check_token_declarations(cert, defects, job_productions)
+            _check_service_declarations(cert, defects)
+            if claimed_errors:
+                defects.append(f"verdict is 'pass' but {len(claimed_errors)} errors are claimed")
+            valid = not defects and not violations
+        elif verdict == "fail":
+            if not claimed_errors:
+                defects.append("verdict is 'fail' but no errors are claimed")
+            valid = not defects
+        else:
+            defects.append(f"unknown verdict {verdict!r}")
+            valid = False
+    except (KeyError, IndexError, TypeError, AttributeError) as exc:
+        # a truncated / hand-edited certificate (missing required keys, wrong
+        # value types) is INVALID, not a crash.
+        defects.append(f"malformed certificate ({type(exc).__name__}: {exc})")
         valid = False
     return valid, defects, violations
 
 
 def main(path: str) -> int:
-    cert = json.loads(Path(path).read_text(encoding="utf-8"))
+    try:
+        cert = _load_cert(path)
+    except CertLoadError as exc:
+        print(f"error: {exc}")
+        return 2  # could not load the inputs
     valid, defects, violations = check_certificate(cert)
-    verdict = cert.get("verdict")
+    meta = cert if isinstance(cert, dict) else {}
+    verdict = meta.get("verdict")
     print(f"certificate: {path}")
-    print(f"verdict claimed: {verdict}; backend={cert.get('backend_name')!r} "
-          f"program={cert.get('program_name')!r}")
+    print(f"verdict claimed: {verdict}; backend={meta.get('backend_name')!r} "
+          f"program={meta.get('program_name')!r}")
     for d in defects:
         print(f"  DEFECT: {d}")
     for v in violations[:20]:
@@ -358,7 +396,7 @@ def main(path: str) -> int:
         print("OK: independently re-verified -- the schedule satisfies all "
               "finite-service constraints in the certificate.")
     elif valid:
-        print(f"OK: consistent FAIL certificate ({len(claimed := cert.get('errors', []))} "
+        print(f"OK: consistent FAIL certificate ({len(meta.get('errors', []))} "
               f"claimed error(s), {len(violations)} recomputed violation(s)).")
     else:
         print("INVALID certificate.")

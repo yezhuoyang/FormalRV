@@ -48,6 +48,8 @@
 import FormalRV.System.Invariants.ScheduleInvariantsExplicit
 import FormalRV.System.Compile.LatticeSurgeryPPMContract
 import FormalRV.System.Compile.SurgeryGadgetToSysCalls
+
+set_option maxRecDepth 8000
 namespace FormalRV.System.SystemChecker
 
 open FormalRV.Framework
@@ -213,7 +215,7 @@ theorem decoder_dependency_violator_accepted :
     all_invariants_with_factory_ports_ok
         surgery_arch decoder_dependency_violator
         10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ### Strengthening status: IMPLEMENTED.
     `feedback_after_decode_ok` (Invariants/SystemInvariantStrengthening
@@ -252,7 +254,7 @@ theorem routing_lane_violator_accepted :
     all_invariants_with_factory_ports_ok
         surgery_arch routing_lane_violator
         10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ### Strengthening status: OPEN.
     A fix needs `syscall_acts_on` to also report the routing-lane
@@ -289,7 +291,7 @@ theorem freshness_use_before_reset_accepted :
     all_invariants_with_factory_ports_ok
         surgery_arch freshness_use_before_reset
         10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-- A schedule that REUSES ancilla site 100 across two Gate2qs
     WITHOUT a `RequestFreshAncilla` reset between them.
@@ -307,7 +309,7 @@ theorem freshness_reuse_without_reset_accepted :
     all_invariants_with_factory_ports_ok
         surgery_arch freshness_reuse_without_reset
         10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ### Strengthening status: IMPLEMENTED.
     `ancilla_freshness_ok` (Invariants/SystemInvariantStrengthening
@@ -342,7 +344,7 @@ theorem site_id_conflation_accepted :
     all_invariants_with_factory_ports_ok
         surgery_arch site_id_conflation
         10 1000 1000 = true := by
-  native_decide
+  decide
 
 /-! ### Strengthening status: OPEN.
     A fix wraps each id family in a single-constructor structure
@@ -379,7 +381,7 @@ theorem magic_no_startup_prefix_accepted :
     all_invariants_with_factory_ports_ok
         surgery_arch magic_no_startup_prefix
         10 1000 1 = true := by
-  native_decide
+  decide
 
 /-! ### Strengthening status: OPEN.
     A fix is a per-factory FIFO causal check: the `i`-th magic
@@ -428,7 +430,7 @@ theorem positive_ancilla_alias_rejected :
     all_invariants_with_factory_ports_ok
         surgery_arch positive_ancilla_alias
         10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-- Two overlapping `RequestMagicState`s on the SAME factory
     zone (port aliasing) are REJECTED. -/
@@ -442,7 +444,7 @@ theorem positive_factory_port_alias_rejected :
     all_invariants_with_factory_ports_ok
         surgery_arch positive_factory_port_alias
         10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-- An off-architecture atom claim (site 500 with arch size
     400) is REJECTED by `capacity_in_arch_ok`. -/
@@ -454,7 +456,7 @@ theorem positive_off_arch_claim_rejected :
     all_invariants_with_factory_ports_ok
         surgery_arch positive_off_arch_claim
         10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-- A `DecodeSyndrome` exceeding its react budget is REJECTED. -/
 def positive_decoder_too_slow : List SysCall :=
@@ -465,7 +467,7 @@ theorem positive_decoder_too_slow_rejected :
     all_invariants_with_factory_ports_ok
         surgery_arch positive_decoder_too_slow
         10 1000 1000 = false := by
-  native_decide
+  decide
 
 /-! ## §11. Summary table (machine-readable)
 
