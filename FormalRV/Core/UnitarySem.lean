@@ -36,9 +36,9 @@
 -/
 
 -- Re-export shim: split into UnitarySem/ submodules (same namespace; opens de-duplicated); importers unchanged.
-import FormalRV.Core.UnitarySem.Part1
-import FormalRV.Core.UnitarySem.Part2
-import FormalRV.Core.UnitarySem.Part3
-import FormalRV.Core.UnitarySem.Part4
-import FormalRV.Core.UnitarySem.Part5
-import FormalRV.Core.UnitarySem.Part6
+import FormalRV.Core.UnitarySem.MatrixFoundations
+import FormalRV.Core.UnitarySem.GateMatricesAndPadding
+import FormalRV.Core.UnitarySem.UnitarySemantics
+import FormalRV.Core.UnitarySem.CircuitEquivalences
+import FormalRV.Core.UnitarySem.SkipIdEquivalences
+import FormalRV.Core.UnitarySem.PadCtrlAndCongruence

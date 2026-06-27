@@ -1,6 +1,6 @@
 
 -- Re-export shim: split into WindowedCaseUnifiedStateEq/ submodules (same namespace; opens de-duplicated); importers unchanged.
-import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Part1
-import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Part2
-import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Part3
-import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Part4
+import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Case2GateStateEq
+import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Case1NoOpStateEqTT
+import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Case1NoOpStateEqFT
+import FormalRV.Shor.VerifiedShor.WindowedCaseUnifiedStateEq.Case1NoOpStateEqFF

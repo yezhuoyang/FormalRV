@@ -26,9 +26,9 @@
 
 
 -- Re-export shim: split into PhaseKickback/ submodules (same namespace; opens de-duplicated); importers unchanged.
-import FormalRV.QPE.PhaseKickback.Part1
-import FormalRV.QPE.PhaseKickback.Part2
-import FormalRV.QPE.PhaseKickback.Part3
-import FormalRV.QPE.PhaseKickback.Part4
-import FormalRV.QPE.PhaseKickback.Part5
-import FormalRV.QPE.PhaseKickback.Part6
+import FormalRV.QPE.PhaseKickback.ShiftedCascade
+import FormalRV.QPE.PhaseKickback.PadEquivBridge
+import FormalRV.QPE.PhaseKickback.ControlSideLinearity
+import FormalRV.QPE.PhaseKickback.UniformSuperpositionEigenstate
+import FormalRV.QPE.PhaseKickback.FourierFormQPE
+import FormalRV.QPE.PhaseKickback.ControlFactorization

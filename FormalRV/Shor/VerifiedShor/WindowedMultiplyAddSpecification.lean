@@ -1,6 +1,6 @@
 
 -- Re-export shim: split into WindowedMultiplyAddSpecification/ submodules (same namespace; opens de-duplicated); importers unchanged.
-import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.Part1
-import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.Part2
-import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.Part3
-import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.Part4
+import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.ReusableGuardAndCase1Unified
+import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.Case2NoOpReusable
+import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.Case3NoOpAndComposedCorrect
+import FormalRV.Shor.VerifiedShor.WindowedMultiplyAddSpecification.MultiWindowSpecScaffold
